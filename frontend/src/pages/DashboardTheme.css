@@ -1,0 +1,997 @@
+/* ====================================================
+   DASHBOARD DARK & LIGHT THEME VARIABLES
+   ==================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* Default Theme Tokens (Dark Mode) */
+:root {
+  --db-bg: #0b0c10;
+  --db-bg-gradient: radial-gradient(at 10% 20%, rgba(10, 38, 19, 0.4) 0px, transparent 50%),
+                     radial-gradient(at 90% 80%, rgba(6, 24, 12, 0.4) 0px, transparent 50%);
+  --db-sidebar-bg: #090a0f;
+  --db-sidebar-border: rgba(255, 255, 255, 0.05);
+  --db-card-bg: #12131a;
+  --db-card-bg-elevated: #161822;
+  --db-card-border: rgba(255, 255, 255, 0.05);
+  --db-card-hover-border: rgba(52, 211, 153, 0.25);
+  --db-text-main: #ffffff;
+  --db-text-secondary: #d1d5db;
+  --db-text-muted: #8b8e99;
+  --db-text-accent: #34d399;
+  --db-text-accent-hover: #6ee7b7;
+  --db-input-bg: rgba(0, 0, 0, 0.25);
+  --db-input-border: rgba(52, 211, 153, 0.2);
+  --db-glass-overlay: rgba(10, 38, 19, 0.35);
+  --db-shadow: rgba(0, 0, 0, 0.5);
+  --db-shadow-sm: rgba(0, 0, 0, 0.3);
+  --db-header-border: rgba(255, 255, 255, 0.05);
+  --db-inner-card: #161822;
+  --db-badge-bg: rgba(52, 211, 153, 0.1);
+  --db-badge-border: rgba(52, 211, 153, 0.25);
+  --db-badge-text: #34d399;
+  --db-chart-grid: rgba(255, 255, 255, 0.03);
+  --db-chart-tooltip-bg: #12131a;
+  --db-btn-secondary-bg: transparent;
+  --db-btn-secondary-hover: rgba(255, 255, 255, 0.04);
+  --db-demo-box-bg: rgba(0, 0, 0, 0.2);
+  --db-demo-box-border: rgba(52, 211, 153, 0.1);
+  --db-prediction-gradient: linear-gradient(135deg, rgba(6, 78, 41, 0.2), transparent);
+  --db-scrollbar-thumb: rgba(52, 211, 153, 0.2);
+  --db-scrollbar-track: transparent;
+  --db-link-color: #34d399;
+  --db-link-hover: #6ee7b7;
+  --db-amber-accent: #fbbf24;
+}
+
+/* Light Theme Tokens */
+.light-theme {
+  --db-bg: #f3f6f9;
+  --db-bg-gradient: radial-gradient(at 10% 20%, rgba(52, 211, 153, 0.04) 0px, transparent 50%),
+                     radial-gradient(at 90% 80%, rgba(16, 185, 129, 0.03) 0px, transparent 50%);
+  --db-sidebar-bg: #0f172a;
+  --db-sidebar-border: rgba(255, 255, 255, 0.08);
+  --db-card-bg: #ffffff;
+  --db-card-bg-elevated: #f8fafc;
+  --db-card-border: rgba(0, 0, 0, 0.07);
+  --db-card-hover-border: rgba(16, 185, 129, 0.4);
+  --db-text-main: #0f172a;
+  --db-text-secondary: #334155;
+  --db-text-muted: #64748b;
+  --db-text-accent: #059669;
+  --db-text-accent-hover: #047857;
+  --db-input-bg: #f1f5f9;
+  --db-input-border: #cbd5e1;
+  --db-glass-overlay: rgba(255, 255, 255, 0.8);
+  --db-shadow: rgba(0, 0, 0, 0.05);
+  --db-shadow-sm: rgba(0, 0, 0, 0.03);
+  --db-header-border: rgba(0, 0, 0, 0.08);
+  --db-inner-card: #f8fafc;
+  --db-badge-bg: rgba(16, 185, 129, 0.08);
+  --db-badge-border: rgba(16, 185, 129, 0.2);
+  --db-badge-text: #059669;
+  --db-chart-grid: rgba(0, 0, 0, 0.04);
+  --db-chart-tooltip-bg: #ffffff;
+  --db-btn-secondary-bg: #f1f5f9;
+  --db-btn-secondary-hover: #e2e8f0;
+  --db-demo-box-bg: #f1f5f9;
+  --db-demo-box-border: rgba(16, 185, 129, 0.15);
+  --db-prediction-gradient: linear-gradient(135deg, rgba(16, 185, 129, 0.06), transparent);
+  --db-scrollbar-thumb: rgba(16, 185, 129, 0.3);
+  --db-scrollbar-track: transparent;
+  --db-link-color: #059669;
+  --db-link-hover: #047857;
+  --db-amber-accent: #d97706;
+}
+
+/* ====================================================
+   BASE PAGE WRAPPER
+   ==================================================== */
+.db-page-wrapper {
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--db-bg);
+  background-image: var(--db-bg-gradient);
+  color: var(--db-text-main);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  display: flex;
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* Custom scrollbar */
+.db-page-wrapper ::-webkit-scrollbar {
+  width: 6px;
+}
+.db-page-wrapper ::-webkit-scrollbar-track {
+  background: var(--db-scrollbar-track);
+}
+.db-page-wrapper ::-webkit-scrollbar-thumb {
+  background: var(--db-scrollbar-thumb);
+  border-radius: 3px;
+}
+
+/* ====================================================
+   SIDEBAR
+   ==================================================== */
+.db-sidebar {
+  width: 260px;
+  background: var(--db-sidebar-bg);
+  border-right: 1px solid var(--db-sidebar-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.75rem 1.25rem;
+  z-index: 100;
+  flex-shrink: 0;
+  transition: background 0.35s ease;
+}
+
+.db-sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 2.5rem;
+  padding-left: 0.5rem;
+}
+
+.db-sidebar-logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #2dd4a0 0%, #0a2613 100%);
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.1rem;
+  box-shadow: 0 0 15px rgba(45, 212, 160, 0.25);
+}
+
+.db-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.db-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  color: #8b8e99;
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.db-nav-item:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.db-nav-item.active {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.08);
+  font-weight: 600;
+}
+
+.db-nav-icon {
+  font-size: 1.1rem;
+  opacity: 0.85;
+}
+
+.db-nav-item.active .db-nav-icon {
+  color: #34d399;
+}
+
+.db-sidebar-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 1.25rem;
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.db-profile-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.db-profile-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(52, 211, 153, 0.25);
+}
+
+.db-profile-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.db-profile-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.db-profile-email {
+  font-size: 0.75rem;
+  color: #8b8e99;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.db-settings-btn {
+  background: none;
+  border: none;
+  color: #8b8e99;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.db-settings-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ====================================================
+   MAIN CONTENT AREA
+   ==================================================== */
+.db-main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.db-header {
+  height: 70px;
+  border-bottom: 1px solid var(--db-header-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  flex-shrink: 0;
+  transition: border 0.35s ease;
+}
+
+.db-header-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--db-text-main);
+}
+
+.db-header-date {
+  font-size: 0.85rem;
+  color: var(--db-text-muted);
+  font-weight: 500;
+}
+
+.db-content-body {
+  flex-grow: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ====================================================
+   THEME TOGGLE BUTTON
+   ==================================================== */
+.db-theme-toggle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--db-card-border);
+  background: var(--db-card-bg);
+  color: var(--db-text-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px var(--db-shadow);
+}
+
+.db-theme-toggle:hover {
+  border-color: var(--db-card-hover-border);
+  transform: scale(1.08) rotate(15deg);
+  box-shadow: 0 4px 16px var(--db-shadow);
+}
+
+/* ====================================================
+   GLASS CARD COMPONENTS
+   ==================================================== */
+.db-card,
+.card,
+.stat-card {
+  background: var(--db-card-bg) !important;
+  border: 1px solid var(--db-card-border) !important;
+  border-radius: 0.85rem !important;
+  padding: 1.5rem !important;
+  box-shadow: 0 4px 25px var(--db-shadow) !important;
+  transition: all 0.3s ease;
+  position: relative;
+  color: var(--db-text-main) !important;
+}
+
+.db-card:hover,
+.card:hover {
+  border-color: var(--db-card-hover-border) !important;
+  box-shadow: 0 8px 30px var(--db-shadow-sm) !important;
+}
+
+/* Card title hierarchy — preserve accent colors */
+.card h1, .card h2, .card h3,
+.db-card h1, .db-card h2, .db-card h3 {
+  color: var(--db-text-main) !important;
+}
+
+/* Muted text for descriptions — only target generic p/span, NOT accent elements */
+.card > p, .card > span,
+.db-card > p, .db-card > span {
+  color: var(--db-text-muted) !important;
+}
+
+/* DO NOT override accent-colored text inside cards */
+.db-card .db-metric-label,
+.db-card .db-text-accent,
+.db-card [class*="text-emerald"],
+.db-card [class*="text-amber"] {
+  /* Let these keep their own colors */
+}
+
+/* ====================================================
+   THEMED TEXT UTILITY CLASSES
+   ==================================================== */
+.db-text-main { color: var(--db-text-main) !important; }
+.db-text-secondary { color: var(--db-text-secondary) !important; }
+.db-text-muted { color: var(--db-text-muted) !important; }
+.db-text-accent { color: var(--db-text-accent) !important; }
+
+/* ====================================================
+   FIX TAILWIND UTILITY OVERRIDES FOR THEMING
+   ==================================================== */
+
+/* Background overrides */
+.db-page-wrapper .bg-white {
+  background-color: var(--db-card-bg) !important;
+}
+
+.db-page-wrapper .bg-black\/20,
+.db-page-wrapper .bg-black\/30 {
+  background-color: var(--db-demo-box-bg) !important;
+}
+
+/* Text color overrides for common Tailwind classes */
+.db-page-wrapper .text-white {
+  color: var(--db-text-main) !important;
+}
+
+.db-page-wrapper .text-slate-900,
+.db-page-wrapper .text-slate-800,
+.db-page-wrapper .text-slate-700,
+.db-page-wrapper .text-gray-900,
+.db-page-wrapper .text-gray-800 {
+  color: var(--db-text-main) !important;
+}
+
+.db-page-wrapper .text-slate-600,
+.db-page-wrapper .text-slate-500,
+.db-page-wrapper .text-slate-400,
+.db-page-wrapper .text-gray-600,
+.db-page-wrapper .text-gray-500 {
+  color: var(--db-text-muted) !important;
+}
+
+/* Preserve emerald accent colors in dark mode, adjust in light */
+.light-theme .text-emerald-400 {
+  color: var(--db-text-accent) !important;
+}
+
+.light-theme .text-emerald-300 {
+  color: var(--db-text-accent) !important;
+}
+
+.light-theme .text-emerald-100\/50,
+.light-theme .text-emerald-100\/60 {
+  color: var(--db-text-muted) !important;
+}
+
+.light-theme .text-amber-400 {
+  color: var(--db-amber-accent) !important;
+}
+
+/* Border overrides */
+.light-theme .border-emerald-500\/10,
+.light-theme .border-emerald-500\/25 {
+  border-color: var(--db-badge-border) !important;
+}
+
+/* Background overrides for accent elements */
+.light-theme .bg-emerald-500\/10 {
+  background-color: var(--db-badge-bg) !important;
+}
+
+.light-theme .bg-emerald-500\/20 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+
+.light-theme .bg-emerald-950\/20 {
+  background-color: rgba(16, 185, 129, 0.04) !important;
+}
+
+.light-theme .bg-emerald-500 {
+  background-color: #059669 !important;
+}
+
+.light-theme .bg-emerald-500:hover,
+.light-theme .hover\:bg-emerald-400:hover {
+  background-color: #047857 !important;
+}
+
+/* Fix gradient cards in light mode */
+.light-theme .bg-gradient-to-br {
+  background: var(--db-prediction-gradient) !important;
+}
+
+/* ====================================================
+   METRIC CARDS GRID
+   ==================================================== */
+.db-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.db-metric-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--db-text-accent) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.25rem;
+}
+
+.db-metric-sublabel {
+  font-size: 0.82rem;
+  color: var(--db-text-muted) !important;
+  margin-bottom: 0.75rem;
+}
+
+.db-metric-val {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--db-text-main) !important;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.db-metric-suffix {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--db-text-muted) !important;
+}
+
+/* ====================================================
+   SECTION HEADERS
+   ==================================================== */
+.db-section-header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--db-text-muted) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+.db-grid-split {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr;
+  gap: 1.5rem;
+}
+
+/* ====================================================
+   SYSTEM INSIGHTS PANEL
+   ==================================================== */
+.db-insights-desc {
+  font-size: 0.88rem;
+  color: var(--db-text-muted) !important;
+  line-height: 1.5;
+  margin: 1rem 0 1.5rem 0;
+}
+
+.db-insights-btn {
+  width: 100%;
+  background: var(--db-btn-secondary-bg);
+  border: 1px solid var(--db-input-border);
+  color: var(--db-text-main);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: center;
+  font-family: inherit;
+}
+
+.db-insights-btn:hover {
+  background: var(--db-btn-secondary-hover);
+  border-color: var(--db-card-hover-border);
+}
+
+/* ====================================================
+   INPUTS & FORMS
+   ==================================================== */
+.db-page-wrapper input,
+.db-page-wrapper select,
+.db-page-wrapper textarea:not(.bg-slate-900),
+.input-field {
+  background-color: var(--db-input-bg) !important;
+  border: 1px solid var(--db-input-border) !important;
+  color: var(--db-text-main) !important;
+  transition: all 0.25s ease;
+}
+
+.db-page-wrapper input:focus,
+.db-page-wrapper select:focus,
+.db-page-wrapper textarea:not(.bg-slate-900):focus,
+.input-field:focus {
+  border-color: var(--db-text-accent) !important;
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.2) !important;
+  outline: none;
+}
+
+/* ====================================================
+   BUTTONS
+   ==================================================== */
+.btn-secondary {
+  background: var(--db-btn-secondary-bg) !important;
+  border: 1px solid var(--db-input-border) !important;
+  color: var(--db-text-main) !important;
+}
+
+.btn-secondary:hover {
+  background: var(--db-btn-secondary-hover) !important;
+}
+
+/* ====================================================
+   CHART AREA THEMING
+   ==================================================== */
+.db-chart-wrapper {
+  background: var(--db-card-bg);
+  border-radius: 0.85rem;
+  padding: 1rem;
+}
+
+/* ====================================================
+   DEMO / INFO BOXES
+   ==================================================== */
+.db-demo-box {
+  background: var(--db-demo-box-bg);
+  border: 1px solid var(--db-demo-box-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+/* ====================================================
+   BADGE / TAG ELEMENTS
+   ==================================================== */
+.db-badge {
+  background: var(--db-badge-bg);
+  border: 1px solid var(--db-badge-border);
+  color: var(--db-badge-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* ====================================================
+   LINKS
+   ==================================================== */
+.db-page-wrapper a:not(.db-nav-item) {
+  transition: color 0.2s ease;
+}
+
+/* ====================================================
+   EXTENDED TAILWIND UTILITY OVERRIDES FOR SUB-PAGES
+   (Subjects, Quizzes, AITutor, Coding, Progress)
+   ==================================================== */
+
+/* --- Slate / Gray Background overrides --- */
+.db-page-wrapper .bg-slate-50,
+.db-page-wrapper .hover\:bg-slate-50:hover {
+  background-color: var(--db-inner-card) !important;
+}
+
+.db-page-wrapper .bg-slate-100 {
+  background-color: var(--db-inner-card) !important;
+}
+
+.db-page-wrapper .bg-slate-200 {
+  background-color: var(--db-card-bg) !important;
+}
+
+/* Code editor header — keep dark in both modes */
+.db-page-wrapper .bg-slate-800 {
+  background-color: #1e293b !important;
+}
+
+/* Code editor textarea — keep dark in both modes */
+.db-page-wrapper .bg-slate-900 {
+  background-color: #0f172a !important;
+}
+
+/* text-green-400 inside code editor — keep in both modes */
+.db-page-wrapper .text-green-400 {
+  color: #4ade80 !important;
+}
+
+/* --- Primary-color utility overrides --- */
+.db-page-wrapper .bg-primary-600 {
+  background-color: var(--db-text-accent) !important;
+  color: #ffffff !important;
+}
+
+.db-page-wrapper .bg-primary-100 {
+  background-color: var(--db-badge-bg) !important;
+}
+
+.db-page-wrapper .text-primary-600 {
+  color: var(--db-text-accent) !important;
+}
+
+.db-page-wrapper .hover\:text-primary-600:hover {
+  color: var(--db-text-accent-hover) !important;
+}
+
+/* --- Border overrides --- */
+.db-page-wrapper .border-slate-100 {
+  border-color: var(--db-card-border) !important;
+}
+
+.db-page-wrapper .border-slate-200 {
+  border-color: var(--db-card-border) !important;
+}
+
+.db-page-wrapper .border-slate-300 {
+  border-color: var(--db-input-border) !important;
+}
+
+.db-page-wrapper .border-b {
+  border-bottom-color: var(--db-card-border) !important;
+}
+
+/* --- Button overrides (non-active language/mode buttons) --- */
+.db-page-wrapper button.border {
+  border-color: var(--db-input-border) !important;
+}
+
+.light-theme button.bg-white.border {
+  background-color: var(--db-card-bg) !important;
+  color: var(--db-text-main) !important;
+}
+
+.dark-theme button.bg-white.border {
+  background-color: var(--db-card-bg-elevated) !important;
+  color: var(--db-text-main) !important;
+}
+
+/* --- Table text theming --- */
+.db-page-wrapper table {
+  color: var(--db-text-main);
+}
+
+.db-page-wrapper table th {
+  color: var(--db-text-muted) !important;
+}
+
+.db-page-wrapper table td {
+  color: var(--db-text-secondary) !important;
+}
+
+.db-page-wrapper .text-orange-600 {
+  color: #f97316 !important;
+}
+
+/* --- Card link hover for Subjects cards --- */
+.db-page-wrapper .card.group:hover h3 {
+  color: var(--db-text-accent) !important;
+}
+
+/* --- AI Tutor chat bubble theming --- */
+.dark-theme .bg-primary-600.text-white {
+  background-color: var(--db-text-accent) !important;
+  color: #000000 !important;
+}
+
+/* AI response bubble — dark mode */
+.dark-theme .bg-slate-100 {
+  background-color: var(--db-inner-card) !important;
+  color: var(--db-text-secondary) !important;
+}
+
+/* --- Page title/heading theming --- */
+.db-page-wrapper h1,
+.db-page-wrapper h2,
+.db-page-wrapper h3 {
+  color: var(--db-text-main);
+}
+
+/* Font-medium / font-semibold elements */
+.db-page-wrapper .font-medium,
+.db-page-wrapper .font-semibold {
+  color: var(--db-text-main);
+}
+
+/* --- Stat card text --- */
+.db-page-wrapper .stat-card p:first-child {
+  color: var(--db-text-muted) !important;
+}
+
+.db-page-wrapper .stat-card p:last-child {
+  color: var(--db-text-main) !important;
+}
+
+/* --- Select / dropdown option styling for light mode --- */
+.light-theme select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+.dark-theme select option {
+  background-color: #12131a;
+  color: #ffffff;
+}
+
+/* --- Primary button theming --- */
+.db-page-wrapper .btn-primary {
+  background-color: var(--db-text-accent) !important;
+  color: #ffffff !important;
+  border: none !important;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.db-page-wrapper .btn-primary:hover {
+  background-color: var(--db-text-accent-hover) !important;
+  transform: translateY(-1px);
+}
+
+/* --- Loading skeleton theming --- */
+.db-page-wrapper .animate-pulse > div,
+.db-page-wrapper .animate-pulse.bg-slate-200,
+.db-page-wrapper .animate-pulse .bg-slate-200 {
+  background-color: var(--db-inner-card) !important;
+}
+
+/* ====================================================
+   RESPONSIVE VIEWPORTS
+   ==================================================== */
+@media (max-width: 1200px) {
+  .db-metric-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .db-grid-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .db-metric-grid {
+    grid-template-columns: 1fr;
+  }
+  .db-sidebar {
+    display: none;
+  }
+  .db-content-body {
+    padding: 1.25rem;
+  }
+  .db-header {
+    padding: 0 1.25rem;
+  }
+}
+
+/* ====================================================
+   SUBJECT CARDS ANIMATED BLOB & GLASSMORPHISM EFFECT
+   ==================================================== */
+.subject-card {
+  position: relative;
+  width: 100%;
+  min-height: 260px;
+  border-radius: 14px;
+  z-index: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px var(--db-shadow);
+  border: 1px solid var(--db-card-border);
+  background: var(--db-bg);
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+  cursor: pointer;
+  padding: 1.5rem;
+}
+
+/* PowerPoint-style top indicator line */
+.subject-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  z-index: 10;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  background: var(--db-text-accent);
+  transition: opacity 0.3s ease, height 0.3s ease;
+  opacity: 0.85;
+}
+
+.subject-card:has(.blob-foc)::before { background: #3b82f6; }
+.subject-card:has(.blob-java)::before { background: #f97316; }
+.subject-card:has(.blob-advjava)::before { background: #ef4444; }
+.subject-card:has(.blob-dsa)::before { background: #10b981; }
+.subject-card:has(.blob-csharp)::before { background: #8b5cf6; }
+.subject-card:has(.blob-dbms)::before { background: #06b6d4; }
+.subject-card:has(.blob-python)::before { background: #eab308; }
+.subject-card:has(.blob-webdev)::before { background: #ec4899; }
+
+.subject-card:hover::before {
+  height: 6px;
+  opacity: 1;
+}
+
+.subject-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px var(--db-shadow);
+}
+
+.light-theme .subject-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 12px 12px 30px rgba(165, 180, 252, 0.12), -12px -12px 30px rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.light-theme .subject-card:hover {
+  box-shadow: 16px 16px 36px rgba(165, 180, 252, 0.2), -16px -16px 36px rgba(255, 255, 255, 0.95);
+}
+
+.subject-card-bg {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+  z-index: 2;
+  background: var(--db-card-bg);
+  opacity: 0.96;
+  backdrop-filter: blur(24px);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--db-card-border);
+  transition: background 0.35s ease, border-color 0.35s ease, opacity 0.3s ease;
+}
+
+.light-theme .subject-card-bg {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9);
+}
+
+.subject-card:hover .subject-card-bg {
+  border-color: var(--db-card-hover-border);
+}
+
+.light-theme .subject-card:hover .subject-card-bg {
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.subject-card-blob {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  opacity: 0.45;
+  filter: blur(20px);
+  animation: blob-bounce 6s infinite ease-in-out;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.light-theme .subject-card-blob {
+  opacity: 0.5; /* brighter glow for PPT background effect in light mode */
+  filter: blur(22px);
+}
+
+.subject-card:hover .subject-card-blob {
+  opacity: 0.65;
+  filter: blur(15px);
+}
+
+.light-theme .subject-card:hover .subject-card-blob {
+  opacity: 0.7;
+  filter: blur(16px);
+}
+
+.subject-card-content {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+
+/* Individual blob color variables */
+.blob-default { background-color: var(--db-text-accent); }
+.blob-foc { background-color: #3b82f6; }
+.blob-java { background-color: #f97316; }
+.blob-advjava { background-color: #ef4444; }
+.blob-dsa { background-color: #10b981; }
+.blob-csharp { background-color: #8b5cf6; }
+.blob-dbms { background-color: #06b6d4; }
+.blob-python { background-color: #eab308; }
+.blob-webdev { background-color: #ec4899; }
+
+@keyframes blob-bounce {
+  0% {
+    transform: translate(-100%, -100%) translate3d(0, 0, 0);
+  }
+  25% {
+    transform: translate(-100%, -100%) translate3d(100%, 0, 0);
+  }
+  50% {
+    transform: translate(-100%, -100%) translate3d(100%, 100%, 0);
+  }
+  75% {
+    transform: translate(-100%, -100%) translate3d(0, 100%, 0);
+  }
+  100% {
+    transform: translate(-100%, -100%) translate3d(0, 0, 0);
+  }
+}
+
+

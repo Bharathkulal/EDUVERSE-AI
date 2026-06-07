@@ -1,0 +1,469 @@
+/* ====================================================
+   AI PROFILE — ANALYTICS DASHBOARD STYLES
+   ==================================================== */
+
+/* Page-level header */
+.ai-profile-header {
+  margin-bottom: 2rem;
+}
+
+.ai-profile-header h1 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--db-text-main);
+  margin-bottom: 0.25rem;
+}
+
+.ai-profile-header p {
+  font-size: 0.88rem;
+  color: var(--db-text-muted) !important;
+}
+
+/* ====================================================
+   ANALYTICS CARDS GRID
+   ==================================================== */
+.ai-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.ai-cards-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ====================================================
+   AI GLASS CARD
+   ==================================================== */
+.ai-glass-card {
+  background: var(--db-card-bg);
+  border: 1px solid var(--db-card-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px var(--db-shadow);
+}
+
+.ai-glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 1rem 1rem 0 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ai-glass-card:hover {
+  border-color: var(--db-card-hover-border);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px var(--db-shadow-sm);
+}
+
+.ai-glass-card:hover::before {
+  opacity: 1;
+}
+
+/* Card accent variants */
+.ai-glass-card.accent-emerald::before {
+  background: linear-gradient(90deg, #34d399, #10b981);
+}
+.ai-glass-card.accent-blue::before {
+  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+}
+.ai-glass-card.accent-purple::before {
+  background: linear-gradient(90deg, #a78bfa, #8b5cf6);
+}
+.ai-glass-card.accent-amber::before {
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+}
+.ai-glass-card.accent-rose::before {
+  background: linear-gradient(90deg, #fb7185, #f43f5e);
+}
+.ai-glass-card.accent-cyan::before {
+  background: linear-gradient(90deg, #22d3ee, #06b6d4);
+}
+
+/* Card header */
+.ai-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.ai-card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.ai-card-icon.emerald {
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+}
+.ai-card-icon.blue {
+  background: rgba(96, 165, 250, 0.1);
+  color: #60a5fa;
+}
+.ai-card-icon.purple {
+  background: rgba(167, 139, 250, 0.1);
+  color: #a78bfa;
+}
+.ai-card-icon.amber {
+  background: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+}
+.ai-card-icon.rose {
+  background: rgba(251, 113, 133, 0.1);
+  color: #fb7185;
+}
+.ai-card-icon.cyan {
+  background: rgba(34, 211, 238, 0.1);
+  color: #22d3ee;
+}
+
+.ai-card-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--db-text-muted);
+}
+
+/* ====================================================
+   SCORE CIRCLE
+   ==================================================== */
+.ai-score-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0.75rem auto;
+  position: relative;
+}
+
+.ai-score-circle.emerald {
+  background: conic-gradient(
+    #34d399 calc(var(--score) * 3.6deg),
+    rgba(52, 211, 153, 0.08) 0deg
+  );
+}
+
+.ai-score-circle.blue {
+  background: conic-gradient(
+    #60a5fa calc(var(--score) * 3.6deg),
+    rgba(96, 165, 250, 0.08) 0deg
+  );
+}
+
+.ai-score-inner {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--db-card-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-score-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--db-text-main);
+}
+
+.ai-score-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--db-text-muted);
+  margin-top: 0.1rem;
+}
+
+/* ====================================================
+   TAG / CHIP ELEMENTS
+   ==================================================== */
+.ai-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ai-tag {
+  padding: 0.35rem 0.75rem;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: transform 0.2s ease;
+}
+
+.ai-tag:hover {
+  transform: scale(1.05);
+}
+
+.ai-tag.strength {
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.ai-tag.weakness {
+  background: rgba(251, 113, 133, 0.1);
+  color: #fb7185;
+  border: 1px solid rgba(251, 113, 133, 0.2);
+}
+
+.ai-tag.career {
+  background: rgba(167, 139, 250, 0.1);
+  color: #a78bfa;
+  border: 1px solid rgba(167, 139, 250, 0.2);
+}
+
+/* ====================================================
+   LEARNING TYPE BADGE
+   ==================================================== */
+.ai-learning-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 2rem;
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.12), rgba(16, 185, 129, 0.06));
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #34d399;
+  margin-top: 0.5rem;
+}
+
+/* ====================================================
+   ROADMAP TIMELINE
+   ==================================================== */
+.ai-roadmap-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 0.75rem;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.ai-roadmap-list::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0.75rem;
+  bottom: 0.75rem;
+  width: 2px;
+  background: linear-gradient(180deg, #34d399, rgba(52, 211, 153, 0.1));
+  border-radius: 1px;
+}
+
+.ai-roadmap-item {
+  position: relative;
+  padding: 0.75rem 0 0.75rem 1rem;
+}
+
+.ai-roadmap-item::before {
+  content: '';
+  position: absolute;
+  left: -1.25rem;
+  top: 1.1rem;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #34d399;
+  border: 2px solid var(--db-card-bg);
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
+}
+
+.ai-roadmap-phase {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--db-text-main);
+  margin-bottom: 0.25rem;
+}
+
+.ai-roadmap-duration {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--db-text-accent);
+  margin-bottom: 0.35rem;
+}
+
+.ai-roadmap-subjects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ai-roadmap-subject {
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: var(--db-badge-bg);
+  color: var(--db-badge-text);
+  border: 1px solid var(--db-badge-border);
+}
+
+/* ====================================================
+   BAR CHART (CSS-based for strengths/weaknesses)
+   ==================================================== */
+.ai-bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.ai-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ai-bar-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--db-text-secondary);
+  min-width: 120px;
+  text-align: right;
+}
+
+.ai-bar-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+}
+
+.ai-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-bar-fill.emerald {
+  background: linear-gradient(90deg, #34d399, #10b981);
+}
+
+.ai-bar-fill.rose {
+  background: linear-gradient(90deg, #fb7185, #f43f5e);
+}
+
+/* ====================================================
+   PROFILE INFO CARD
+   ==================================================== */
+.ai-profile-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.ai-profile-info-item {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--db-card-border);
+}
+
+.ai-profile-info-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--db-text-muted);
+  margin-bottom: 0.15rem;
+}
+
+.ai-profile-info-value {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--db-text-main);
+}
+
+/* ====================================================
+   NO DATA STATE
+   ==================================================== */
+.ai-no-data {
+  text-align: center;
+  padding: 3rem;
+  color: var(--db-text-muted);
+}
+
+.ai-no-data-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.ai-no-data-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--db-text-main);
+  margin-bottom: 0.5rem;
+}
+
+.ai-no-data-desc {
+  font-size: 0.85rem;
+  color: var(--db-text-muted);
+}
+
+/* ====================================================
+   RESPONSIVE
+   ==================================================== */
+@media (max-width: 1024px) {
+  .ai-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .ai-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-cards-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-profile-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-score-circle {
+    width: 100px;
+    height: 100px;
+  }
+
+  .ai-score-inner {
+    width: 80px;
+    height: 80px;
+  }
+}

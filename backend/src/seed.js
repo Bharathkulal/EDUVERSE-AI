@@ -1,0 +1,220 @@
+require('dotenv').config();
+const bcrypt = require('bcryptjs');
+const db = require('./config/db');
+
+const subjects = [
+  { name: 'FOC', desc: 'Fundamentals of Computing - Introduction to computer science concepts' },
+  { name: 'Java', desc: 'Core Java programming - OOP, collections, and fundamentals' },
+  { name: 'Advanced Java', desc: 'JSP, Servlets, JDBC, and enterprise Java development' },
+  { name: 'DSA', desc: 'Data Structures and Algorithms for problem solving' },
+  { name: 'C#', desc: 'C# programming with .NET framework fundamentals' },
+  { name: 'DBMS', desc: 'Database Management Systems - SQL, normalization, and design' },
+  { name: 'Python', desc: 'Python programming for beginners to advanced' },
+  { name: 'Web Development', desc: 'HTML, CSS, JavaScript, React and full-stack development' },
+];
+
+const sampleTopics = [
+  { title: 'Introduction', content: 'Overview of the subject and learning objectives.' },
+  { title: 'Core Concepts', content: 'Fundamental concepts and theory.' },
+  { title: 'Practical Applications', content: 'Hands-on examples and use cases.' },
+];
+
+const codingProblems = [
+  { title: 'Hello World', lang: 'java', desc: 'Write a Java program to print "Hello, EduVerse!"' },
+  { title: 'Sum of Array', lang: 'python', desc: 'Write a Python function to return the sum of an array.' },
+  { title: 'Factorial', lang: 'c', desc: 'Write a C program to calculate factorial of a number.' },
+  { title: 'Prime Check', lang: 'csharp', desc: 'Write a C# method to check if a number is prime.' },
+  { title: 'Reverse String', lang: 'java', desc: 'Write a Java method to reverse a string.' },
+  { title: 'Fibonacci', lang: 'python', desc: 'Generate Fibonacci series up to n terms in Python.' },
+];
+
+async function seed() {
+  console.log('Seeding EduVerse AI database...');
+
+  const adminPass = await bcrypt.hash('admin123', 12);
+  const studentPass = await bcrypt.hash('student123', 12);
+
+  // --- Users (idempotent via ON CONFLICT) ---
+  await db.query(
+    `INSERT INTO users (name, email, password, role)
+     VALUES ('Admin User', 'admin@eduverse.ai', $1::text, 'admin')
+     ON CONFLICT (email) DO NOTHING`,
+    [adminPass]
+  );
+  await db.query(
+    `INSERT INTO users (name, email, password, role)
+     VALUES ('John Student', 'student@eduverse.ai', $1::text, 'student')
+     ON CONFLICT (email) DO NOTHING`,
+    [studentPass]
+  );
+
+  // --- Student progress ---
+  const student = await db.query(
+    "SELECT id FROM users WHERE email = 'student@eduverse.ai'"
+  );
+  if (student.rows[0]) {
+    await db.query(
+      `INSERT INTO student_progress (student_id, study_hours, completed_topics)
+       VALUES ($1::int, 5, 2)
+       ON CONFLICT (student_id) DO NOTHING`,
+      [student.rows[0].id]
+    );
+  }
+
+  // --- Subjects, Units, Topics, Quizzes, Questions ---
+  for (const sub of subjects) {
+    // Insert subject or skip if it already exists
+    await db.query(
+      `INSERT INTO subjects (subject_name, description)
+       VALUES ($1::text, $2::text)
+       ON CONFLICT DO NOTHING`,
+      [sub.name, sub.desc]
+    );
+
+    // Always fetch the subject id (handles both fresh insert and existing row)
+    const subRow = await db.query(
+      'SELECT id FROM subjects WHERE subject_name = $1::text',
+      [sub.name]
+    );
+    const subjectId = subRow.rows[0]?.id;
+    if (!subjectId) continue;
+
+    // --- Unit (idempotent: check before inserting) ---
+    let unitId;
+    const existingUnit = await db.query(
+      `SELECT id FROM units WHERE subject_id = $1::int AND title = $2::text`,
+      [subjectId, 'Unit 1 - Fundamentals']
+    );
+    if (existingUnit.rows[0]) {
+      unitId = existingUnit.rows[0].id;
+    } else {
+      const unitResult = await db.query(
+        `INSERT INTO units (subject_id, title, order_index)
+         VALUES ($1::int, $2::text, 0)
+         RETURNING id`,
+        [subjectId, 'Unit 1 - Fundamentals']
+      );
+      unitId = unitResult.rows[0].id;
+    }
+
+    // --- Topics (idempotent: unique on subject_id + title) ---
+    for (let i = 0; i < sampleTopics.length; i++) {
+      const existingTopic = await db.query(
+        `SELECT id FROM topics WHERE subject_id = $1::int AND title = $2::text`,
+        [subjectId, sampleTopics[i].title]
+      );
+      if (!existingTopic.rows[0]) {
+        await db.query(
+          `INSERT INTO topics (subject_id, unit_id, title, content, notes, order_index)
+           VALUES ($1::int, $2::int, $3::text, $4::text, $5::text, $6::int)`,
+          [subjectId, unitId, sampleTopics[i].title, sampleTopics[i].content, `Study notes for ${sampleTopics[i].title}`, i]
+        );
+      }
+    }
+
+    // --- Quiz (idempotent: check before inserting) ---
+    const quizTitle = `${sub.name} - Basics Quiz`;
+    let quizId;
+    const existingQuiz = await db.query(
+      `SELECT id FROM quizzes WHERE subject_id = $1::int AND title = $2::text`,
+      [subjectId, quizTitle]
+    );
+    if (existingQuiz.rows[0]) {
+      quizId = existingQuiz.rows[0].id;
+    } else {
+      const quizResult = await db.query(
+        `INSERT INTO quizzes (subject_id, title)
+         VALUES ($1::int, $2::text)
+         RETURNING id`,
+        [subjectId, quizTitle]
+      );
+      quizId = quizResult.rows[0].id;
+    }
+
+    // --- Questions (idempotent: check before inserting) ---
+    const questions = [
+      { q: `What is the primary focus of ${sub.name}?`, a: 'Theory only', b: 'Practice only', c: 'Theory and Practice', d: 'None', ans: 'c' },
+      { q: `Which skill improves with ${sub.name}?`, a: 'Problem solving', b: 'Memorization only', c: 'None', d: 'Only writing', ans: 'a' },
+      { q: 'Best way to learn this subject?', a: 'Skip practice', b: 'Regular practice', c: 'Avoid quizzes', d: 'No notes', ans: 'b' },
+    ];
+    for (const qu of questions) {
+      const existingQ = await db.query(
+        `SELECT id FROM questions WHERE quiz_id = $1::int AND question = $2::text`,
+        [quizId, qu.q]
+      );
+      if (!existingQ.rows[0]) {
+        await db.query(
+          `INSERT INTO questions (quiz_id, question, option_a, option_b, option_c, option_d, correct_answer)
+           VALUES ($1::int, $2::text, $3::text, $4::text, $5::text, $6::text, $7::text)`,
+          [quizId, qu.q, qu.a, qu.b, qu.c, qu.d, qu.ans]
+        );
+      }
+    }
+  }
+
+  // --- Coding Problems (idempotent: check before inserting) ---
+  for (const prob of codingProblems) {
+    const existingProb = await db.query(
+      `SELECT id FROM coding_problems WHERE title = $1::text`,
+      [prob.title]
+    );
+    if (!existingProb.rows[0]) {
+      await db.query(
+        `INSERT INTO coding_problems (title, description, language, difficulty)
+         VALUES ($1::text, $2::text, $3::text, 'easy'::text)`,
+        [prob.title, prob.desc, prob.lang]
+      );
+    }
+  }
+
+  // --- Seed Student Progress Activities ---
+  if (student.rows[0]) {
+    const studentId = student.rows[0].id;
+
+    // Check if progress exists
+    const hasProgress = await db.query('SELECT 1 FROM student_progress WHERE student_id = $1', [studentId]);
+    if (hasProgress.rows.length === 0) {
+      await db.query(
+        `INSERT INTO student_progress (student_id, study_hours, completed_topics)
+         VALUES ($1::int, 15, 8)`,
+        [studentId]
+      );
+    }
+
+    // Check if quiz result exists
+    const hasQuizResult = await db.query('SELECT 1 FROM quiz_results WHERE student_id = $1', [studentId]);
+    if (hasQuizResult.rows.length === 0) {
+      const quiz = await db.query('SELECT id FROM quizzes LIMIT 1');
+      if (quiz.rows[0]) {
+        await db.query(
+          `INSERT INTO quiz_results (student_id, quiz_id, score, total_questions)
+           VALUES ($1::int, $2::int, 80, 100)`,
+          [studentId, quiz.rows[0].id]
+        );
+      }
+    }
+
+    // Check if coding submission exists
+    const hasCodingResult = await db.query('SELECT 1 FROM coding_submissions WHERE student_id = $1', [studentId]);
+    if (hasCodingResult.rows.length === 0) {
+      const problem = await db.query('SELECT id FROM coding_problems LIMIT 1');
+      if (problem.rows[0]) {
+        await db.query(
+          `INSERT INTO coding_submissions (student_id, problem_id, language, code, score)
+           VALUES ($1::int, $2::int, 'python', 'def hello(): pass', 90)`,
+          [studentId, problem.rows[0].id]
+        );
+      }
+    }
+  }
+
+  console.log('Seed completed!');
+  console.log('Admin: admin@eduverse.ai / admin123');
+  console.log('Student: student@eduverse.ai / student123');
+  process.exit(0);
+}
+
+seed().catch((err) => {
+  console.error('Seed failed:', err);
+  process.exit(1);
+});

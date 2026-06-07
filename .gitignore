@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.log
+.DS_Store
+uploads/
+ml-service/models/*.joblib
+ml-service/datasets/*
+!ml-service/datasets/sample_dataset.csv
+__pycache__/
+*.pyc
+.venv/
+venv/

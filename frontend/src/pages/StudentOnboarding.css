@@ -1,0 +1,478 @@
+/* ====================================================
+   STUDENT ONBOARDING — GLASSMORPHISM MULTI-STEP FORM
+   ==================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+.onboarding-wrapper {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #060a10;
+  background-image:
+    radial-gradient(at 20% 30%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
+    radial-gradient(at 80% 70%, rgba(6, 78, 41, 0.15) 0px, transparent 50%),
+    radial-gradient(at 50% 0%, rgba(52, 211, 153, 0.06) 0px, transparent 60%);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  padding: 2rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated background orbs */
+.onboarding-orb-1 {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.08) 0%, transparent 70%);
+  top: -150px;
+  left: -100px;
+  animation: orbFloat 12s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.onboarding-orb-2 {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%);
+  bottom: -100px;
+  right: -80px;
+  animation: orbFloat 15s ease-in-out infinite reverse;
+  pointer-events: none;
+}
+
+.onboarding-orb-3 {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.04) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: orbPulse 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -20px) scale(1.05); }
+  66% { transform: translate(-20px, 15px) scale(0.95); }
+}
+
+@keyframes orbPulse {
+  0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.15); }
+}
+
+/* Main card container */
+.onboarding-card {
+  width: 100%;
+  max-width: 640px;
+  background: rgba(15, 17, 24, 0.75);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(52, 211, 153, 0.12);
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.5),
+    0 0 80px rgba(52, 211, 153, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  position: relative;
+  z-index: 10;
+}
+
+/* Brand header */
+.onboarding-brand {
+  font-size: 1.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #34d399, #10b981);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+
+/* ====================================================
+   PROGRESS BAR
+   ==================================================== */
+.onboarding-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin: 1.5rem 0 2rem;
+  position: relative;
+}
+
+.onboarding-step-item {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.onboarding-step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.onboarding-step-circle.inactive {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.onboarding-step-circle.active {
+  background: linear-gradient(135deg, #34d399, #10b981);
+  border: 2px solid #34d399;
+  color: #000;
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.3), 0 0 40px rgba(52, 211, 153, 0.1);
+}
+
+.onboarding-step-circle.completed {
+  background: rgba(52, 211, 153, 0.15);
+  border: 2px solid rgba(52, 211, 153, 0.4);
+  color: #34d399;
+}
+
+.onboarding-step-line {
+  width: 60px;
+  height: 3px;
+  border-radius: 2px;
+  transition: background 0.4s ease;
+  flex-shrink: 0;
+}
+
+.onboarding-step-line.inactive {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.onboarding-step-line.active {
+  background: linear-gradient(90deg, #34d399, rgba(52, 211, 153, 0.3));
+}
+
+.onboarding-step-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.onboarding-step-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.25);
+  transition: color 0.3s ease;
+  text-align: center;
+  flex: 1;
+}
+
+.onboarding-step-label.active {
+  color: #34d399;
+}
+
+.onboarding-step-label.completed {
+  color: rgba(52, 211, 153, 0.5);
+}
+
+/* ====================================================
+   FORM FIELDS
+   ==================================================== */
+.onboarding-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.onboarding-form-grid .full-width {
+  grid-column: span 2;
+}
+
+.onboarding-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.onboarding-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.onboarding-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid rgba(52, 211, 153, 0.15) !important;
+  border-radius: 0.75rem;
+  color: #fff !important;
+  font-size: 0.9rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.onboarding-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.onboarding-input:focus {
+  border-color: #34d399 !important;
+  box-shadow: 0 0 15px rgba(52, 211, 153, 0.15) !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+
+.onboarding-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+.onboarding-select option {
+  background: #12131a;
+  color: #fff;
+}
+
+.onboarding-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* ====================================================
+   LEARNING LEVEL SELECTOR
+   ==================================================== */
+.learning-level-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.learning-level-card {
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1rem;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.learning-level-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 1rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.08), transparent);
+}
+
+.learning-level-card:hover {
+  border-color: rgba(52, 211, 153, 0.2);
+  transform: translateY(-2px);
+}
+
+.learning-level-card:hover::before {
+  opacity: 1;
+}
+
+.learning-level-card.selected {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.08);
+  box-shadow: 0 0 25px rgba(52, 211, 153, 0.1);
+}
+
+.learning-level-card.selected::before {
+  opacity: 1;
+}
+
+.learning-level-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.learning-level-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.35rem;
+}
+
+.learning-level-desc {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.4;
+}
+
+/* ====================================================
+   BUTTONS
+   ==================================================== */
+.onboarding-btn-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.onboarding-btn-back {
+  flex: 1;
+  padding: 0.85rem;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.onboarding-btn-back:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.onboarding-btn-next {
+  flex: 2;
+  padding: 0.85rem;
+  background: linear-gradient(135deg, #34d399, #10b981);
+  border: none;
+  border-radius: 0.75rem;
+  color: #000;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(52, 211, 153, 0.2);
+}
+
+.onboarding-btn-next:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 25px rgba(52, 211, 153, 0.3);
+}
+
+.onboarding-btn-next:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.onboarding-btn-submit {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #34d399, #059669);
+  border: none;
+  border-radius: 0.75rem;
+  color: #000;
+  font-size: 1rem;
+  font-weight: 800;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 20px rgba(52, 211, 153, 0.25);
+  letter-spacing: 0.02em;
+}
+
+.onboarding-btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(52, 211, 153, 0.35);
+}
+
+.onboarding-btn-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Spinner */
+.onboarding-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(0, 0, 0, 0.2);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ====================================================
+   STEP TITLE AREA
+   ==================================================== */
+.onboarding-step-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.35rem;
+}
+
+.onboarding-step-subtitle {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 1.5rem;
+}
+
+/* ====================================================
+   RESPONSIVE
+   ==================================================== */
+@media (max-width: 640px) {
+  .onboarding-card {
+    padding: 1.75rem 1.25rem;
+    border-radius: 1.25rem;
+  }
+
+  .onboarding-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-form-grid .full-width {
+    grid-column: span 1;
+  }
+
+  .learning-level-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-step-line {
+    width: 35px;
+  }
+
+  .onboarding-step-circle {
+    width: 34px;
+    height: 34px;
+    font-size: 0.75rem;
+  }
+}
