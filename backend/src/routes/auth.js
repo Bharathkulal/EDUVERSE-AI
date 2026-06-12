@@ -78,6 +78,13 @@ router.post(
       }
 
       const user = result.rows[0];
+      
+      // Check if student user is blocked
+      const blockedCheck = await db.query('SELECT blocked FROM users WHERE id = $1', [user.id]);
+      if (blockedCheck.rows.length > 0 && blockedCheck.rows[0].blocked) {
+        return res.status(403).json({ message: 'This account has been temporarily blocked by administration.' });
+      }
+
       const valid = await bcrypt.compare(password, user.password);
       if (!valid) {
         return res.status(401).json({ message: 'Invalid email or password' });
@@ -85,6 +92,11 @@ router.post(
 
       delete user.password;
       const token = generateToken(user);
+
+      // Log Login activity
+      const { logActivity } = require('../utils/system_logger');
+      logActivity(user.id, 'login', 'Auth', 'User logged in successfully', false).catch(e => console.error(e));
+
       res.json({ message: 'Login successful', token, user });
     } catch (err) {
       console.error(err);

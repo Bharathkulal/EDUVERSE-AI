@@ -1,17 +1,11 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const db = require('../config/db');
 const validate = require('../middleware/validate');
 const { authenticate } = require('../middleware/auth');
+const { generateContentWithFailover } = require('../utils/ai_helper');
 
 const router = express.Router();
-
-const getModel = () => {
-  if (!process.env.GEMINI_API_KEY) return null;
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-};
 
 router.post(
   '/chat',
@@ -36,10 +30,15 @@ router.post(
 
       let responseText = '';
 
-      const model = getModel();
-      if (model) {
-        const result = await model.generateContent(systemPrompt);
-        responseText = result.response.text();
+      let apiCallResult = null;
+      try {
+        apiCallResult = await generateContentWithFailover(systemPrompt);
+      } catch (apiErr) {
+        console.error('All failovers exhausted for AI Tutor:', apiErr);
+      }
+
+      if (apiCallResult) {
+        responseText = apiCallResult.text;
       } else {
         responseText = `[Demo Mode - Add GEMINI_API_KEY for live AI]\n\nRegarding "${message}":\n\nThis is a fundamental concept in ${subject || 'computer science'}. Let me explain:\n\n1. Start with the core definition\n2. Understand the key components\n3. Practice with examples\n4. Apply through exercises\n\nFor "${mode || 'doubt'}" mode: Review your course materials and try breaking the problem into smaller steps. Would you like me to generate practice questions?`;
       }

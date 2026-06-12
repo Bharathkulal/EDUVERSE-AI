@@ -1,0 +1,316 @@
+/* Cybernetic HUD layout styles for AdminApiSettings page */
+.friday-admin-container {
+  position: relative;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: #e2e8f0;
+  z-index: 1;
+}
+
+/* Glassmorphic Cyber Card styling */
+.friday-cyber-card {
+  background: rgba(10, 15, 30, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 240, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4),
+              inset 0 0 20px rgba(0, 240, 255, 0.05);
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.friday-cyber-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.5), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.friday-cyber-card:hover {
+  border-color: rgba(0, 240, 255, 0.25);
+  box-shadow: 0 12px 40px 0 rgba(0, 240, 255, 0.08),
+              inset 0 0 24px rgba(0, 240, 255, 0.08);
+}
+
+.friday-cyber-card:hover::before {
+  opacity: 1;
+}
+
+/* Drag & Drop Styles */
+.friday-drag-item {
+  cursor: grab;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.friday-drag-item:active {
+  cursor: grabbing;
+}
+
+.friday-drag-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+  border: 1px dashed rgba(0, 240, 255, 0.5);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+}
+
+/* Cyber Pulse Status Indicators */
+.cyber-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.cyber-pulse-dot::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: 0;
+  animation: pulse-ring 1.5s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.8;
+  }
+  80%, 100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* Latency Gauge styles */
+.latency-gauge-bg {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.latency-gauge-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hologram Scanning Line overlay for playground results */
+.hologram-scan {
+  position: relative;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  font-family: 'Consolas', monospace;
+  overflow: hidden;
+}
+
+.hologram-scan::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 240, 255, 0.08) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.06),
+    rgba(0, 255, 0, 0.02),
+    rgba(0, 0, 255, 0.06)
+  );
+  background-size: 100% 4px, 6px 100%;
+  pointer-events: none;
+}
+
+/* Glowing text classes */
+.glow-cyan {
+  text-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+}
+
+.glow-purple {
+  text-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+}
+
+.glow-emerald {
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+/* ====================================================
+   LIGHT THEME SUPPORT OVERRIDES
+   ==================================================== */
+.light-theme .friday-admin-container {
+  color: var(--db-text-secondary);
+}
+
+.light-theme .friday-hud-logo,
+.light-theme .friday-admin-container h1,
+.light-theme .friday-admin-container h2,
+.light-theme .friday-admin-container h3,
+.light-theme .friday-admin-container h4,
+.light-theme .friday-admin-container h5,
+.light-theme .friday-admin-container th,
+.light-theme .friday-admin-container td,
+.light-theme .friday-admin-container .font-bold {
+  color: var(--db-text-main) !important;
+}
+
+.light-theme .friday-admin-container .text-white,
+.light-theme .friday-admin-container .text-slate-200,
+.light-theme .friday-admin-container .text-slate-300 {
+  color: var(--db-text-main) !important;
+}
+
+.light-theme .friday-admin-container .text-slate-400,
+.light-theme .friday-admin-container .text-slate-500,
+.light-theme .friday-admin-container .text-slate-600 {
+  color: var(--db-text-muted) !important;
+}
+
+/* Light Theme Cyber Card override */
+.light-theme .friday-cyber-card {
+  background: var(--db-card-bg) !important;
+  border: 1px solid var(--db-card-border) !important;
+  box-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.05),
+              inset 0 0 20px rgba(6, 182, 212, 0.02) !important;
+}
+
+.light-theme .friday-cyber-card:hover {
+  border-color: var(--db-card-hover-border) !important;
+  box-shadow: 0 12px 40px 0 rgba(6, 182, 212, 0.06),
+              inset 0 0 24px rgba(6, 182, 212, 0.04) !important;
+}
+
+.light-theme .friday-cyber-card::before {
+  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.4), transparent);
+}
+
+/* Overrides for specific dark-themed nested blocks */
+.light-theme .friday-admin-container .bg-slate-950/60,
+.light-theme .friday-admin-container .bg-slate-900,
+.light-theme .friday-admin-container .bg-slate-900/50,
+.light-theme .friday-admin-container .bg-slate-900/40,
+.light-theme .friday-admin-container .bg-slate-900/20,
+.light-theme .friday-admin-container .bg-slate-950/40,
+.light-theme .friday-admin-container .bg-slate-950/80 {
+  background-color: var(--db-inner-card) !important;
+  color: var(--db-text-secondary) !important;
+  border-color: var(--db-input-border) !important;
+}
+
+.light-theme .friday-admin-container input[type="text"],
+.light-theme .friday-admin-container input[type="search"],
+.light-theme .friday-admin-container select,
+.light-theme .friday-admin-container textarea {
+  background-color: var(--db-input-bg) !important;
+  border: 1px solid var(--db-input-border) !important;
+  color: var(--db-text-main) !important;
+}
+
+.light-theme .friday-admin-container input[type="range"] {
+  background-color: var(--db-input-bg) !important;
+}
+
+.light-theme .friday-admin-container button.bg-slate-900 {
+  background-color: var(--db-card-bg) !important;
+  border-color: var(--db-card-border) !important;
+  color: var(--db-text-main) !important;
+}
+
+.light-theme .friday-admin-container tr {
+  border-bottom-color: var(--db-card-border) !important;
+}
+
+.light-theme .friday-admin-container tr:hover {
+  background-color: var(--db-btn-secondary-hover) !important;
+}
+
+/* Scan / Hologram styling overlay in light theme */
+.light-theme .hologram-scan {
+  background: var(--db-card-bg) !important;
+  border-color: rgba(6, 182, 212, 0.2) !important;
+  color: var(--db-text-main) !important;
+}
+
+.light-theme .hologram-scan::after {
+  background: linear-gradient(
+    rgba(255, 255, 255, 0) 50%, 
+    rgba(6, 182, 212, 0.04) 50%
+  ) !important;
+}
+
+/* Glow colors adjusted for contrast in light mode */
+.light-theme .glow-cyan {
+  color: #0891b2 !important;
+  text-shadow: 0 0 8px rgba(8, 145, 178, 0.2) !important;
+}
+
+.light-theme .glow-purple {
+  color: #7c3aed !important;
+  text-shadow: 0 0 8px rgba(124, 58, 237, 0.2) !important;
+}
+
+.light-theme .glow-emerald {
+  color: #059669 !important;
+  text-shadow: 0 0 8px rgba(5, 150, 105, 0.2) !important;
+}
+
+/* Interactive elements */
+.light-theme .friday-drag-item.dragging {
+  border: 1px dashed rgba(6, 182, 212, 0.5);
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.1);
+}
+
+.light-theme .friday-hud-scanline {
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(6, 182, 212, 0.04) 50%,
+    rgba(6, 182, 212, 0.04)
+  ) !important;
+}
+
+/* ====================================================
+   RESPONSIVE LAYOUT ADJUSTMENTS
+   ==================================================== */
+@media (max-width: 1024px) {
+  .friday-admin-container {
+    padding: 1rem;
+  }
+  
+  .friday-cyber-card {
+    padding: 1.25rem !important;
+  }
+  
+  /* Force grid columns to adapt on medium devices */
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-cols-4,
+  .grid-cols-3,
+  .grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .flex-row-mobile-stack {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+}
+

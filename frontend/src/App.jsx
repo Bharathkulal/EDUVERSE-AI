@@ -27,6 +27,11 @@ import StudentOnboarding from './pages/StudentOnboarding';
 import AIProfile from './pages/AIProfile';
 import QuestionBank from './pages/QuestionBank';
 import AdminQuestions from './pages/admin/AdminQuestions';
+import VoiceAssistant from './pages/VoiceAssistant';
+import AdminApiSettings from './pages/admin/AdminApiSettings';
+import AdminSystemLogs from './pages/admin/AdminSystemLogs';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminAlerts from './pages/admin/AdminAlerts';
 
 function HomeRedirect() {
   const { user, loading, profileCompleted } = useAuth();
@@ -58,6 +63,7 @@ export default function App() {
       <Route path="/ml-analytics" element={<ProtectedRoute><Layout><MLAnalytics /></Layout></ProtectedRoute>} />
       <Route path="/ai-profile" element={<ProtectedRoute><Layout><AIProfile /></Layout></ProtectedRoute>} />
       <Route path="/question-bank" element={<ProtectedRoute><Layout><QuestionBank /></Layout></ProtectedRoute>} />
+      <Route path="/voice-assistant" element={<ProtectedRoute><Layout><VoiceAssistant /></Layout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
 
       <Route path="/admin" element={<ProtectedRoute adminOnly><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
@@ -67,6 +73,10 @@ export default function App() {
       <Route path="/admin/dataset" element={<ProtectedRoute adminOnly><Layout><AdminDataset /></Layout></ProtectedRoute>} />
       <Route path="/admin/ml" element={<ProtectedRoute adminOnly><Layout><AdminML /></Layout></ProtectedRoute>} />
       <Route path="/admin/questions" element={<ProtectedRoute adminOnly><Layout><AdminQuestions /></Layout></ProtectedRoute>} />
+      <Route path="/admin/api-settings" element={<ProtectedRoute adminOnly><Layout><AdminApiSettings /></Layout></ProtectedRoute>} />
+      <Route path="/admin/logs" element={<ProtectedRoute adminOnly><Layout><AdminSystemLogs /></Layout></ProtectedRoute>} />
+      <Route path="/admin/analytics" element={<ProtectedRoute adminOnly><Layout><AdminAnalytics /></Layout></ProtectedRoute>} />
+      <Route path="/admin/alerts" element={<ProtectedRoute adminOnly><Layout><AdminAlerts /></Layout></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

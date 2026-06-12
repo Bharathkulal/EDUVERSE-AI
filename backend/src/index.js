@@ -112,6 +112,104 @@ const db = require('./config/db');
       )
     `);
 
+    // Create API configurations tables
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS api_configurations (
+        provider VARCHAR(100) PRIMARY KEY,
+        api_key TEXT NOT NULL,
+        priority INTEGER NOT NULL DEFAULT 0,
+        status VARCHAR(50) NOT NULL DEFAULT 'Disconnected',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Alert table for new fields
+    await db.query(`
+      ALTER TABLE api_configurations ADD COLUMN IF NOT EXISTS consecutive_failures INTEGER DEFAULT 0;
+      ALTER TABLE api_configurations ADD COLUMN IF NOT EXISTS disabled BOOLEAN DEFAULT false;
+      ALTER TABLE api_configurations ADD COLUMN IF NOT EXISTS cooldown_until TIMESTAMP NULL;
+      ALTER TABLE api_configurations ADD COLUMN IF NOT EXISTS last_used TIMESTAMP NULL;
+    `);
+
+    // Add student control fields to users table
+    await db.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS api_limit INTEGER DEFAULT 100;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS api_used_today INTEGER DEFAULT 0;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS blocked BOOLEAN DEFAULT false;
+    `);
+
+    // Create user_activity_logs table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS user_activity_logs (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        action VARCHAR(100) NOT NULL,
+        module VARCHAR(100) NOT NULL,
+        value TEXT,
+        api_used BOOLEAN DEFAULT false,
+        metadata JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create system_alerts table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS system_alerts (
+        id SERIAL PRIMARY KEY,
+        priority VARCHAR(50) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        status VARCHAR(50) DEFAULT 'Active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create ml_training_jobs table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS ml_training_jobs (
+        id SERIAL PRIMARY KEY,
+        model_version VARCHAR(50) NOT NULL,
+        status VARCHAR(50) DEFAULT 'Idle',
+        dataset_size INTEGER DEFAULT 0,
+        accuracy DECIMAL(5,4) DEFAULT 0.0000,
+        loss DECIMAL(5,4) DEFAULT 0.0000,
+        epochs INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS api_usage_logs (
+        id SERIAL PRIMARY KEY,
+        provider VARCHAR(100) NOT NULL,
+        success BOOLEAN NOT NULL,
+        latency_ms INTEGER NOT NULL,
+        error_message TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS api_audit_logs (
+        id SERIAL PRIMARY KEY,
+        admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        action VARCHAR(100) NOT NULL,
+        provider VARCHAR(100),
+        details TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Seed default providers
+    const providers = ['gemini', 'openrouter', 'groq', 'together', 'deepgram', 'elevenlabs', 'assemblyai', 'azure_speech', 'custom'];
+    for (let i = 0; i < providers.length; i++) {
+      await db.query(`
+        INSERT INTO api_configurations (provider, api_key, priority, status)
+        VALUES ($1, '', $2, 'Disconnected')
+        ON CONFLICT (provider) DO NOTHING
+      `, [providers[i], i + 1]);
+    }
+
     console.log('Database migrations completed successfully.');
   } catch (err) {
     console.error('Error running migrations:', err);
@@ -129,6 +227,9 @@ const mlRoutes = require('./routes/ml');
 const aiRoutes = require('./routes/ai');
 const onboardingRoutes = require('./routes/onboarding');
 const questionBankRoutes = require('./routes/question_bank');
+const fridayRoutes = require('./routes/friday');
+const apiSettingsRoutes = require('./routes/api_settings');
+const adminSystemRoutes = require('./routes/admin_system');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -162,6 +263,9 @@ app.use('/api/ml', mlRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/questions', questionBankRoutes);
+app.use('/api/friday', fridayRoutes);
+app.use('/api/admin/api-settings', apiSettingsRoutes);
+app.use('/api/admin/system', adminSystemRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

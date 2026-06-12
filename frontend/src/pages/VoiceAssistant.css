@@ -1,0 +1,302 @@
+/* Redesigned Premium F.R.I.D.A.Y. Core Stylesheet */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@400;700;900&display=swap');
+
+/* Color variables & System tokens */
+:root {
+  --friday-bg-base: #050816;
+  --friday-bg-mid: #0b1120;
+  --friday-bg-dark: #03050f;
+  --friday-purple: #7c3aed;
+  --friday-blue: #2563eb;
+  --friday-glow: #00d4ff;
+  --friday-text-main: #ffffff;
+  --friday-text-sub: #d1d5db;
+  --friday-card-bg: rgba(255, 255, 255, 0.03);
+  --friday-card-border: rgba(255, 255, 255, 0.07);
+  --friday-glow-purple: rgba(124, 58, 237, 0.35);
+  --friday-glow-blue: rgba(37, 99, 235, 0.35);
+  --friday-glow-cyan: rgba(0, 212, 255, 0.35);
+}
+
+/* Base Page Setup */
+.friday-premium-dashboard {
+  background-color: var(--friday-bg-base);
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(124, 58, 237, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 40%),
+    linear-gradient(to bottom, #050816, #0b1120, #03050f);
+  min-height: calc(100vh - 4.5rem);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--friday-text-main);
+  position: relative;
+  overflow-x: hidden;
+  padding: 1.5rem;
+}
+
+/* Background Grid Overlay & HUD elements */
+.friday-grid-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 30px 30px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.friday-hud-scanline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(to bottom, rgba(0, 212, 255, 0.1) 0%, transparent 100%);
+  animation: hudScan 8s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes hudScan {
+  0% { transform: translateY(-100px); opacity: 0; }
+  10% { opacity: 0.5; }
+  90% { opacity: 0.5; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+/* Sticky HUD Navbar */
+.friday-hud-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(5, 8, 22, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--friday-card-border);
+}
+
+.friday-hud-logo {
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+}
+
+/* Dark Glassmorphism Cards */
+.friday-glass-card {
+  background: var(--friday-card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--friday-card-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.friday-glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+}
+
+.friday-glass-card:hover {
+  border-color: rgba(0, 212, 255, 0.2);
+  box-shadow: 0 12px 40px 0 rgba(0, 212, 255, 0.03),
+              inset 0 0 12px rgba(255, 255, 255, 0.01);
+}
+
+/* Advanced Animated Voice Core Orb */
+.friday-orb-container {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.friday-orb-glow-halo {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  filter: blur(24px);
+  transition: all 0.5s ease;
+  opacity: 0.7;
+}
+
+.friday-orb-glow-halo.idle { background: radial-gradient(circle, var(--friday-glow-blue) 0%, transparent 70%); }
+.friday-orb-glow-halo.listening { background: radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%); }
+.friday-orb-glow-halo.thinking { background: radial-gradient(circle, var(--friday-glow-purple) 0%, transparent 70%); }
+.friday-orb-glow-halo.speaking { background: radial-gradient(circle, var(--friday-glow-cyan) 0%, transparent 70%); }
+
+.friday-orb-ring-outer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 3px solid var(--friday-blue);
+  border-right: 3px solid var(--friday-glow);
+  animation: orbRotateCw 12s linear infinite;
+}
+
+.friday-orb-ring-mid {
+  position: absolute;
+  width: 82%;
+  height: 82%;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  animation: orbRotateCcw 8s linear infinite;
+}
+
+.friday-orb-ring-inner {
+  position: absolute;
+  width: 65%;
+  height: 65%;
+  border-radius: 50%;
+  border: 1px dotted var(--friday-purple);
+  animation: orbRotateCw 5s linear infinite;
+}
+
+.friday-orb-core {
+  position: absolute;
+  width: 45%;
+  height: 45%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.4s ease;
+  cursor: pointer;
+}
+
+.friday-orb-core.idle {
+  background: radial-gradient(circle, #1e3a8a 0%, #050816 100%);
+  box-shadow: 0 0 25px var(--friday-blue), inset 0 0 10px rgba(0, 212, 255, 0.5);
+  border: 2px solid var(--friday-blue);
+  animation: orbBreathe 3s ease-in-out infinite;
+}
+
+.friday-orb-core.listening {
+  background: radial-gradient(circle, #ec4899 0%, #500724 100%);
+  box-shadow: 0 0 35px #ec4899, inset 0 0 10px rgba(255, 255, 255, 0.6);
+  border: 2px solid #ec4899;
+  animation: orbPulseListening 0.8s ease-in-out infinite alternate;
+}
+
+.friday-orb-core.thinking {
+  background: radial-gradient(circle, #6b21a8 0%, #1e1b4b 100%);
+  box-shadow: 0 0 35px var(--friday-purple), inset 0 0 10px rgba(255, 255, 255, 0.4);
+  border: 2px solid var(--friday-purple);
+  animation: orbThinkingRotate 1.5s linear infinite;
+}
+
+.friday-orb-core.speaking {
+  background: radial-gradient(circle, #0891b2 0%, #0c4a6e 100%);
+  box-shadow: 0 0 35px var(--friday-glow), inset 0 0 10px rgba(255, 255, 255, 0.6);
+  border: 2px solid var(--friday-glow);
+  animation: orbPulseSpeaking 0.6s ease-in-out infinite alternate;
+}
+
+/* Keyframes for reactor core */
+@keyframes orbRotateCw {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes orbRotateCcw {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes orbBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes orbPulseListening {
+  0% { transform: scale(0.95); }
+  100% { transform: scale(1.12); }
+}
+
+@keyframes orbPulseSpeaking {
+  0% { transform: scale(0.98); }
+  100% { transform: scale(1.1); }
+}
+
+@keyframes orbThinkingRotate {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.08); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+/* Sound Waves Graphics */
+.friday-pulse-wave-lines {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.friday-pulse-line {
+  width: 3px;
+  background: linear-gradient(to top, var(--friday-purple), var(--friday-glow));
+  border-radius: 4px;
+  height: 6px;
+  transition: all 0.2s ease;
+}
+
+.friday-pulse-wave-lines.active .friday-pulse-line:nth-child(2n) { animation: waveMotion1 0.8s ease-in-out infinite alternate; }
+.friday-pulse-wave-lines.active .friday-pulse-line:nth-child(2n+1) { animation: waveMotion2 1s ease-in-out infinite alternate; }
+
+/* Chat Custom Aesthetics */
+.friday-chat-user-bubble {
+  background: linear-gradient(135deg, var(--friday-purple) 0%, var(--friday-blue) 100%);
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2);
+}
+
+.friday-chat-ai-bubble {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+/* Quick launch hover lift & borders */
+.friday-action-lift-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.friday-action-lift-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--friday-glow);
+  box-shadow: 0 10px 25px rgba(0, 212, 255, 0.1);
+}
+
+/* Circular Dashboard Dial Track */
+.friday-circular-progress-bg {
+  stroke: rgba(255, 255, 255, 0.03);
+}
+
+/* Custom animated stars in background */
+.friday-star {
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+  animation: starBlink 2.5s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes starBlink {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.8; }
+}

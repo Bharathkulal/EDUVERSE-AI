@@ -12,6 +12,7 @@ const studentNav = [
   { path: '/ml-analytics', label: 'ML Insights', icon: '🧠' },
   { path: '/ai-profile', label: 'AI Profile', icon: '👤' },
   { path: '/question-bank', label: 'Question Bank', icon: '❓' },
+  { path: '/voice-assistant', label: 'Voice Assistant', icon: '🎙️' },
   { path: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
@@ -23,6 +24,10 @@ const adminNav = [
   { path: '/admin/dataset', label: 'Dataset', icon: '📁' },
   { path: '/admin/ml', label: 'ML Training', icon: '⚙️' },
   { path: '/admin/questions', label: 'Question Bank', icon: '❓' },
+  { path: '/admin/api-settings', label: 'API Settings', icon: '🔑' },
+  { path: '/admin/logs', label: 'Logs', icon: '📋' },
+  { path: '/admin/analytics', label: 'Analytics', icon: '📈' },
+  { path: '/admin/alerts', label: 'Alerts', icon: '🚨' },
 ];
 
 export default function Layout({ children }) {
