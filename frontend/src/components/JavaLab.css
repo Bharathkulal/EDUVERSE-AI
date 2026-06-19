@@ -1,0 +1,35 @@
+/* ═══════════════════════════════════════════════════════════
+   JavaLab.css — Advanced Java Interactive Learning Hub
+   EduVerse AI | Matches DBMSLab.css structure exactly
+   ═══════════════════════════════════════════════════════════ */
+
+.java-lab {
+  --db-primary: #2563EB;
+  --db-primary-h: #1D4ED8;
+  --db-secondary: #60A5FA;
+  --db-accent: #06B6D4;
+  --db-success: #10B981;
+  --db-warning: #F59E0B;
+  --db-danger: #EF4444;
+  --db-bg: #F8FAFC;
+  --db-card: #FFFFFF;
+  --db-border: #E2E8F0;
+  --db-text: #0F172A;
+  --db-text-muted: #64748B;
+  --db-radius: 24px;
+  --db-radius-sm: 12px;
+
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--db-text);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+[data-theme="dark"] .java-lab {
+  --db-bg: #0B0F19;
+  --db-card: rgba(17, 24, 39, 0.85);
+  --db-border: rgba(255, 255, 255, 0.08);
+  --db-text: #F3F4F6;
+  --db-text-muted: #9CA3AF;
+}
