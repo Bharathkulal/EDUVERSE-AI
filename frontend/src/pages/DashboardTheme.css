@@ -1,86 +1,84 @@
 /* ====================================================
    DASHBOARD DARK & LIGHT THEME VARIABLES
    ==================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-/* Default Theme Tokens (Dark Mode) */
+/* Default Theme Tokens (Dark Mode) - Premium dark SaaS theme */
 :root {
-  --db-bg: #0b0c10;
-  --db-bg-gradient: radial-gradient(at 10% 20%, rgba(10, 38, 19, 0.4) 0px, transparent 50%),
-                     radial-gradient(at 90% 80%, rgba(6, 24, 12, 0.4) 0px, transparent 50%);
-  --db-sidebar-bg: #090a0f;
-  --db-sidebar-border: rgba(255, 255, 255, 0.05);
-  --db-card-bg: #12131a;
-  --db-card-bg-elevated: #161822;
-  --db-card-border: rgba(255, 255, 255, 0.05);
-  --db-card-hover-border: rgba(52, 211, 153, 0.25);
-  --db-text-main: #ffffff;
-  --db-text-secondary: #d1d5db;
-  --db-text-muted: #8b8e99;
-  --db-text-accent: #34d399;
-  --db-text-accent-hover: #6ee7b7;
-  --db-input-bg: rgba(0, 0, 0, 0.25);
-  --db-input-border: rgba(52, 211, 153, 0.2);
-  --db-glass-overlay: rgba(10, 38, 19, 0.35);
-  --db-shadow: rgba(0, 0, 0, 0.5);
-  --db-shadow-sm: rgba(0, 0, 0, 0.3);
-  --db-header-border: rgba(255, 255, 255, 0.05);
-  --db-inner-card: #161822;
-  --db-badge-bg: rgba(52, 211, 153, 0.1);
-  --db-badge-border: rgba(52, 211, 153, 0.25);
-  --db-badge-text: #34d399;
-  --db-chart-grid: rgba(255, 255, 255, 0.03);
-  --db-chart-tooltip-bg: #12131a;
-  --db-btn-secondary-bg: transparent;
-  --db-btn-secondary-hover: rgba(255, 255, 255, 0.04);
-  --db-demo-box-bg: rgba(0, 0, 0, 0.2);
-  --db-demo-box-border: rgba(52, 211, 153, 0.1);
-  --db-prediction-gradient: linear-gradient(135deg, rgba(6, 78, 41, 0.2), transparent);
-  --db-scrollbar-thumb: rgba(52, 211, 153, 0.2);
+  --db-bg: #0F172A;
+  --db-bg-gradient: none;
+  --db-sidebar-bg: #1E293B;
+  --db-sidebar-border: #334155;
+  --db-card-bg: #1E293B;
+  --db-card-bg-elevated: #0F172A;
+  --db-card-border: #334155;
+  --db-card-hover-border: #3B82F6;
+  --db-text-main: #F8FAFC;
+  --db-text-secondary: #E2E8F0;
+  --db-text-muted: #94A3B8;
+  --db-text-accent: #3B82F6;
+  --db-text-accent-hover: #60A5FA;
+  --db-input-bg: #0F172A;
+  --db-input-border: #334155;
+  --db-glass-overlay: rgba(30, 41, 59, 0.95);
+  --db-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  --db-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.15);
+  --db-header-border: #334155;
+  --db-inner-card: #1E293B;
+  --db-badge-bg: rgba(59, 130, 246, 0.15);
+  --db-badge-border: rgba(59, 130, 246, 0.3);
+  --db-badge-text: #60A5FA;
+  --db-chart-grid: rgba(255, 255, 255, 0.05);
+  --db-chart-tooltip-bg: #0F172A;
+  --db-btn-secondary-bg: #1E293B;
+  --db-btn-secondary-hover: #334155;
+  --db-demo-box-bg: #0F172A;
+  --db-demo-box-border: #334155;
+  --db-prediction-gradient: linear-gradient(135deg, rgba(59, 130, 246, 0.15), transparent);
+  --db-scrollbar-thumb: #334155;
   --db-scrollbar-track: transparent;
-  --db-link-color: #34d399;
-  --db-link-hover: #6ee7b7;
-  --db-amber-accent: #fbbf24;
+  --db-link-color: #3B82F6;
+  --db-link-hover: #60A5FA;
+  --db-amber-accent: #F59E0B;
 }
 
-/* Light Theme Tokens */
+/* Light Theme Tokens - Modern EdTech SaaS */
 .light-theme {
-  --db-bg: #f3f6f9;
-  --db-bg-gradient: radial-gradient(at 10% 20%, rgba(52, 211, 153, 0.04) 0px, transparent 50%),
-                     radial-gradient(at 90% 80%, rgba(16, 185, 129, 0.03) 0px, transparent 50%);
-  --db-sidebar-bg: #0f172a;
-  --db-sidebar-border: rgba(255, 255, 255, 0.08);
-  --db-card-bg: #ffffff;
-  --db-card-bg-elevated: #f8fafc;
-  --db-card-border: rgba(0, 0, 0, 0.07);
-  --db-card-hover-border: rgba(16, 185, 129, 0.4);
-  --db-text-main: #0f172a;
+  --db-bg: #F8FAFC;
+  --db-bg-gradient: none;
+  --db-sidebar-bg: #FFFFFF;
+  --db-sidebar-border: #E2E8F0;
+  --db-card-bg: #FFFFFF;
+  --db-card-bg-elevated: #F8FAFC;
+  --db-card-border: #E2E8F0;
+  --db-card-hover-border: #2563EB;
+  --db-text-main: #0F172A;
   --db-text-secondary: #334155;
-  --db-text-muted: #64748b;
-  --db-text-accent: #059669;
-  --db-text-accent-hover: #047857;
-  --db-input-bg: #f1f5f9;
-  --db-input-border: #cbd5e1;
-  --db-glass-overlay: rgba(255, 255, 255, 0.8);
-  --db-shadow: rgba(0, 0, 0, 0.05);
-  --db-shadow-sm: rgba(0, 0, 0, 0.03);
-  --db-header-border: rgba(0, 0, 0, 0.08);
-  --db-inner-card: #f8fafc;
-  --db-badge-bg: rgba(16, 185, 129, 0.08);
-  --db-badge-border: rgba(16, 185, 129, 0.2);
-  --db-badge-text: #059669;
-  --db-chart-grid: rgba(0, 0, 0, 0.04);
-  --db-chart-tooltip-bg: #ffffff;
-  --db-btn-secondary-bg: #f1f5f9;
-  --db-btn-secondary-hover: #e2e8f0;
-  --db-demo-box-bg: #f1f5f9;
-  --db-demo-box-border: rgba(16, 185, 129, 0.15);
-  --db-prediction-gradient: linear-gradient(135deg, rgba(16, 185, 129, 0.06), transparent);
-  --db-scrollbar-thumb: rgba(16, 185, 129, 0.3);
+  --db-text-muted: #64748B;
+  --db-text-accent: #2563EB;
+  --db-text-accent-hover: #1D4ED8;
+  --db-input-bg: #FFFFFF;
+  --db-input-border: #E2E8F0;
+  --db-glass-overlay: rgba(255, 255, 255, 0.95);
+  --db-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+  --db-shadow-sm: 0 2px 10px rgba(15, 23, 42, 0.04);
+  --db-header-border: #E2E8F0;
+  --db-inner-card: #FFFFFF;
+  --db-badge-bg: rgba(37, 99, 235, 0.08);
+  --db-badge-border: rgba(37, 99, 235, 0.2);
+  --db-badge-text: #2563EB;
+  --db-chart-grid: #F1F5F9;
+  --db-chart-tooltip-bg: #FFFFFF;
+  --db-btn-secondary-bg: #FFFFFF;
+  --db-btn-secondary-hover: #F1F5F9;
+  --db-demo-box-bg: #F8FAFC;
+  --db-demo-box-border: #E2E8F0;
+  --db-prediction-gradient: linear-gradient(135deg, rgba(37, 99, 235, 0.06), transparent);
+  --db-scrollbar-thumb: #CBD5E1;
   --db-scrollbar-track: transparent;
-  --db-link-color: #059669;
-  --db-link-hover: #047857;
-  --db-amber-accent: #d97706;
+  --db-link-color: #2563EB;
+  --db-link-hover: #1D4ED8;
+  --db-amber-accent: #D97706;
 }
 
 /* ====================================================
@@ -92,7 +90,7 @@
   background-color: var(--db-bg);
   background-image: var(--db-bg-gradient);
   color: var(--db-text-main);
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   display: flex;
   transition: background-color 0.35s ease, color 0.35s ease;
 }
@@ -122,7 +120,7 @@
   padding: 1.75rem 1.25rem;
   z-index: 100;
   flex-shrink: 0;
-  transition: background 0.35s ease;
+  transition: background 0.35s ease, border-color 0.35s ease;
 }
 
 .db-sidebar-logo {
@@ -130,8 +128,8 @@
   align-items: center;
   gap: 0.75rem;
   font-size: 1.25rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-weight: 800;
+  color: var(--db-text-main);
   margin-bottom: 2.5rem;
   padding-left: 0.5rem;
 }
@@ -139,7 +137,7 @@
 .db-sidebar-logo-icon {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #2dd4a0 0%, #0a2613 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #60A5FA 100%);
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
@@ -147,7 +145,7 @@
   color: #ffffff;
   font-weight: 800;
   font-size: 1.1rem;
-  box-shadow: 0 0 15px rgba(45, 212, 160, 0.25);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 .db-nav-list {
@@ -161,24 +159,36 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  color: #8b8e99;
+  border-radius: 12px;
+  color: var(--db-text-muted);
   font-size: 0.92rem;
   font-weight: 500;
   text-decoration: none;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
   cursor: pointer;
+  position: relative;
 }
 
 .db-nav-item:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.03);
+  color: var(--db-text-accent);
+  background: var(--db-card-bg-elevated);
 }
 
 .db-nav-item.active {
-  color: #34d399;
-  background: rgba(52, 211, 153, 0.08);
+  color: var(--db-text-accent);
+  background: var(--db-badge-bg);
   font-weight: 600;
+}
+
+.db-nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 4px;
+  background-color: var(--db-text-accent);
+  border-radius: 0 4px 4px 0;
 }
 
 .db-nav-icon {
@@ -187,11 +197,11 @@
 }
 
 .db-nav-item.active .db-nav-icon {
-  color: #34d399;
+  color: var(--db-text-accent);
 }
 
 .db-sidebar-footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--db-sidebar-border);
   padding-top: 1.25rem;
   margin-top: auto;
   display: flex;
@@ -210,15 +220,15 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #1f2937;
+  background: var(--db-input-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: var(--db-text-main);
   font-weight: 700;
   font-size: 0.9rem;
   flex-shrink: 0;
-  border: 1px solid rgba(52, 211, 153, 0.25);
+  border: 1.5px solid var(--db-text-accent);
 }
 
 .db-profile-details {
@@ -230,7 +240,7 @@
 .db-profile-name {
   font-size: 0.88rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--db-text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -238,7 +248,7 @@
 
 .db-profile-email {
   font-size: 0.75rem;
-  color: #8b8e99;
+  color: var(--db-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -247,7 +257,7 @@
 .db-settings-btn {
   background: none;
   border: none;
-  color: #8b8e99;
+  color: var(--db-text-muted);
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 0.25rem;
@@ -255,8 +265,8 @@
 }
 
 .db-settings-btn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--db-text-main);
+  background: var(--db-btn-secondary-hover);
 }
 
 /* ====================================================
@@ -333,18 +343,20 @@
 .stat-card {
   background: var(--db-card-bg) !important;
   border: 1px solid var(--db-card-border) !important;
-  border-radius: 0.85rem !important;
+  border-radius: 20px !important;
   padding: 1.5rem !important;
-  box-shadow: 0 4px 25px var(--db-shadow) !important;
-  transition: all 0.3s ease;
+  box-shadow: var(--db-shadow) !important;
+  transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease !important;
   position: relative;
   color: var(--db-text-main) !important;
 }
 
 .db-card:hover,
-.card:hover {
+.card:hover,
+.stat-card:hover {
   border-color: var(--db-card-hover-border) !important;
-  box-shadow: 0 8px 30px var(--db-shadow-sm) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08) !important;
 }
 
 /* Card title hierarchy — preserve accent colors */

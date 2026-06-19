@@ -45,7 +45,9 @@ export default function LoginDrawer({ isOpen, onClose, onOpenRegister }) {
       onClose();
       navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed');
+      const errorMsg = err.response?.data?.message || 
+                       (err.message === 'Network Error' ? 'Could not connect to the backend server. Please make sure the backend is running.' : 'Login failed');
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
+import CSharpLab from '../components/CSharpLab';
 
 export default function SubjectDetail() {
   const { id } = useParams();
@@ -25,6 +26,19 @@ export default function SubjectDetail() {
   };
 
   if (!subject) return <div className="animate-pulse h-96 bg-slate-200 rounded-xl" />;
+
+  // C# gets the interactive lab experience
+  if (subject.subject_name === 'C#') {
+    return (
+      <div>
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px' }}>{subject.subject_name}</h1>
+          <p style={{ color: '#64748B', margin: 0, fontSize: '0.9rem' }}>{subject.description}</p>
+        </div>
+        <CSharpLab />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
