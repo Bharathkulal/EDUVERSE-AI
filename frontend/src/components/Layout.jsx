@@ -32,7 +32,7 @@ const adminNav = [
 
 // All top-level nav paths — back button hidden on these
 const TOP_LEVEL_PATHS = [
-  '/dashboard', '/subjects', '/quizzes', '/coding', '/ai-tutor',
+  '/dashboard', '/subjects', '/quizzes', '/coding', '/dbms-lab', '/ai-tutor',
   '/progress', '/ml-analytics', '/ai-profile', '/question-bank',
   '/voice-assistant', '/settings',
   '/admin', '/admin/students', '/admin/content', '/admin/quizzes',
@@ -58,6 +58,7 @@ export default function Layout({ children }) {
     if (path.startsWith('/subjects/'))   return 'Subject Detail';
     if (path.startsWith('/quizzes/'))    return 'Quiz';
     if (path.startsWith('/admin/'))      return 'Admin';
+    if (path.startsWith('/dbms-lab'))    return 'DBMS Lab';
     return '';
   };
 

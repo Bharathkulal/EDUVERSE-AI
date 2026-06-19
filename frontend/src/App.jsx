@@ -32,6 +32,7 @@ import AdminApiSettings from './pages/admin/AdminApiSettings';
 import AdminSystemLogs from './pages/admin/AdminSystemLogs';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminAlerts from './pages/admin/AdminAlerts';
+import DBMSLab from './components/DBMSLab';
 
 function HomeRedirect() {
   const { user, loading, profileCompleted } = useAuth();
@@ -58,6 +59,7 @@ export default function App() {
       <Route path="/quizzes" element={<ProtectedRoute><Layout><Quizzes /></Layout></ProtectedRoute>} />
       <Route path="/quizzes/:id" element={<ProtectedRoute><Layout><QuizTake /></Layout></ProtectedRoute>} />
       <Route path="/coding" element={<ProtectedRoute><Layout><Coding /></Layout></ProtectedRoute>} />
+      <Route path="/dbms-lab" element={<ProtectedRoute><Layout><DBMSLab /></Layout></ProtectedRoute>} />
       <Route path="/ai-tutor" element={<ProtectedRoute><Layout><AITutor /></Layout></ProtectedRoute>} />
       <Route path="/progress" element={<ProtectedRoute><Layout><Progress /></Layout></ProtectedRoute>} />
       <Route path="/ml-analytics" element={<ProtectedRoute><Layout><MLAnalytics /></Layout></ProtectedRoute>} />
