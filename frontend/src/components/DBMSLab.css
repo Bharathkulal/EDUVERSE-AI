@@ -184,65 +184,79 @@
 .db-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 24px;
+  gap: 28px;
 }
 .db-card-el {
-  background: var(--db-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--db-border);
+  background: #FFFFFF;
   border-radius: var(--db-radius);
-  padding: 24px;
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--db-shadow);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+  border: 1px solid var(--db-border);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
+  height: 380px; /* PowerPoint portrait card height */
+}
+[data-theme="dark"] .db-card-el {
+  background: rgba(17, 24, 39, 0.85);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+.db-card-el::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at 90% 10%, color-mix(in srgb, var(--card-color) 8%, transparent) 0%, transparent 60%);
+  pointer-events: none;
 }
 .db-card-el:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--db-shadow-lg);
-  border-color: var(--db-primary);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.12), 0 1px 10px rgba(0, 0, 0, 0.04);
+  border-color: var(--card-color);
 }
 .db-card-top {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 16px;
+  align-items: center;
+  margin-bottom: 24px;
 }
 .db-card-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+  font-size: 1.5rem;
+  background: color-mix(in srgb, var(--card-color) 12%, transparent) !important;
+  color: var(--card-color) !important;
 }
 .db-card-badge {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 20px;
   text-transform: uppercase;
+  background: color-mix(in srgb, var(--card-color) 12%, transparent) !important;
+  color: var(--card-color) !important;
+  letter-spacing: 0.05em;
 }
-.db-card-badge.beginner { background: rgba(16, 185, 129, 0.1); color: var(--db-success); }
-.db-card-badge.intermediate { background: rgba(245, 158, 11, 0.1); color: var(--db-warning); }
-.db-card-badge.advanced { background: rgba(239, 68, 68, 0.1); color: var(--db-danger); }
 
 .db-card-title {
-  font-size: 1.2rem;
-  font-weight: 750;
-  margin: 0 0 8px 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  margin: 0 0 10px 0;
   color: var(--db-text);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 .db-card-desc {
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   color: var(--db-muted);
-  line-height: 1.5;
-  margin: 0 0 20px 0;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
   flex-grow: 1;
 }
 .db-card-footer {
@@ -250,43 +264,46 @@
   justify-content: space-between;
   align-items: center;
   border-top: 1px solid var(--db-border);
-  padding-top: 16px;
+  padding-top: 20px;
 }
 .db-card-meta {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-.db-meta-item {
-  font-size: 0.78rem;
-  color: var(--db-muted);
-  display: flex;
-  align-items: center;
   gap: 4px;
 }
-.db-card-btn {
-  background: var(--db-primary);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 12px;
-  font-weight: 650;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s;
+.db-meta-item {
+  font-size: 0.8rem;
+  color: var(--db-muted);
   display: flex;
   align-items: center;
   gap: 6px;
+  font-weight: 500;
 }
-.db-card-btn:hover {
-  background: var(--db-primary-h);
-  transform: scale(1.02);
+.db-card-btn {
+  background: var(--card-color) !important;
+  color: #FFFFFF !important;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--card-color) 20%, transparent);
+}
+.db-card-btn:hover:not(:disabled) {
+  transform: scale(1.1) rotate(-45deg);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--card-color) 40%, transparent);
 }
 .db-card-btn:disabled {
-  background: var(--db-border);
-  color: var(--db-muted);
+  background: var(--db-border) !important;
+  color: var(--db-muted) !important;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 /* Circular Progress Ring */
@@ -298,12 +315,12 @@
 .db-progress-ring-bg {
   fill: transparent;
   stroke: var(--db-border);
-  stroke-width: 3;
+  stroke-width: 3.5;
 }
 .db-progress-ring-circle {
   fill: transparent;
-  stroke: var(--db-primary);
-  stroke-width: 3;
+  stroke: var(--card-color) !important;
+  stroke-width: 3.5;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.35s;
   transform: rotate(-90deg);

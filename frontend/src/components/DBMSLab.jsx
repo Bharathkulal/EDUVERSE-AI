@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Database, Table, Key, GitMerge, RefreshCw, Award, Zap,
   Play, Pause, RotateCcw, Eye, Terminal, ArrowLeft, BookOpen,
-  Monitor, Home, ChevronRight, Search
+  Monitor, Home, ArrowRight, Search
 } from 'lucide-react';
 import './DBMSLab.css';
 
@@ -16,7 +16,7 @@ const DBMS_DATA = [
     title: 'Database Basics',
     Icon: Database,
     color: '#2563EB',
-    gradient: 'linear-gradient(135deg, #2563EB, #06B6D4)',
+    gradient: 'linear-gradient(135deg, #FF007F, #7B2CBF)',
     description: 'Understand databases, schemas, tables, fields, and records.',
     difficulty: 'beginner',
     duration: '10 min',
@@ -45,7 +45,7 @@ const DBMS_DATA = [
     title: 'Keys & Constraints',
     Icon: Key,
     color: '#06B6D4',
-    gradient: 'linear-gradient(135deg, #06B6D4, #3B82F6)',
+    gradient: 'linear-gradient(135deg, #00B4D8, #0077B6)',
     description: 'Master Primary Keys, Foreign Keys, Unique constraints, and referential integrity.',
     difficulty: 'intermediate',
     duration: '15 min',
@@ -73,7 +73,7 @@ const DBMS_DATA = [
     title: 'JOIN Lab',
     Icon: GitMerge,
     color: '#60A5FA',
-    gradient: 'linear-gradient(135deg, #60A5FA, #2563EB)',
+    gradient: 'linear-gradient(135deg, #7B2CBF, #3F37C9)',
     description: 'Learn how to combine fields from multiple tables using INNER, LEFT, RIGHT, and FULL JOINs.',
     difficulty: 'intermediate',
     duration: '20 min',
@@ -101,7 +101,7 @@ const DBMS_DATA = [
     title: 'Transaction Simulator',
     Icon: RefreshCw,
     color: '#10B981',
-    gradient: 'linear-gradient(135deg, #10B981, #059669)',
+    gradient: 'linear-gradient(135deg, #4CC9F0, #4895EF)',
     description: 'Explore transactions, ACID properties, commits, and rollbacks step-by-step.',
     difficulty: 'advanced',
     duration: '15 min',
@@ -125,10 +125,10 @@ const DBMS_DATA = [
       }
     ]
   },
-  { id: 'sql-playground', title: 'SQL Playground', Icon: Terminal, color: '#64748B', gradient: 'linear-gradient(135deg, #64748B, #475569)', description: 'Interactive SQL execution arena (Phase 2)', difficulty: 'intermediate', duration: 'Locked', xp: 200, locked: true, topics: [] },
-  { id: 'normalization', title: 'Normalization Studio', Icon: Table, color: '#7C3AED', gradient: 'linear-gradient(135deg, #7C3AED, #EC4899)', description: 'Step-by-step normalization guide (Phase 2)', difficulty: 'advanced', duration: 'Locked', xp: 250, locked: true, topics: [] },
-  { id: 'indexing', title: 'Indexing Explorer', Icon: Search, color: '#F59E0B', gradient: 'linear-gradient(135deg, #F59E0B, #D97706)', description: 'Scan vs B-Tree indexing visuals (Phase 2)', difficulty: 'advanced', duration: 'Locked', xp: 300, locked: true, topics: [] },
-  { id: 'er-builder', title: 'ER Diagram Builder', Icon: Home, color: '#EF4444', gradient: 'linear-gradient(135deg, #EF4444, #B91C1C)', description: 'Interactive React Flow builder (Phase 2)', difficulty: 'intermediate', duration: 'Locked', xp: 200, locked: true, topics: [] }
+  { id: 'sql-playground', title: 'SQL Playground', Icon: Terminal, color: '#64748B', gradient: 'linear-gradient(135deg, #FF4D6D, #C9184A)', description: 'Interactive SQL arena (Phase 2)', difficulty: 'intermediate', duration: 'Locked', xp: 200, locked: true, topics: [] },
+  { id: 'normalization', title: 'Normalization Studio', Icon: Table, color: '#7C3AED', gradient: 'linear-gradient(135deg, #9B5DE5, #F15BB5)', description: 'Step-by-step normalization guide (Phase 2)', difficulty: 'advanced', duration: 'Locked', xp: 250, locked: true, topics: [] },
+  { id: 'indexing', title: 'Indexing Explorer', Icon: Search, color: '#F59E0B', gradient: 'linear-gradient(135deg, #F15BB5, #EEEF20)', description: 'Scan vs B-Tree indexing visuals (Phase 2)', difficulty: 'advanced', duration: 'Locked', xp: 300, locked: true, topics: [] },
+  { id: 'er-builder', title: 'ER Diagram Builder', Icon: Home, color: '#EF4444', gradient: 'linear-gradient(135deg, #FF9F1C, #FF4000)', description: 'Interactive React Flow builder (Phase 2)', difficulty: 'intermediate', duration: 'Locked', xp: 200, locked: true, topics: [] }
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -649,6 +649,7 @@ export default function DBMSLab() {
                   <motion.div
                     key={cat.id}
                     className={`db-card-el ${cat.locked ? 'opacity-70' : ''}`}
+                    style={{ '--card-color': cat.color, '--card-gradient': cat.gradient }}
                     whileTap={cat.locked ? {} : { scale: 0.98 }}
                   >
                     <div className="db-card-top">
@@ -692,9 +693,8 @@ export default function DBMSLab() {
                         className="db-card-btn"
                         onClick={() => openCategory(cat)}
                         disabled={cat.locked}
-                        style={cat.locked ? {} : { background: cat.color }}
                       >
-                        {cat.locked ? 'Coming Soon' : 'Continue'} <ChevronRight size={14} />
+                        <ArrowRight size={20} strokeWidth={2.5} />
                       </button>
                     </div>
                   </motion.div>

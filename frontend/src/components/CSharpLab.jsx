@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Code, Layers, Database, Filter, FolderOpen, Zap,
-  ChevronRight, Play, Pause, RotateCcw, Eye, Terminal,
-  ArrowLeft, BookOpen, Monitor, Home
+  Play, Pause, RotateCcw, Eye, Terminal, ArrowLeft, BookOpen,
+  Monitor, Home, ArrowRight, Search
 } from 'lucide-react';
 import './CSharpLab.css';
 
@@ -13,7 +13,7 @@ import './CSharpLab.css';
 const CSHARP_DATA = [
   {
     id: 'basics', title: 'Basics of C#', Icon: Code,
-    color: '#2563EB', gradient: 'linear-gradient(135deg,#2563EB,#06B6D4)',
+    color: '#FF007F', gradient: 'linear-gradient(135deg, #FF007F, #7B2CBF)',
     description: 'Variables, types, control flow, and methods',
     topics: [
       {
@@ -57,7 +57,7 @@ const CSHARP_DATA = [
   },
   {
     id: 'oop', title: 'OOP in C#', Icon: Layers,
-    color: '#7C3AED', gradient: 'linear-gradient(135deg,#7C3AED,#EC4899)',
+    color: '#7C3AED', gradient: 'linear-gradient(135deg, #7B2CBF, #3F37C9)',
     description: 'Classes, objects, inheritance, polymorphism & abstraction',
     topics: [
       {
@@ -125,7 +125,7 @@ const CSHARP_DATA = [
   },
   {
     id: 'data-structures', title: 'Data Structures', Icon: Database,
-    color: '#059669', gradient: 'linear-gradient(135deg,#059669,#0891B2)',
+    color: '#059669', gradient: 'linear-gradient(135deg, #00B4D8, #0077B6)',
     description: 'Arrays, lists, stacks, queues, and dictionaries',
     topics: [
       {
@@ -169,7 +169,7 @@ const CSHARP_DATA = [
   },
   {
     id: 'linq', title: 'LINQ & Collections', Icon: Filter,
-    color: '#D97706', gradient: 'linear-gradient(135deg,#D97706,#EF4444)',
+    color: '#D97706', gradient: 'linear-gradient(135deg, #FF9F1C, #FF4000)',
     description: 'Query any collection with SQL-like syntax',
     topics: [
       {
@@ -201,7 +201,7 @@ const CSHARP_DATA = [
   },
   {
     id: 'file-handling', title: 'File Handling', Icon: FolderOpen,
-    color: '#0891B2', gradient: 'linear-gradient(135deg,#0891B2,#6366F1)',
+    color: '#0891B2', gradient: 'linear-gradient(135deg, #4CC9F0, #4895EF)',
     description: 'Read, write, and stream files with System.IO',
     topics: [
       {
@@ -232,7 +232,7 @@ const CSHARP_DATA = [
   },
   {
     id: 'async', title: 'Async & Multithreading', Icon: Zap,
-    color: '#DB2777', gradient: 'linear-gradient(135deg,#DB2777,#7C3AED)',
+    color: '#DB2777', gradient: 'linear-gradient(135deg, #FF4D6D, #C9184A)',
     description: 'async/await, Tasks, and parallel programming',
     topics: [
       {
@@ -1070,14 +1070,46 @@ export default function CSharpLab() {
   const [mode,     setMode]     = useState('learn');
   const [step,     setStep]     = useState(0);
   const [playing,  setPlaying]  = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [xp, setXp] = useState(() => Number(localStorage.getItem('csharp_xp') || 0));
+  const [completedTopics, setCompletedTopics] = useState(() => {
+    const saved = localStorage.getItem('csharp_completed_topics');
+    return saved ? JSON.parse(saved) : [];
+  });
 
-  // Auto-play
+  // Calculate stats
+  const totalXP = xp;
+  const streak = 3; // Mocked
+  const totalCompleted = completedTopics.length;
+
+  // Auto-play with progress logging
   useEffect(() => {
-    if (!playing || !topic) return;
-    if (step >= topic.steps - 1) { setPlaying(false); return; }
-    const t = setTimeout(() => setStep(s => s + 1), 1300);
-    return () => clearTimeout(t);
-  }, [playing, step, topic]);
+    let timer = null;
+    if (playing && topic) {
+      timer = setInterval(() => {
+        setStep((currentStep) => {
+          if (currentStep < topic.steps - 1) {
+            return currentStep + 1;
+          } else {
+            setPlaying(false);
+            // Award XP on complete topic
+            if (!completedTopics.includes(topic.id)) {
+              const newCompleted = [...completedTopics, topic.id];
+              setCompletedTopics(newCompleted);
+              localStorage.setItem('csharp_completed_topics', JSON.stringify(newCompleted));
+              const newXP = xp + 100;
+              setXp(newXP);
+              localStorage.setItem('csharp_xp', newXP.toString());
+            }
+            return currentStep;
+          }
+        });
+      }, 2000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [playing, topic, completedTopics, xp]);
 
   const openCategory = useCallback((cat) => {
     setCategory(cat);
@@ -1094,6 +1126,13 @@ export default function CSharpLab() {
 
   const goHome = () => { setLevel('categories'); setCategory(null); setTopic(null); };
   const goTopics = () => { setLevel('topics'); setTopic(null); };
+
+  // Compute circular progress
+  const getCategoryProgress = (cat) => {
+    if (!cat.topics || cat.topics.length === 0) return 0;
+    const completedInCat = cat.topics.filter(t => completedTopics.includes(t.id)).length;
+    return Math.round((completedInCat / cat.topics.length) * 100);
+  };
 
   const sliderProgress = topic ? (step / (topic.steps - 1)) * 100 : 0;
 
@@ -1132,39 +1171,119 @@ export default function CSharpLab() {
         {/* ══════════════════════════════════════════════
             LEVEL 1: CATEGORIES
             ══════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════════
+            LEVEL 1: CATEGORIES
+            ══════════════════════════════════════════════ */}
         {level === 'categories' && (
           <motion.div key="categories" {...pageVariants}>
-            <div className="cs-lab-header">
-              <h1 className="cs-lab-title">⌨ C# Interactive Lab</h1>
-              <p className="cs-lab-subtitle">
-                Choose a module to begin. Visualize concepts, run code, and simulate execution step-by-step.
-              </p>
+            
+            {/* Top Stats bar */}
+            <div className="db-stats-banner">
+              <div className="db-stat-card">
+                <div className="db-stat-icon-wrapper" style={{ background: 'rgba(37, 99, 235, 0.1)', color: 'var(--db-primary)' }}>✨</div>
+                <div className="db-stat-info">
+                  <span className="db-stat-value">{totalXP}</span>
+                  <span className="db-stat-label">Total XP</span>
+                </div>
+              </div>
+              <div className="db-stat-card">
+                <div className="db-stat-icon-wrapper" style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--db-warning)' }}>🔥</div>
+                <div className="db-stat-info">
+                  <span className="db-stat-value">{streak} Days</span>
+                  <span className="db-stat-label">Streak</span>
+                </div>
+              </div>
+              <div className="db-stat-card">
+                <div className="db-stat-icon-wrapper" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--db-success)' }}>🏆</div>
+                <div className="db-stat-info">
+                  <span className="db-stat-value">{totalCompleted}</span>
+                  <span className="db-stat-label">Modules Completed</span>
+                </div>
+              </div>
             </div>
-            <div className="cs-category-grid">
-              {CSHARP_DATA.map((cat, idx) => (
-                <motion.div
-                  key={cat.id}
-                  className="cs-category-card"
-                  style={{ '--card-gradient': cat.gradient, '--card-color': cat.color }}
-                  onClick={() => openCategory(cat)}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0, transition: { delay: idx * 0.07 } }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <div className="cs-category-glow" />
-                  <div className="cs-category-icon">
-                    <cat.Icon size={24} strokeWidth={2} />
-                  </div>
-                  <h3 className="cs-category-title">{cat.title}</h3>
-                  <p className="cs-category-desc">{cat.description}</p>
-                  <div className="cs-category-meta">
-                    <span className="cs-category-count">{cat.topics.length} topics</span>
-                    <span className="cs-category-enter">
-                      Enter Module <ChevronRight size={14} />
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
+
+            <div className="db-header">
+              <div className="db-title-area">
+                <h1>⌨ C# Interactive Laboratory</h1>
+                <p>Choose a module to begin. Visualize concepts, run code, and simulate execution step-by-step.</p>
+              </div>
+              <div className="db-search-bar">
+                <Search size={16} className="db-search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search C# modules..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="db-grid">
+              {CSHARP_DATA.filter(cat => 
+                cat.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                cat.description.toLowerCase().includes(searchQuery.toLowerCase())
+              ).map((cat, idx) => {
+                const progress = getCategoryProgress(cat);
+                const radius = 16;
+                const circumference = 2 * Math.PI * radius;
+                const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+                return (
+                  <motion.div
+                    key={cat.id}
+                    className={`db-card-el ${cat.locked ? 'opacity-70' : ''}`}
+                    style={{ '--card-gradient': cat.gradient, '--card-color': cat.color }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0, transition: { delay: idx * 0.07 } }}
+                    whileTap={cat.locked ? {} : { scale: 0.98 }}
+                  >
+                    <div className="db-card-top">
+                      <div className="db-card-icon">
+                        <cat.Icon size={24} />
+                      </div>
+                      
+                      {!cat.locked && (
+                        <div className="db-progress-ring-container">
+                          <svg width="36" height="36">
+                            <circle className="db-progress-ring-bg" cx="18" cy="18" r={radius} />
+                            <circle
+                              className="db-progress-ring-circle"
+                              cx="18"
+                              cy="18"
+                              r={radius}
+                              strokeDasharray={`${circumference} ${circumference}`}
+                              strokeDashoffset={strokeDashoffset}
+                            />
+                          </svg>
+                          <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '8px', fontWeight: 'bold', color: '#FFFFFF' }}>
+                            {progress}%
+                          </span>
+                        </div>
+                      )}
+
+                      {cat.locked && <span className="db-card-badge advanced">Locked</span>}
+                      {!cat.locked && <span className="db-card-badge beginner">Active</span>}
+                    </div>
+
+                    <h3 className="db-card-title">{cat.title}</h3>
+                    <p className="db-card-desc">{cat.description}</p>
+                    
+                    <div className="db-card-footer">
+                      <div className="db-card-meta">
+                        <span className="db-meta-item">⏱ {cat.topics.length * 5} min</span>
+                        <span className="db-meta-item">💎 {cat.topics.length * 100} XP</span>
+                      </div>
+                      <button
+                        className="db-card-btn"
+                        onClick={() => openCategory(cat)}
+                        disabled={cat.locked}
+                      >
+                        <ArrowRight size={20} strokeWidth={2.5} />
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
         )}
