@@ -127,8 +127,9 @@ export default function SubjectDetail() {
                 whileHover={{ scale: 1.03, y: -5 }}
                 onClick={() => {
                   if (cat.id === 'stack') navigate('/dsa/stack');
+                  if (cat.id === 'queue') navigate('/dsa/queue');
                 }}
-                className={`card-glass cursor-pointer flex flex-col justify-between ${cat.id === 'stack' ? 'ring-2 ring-blue-500 shadow-blue-500/20' : ''}`}
+                className={`card-glass cursor-pointer flex flex-col justify-between ${['stack', 'queue'].includes(cat.id) ? 'ring-2 ring-blue-500 shadow-blue-500/20' : ''}`}
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm">

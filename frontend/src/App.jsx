@@ -14,6 +14,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import Subjects from './pages/Subjects';
 import SubjectDetail from './pages/SubjectDetail';
 import StackVisualization from './pages/StackVisualization';
+import QueueVisualization from './pages/QueueVisualization';
 import ExecutionSimulator from './pages/ExecutionSimulator';
 import Quizzes from './pages/Quizzes';
 import QuizTake from './pages/QuizTake';
@@ -68,6 +69,7 @@ export default function App() {
           
           {/* New Prototype Routes */}
           <Route path="/dsa/stack" element={<ProtectedRoute><StackVisualization /></ProtectedRoute>} />
+          <Route path="/dsa/queue" element={<ProtectedRoute><QueueVisualization /></ProtectedRoute>} />
           <Route path="/dsa/stack/simulator" element={<ProtectedRoute><Layout><ExecutionSimulator /></Layout></ProtectedRoute>} />
 
           <Route path="/quizzes" element={<ProtectedRoute><Layout><Quizzes /></Layout></ProtectedRoute>} />
