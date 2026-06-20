@@ -272,6 +272,8 @@ function cloneTree(node) {
   const n = new TreeNode(node.value);
   n.id = node.id;
   n.height = node.height;
+  n.x = node.x;
+  n.y = node.y;
   n.left = cloneTree(node.left);
   n.right = cloneTree(node.right);
   return n;
@@ -780,21 +782,31 @@ export default function TreeVisualization() {
           {/* SVG Canvas */}
           <div ref={canvasRef} className="flex-1 relative overflow-hidden">
             <svg width="100%" height="100%" className="absolute inset-0">
+              <defs>
+                <filter id="glow-blue" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <filter id="glow-green" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+
               {/* Edges */}
               {edges.map((edge, i) => {
                 const isActive = activeNodeValue === edge.from.value || activeNodeValue === edge.to.value;
                 return (
-                  <motion.line
-                    key={`edge-${i}-${edge.from.id}-${edge.to.id}`}
+                  <line
+                    key={`edge-${edge.from.id}-${edge.to.id}`}
                     x1={edge.from.x}
                     y1={edge.from.y}
                     x2={edge.to.x}
                     y2={edge.to.y}
                     stroke={isActive ? '#2563EB' : '#CBD5E1'}
                     strokeWidth={isActive ? 3 : 2}
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{ duration: 0.5, delay: i * 0.05 }}
+                    strokeLinecap="round"
+                    style={{ transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
                   />
                 );
               })}
@@ -803,60 +815,67 @@ export default function TreeVisualization() {
               {nodes.map((node) => {
                 const style = getNodeStyle(node);
                 const isHovered = hoveredNode === node.value;
+                const isActive = style.glow !== 'none';
                 const r = isHovered ? 26 : 22;
 
                 return (
-                  <motion.g
+                  <g
                     key={node.id}
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{
-                      x: node.x,
-                      y: node.y,
-                      scale: 1,
-                      opacity: 1,
-                    }}
-                    transition={{ type: 'spring', stiffness: 150, damping: 20 }}
+                    transform={`translate(${node.x}, ${node.y})`}
+                    style={{ transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)', cursor: 'pointer' }}
                     onMouseEnter={() => setHoveredNode(node.value)}
                     onMouseLeave={() => setHoveredNode(null)}
-                    style={{ cursor: 'pointer' }}
                   >
-                    {/* Glow ring */}
-                    {(style.glow !== 'none') && (
-                      <motion.circle
-                        r={r + 6}
+                    {/* Glow ring for active nodes */}
+                    {isActive && (
+                      <circle
+                        r={r + 8}
                         fill="none"
                         stroke={style.border}
                         strokeWidth="2"
-                        opacity={0.3}
-                        animate={{ r: [r + 4, r + 8, r + 4] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
+                        opacity="0.25"
+                        className="tree-glow-ring"
                       />
                     )}
+
+                    {/* Outer shadow circle */}
+                    <circle
+                      r={r + 1}
+                      fill="none"
+                      stroke={style.border}
+                      strokeWidth="1"
+                      opacity="0.15"
+                    />
+
                     {/* Main circle */}
                     <circle
                       r={r}
                       fill={style.bg}
                       stroke={style.border}
                       strokeWidth="2.5"
+                      filter={isActive ? 'url(#glow-blue)' : 'none'}
+                      style={{ transition: 'all 0.3s ease' }}
                     />
+
                     {/* Value text */}
                     <text
                       textAnchor="middle"
                       dominantBaseline="central"
                       fill={style.text}
-                      fontSize="13"
+                      fontSize="14"
                       fontWeight="800"
                       fontFamily="Inter, system-ui, sans-serif"
+                      style={{ pointerEvents: 'none' }}
                     >
                       {node.value}
                     </text>
 
                     {/* Hover tooltip */}
                     {isHovered && (
-                      <g>
-                        <rect x={-55} y={-58} width={110} height={30} rx={8} fill="#1E293B" opacity={0.95} />
-                        <text x={0} y={-40} textAnchor="middle" fill="white" fontSize="9" fontWeight="600" fontFamily="Inter, system-ui, sans-serif">
-                          val={node.value} h={node.height} bf={getBalance(node)}
+                      <g style={{ pointerEvents: 'none' }}>
+                        <rect x={-60} y={-56} width={120} height={28} rx={8} fill="#1E293B" opacity={0.95} />
+                        <text x={0} y={-39} textAnchor="middle" fill="white" fontSize="10" fontWeight="600" fontFamily="Inter, system-ui, sans-serif">
+                          val={node.value}  h={node.height}  bf={getBalance(node)}
                         </text>
                       </g>
                     )}
@@ -864,14 +883,25 @@ export default function TreeVisualization() {
                     {/* ROOT label */}
                     {treeRoot && node.value === treeRoot.value && (
                       <g>
-                        <rect x={-18} y={-r - 20} width={36} height={14} rx={4} fill="#2563EB" />
-                        <text x={0} y={-r - 11} textAnchor="middle" fill="white" fontSize="8" fontWeight="800" fontFamily="Inter, system-ui, sans-serif">ROOT</text>
+                        <rect x={-20} y={-r - 22} width={40} height={16} rx={5} fill="#2563EB" />
+                        <text x={0} y={-r - 12} textAnchor="middle" fill="white" fontSize="9" fontWeight="800" fontFamily="Inter, system-ui, sans-serif">ROOT</text>
                       </g>
                     )}
-                  </motion.g>
+                  </g>
                 );
               })}
             </svg>
+
+            {/* CSS for glow animation */}
+            <style>{`
+              .tree-glow-ring {
+                animation: treeGlowPulse 1.5s ease-in-out infinite;
+              }
+              @keyframes treeGlowPulse {
+                0%, 100% { r: ${22 + 6}; opacity: 0.2; }
+                50% { r: ${22 + 12}; opacity: 0.35; }
+              }
+            `}</style>
 
             {/* Empty state */}
             {nodes.length === 0 && (
