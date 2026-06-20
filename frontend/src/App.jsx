@@ -67,7 +67,7 @@ export default function App() {
           <Route path="/subjects/:id" element={<ProtectedRoute><Layout><SubjectDetail /></Layout></ProtectedRoute>} />
           
           {/* New Prototype Routes */}
-          <Route path="/dsa/stack" element={<ProtectedRoute><Layout><StackVisualization /></Layout></ProtectedRoute>} />
+          <Route path="/dsa/stack" element={<ProtectedRoute><StackVisualization /></ProtectedRoute>} />
           <Route path="/dsa/stack/simulator" element={<ProtectedRoute><Layout><ExecutionSimulator /></Layout></ProtectedRoute>} />
 
           <Route path="/quizzes" element={<ProtectedRoute><Layout><Quizzes /></Layout></ProtectedRoute>} />

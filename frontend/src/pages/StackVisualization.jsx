@@ -1,131 +1,448 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Play, Info } from 'lucide-react';
+import { 
+  ArrowLeft, ArrowRightToLine, ArrowUpFromLine, Eye, 
+  Trash2, XCircle, ChevronRight, Zap, Info, ShieldAlert,
+  Play, RotateCcw
+} from 'lucide-react';
+
+const MAX_CAPACITY = 6;
 
 export default function StackVisualization() {
   const navigate = useNavigate();
-  const [stack, setStack] = useState(['Arrays', 'Linked List']);
-  const [actionLabel, setActionLabel] = useState(null);
+  
+  // State
+  const [stack, setStack] = useState([]); // array of objects {id, value}
+  const [inputValue, setInputValue] = useState('');
+  const [history, setHistory] = useState([]);
+  const [speed, setSpeed] = useState(1);
+  const [mode, setMode] = useState('Learn');
+  const [activeLine, setActiveLine] = useState(null); // For code highlighting
+  
+  // Animation states
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [overflow, setOverflow] = useState(false);
+  const [underflow, setUnderflow] = useState(false);
+  const [peekIndex, setPeekIndex] = useState(null);
 
-  const pushItem = () => {
-    if (stack.length >= 6) return;
-    const items = ['Trees', 'Graphs', 'HashMaps', 'Heaps', 'Tries'];
-    const next = items[stack.length % items.length];
-    setStack([...stack, next]);
-    setActionLabel('PUSH');
-    setTimeout(() => setActionLabel(null), 1000);
+  // Focus ref for input
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const addHistory = (action) => {
+    setHistory(prev => [action, ...prev].slice(0, 4));
   };
 
-  const popItem = () => {
-    if (stack.length === 0) return;
-    setStack(stack.slice(0, -1));
-    setActionLabel('POP');
-    setTimeout(() => setActionLabel(null), 1000);
+  const getDuration = (base) => base / speed;
+
+  // Operations
+  const handlePush = async () => {
+    if (isAnimating) return;
+    
+    setIsAnimating(true);
+    setActiveLine('push_check');
+    
+    await new Promise(r => setTimeout(r, getDuration(400)));
+
+    if (stack.length >= MAX_CAPACITY) {
+      setActiveLine('push_overflow');
+      setOverflow(true);
+      addHistory(`Push(${inputValue}) - Failed (Overflow)`);
+      setTimeout(() => {
+        setOverflow(false);
+        setIsAnimating(false);
+        setActiveLine(null);
+      }, getDuration(1000));
+      return;
+    }
+
+    setActiveLine('push_execute');
+    let newValue = parseInt(inputValue, 10);
+    if (isNaN(newValue)) {
+      newValue = Math.floor(Math.random() * 100) + 1; // Auto generate
+    }
+    const newId = Date.now();
+    
+    // Simulate animation delay
+    setTimeout(() => {
+      setStack(prev => [...prev, { id: newId, value: newValue }]);
+      addHistory(`Push(${newValue})`);
+      setInputValue('');
+      inputRef.current?.focus();
+      setIsAnimating(false);
+      setActiveLine(null);
+    }, getDuration(800));
+  };
+
+  const handlePop = async () => {
+    if (isAnimating) return;
+    
+    setIsAnimating(true);
+    setActiveLine('pop_check');
+    
+    await new Promise(r => setTimeout(r, getDuration(400)));
+
+    if (stack.length === 0) {
+      setActiveLine('pop_underflow');
+      setUnderflow(true);
+      addHistory(`Pop() - Failed (Underflow)`);
+      setTimeout(() => {
+        setUnderflow(false);
+        setIsAnimating(false);
+        setActiveLine(null);
+      }, getDuration(1000));
+      return;
+    }
+
+    setActiveLine('pop_execute');
+    // Pre-animation state (glow red, move up) is handled by framer-motion exit props
+    const poppedValue = stack[stack.length - 1].value;
+    
+    setTimeout(() => {
+      setStack(prev => prev.slice(0, -1));
+      addHistory(`Pop() -> ${poppedValue}`);
+      setIsAnimating(false);
+      setActiveLine(null);
+    }, getDuration(800)); // allow exit animation to play
+  };
+
+  const handlePeek = async () => {
+    if (isAnimating) return;
+    
+    setIsAnimating(true);
+    setActiveLine('peek');
+    
+    if (stack.length > 0) {
+      setPeekIndex(stack.length - 1);
+      addHistory(`Peek() -> ${stack[stack.length - 1].value}`);
+    } else {
+      addHistory(`Peek() -> Empty`);
+    }
+
+    setTimeout(() => {
+      setPeekIndex(null);
+      setIsAnimating(false);
+      setActiveLine(null);
+    }, getDuration(1500));
+  };
+
+  const handleClear = () => {
+    setStack([]);
+    addHistory('Clear()');
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handlePush();
+    }
+  };
+
+  // UI Components
+  const renderCode = () => {
+    const lines = [
+      { id: 'def', text: '#define MAX 6\n\nint stack[MAX];\nint top = -1;\n' },
+      { id: 'push_def', text: 'void push(int value) {' },
+      { id: 'push_check', text: '    if (top == MAX - 1) {' },
+      { id: 'push_overflow', text: '        printf("Stack Overflow");\n        return;\n    }' },
+      { id: 'push_execute', text: '\n    top++;\n    stack[top] = value;\n}\n' },
+      { id: 'pop_def', text: 'int pop() {' },
+      { id: 'pop_check', text: '    if (top == -1) {' },
+      { id: 'pop_underflow', text: '        printf("Stack Underflow");\n        return -1;\n    }' },
+      { id: 'pop_execute', text: '\n    return stack[top--];\n}\n' },
+      { id: 'peek', text: 'int peek() {\n    return stack[top];\n}' }
+    ];
+
+    return (
+      <pre className="font-mono text-sm leading-relaxed text-slate-800 bg-white/50 p-6 rounded-xl border border-slate-200 overflow-hidden shadow-inner h-full">
+        <code>
+          {lines.map((line) => (
+            <div 
+              key={line.id} 
+              className={`transition-colors duration-300 px-2 rounded ${activeLine === line.id ? 'bg-blue-100 text-blue-900 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}`}
+            >
+              {line.text}
+            </div>
+          ))}
+        </code>
+      </pre>
+    );
   };
 
   return (
-    <div className="min-h-screen p-6 md:p-10 flex flex-col">
-      <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => navigate('/subjects/dsa')} className="p-2 bg-white rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition">
+    <div className="h-screen w-full overflow-hidden bg-[#F8FAFC] flex flex-col font-sans">
+      
+      {/* HEADER BREADCRUMB - 64px */}
+      <header className="h-16 shrink-0 bg-white border-b border-slate-200 flex items-center px-8 shadow-sm relative z-10">
+        <button onClick={() => navigate(-1)} className="mr-4 p-2 hover:bg-slate-100 rounded-full transition">
           <ArrowLeft className="w-5 h-5 text-slate-600" />
         </button>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Stack (LIFO)</h1>
-          <p className="text-sm text-slate-500">Data Structures Module</p>
+        <div className="flex items-center text-sm font-medium text-slate-500 gap-2">
+          <span>Home</span> <ChevronRight className="w-4 h-4" />
+          <span>Subjects</span> <ChevronRight className="w-4 h-4" />
+          <span>DSA</span> <ChevronRight className="w-4 h-4" />
+          <span className="text-blue-600 font-bold">Stack</span> <ChevronRight className="w-4 h-4 text-slate-400" />
+          <span className="text-slate-800">Operations</span>
         </div>
-      </div>
+      </header>
 
-      <div className="grid lg:grid-cols-2 gap-10 flex-1">
-        {/* Left: Explanation */}
-        <div className="flex flex-col gap-6">
-          <div className="card-glass border-blue-100 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <Info className="w-20 h-20 text-blue-500" />
+      {/* MAIN CONTENT - 100vh - 64px */}
+      <main className="flex-1 p-5 gap-5 flex h-[calc(100vh-64px)] max-w-[1920px] mx-auto w-full">
+        
+        {/* ==========================================
+            LEFT PANEL: CONTROLS (25%)
+        =========================================== */}
+        <div className="w-1/4 min-w-[300px] h-full bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg p-6 flex flex-col justify-between">
+          
+          <div>
+            <div className="mb-6">
+              <h2 className="text-2xl font-extrabold text-[#0F172A] flex items-center gap-2">
+                <Zap className="w-6 h-6 text-blue-500" /> Try With My Value
+              </h2>
+              <p className="text-[#64748B] text-sm mt-1">Experiment with your own values and watch Stack operations live.</p>
             </div>
-            <h2 className="text-xl font-bold text-slate-800 mb-4">How it works</h2>
-            <p className="text-slate-600 leading-relaxed mb-4">
-              A Stack is a linear data structure that follows the <strong>Last In, First Out (LIFO)</strong> principle. 
-              The last element added is the first one to be removed.
-            </p>
-            <div className="space-y-3">
-              <div className="bg-white/50 p-3 rounded-lg border border-slate-100 flex gap-3 items-start">
-                <span className="font-mono text-sm font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded">Push()</span>
-                <span className="text-sm text-slate-600">Adds an element to the top of the stack.</span>
-              </div>
-              <div className="bg-white/50 p-3 rounded-lg border border-slate-100 flex gap-3 items-start">
-                <span className="font-mono text-sm font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded">Pop()</span>
-                <span className="text-sm text-slate-600">Removes the top element from the stack.</span>
-              </div>
-            </div>
-          </div>
 
-          <div className="card-glass flex-1 flex flex-col justify-center items-center gap-6">
-            <h3 className="text-lg font-bold text-slate-800">Ready to write code?</h3>
-            <p className="text-slate-500 text-center max-w-sm">Test your understanding by writing and running actual Stack implementations.</p>
-            <button 
-              onClick={() => navigate('/dsa/stack/simulator')}
-              className="btn-primary w-full max-w-xs flex items-center justify-center gap-2"
-            >
-              <Play className="w-5 h-5" /> Try Example Simulator
-            </button>
-          </div>
-        </div>
-
-        {/* Right: Visualization */}
-        <div className="card-glass bg-slate-50/50 flex flex-col items-center justify-center py-12 relative min-h-[500px]">
-          {/* Action indicator animation */}
-          <AnimatePresence>
-            {actionLabel && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.5, y: -20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 1.5 }}
-                className={`absolute top-10 font-black text-4xl uppercase tracking-widest ${actionLabel === 'PUSH' ? 'text-blue-500/20' : 'text-red-500/20'}`}
+            {/* Input Card */}
+            <div className="bg-[#F8FAFC] p-4 rounded-2xl border border-slate-200 mb-6 shadow-inner">
+              <input 
+                ref={inputRef}
+                type="number"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Auto-value or type..."
+                className="w-full text-center text-2xl font-bold bg-white border-2 border-slate-200 rounded-xl py-4 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all text-slate-800 placeholder-slate-300"
+              />
+              <div className="flex justify-center gap-2 mt-4">
+                {[10, 20, 50, 100].map(val => (
+                  <button 
+                    key={val} 
+                    onClick={() => { setInputValue(val.toString()); inputRef.current?.focus(); }}
+                    className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:border-blue-400 hover:text-blue-600 transition shadow-sm"
+                  >
+                    [{val}]
+                  </button>
+                ))}
+              </div>
+              <button 
+                onClick={handlePush}
+                disabled={isAnimating}
+                className="w-full mt-4 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-slate-300 text-white font-bold text-lg py-3 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
               >
-                {actionLabel}
+                Push {inputValue ? `(${inputValue})` : '(Auto)'} 
+                <span className="text-xs bg-blue-400 text-white px-2 py-1 rounded-md ml-2 flex items-center">↵ Enter</span>
+              </button>
+            </div>
+
+            {/* Operation Buttons */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <button onClick={handlePop} disabled={isAnimating} className="flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-[#EF4444] border border-red-200 font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
+                <ArrowUpFromLine className="w-5 h-5" /> Pop
+              </button>
+              <button onClick={handlePeek} disabled={isAnimating} className="flex items-center justify-center gap-2 bg-purple-50 hover:bg-purple-100 text-purple-600 border border-purple-200 font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
+                <Eye className="w-5 h-5" /> Peek
+              </button>
+              <button disabled className="flex items-center justify-center gap-2 bg-slate-50 border border-slate-200 text-slate-600 font-bold py-3 rounded-xl opacity-70">
+                IsEmpty
+              </button>
+              <button disabled className="flex items-center justify-center gap-2 bg-slate-50 border border-slate-200 text-slate-600 font-bold py-3 rounded-xl opacity-70">
+                IsFull
+              </button>
+              <button onClick={handleClear} disabled={isAnimating} className="col-span-2 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
+                <Trash2 className="w-5 h-5" /> Clear
+              </button>
+            </div>
+          </div>
+
+          {/* Bottom Info: Speed & History */}
+          <div>
+            <div className="flex justify-between items-center bg-slate-100 p-1 rounded-xl mb-4">
+              {[0.5, 1, 2].map(s => (
+                <button 
+                  key={s} 
+                  onClick={() => setSpeed(s)}
+                  className={`flex-1 py-1 text-sm font-bold rounded-lg transition-all ${speed === s ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  {s}×
+                </button>
+              ))}
+            </div>
+            
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 h-32 overflow-hidden flex flex-col">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Recent History</h4>
+              <div className="flex-1 flex flex-col gap-1">
+                <AnimatePresence>
+                  {history.map((h, i) => (
+                    <motion.div 
+                      key={i + h} 
+                      initial={{ opacity: 0, x: -10 }} 
+                      animate={{ opacity: i === 0 ? 1 : 0.6, x: 0 }} 
+                      className={`text-sm font-mono ${i === 0 ? 'text-slate-800 font-bold' : 'text-slate-500'}`}
+                    >
+                      &gt; {h}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        {/* ==========================================
+            CENTER PANEL: VISUALIZATION (40%)
+        =========================================== */}
+        <div className="w-[40%] h-full bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg flex flex-col relative overflow-hidden">
+          
+          {/* Header Stats */}
+          <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-10">
+            <div className="bg-white/80 backdrop-blur border border-slate-200 px-4 py-2 rounded-xl shadow-sm flex items-center gap-2">
+              <span className="font-bold text-slate-700">Elements:</span> 
+              <span className="font-mono text-lg font-black text-blue-600">{stack.length} / {MAX_CAPACITY}</span>
+            </div>
+            <div className="flex gap-2">
+              {['Learn', 'Practice', 'Challenge'].map(m => (
+                <button 
+                  key={m} onClick={() => setMode(m)}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition ${mode === m ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Underflow / Overflow Alerts */}
+          <AnimatePresence>
+            {overflow && (
+              <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="absolute top-20 left-1/2 -translate-x-1/2 bg-red-100 border border-red-300 text-red-700 font-bold px-6 py-2 rounded-full shadow-lg z-50 flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5" /> Stack Overflow!
+              </motion.div>
+            )}
+            {underflow && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-orange-100 border border-orange-300 text-orange-700 font-bold px-6 py-2 rounded-full shadow-lg z-50 flex items-center gap-2">
+                <Info className="w-5 h-5" /> Stack Underflow!
               </motion.div>
             )}
           </AnimatePresence>
 
-          <div className="w-64 h-96 border-b-4 border-l-4 border-r-4 border-slate-300 rounded-b-xl relative flex flex-col justify-end p-2 gap-2 bg-white shadow-inner">
-            <AnimatePresence>
-              {stack.map((item, index) => (
-                <motion.div
-                  key={item}
-                  initial={{ opacity: 0, y: -50, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: 50, scale: 0.9 }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                  className={`w-full h-14 rounded-lg flex items-center justify-center font-bold text-white shadow-md relative
-                    ${index === stack.length - 1 ? 'bg-gradient-to-r from-blue-500 to-indigo-500 ring-4 ring-blue-200' : 'bg-slate-400'}`}
-                >
-                  {item}
-                  {index === stack.length - 1 && (
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="absolute -left-20 text-blue-600 font-bold flex items-center gap-2"
-                    >
-                      TOP <ArrowLeft className="w-4 h-4" />
-                    </motion.div>
-                  )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-            {stack.length === 0 && <div className="text-center text-slate-400 font-medium py-4">Stack is empty</div>}
-          </div>
+          {/* Hero Stack Container */}
+          <div className="flex-1 flex flex-col items-center justify-end pb-6 pt-16">
+            
+            {/* The Stack structure */}
+            <motion.div 
+              animate={underflow ? { x: [-10, 10, -10, 10, 0] } : {}}
+              transition={{ duration: 0.4 }}
+              className={`relative w-64 h-[350px] border-b-8 border-l-8 border-r-8 rounded-b-2xl flex flex-col-reverse justify-start p-2 gap-2 bg-[#F8FAFC] shadow-inner transition-colors duration-300
+                ${overflow ? 'border-red-400 bg-red-50' : underflow ? 'border-orange-400 bg-orange-50' : 'border-slate-300'}`
+              }
+            >
+              {/* Empty placehoder slots */}
+              <div className="absolute inset-0 flex flex-col justify-end p-2 gap-2 z-0 pointer-events-none">
+                {Array.from({ length: MAX_CAPACITY }).map((_, i) => (
+                  <div key={`empty-${i}`} className="w-full h-12 border-2 border-dashed border-slate-200 rounded-xl" />
+                ))}
+              </div>
 
-          <div className="flex gap-4 mt-12">
-            <button onClick={popItem} disabled={stack.length===0} className="btn-secondary w-32 border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 font-bold tracking-wide">
-              POP
-            </button>
-            <button onClick={pushItem} disabled={stack.length>=6} className="btn-primary w-32 bg-blue-600 font-bold tracking-wide">
-              PUSH
-            </button>
+              {/* TOP Pointer */}
+              <motion.div 
+                animate={{ y: `calc(-${(stack.length * (48 + 8))}px)` }} // 48px height + 8px gap
+                transition={{ type: "spring", stiffness: 100, damping: 15 }}
+                className="absolute -left-28 bottom-4 flex items-center gap-2 text-blue-600 font-black tracking-widest z-20"
+              >
+                TOP <ArrowRightToLine className="w-6 h-6" />
+              </motion.div>
+
+              {/* Stack Elements */}
+              <div className="relative z-10 flex flex-col-reverse justify-start gap-2 w-full h-full">
+                <AnimatePresence initial={false}>
+                  {stack.map((item, index) => {
+                    const isTop = index === stack.length - 1;
+                    const isPeeking = peekIndex === index;
+
+                    return (
+                      <motion.div
+                        key={item.id}
+                        layout
+                        initial={{ opacity: 0, y: -200, scale: 0.5 }}
+                        animate={{ 
+                          opacity: 1, 
+                          y: 0, 
+                          scale: isPeeking ? 1.05 : 1,
+                          boxShadow: isPeeking ? '0 0 20px rgba(96, 165, 250, 0.8)' : '0 4px 6px rgba(0,0,0,0.1)'
+                        }}
+                        exit={{ opacity: 0, y: -50, scale: 1.1, rotateZ: 5, backgroundColor: '#EF4444' }}
+                        transition={{ 
+                          duration: getDuration(0.5), 
+                          layout: { type: "spring", stiffness: 200, damping: 20 }
+                        }}
+                        className={`w-full h-12 rounded-xl flex items-center justify-center font-black text-xl text-white relative shadow-lg shrink-0
+                          ${isTop ? 'bg-gradient-to-r from-[#2563EB] to-[#60A5FA] ring-4 ring-blue-300 ring-offset-2' : 'bg-slate-500'}`}
+                      >
+                        {item.value}
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+
+            </motion.div>
+            
+            <div className="mt-4 mb-4 text-slate-400 font-bold tracking-widest text-xl">BOTTOM</div>
+
+            {/* Explanation Section Moved Here */}
+            <div className="w-full max-w-sm bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-slate-700 rounded-[20px] shadow-xl p-5 text-white flex flex-col relative overflow-hidden shrink-0">
+              <h3 className="text-xs font-bold text-blue-400 mb-2 flex items-center gap-2 relative z-10 uppercase tracking-widest">
+                <Info className="w-4 h-4" /> Step-by-Step Explanation
+              </h3>
+              <div className="flex-1 flex items-center relative z-10 min-h-[50px]">
+                <AnimatePresence mode="wait">
+                  <motion.p 
+                    key={activeLine || 'default'}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="text-[15px] text-slate-200 leading-relaxed font-medium"
+                  >
+                    {activeLine === 'push_check' && "Step 1: First, we check if the stack is completely full. We can't add a new number if there is no space left!"}
+                    {activeLine === 'push_overflow' && "Oops! The stack is completely full. We cannot add this number."}
+                    {activeLine === 'push_execute' && "Step 2: There is space! We move the 'TOP' arrow up by one and place the new number in that slot."}
+                    {activeLine === 'pop_check' && "Step 1: First, we check if the stack is empty. We can't remove anything from an empty stack!"}
+                    {activeLine === 'pop_underflow' && "Oops! The stack is empty. There is nothing to remove."}
+                    {activeLine === 'pop_execute' && "Step 2: We take the top number out, and then move the 'TOP' arrow down by one."}
+                    {activeLine === 'peek' && "We are just looking at the top number without actually removing it."}
+                    {!activeLine && "Click 'Push' or 'Pop' on the left to see how the stack works step-by-step!"}
+                  </motion.p>
+                </AnimatePresence>
+              </div>
+            </div>
+
           </div>
         </div>
-      </div>
+
+
+        {/* ==========================================
+            RIGHT PANEL: CODE (35%)
+        =========================================== */}
+        <div className="w-[35%] h-full flex flex-col gap-5">
+          
+          {/* C Code Section */}
+          <div className="flex-1 bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg p-6 flex flex-col">
+            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <Code2 className="w-5 h-5 text-emerald-500" /> Live C Implementation
+            </h3>
+            {renderCode()}
+          </div>
+
+        </div>
+
+      </main>
     </div>
   );
 }
+
+// Ensure icons used in render are imported
+import { Code2, Terminal } from 'lucide-react';
