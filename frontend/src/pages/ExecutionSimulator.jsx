@@ -133,7 +133,7 @@ export default function ExecutionSimulator() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                   >
-                    > {out}
+                    &gt; {out}
                   </motion.div>
                 ))}
               </AnimatePresence>

@@ -35,7 +35,7 @@ export default function StudentDashboard() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/50 backdrop-blur-md p-6 rounded-[24px] border border-white shadow-sm"
+        className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 card-glass p-6 rounded-[24px] shadow-sm"
       >
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Good Morning, {user?.name?.split(' ')[0] || 'Student'}! ☀️</h1>

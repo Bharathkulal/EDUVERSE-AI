@@ -5,41 +5,49 @@
 
 /* Default Theme Tokens (Dark Mode) - Premium dark SaaS theme */
 :root {
-  --db-bg: #0F172A;
+  --db-bg: #000000;
   --db-bg-gradient: none;
-  --db-sidebar-bg: #1E293B;
-  --db-sidebar-border: #334155;
-  --db-card-bg: #1E293B;
-  --db-card-bg-elevated: #0F172A;
-  --db-card-border: #334155;
-  --db-card-hover-border: #3B82F6;
-  --db-text-main: #F8FAFC;
-  --db-text-secondary: #E2E8F0;
-  --db-text-muted: #94A3B8;
-  --db-text-accent: #3B82F6;
-  --db-text-accent-hover: #60A5FA;
-  --db-input-bg: #0F172A;
-  --db-input-border: #334155;
-  --db-glass-overlay: rgba(30, 41, 59, 0.95);
-  --db-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  --db-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.15);
-  --db-header-border: #334155;
-  --db-inner-card: #1E293B;
-  --db-badge-bg: rgba(59, 130, 246, 0.15);
-  --db-badge-border: rgba(59, 130, 246, 0.3);
-  --db-badge-text: #60A5FA;
-  --db-chart-grid: rgba(255, 255, 255, 0.05);
-  --db-chart-tooltip-bg: #0F172A;
-  --db-btn-secondary-bg: #1E293B;
-  --db-btn-secondary-hover: #334155;
-  --db-demo-box-bg: #0F172A;
-  --db-demo-box-border: #334155;
-  --db-prediction-gradient: linear-gradient(135deg, rgba(59, 130, 246, 0.15), transparent);
-  --db-scrollbar-thumb: #334155;
+  --db-sidebar-bg: #000000;
+  --db-sidebar-border: #111111;
+  --db-card-bg: #000000;
+  --db-card-bg-elevated: #09090b;
+  --db-card-border: #1f1f1f;
+  --db-card-hover-border: #3f3f46;
+  --db-text-main: #fafafa;
+  --db-text-secondary: #d4d4d8;
+  --db-text-muted: #71717a;
+  --db-text-accent: #ffffff;
+  --db-text-accent-hover: #a1a1aa;
+  --db-input-bg: #09090b;
+  --db-input-border: #27272a;
+  --db-glass-overlay: rgba(0, 0, 0, 0.85);
+  --db-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
+  --db-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.5);
+  --db-header-border: #111111;
+  --db-inner-card: #09090b;
+  --db-badge-bg: rgba(255, 255, 255, 0.08);
+  --db-badge-border: rgba(255, 255, 255, 0.15);
+  --db-badge-text: #ffffff;
+  --db-chart-grid: rgba(255, 255, 255, 0.03);
+  --db-chart-tooltip-bg: #09090b;
+  --db-btn-secondary-bg: #09090b;
+  --db-btn-secondary-hover: #18181b;
+  --db-demo-box-bg: #09090b;
+  --db-demo-box-border: #27272a;
+  --db-prediction-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent);
+  --db-scrollbar-thumb: #27272a;
   --db-scrollbar-track: transparent;
-  --db-link-color: #3B82F6;
-  --db-link-hover: #60A5FA;
-  --db-amber-accent: #F59E0B;
+  --db-link-color: #ffffff;
+  --db-link-hover: #a1a1aa;
+  --db-amber-accent: #f59e0b;
+  
+  /* Vercel-style Theme Toggle (Dark Theme) */
+  --db-toggle-bg: #000000;
+  --db-toggle-border: #27272a;
+  --db-toggle-color: #a1a1aa;
+  --db-toggle-hover-bg: #18181b;
+  --db-toggle-hover-border: #52525b;
+  --db-toggle-hover-color: #ffffff;
 }
 
 /* Light Theme Tokens - Modern EdTech SaaS */
@@ -79,6 +87,14 @@
   --db-link-color: #2563EB;
   --db-link-hover: #1D4ED8;
   --db-amber-accent: #D97706;
+  
+  /* Vercel-style Theme Toggle (Light Theme) */
+  --db-toggle-bg: #ffffff;
+  --db-toggle-border: #e2e8f0;
+  --db-toggle-color: #666666;
+  --db-toggle-hover-bg: #f8fafc;
+  --db-toggle-hover-border: #94a3b8;
+  --db-toggle-hover-color: #000000;
 }
 
 /* ====================================================
@@ -314,25 +330,30 @@
 /* ====================================================
    THEME TOGGLE BUTTON
    ==================================================== */
+/* ====================================================
+   THEME TOGGLE BUTTON (Vercel Style)
+   ==================================================== */
 .db-theme-toggle {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 1px solid var(--db-card-border);
-  background: var(--db-card-bg);
-  color: var(--db-text-accent);
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--db-toggle-border);
+  background: var(--db-toggle-bg);
+  color: var(--db-toggle-color);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 10px var(--db-shadow);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--db-shadow-sm);
 }
 
 .db-theme-toggle:hover {
-  border-color: var(--db-card-hover-border);
-  transform: scale(1.08) rotate(15deg);
-  box-shadow: 0 4px 16px var(--db-shadow);
+  background: var(--db-toggle-hover-bg);
+  border-color: var(--db-toggle-hover-border);
+  color: var(--db-toggle-hover-color);
+  transform: translateY(-1px);
+  box-shadow: var(--db-shadow);
 }
 
 /* ====================================================
@@ -340,7 +361,8 @@
    ==================================================== */
 .db-card,
 .card,
-.stat-card {
+.stat-card,
+.card-glass {
   background: var(--db-card-bg) !important;
   border: 1px solid var(--db-card-border) !important;
   border-radius: 20px !important;
@@ -353,7 +375,8 @@
 
 .db-card:hover,
 .card:hover,
-.stat-card:hover {
+.stat-card:hover,
+.card-glass:hover {
   border-color: var(--db-card-hover-border) !important;
   transform: translateY(-2px) !important;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08) !important;

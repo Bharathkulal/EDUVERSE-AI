@@ -4,7 +4,7 @@ import api from '../api/axios';
 
 const subjectIcons = {
   FOC: '🔢', Java: '☕', 'Advanced Java': '⚡', DSA: '🌳', 'C#': '🔷',
-  DBMS: '🗄️', Python: '🐍', 'Web Development': '🌐',
+  DBMS: '🗄️', Python: '🐍', 'Web Development': '🌐', Mathematics: '🧮',
 };
 
 const subjectBlobColors = {
@@ -16,6 +16,7 @@ const subjectBlobColors = {
   DBMS: 'blob-dbms',
   Python: 'blob-python',
   'Web Development': 'blob-webdev',
+  Mathematics: 'blob-python',
 };
 
 export default function Subjects() {
@@ -32,6 +33,16 @@ export default function Subjects() {
             seen.add(item.subject_name);
             uniqueSubjects.push(item);
           }
+        }
+        // Inject Mathematics for prototype if not present
+        if (!uniqueSubjects.find(s => s.subject_name === 'Mathematics')) {
+          uniqueSubjects.push({
+            id: 'math-proto',
+            subject_name: 'Mathematics',
+            description: 'Advanced numerical methods and calculus execution engines.',
+            topic_count: 3,
+            unit_count: 1
+          });
         }
         setSubjects(uniqueSubjects);
         setLoading(false);
