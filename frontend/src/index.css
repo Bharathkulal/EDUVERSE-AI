@@ -4,24 +4,46 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply bg-gradient-to-br from-[#F8FAFF] to-[#EAF2FF] text-slate-900 antialiased min-h-screen bg-fixed;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50;
+    @apply bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-medium px-5 py-2.5 rounded-xl transition-all shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] disabled:opacity-50 hover:scale-[1.02];
   }
   .btn-secondary {
-    @apply bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium px-4 py-2 rounded-lg transition-colors;
+    @apply bg-white/80 backdrop-blur-md border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium px-5 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-md hover:scale-[1.02];
   }
   .card {
     @apply bg-white rounded-xl shadow-sm border border-slate-200 p-6;
   }
+  .card-glass {
+    @apply bg-white/60 backdrop-blur-[16px] border border-white/50 rounded-[20px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all;
+  }
   .input-field {
-    @apply w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition;
+    @apply w-full px-4 py-3 border border-slate-200 bg-white/80 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-[#2563EB]/50 focus:border-[#2563EB] outline-none transition-all shadow-sm;
   }
   .stat-card {
     @apply card flex flex-col gap-1;
   }
+}
+
+@keyframes bg-loop {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.bg-loop {
+  background-size: 200% 200%;
+  animation: bg-loop 8s ease infinite;
+}
+
+@keyframes brain-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 2px rgba(37,99,235,0.2)); }
+  50% { opacity: 0.9; transform: scale(1.05); filter: drop-shadow(0 0 10px rgba(96,165,250,0.6)); }
+}
+.animate-brain-pulse {
+  animation: brain-pulse 2s ease-in-out infinite;
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import '../pages/DashboardTheme.css';
 
@@ -307,8 +308,17 @@ export default function Layout({ children }) {
           </div>
         </header>
 
-        <main className="db-content-body">
-          {children}
+        <main className="db-content-body overflow-hidden">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
+            className="w-full h-full"
+          >
+            {children}
+          </motion.div>
         </main>
       </div>
     </div>
