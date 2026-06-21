@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, ChevronRight, Zap, Play, Pause, SkipForward, RotateCcw,
+  ArrowLeft, ChevronRight, Zap, Play, Pause, SkipForward, SkipBack, RotateCcw,
   Plus, Minus, Search, Trash2, Code2, Cpu, Database, Info, GitMerge,
   ToggleLeft, ToggleRight, Layers
 } from 'lucide-react';
@@ -323,6 +323,13 @@ export default function TreeVisualization() {
   // History log
   const [history, setHistory] = useState([]);
 
+  // Pending tree root (applied after animation completes)
+  const [pendingTreeRoot, setPendingTreeRoot] = useState(null);
+
+  // Auto-mode: continuously insert random values
+  const [autoMode, setAutoMode] = useState(false);
+  const autoModeRef = useRef(false);
+
   // Resize observer for canvas
   useEffect(() => {
     const el = canvasRef.current;
@@ -346,33 +353,77 @@ export default function TreeVisualization() {
 
   // Seed initial tree
   useEffect(() => {
-    let root = null;
-    const vals = [50, 30, 70, 20, 40, 60, 80];
-    for (const v of vals) {
-      root = bstInsert(root, v, [], treeType);
-    }
-    assignPositions(root, canvasSize.w, canvasSize.h);
-    setTreeRoot(root);
-    setHistory([{ msg: 'Tree initialized with [50,30,70,20,40,60,80]', time: Date.now() }]);
+    setTreeRoot(null);
+    setHistory([{ msg: 'Tree initialized (Empty)', time: Date.now() }]);
   }, [treeType]);
 
   // Playback
   useEffect(() => {
-    if (isPlaying && animSteps.length > 0) {
-      playRef.current = setInterval(() => {
-        setCurrentStep(prev => {
-          if (prev >= animSteps.length - 1) {
-            setIsPlaying(false);
-            return prev;
-          }
-          return prev + 1;
-        });
-      }, 1200 / speed);
+    if (isPlaying) {
+      if (animSteps.length > 0) {
+        playRef.current = setInterval(() => {
+          setCurrentStep(prev => {
+            if (prev >= animSteps.length - 1) {
+              setIsPlaying(false);
+              return prev;
+            }
+            return prev + 1;
+          });
+        }, 1200 / speed);
+      } else if (traversalOrder.length > 0) {
+        playRef.current = setInterval(() => {
+          setTraversalIndex(prev => {
+            if (prev >= traversalOrder.length - 1) {
+              setIsPlaying(false);
+              return prev;
+            }
+            return prev + 1;
+          });
+        }, 800 / speed);
+      }
     } else {
       clearInterval(playRef.current);
     }
     return () => clearInterval(playRef.current);
-  }, [isPlaying, animSteps, speed]);
+  }, [isPlaying, animSteps, traversalOrder, speed]);
+
+  // Keep autoModeRef in sync
+  useEffect(() => {
+    autoModeRef.current = autoMode;
+  }, [autoMode]);
+
+  // Commit pending tree when animation finishes, then chain next auto-insert
+  useEffect(() => {
+    if (!isPlaying && pendingTreeRoot && animSteps.length > 0 && currentStep >= animSteps.length - 1) {
+      const newRoot = pendingTreeRoot.root;
+      const msg = pendingTreeRoot.msg;
+      setTreeRoot(newRoot);
+      addHistory(msg);
+      setPendingTreeRoot(null);
+
+      // If auto-mode is on, queue the next random insert after a short delay
+      if (autoModeRef.current) {
+        setTimeout(() => {
+          if (!autoModeRef.current) return;
+          const val = Math.floor(Math.random() * 99) + 1;
+          const steps = [];
+          steps.push({ type: 'start', message: `Insert ${val} into ${treeType.toUpperCase()} tree.` });
+          const nextRoot = bstInsert(cloneTree(newRoot), val, steps, treeType);
+          steps.push({ type: 'done', message: `Insert operation complete.` });
+          assignPositions(nextRoot, canvasSize.w, canvasSize.h);
+          setAnimSteps(steps);
+          setCurrentStep(0);
+          setIsPlaying(true);
+          setFoundNode(null);
+          setDeletedNode(null);
+          setHighlightedNodes(new Set());
+          setTraversalOrder([]);
+          setTraversalIndex(-1);
+          setPendingTreeRoot({ root: nextRoot, msg: `Inserted ${val}` });
+        }, 600);
+      }
+    }
+  }, [isPlaying, pendingTreeRoot, animSteps, currentStep, treeType, canvasSize]);
 
   // Process current step highlight
   useEffect(() => {
@@ -418,9 +469,15 @@ export default function TreeVisualization() {
   const addHistory = (msg) => setHistory(prev => [{ msg, time: Date.now() }, ...prev].slice(0, 8));
 
   // ─── Operations ────────────────────────────────────────────────
-  const handleInsert = useCallback(() => {
-    const val = parseInt(inputValue);
-    if (isNaN(val)) return;
+  const doInsert = useCallback((overrideVal) => {
+    let val = overrideVal;
+    if (val === undefined || val === null) {
+      val = parseInt(inputValue);
+    }
+    if (isNaN(val)) {
+      // Auto-generate a random value between 1 and 99
+      val = Math.floor(Math.random() * 99) + 1;
+    }
     const steps = [];
     steps.push({ type: 'start', message: `Insert ${val} into ${treeType.toUpperCase()} tree.` });
     const newRoot = bstInsert(cloneTree(treeRoot), val, steps, treeType);
@@ -434,13 +491,13 @@ export default function TreeVisualization() {
     setHighlightedNodes(new Set());
     setTraversalOrder([]);
     setTraversalIndex(-1);
-    // Delay setting the final tree so animation plays
-    setTimeout(() => {
-      setTreeRoot(newRoot);
-      addHistory(`Inserted ${val}`);
-    }, (steps.length * 1200) / speed);
+    setPendingTreeRoot({ root: newRoot, msg: `Inserted ${val}` });
     setInputValue('');
   }, [inputValue, treeRoot, treeType, canvasSize, speed]);
+
+  const handleInsert = useCallback(() => {
+    doInsert();
+  }, [doInsert]);
 
   const handleDelete = useCallback(() => {
     const val = parseInt(inputValue);
@@ -458,10 +515,7 @@ export default function TreeVisualization() {
     setHighlightedNodes(new Set());
     setTraversalOrder([]);
     setTraversalIndex(-1);
-    setTimeout(() => {
-      setTreeRoot(newRoot);
-      addHistory(`Deleted ${val}`);
-    }, (steps.length * 1200) / speed);
+    setPendingTreeRoot({ root: newRoot, msg: `Deleted ${val}` });
     setInputValue('');
   }, [inputValue, treeRoot, treeType, canvasSize, speed]);
 
@@ -489,6 +543,7 @@ export default function TreeVisualization() {
     setAnimSteps([]);
     setCurrentStep(-1);
     setIsPlaying(false);
+    setAutoMode(false);
     setHighlightedNodes(new Set());
     setActiveNodeValue(null);
     setFoundNode(null);
@@ -496,21 +551,15 @@ export default function TreeVisualization() {
     setTraversalOrder([]);
     setTraversalIndex(-1);
     setCallStack([]);
-    setTimeout(() => {
-      let root = null;
-      const vals = [50, 30, 70, 20, 40, 60, 80];
-      for (const v of vals) root = bstInsert(root, v, [], treeType);
-      assignPositions(root, canvasSize.w, canvasSize.h);
-      setTreeRoot(root);
-      addHistory('Tree reset');
-    }, 100);
+    setPendingTreeRoot(null);
+    addHistory('Tree cleared');
   };
 
   const handleTraversal = () => {
     if (!treeRoot) return;
     const order = getTraversalOrder(treeRoot, traversalType);
     setTraversalOrder(order);
-    setTraversalIndex(-1);
+    setTraversalIndex(0);
     setHighlightedNodes(new Set());
     setActiveNodeValue(null);
     setFoundNode(null);
@@ -518,16 +567,59 @@ export default function TreeVisualization() {
     setAnimSteps([]);
     setCurrentStep(-1);
     addHistory(`${traversalType.charAt(0).toUpperCase() + traversalType.slice(1)} traversal`);
-    // Auto-play traversal
-    let idx = 0;
-    const interval = setInterval(() => {
-      if (idx >= order.length) {
-        clearInterval(interval);
-        return;
-      }
-      setTraversalIndex(idx);
-      idx++;
-    }, 800 / speed);
+    setIsPlaying(true);
+  };
+
+  const handlePlayPause = () => {
+    if (isPlaying || autoMode) {
+      // Pause everything
+      setIsPlaying(false);
+      setAutoMode(false);
+      return;
+    }
+    // If no animation is queued, start auto-mode (continuous random inserts)
+    if (animSteps.length === 0 && traversalOrder.length === 0) {
+      setAutoMode(true);
+      doInsert(NaN); // First random insert kicks off the chain
+      return;
+    }
+    // Resume existing animation
+    setIsPlaying(true);
+  };
+  
+  const handleNext = () => {
+    setIsPlaying(false);
+    if (animSteps.length > 0) {
+      if (currentStep < animSteps.length - 1) setCurrentStep(currentStep + 1);
+    } else if (traversalOrder.length > 0) {
+      if (traversalIndex < traversalOrder.length - 1) setTraversalIndex(traversalIndex + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    setIsPlaying(false);
+    if (animSteps.length > 0) {
+      if (currentStep > 0) setCurrentStep(currentStep - 1);
+    } else if (traversalOrder.length > 0) {
+      if (traversalIndex > 0) setTraversalIndex(traversalIndex - 1);
+    }
+  };
+
+  const handleAnimReset = () => {
+    setIsPlaying(false);
+    setAutoMode(false);
+    setAnimSteps([]);
+    setCurrentStep(-1);
+    setTreeRoot(null);
+    setPendingTreeRoot(null);
+    setHighlightedNodes(new Set());
+    setActiveNodeValue(null);
+    setFoundNode(null);
+    setDeletedNode(null);
+    setTraversalOrder([]);
+    setTraversalIndex(-1);
+    setCallStack([]);
+    addHistory('Restarted — tree cleared');
   };
 
   const handleKeyDown = (e) => {
@@ -701,6 +793,25 @@ export default function TreeVisualization() {
               >
                 <Play className="w-3.5 h-3.5 fill-current" /> Run Traversal
               </button>
+            </div>
+
+            {/* Playback Controls */}
+            <div className="border-t border-slate-200 pt-4 space-y-3">
+              <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">Execution Debugger</label>
+              <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-200 gap-1">
+                <button onClick={handleAnimReset} className="p-2 hover:bg-slate-200 rounded-lg transition text-slate-500 hover:text-slate-800" title="Reset Step">
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+                <button onClick={handlePrev} className="p-2 hover:bg-slate-200 rounded-lg transition text-slate-500 hover:text-slate-800" title="Previous Step">
+                  <SkipBack className="w-4 h-4" />
+                </button>
+                <button onClick={handlePlayPause} className="p-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition" title={isPlaying ? "Pause" : "Play"}>
+                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
+                </button>
+                <button onClick={handleNext} className="p-2 hover:bg-slate-200 rounded-lg transition text-slate-500 hover:text-slate-800" title="Next Step">
+                  <SkipForward className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Speed */}
