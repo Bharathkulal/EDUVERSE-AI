@@ -141,8 +141,9 @@ export default function SubjectDetail() {
                   if (cat.id === 'queue') navigate('/dsa/queue');
                   if (cat.id === 'linked-list') navigate('/dsa/linked-list');
                   if (cat.id === 'tree') navigate('/dsa/tree');
+                  if (cat.id === 'graph') navigate('/dsa/graph');
                 }}
-                className={`card-glass cursor-pointer flex flex-col justify-between ${['stack', 'queue', 'linked-list', 'tree'].includes(cat.id) ? 'ring-2 ring-blue-500 shadow-blue-500/20' : ''}`}
+                className={`card-glass cursor-pointer flex flex-col justify-between ${['stack', 'queue', 'linked-list', 'tree', 'graph'].includes(cat.id) ? 'ring-2 ring-blue-500 shadow-blue-500/20' : ''}`}
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm">

@@ -18,6 +18,7 @@ import QueueVisualization from './pages/QueueVisualization';
 import MathVisualization from './pages/MathVisualization';
 import LinkedListVisualization from './pages/LinkedListVisualization';
 import TreeVisualization from './pages/TreeVisualization';
+import GraphVisualization from './pages/GraphVisualization';
 import ExecutionSimulator from './pages/ExecutionSimulator';
 import Quizzes from './pages/Quizzes';
 import QuizTake from './pages/QuizTake';
@@ -76,6 +77,7 @@ export default function App() {
           <Route path="/dsa/queue" element={<ProtectedRoute><QueueVisualization /></ProtectedRoute>} />
           <Route path="/dsa/linked-list" element={<ProtectedRoute><LinkedListVisualization /></ProtectedRoute>} />
           <Route path="/dsa/tree" element={<ProtectedRoute><TreeVisualization /></ProtectedRoute>} />
+          <Route path="/dsa/graph" element={<ProtectedRoute><GraphVisualization /></ProtectedRoute>} />
           <Route path="/mathematics/numerical-methods" element={<ProtectedRoute><MathVisualization /></ProtectedRoute>} />
           <Route path="/dsa/stack/simulator" element={<ProtectedRoute><Layout><ExecutionSimulator /></Layout></ProtectedRoute>} />
 
