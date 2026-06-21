@@ -7,6 +7,7 @@ import '../pages/DashboardTheme.css';
 const studentNav = [
   { path: '/dashboard', label: 'Dashboard', icon: '⚡' },
   { path: '/subjects', label: 'Subjects', icon: '📚' },
+  { path: '/practice-hub', label: 'Practice Hub', icon: '🧪' },
   { path: '/quizzes', label: 'Quizzes', icon: '📝' },
   { path: '/coding', label: 'Coding Labs', icon: '💻' },
   { path: '/progress', label: 'Progress Reports', icon: '📊' },
@@ -33,7 +34,7 @@ const adminNav = [
 
 // All top-level nav paths — back button hidden on these
 const TOP_LEVEL_PATHS = [
-  '/dashboard', '/subjects', '/quizzes', '/coding', '/dbms-lab', '/ai-tutor',
+  '/dashboard', '/subjects', '/practice-hub', '/quizzes', '/coding', '/dbms-lab', '/ai-tutor',
   '/progress', '/ml-analytics', '/ai-profile', '/question-bank',
   '/voice-assistant', '/settings',
   '/admin', '/admin/students', '/admin/content', '/admin/quizzes',

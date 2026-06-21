@@ -26,6 +26,7 @@ import AITutor from './pages/AITutor';
 import Progress from './pages/Progress';
 import MLAnalytics from './pages/MLAnalytics';
 import Settings from './pages/Settings';
+import PracticeHub from './pages/PracticeHub';
 import AdminStudents from './pages/admin/AdminStudents';
 import AdminContent from './pages/admin/AdminContent';
 import AdminQuizzes from './pages/admin/AdminQuizzes';
@@ -77,6 +78,8 @@ export default function App() {
           <Route path="/dsa/tree" element={<ProtectedRoute><TreeVisualization /></ProtectedRoute>} />
           <Route path="/mathematics/numerical-methods" element={<ProtectedRoute><MathVisualization /></ProtectedRoute>} />
           <Route path="/dsa/stack/simulator" element={<ProtectedRoute><Layout><ExecutionSimulator /></Layout></ProtectedRoute>} />
+
+          <Route path="/practice-hub" element={<ProtectedRoute><Layout><PracticeHub /></Layout></ProtectedRoute>} />
 
           <Route path="/quizzes" element={<ProtectedRoute><Layout><Quizzes /></Layout></ProtectedRoute>} />
           <Route path="/quizzes/:id" element={<ProtectedRoute><Layout><QuizTake /></Layout></ProtectedRoute>} />
