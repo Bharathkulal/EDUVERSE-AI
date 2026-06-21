@@ -4,6 +4,9 @@ export default {
   theme: {
     extend: {
       colors: {
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        'hero-sub': 'hsl(var(--hero-sub))',
         primary: {
           50: '#eef2ff',
           100: '#e0e7ff',
@@ -18,7 +21,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Geist Sans', 'Inter', 'system-ui', 'sans-serif'],
+        headline: ['General Sans', 'sans-serif'],
       },
     },
   },
