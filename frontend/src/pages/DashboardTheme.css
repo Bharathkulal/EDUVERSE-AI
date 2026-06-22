@@ -4,97 +4,98 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* Default Theme Tokens (Dark Mode) - Premium dark SaaS theme */
-:root {
-  --db-bg: #000000;
-  --db-bg-gradient: none;
-  --db-sidebar-bg: #000000;
-  --db-sidebar-border: #111111;
-  --db-card-bg: #000000;
-  --db-card-bg-elevated: #09090b;
-  --db-card-border: #1f1f1f;
-  --db-card-hover-border: #3f3f46;
-  --db-text-main: #fafafa;
-  --db-text-secondary: #d4d4d8;
-  --db-text-muted: #71717a;
-  --db-text-accent: #ffffff;
-  --db-text-accent-hover: #a1a1aa;
-  --db-input-bg: #09090b;
-  --db-input-border: #27272a;
-  --db-glass-overlay: rgba(0, 0, 0, 0.85);
-  --db-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
-  --db-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.5);
-  --db-header-border: #111111;
-  --db-inner-card: #09090b;
+:root, .dark-theme {
+  --db-bg: #0F172A;
+  --db-bg-gradient: linear-gradient(135deg, #0F172A 0%, #020617 100%);
+  --db-sidebar-bg: #111827;
+  --db-sidebar-border: rgba(255, 255, 255, 0.08);
+  --db-card-bg: #111827;
+  --db-card-bg-elevated: #1E293B;
+  --db-card-border: rgba(255, 255, 255, 0.08);
+  --db-card-hover-border: rgba(255, 255, 255, 0.15);
+  --db-text-main: #F8FAFC;
+  --db-text-secondary: #CBD5E1;
+  --db-text-muted: #94A3B8;
+  --db-text-accent: #3B82F6;
+  --db-text-accent-hover: #60A5FA;
+  --db-input-bg: #1E293B;
+  --db-input-border: rgba(255, 255, 255, 0.08);
+  --db-glass-overlay: rgba(17, 24, 39, 0.85);
+  --db-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --db-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.20);
+  --db-header-border: rgba(255, 255, 255, 0.08);
+  --db-inner-card: #1E293B;
   --db-badge-bg: rgba(255, 255, 255, 0.08);
   --db-badge-border: rgba(255, 255, 255, 0.15);
   --db-badge-text: #ffffff;
-  --db-chart-grid: rgba(255, 255, 255, 0.03);
+  --db-chart-grid: rgba(255, 255, 255, 0.05);
   --db-chart-tooltip-bg: #09090b;
-  --db-btn-secondary-bg: #09090b;
-  --db-btn-secondary-hover: #18181b;
-  --db-demo-box-bg: #09090b;
-  --db-demo-box-border: #27272a;
+  --db-btn-secondary-bg: #1E293B;
+  --db-btn-secondary-hover: #334155;
+  --db-demo-box-bg: #1E293B;
+  --db-demo-box-border: rgba(255, 255, 255, 0.08);
   --db-prediction-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent);
-  --db-scrollbar-thumb: #27272a;
+  --db-scrollbar-thumb: #334155;
   --db-scrollbar-track: transparent;
-  --db-link-color: #ffffff;
-  --db-link-hover: #a1a1aa;
+  --db-link-color: #3B82F6;
+  --db-link-hover: #60A5FA;
   --db-amber-accent: #f59e0b;
+  --db-transition: all 300ms ease-in-out;
   
-  /* Vercel-style Theme Toggle (Dark Theme) */
-  --db-toggle-bg: #000000;
-  --db-toggle-border: #27272a;
-  --db-toggle-color: #a1a1aa;
-  --db-toggle-hover-bg: #18181b;
-  --db-toggle-hover-border: #52525b;
-  --db-toggle-hover-color: #ffffff;
+  /* Theme Toggle (Dark Theme) */
+  --db-toggle-bg: #1E293B;
+  --db-toggle-border: rgba(255, 255, 255, 0.08);
+  --db-toggle-color: #CBD5E1;
+  --db-toggle-hover-bg: #334155;
+  --db-toggle-hover-border: rgba(255, 255, 255, 0.15);
+  --db-toggle-hover-color: #F8FAFC;
 }
 
-/* Light Theme Tokens - Modern EdTech SaaS */
+/* Light Theme Tokens - PowerPoint × Notion × Apple Education */
 .light-theme {
   --db-bg: #F8FAFC;
-  --db-bg-gradient: none;
+  --db-bg-gradient: linear-gradient(135deg, #F8FAFC 0%, #EEF2FF 100%);
   --db-sidebar-bg: #FFFFFF;
-  --db-sidebar-border: #E2E8F0;
+  --db-sidebar-border: #E8ECF4;
   --db-card-bg: #FFFFFF;
   --db-card-bg-elevated: #F8FAFC;
-  --db-card-border: #E2E8F0;
-  --db-card-hover-border: #2563EB;
-  --db-text-main: #0F172A;
-  --db-text-secondary: #334155;
-  --db-text-muted: #64748B;
-  --db-text-accent: #2563EB;
-  --db-text-accent-hover: #1D4ED8;
+  --db-card-border: #E8ECF4;
+  --db-card-hover-border: #3B82F6;
+  --db-text-main: #111827;
+  --db-text-secondary: #6B7280;
+  --db-text-muted: #8E98A8;
+  --db-text-accent: #3B82F6;
+  --db-text-accent-hover: #2563EB;
   --db-input-bg: #FFFFFF;
-  --db-input-border: #E2E8F0;
+  --db-input-border: #E8ECF4;
   --db-glass-overlay: rgba(255, 255, 255, 0.95);
-  --db-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
-  --db-shadow-sm: 0 2px 10px rgba(15, 23, 42, 0.04);
-  --db-header-border: #E2E8F0;
+  --db-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+  --db-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.03);
+  --db-header-border: #E8ECF4;
   --db-inner-card: #FFFFFF;
-  --db-badge-bg: rgba(37, 99, 235, 0.08);
-  --db-badge-border: rgba(37, 99, 235, 0.2);
-  --db-badge-text: #2563EB;
-  --db-chart-grid: #F1F5F9;
+  --db-badge-bg: rgba(59, 130, 246, 0.08);
+  --db-badge-border: rgba(59, 130, 246, 0.2);
+  --db-badge-text: #3B82F6;
+  --db-chart-grid: #EEF2FF;
   --db-chart-tooltip-bg: #FFFFFF;
   --db-btn-secondary-bg: #FFFFFF;
-  --db-btn-secondary-hover: #F1F5F9;
+  --db-btn-secondary-hover: #F8FAFC;
   --db-demo-box-bg: #F8FAFC;
-  --db-demo-box-border: #E2E8F0;
-  --db-prediction-gradient: linear-gradient(135deg, rgba(37, 99, 235, 0.06), transparent);
-  --db-scrollbar-thumb: #CBD5E1;
+  --db-demo-box-border: #E8ECF4;
+  --db-prediction-gradient: linear-gradient(135deg, rgba(59, 130, 246, 0.06), transparent);
+  --db-scrollbar-thumb: #E8ECF4;
   --db-scrollbar-track: transparent;
-  --db-link-color: #2563EB;
-  --db-link-hover: #1D4ED8;
-  --db-amber-accent: #D97706;
+  --db-link-color: #3B82F6;
+  --db-link-hover: #2563EB;
+  --db-amber-accent: #F59E0B;
   
-  /* Vercel-style Theme Toggle (Light Theme) */
-  --db-toggle-bg: #ffffff;
-  --db-toggle-border: #e2e8f0;
-  --db-toggle-color: #666666;
-  --db-toggle-hover-bg: #f8fafc;
-  --db-toggle-hover-border: #94a3b8;
-  --db-toggle-hover-color: #000000;
+  /* Theme Toggle (Light Theme) */
+  --db-toggle-bg: #FFFFFF;
+  --db-toggle-border: #E8ECF4;
+  --db-toggle-color: #6B7280;
+  --db-toggle-hover-bg: #F8FAFC;
+  --db-toggle-hover-border: #3B82F6;
+  --db-toggle-hover-color: #111827;
 }
 
 /* ====================================================
@@ -108,7 +109,7 @@
   color: var(--db-text-main);
   font-family: 'Inter', sans-serif;
   display: flex;
-  transition: background-color 0.35s ease, color 0.35s ease;
+  transition: background-color 300ms ease-in-out, color 300ms ease-in-out, border-color 300ms ease-in-out, box-shadow 300ms ease-in-out;
 }
 
 /* Custom scrollbar */
@@ -136,7 +137,7 @@
   padding: 1.75rem 1.25rem;
   z-index: 100;
   flex-shrink: 0;
-  transition: background 0.35s ease, border-color 0.35s ease;
+  transition: background 300ms ease-in-out, border-color 300ms ease-in-out;
 }
 
 .db-sidebar-logo {
@@ -303,7 +304,7 @@
   justify-content: space-between;
   padding: 0 2rem;
   flex-shrink: 0;
-  transition: border 0.35s ease;
+  transition: border 300ms ease-in-out, background-color 300ms ease-in-out;
 }
 
 .db-header-title {
@@ -344,7 +345,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 300ms ease-in-out;
   box-shadow: var(--db-shadow-sm);
 }
 
@@ -368,7 +369,7 @@
   border-radius: 20px !important;
   padding: 1.5rem !important;
   box-shadow: var(--db-shadow) !important;
-  transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease !important;
+  transition: transform 300ms ease-in-out, border-color 300ms ease-in-out, box-shadow 300ms ease-in-out, background-color 300ms ease-in-out, color 300ms ease-in-out !important;
   position: relative;
   color: var(--db-text-main) !important;
 }

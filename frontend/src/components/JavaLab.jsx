@@ -1,792 +1,978 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Code, Layers, Database, Filter, FolderOpen, Zap,
-  Play, Pause, RotateCcw, Eye, Terminal, ArrowLeft, BookOpen,
-  Monitor, Home, ArrowRight, Search, BrainCircuit, ShieldAlert
+  BookOpen, Play, Code, CheckCircle, HelpCircle, FileText,
+  ChevronRight, Award, Compass, Flame, TrendingUp, PlayCircle,
+  Code2, Terminal, Info, RefreshCw, Layers, Database, Zap,
+  BrainCircuit, ShieldAlert, Sparkles, Star, Trophy
 } from 'lucide-react';
 import './JavaLab.css';
 
 // ═══════════════════════════════════════════════════════════
-// JAVA DATA SET
+// JAVA MODULES DATA
 // ═══════════════════════════════════════════════════════════
-const JAVA_DATA = [
+const JAVA_MODULES = [
   {
-    id: 'servlets',
-    title: 'Servlets',
-    Icon: Layers,
-    color: '#7C3AED',
-    gradient: 'linear-gradient(135deg, #7B2CBF, #3F37C9)',
-    description: 'Servlet Lifecycle, doGet(), doPost(), and RequestDispatcher.',
-    difficulty: 'intermediate',
-    duration: '20 min',
-    xp: 200,
-    topics: [
-      {
-        id: 'servlet-lifecycle',
-        title: 'Servlet Lifecycle Visualizer',
-        vizType: 'servletLifecycle',
-        steps: 4,
-        preview: 'Watch client requests map to init(), service(), doGet()/doPost(), and destroy() states.',
-        code: `// Java Servlet Lifecycle\n@WebServlet("/hello")\npublic class HelloServlet extends HttpServlet {\n  \n  // Step 1: Called once during servlet startup\n  public void init() {\n    System.out.println("Servlet Initialized");\n  }\n  \n  // Step 2: Thread-safe doGet invocation\n  protected void doGet(HttpServletRequest req, HttpServletResponse resp) \n      throws IOException {\n    resp.getWriter().write("Hello World!");\n  }\n  \n  // Step 3: Called when container shuts down\n  public void destroy() {\n    System.out.println("Servlet Destroyed");\n  }\n}`,
-        stepLabels: ['init()', 'service() thread', 'doGet() response', 'destroy()'],
-        stepDescriptions: [
-          'The servlet container instantiates the Servlet and invokes init() exactly once to configure resources.',
-          'Upon client requests, separate worker threads invoke the service() method, routing to doGet() or doPost().',
-          'doGet() parses request parameters, processes logic, and writes responses back to the socket buffer.',
-          'When Tomcat/Glassfish shuts down, destroy() is invoked to release active file handlers and db pools.'
-        ]
-      }
-    ]
-  },
-  {
-    id: 'jdbc',
-    title: 'JDBC',
-    Icon: Database,
-    color: '#059669',
-    gradient: 'linear-gradient(135deg, #4CC9F0, #4895EF)',
-    description: 'JDBC Architecture, PreparedStatements, and ResultSet cursors.',
-    difficulty: 'intermediate',
-    duration: '25 min',
-    xp: 250,
-    topics: [
-      {
-        id: 'jdbc-crud',
-        title: 'JDBC PreparedStatements',
-        vizType: 'jdbcCrud',
-        steps: 5,
-        preview: 'Simulate database drivers executing query binding and navigating result sets.',
-        code: `// JDBC Driver statement execution\nString sql = "SELECT * FROM users WHERE id = ?";\ntry (PreparedStatement pstmt = conn.prepareStatement(sql)) {\n  \n  // Step 1: Bind placeholder parameter\n  pstmt.setInt(1, 101);\n  \n  // Step 2: Execute query against database driver\n  try (ResultSet rs = pstmt.executeQuery()) {\n    \n    // Step 3: Scan cursor row-by-row\n    while (rs.next()) {\n      String name = rs.getString("name");\n    }\n  }\n}`,
-        stepLabels: ['Prepare SQL', 'Bind Parameter', 'Execute Query', 'Read Cursor', 'Close ResultSet'],
-        stepDescriptions: [
-          'PreparedStatement compiles the SQL query template first, preparing placeholders (?) on the DBMS server.',
-          'Binding pstmt.setInt(1, 101) replaces the first wildcard safely, preventing sql-injection hacks.',
-          'pstmt.executeQuery() sends the bound request. Database retrieves index records and compiles Cursor blocks.',
-          'rs.next() advances the cursor buffer row-by-row. Data is fetched on-demand from driver arrays.',
-          'Using-with-resources closes ResultSet and PreparedStatement structures, preventing memory leaks.'
-        ]
-      }
-    ]
-  },
-  {
-    id: 'session-mgmt',
-    title: 'Session Management',
-    Icon: Zap,
-    color: '#DB2777',
-    gradient: 'linear-gradient(135deg, #FF4D6D, #C9184A)',
-    description: 'Cookies, HttpSession mapping, and tracking lifecycles.',
-    difficulty: 'intermediate',
-    duration: '15 min',
-    xp: 180,
-    topics: [
-      {
-        id: 'session-tracker',
-        title: 'HttpSession & Session ID Tracker',
-        vizType: 'sessionTracker',
-        steps: 4,
-        preview: 'Visualize how JSESSIONID is passed via headers to identify user-specific server maps.',
-        code: `// Java Session Management\nprotected void doGet(HttpServletRequest req, HttpServletResponse resp) {\n  \n  // Step 1: Get or Create Session context\n  HttpSession session = req.getSession(true);\n  \n  // Step 2: Retrieve attributes\n  Integer count = (Integer) session.getAttribute("visitCount");\n  \n  // Step 3: Mutate attribute store\n  session.setAttribute("visitCount", (count == null ? 1 : count + 1));\n}`,
-        stepLabels: ['Client Request', 'JSESSIONID Lookup', 'Session Found', 'Session SetAttribute'],
-        stepDescriptions: [
-          'Client initiates an HTTP request. Browser automatically appends cookies to request headers.',
-          'Server scans headers for JSESSIONID. If empty, server allocates a fresh UUID block on JVM heap.',
-          'If JSESSIONID matches an active session hashmap, server fetches user context variables.',
-          'session.setAttribute updates the session context map. Changes are saved for subsequent requests.'
-        ]
-      }
-    ]
-  },
-  {
-    id: 'spring-boot',
-    title: 'Spring Boot',
-    Icon: BrainCircuit,
-    color: '#10B981',
-    gradient: 'linear-gradient(135deg, #9B5DE5, #F15BB5)',
-    description: 'Dependency Injection, IoC Containers, and REST endpoints.',
-    difficulty: 'advanced',
-    duration: '30 min',
-    xp: 300,
-    topics: [
-      {
-        id: 'spring-di',
-        title: 'Spring Boot IoC Container',
-        vizType: 'springDi',
-        steps: 4,
-        preview: 'Inspect how beans are auto-wired and resolved within the IoC Registry.',
-        code: `// Spring Dependency Injection\n@RestController\npublic class UserController {\n\n  // Autowired bean gets injected by Container registry\n  @Autowired\n  private UserService userService;\n\n  @GetMapping("/users")\n  public List<User> getUsers() {\n    return userService.getAllUsers();\n  }\n}`,
-        stepLabels: ['Component Scan', 'Bean Instantiate', 'Auto-wiring Injection', 'Request Dispatch'],
-        stepDescriptions: [
-          'On startup, Spring Boot scans classpath annotations (@RestController, @Service, @Component).',
-          'IoC Container instantiates beans and registers them inside the ApplicationContext bean registry.',
-          '@Autowired signals the container to resolve dependencies, injecting the UserService bean instance.',
-          'When client hits /users endpoint, dispatcher servlet routes call to bean method automatically.'
-        ]
-      }
-    ]
-  },
-  {
-    id: 'web-tech',
-    title: 'Web Technologies',
-    Icon: Code,
-    color: '#2563EB',
-    gradient: 'linear-gradient(135deg, #FF007F, #7B2CBF)',
-    description: 'Java Web Fundamentals, HTTP Lifecycle, and architectures.',
-    difficulty: 'beginner',
-    duration: '10 min',
+    id: 1,
+    title: 'Java Fundamentals',
+    description: 'Master variables, data types, JVM internals, and basic input/output.',
+    difficulty: 'Beginner',
+    duration: '45 mins',
     xp: 100,
-    locked: true,
-    topics: []
+    accent: '#3B82F6',
+    icon: Compass,
+    progress: 100,
+    topics: [
+      { title: 'Introduction to Java', content: 'Java is a class-based, object-oriented programming language designed to have as few implementation dependencies as possible. It is write once, run anywhere (WORA).' },
+      { title: 'JDK, JRE, JVM', content: 'JDK (Java Development Kit) is the development environment. JRE (Java Runtime Environment) provides the libraries and JVM to execute. JVM (Java Virtual Machine) executes the bytecode.' },
+      { title: 'Variables & Data Types', content: 'Java has primitive types (int, float, double, char, boolean, etc.) and reference types (Strings, Arrays, Objects).' },
+      { title: 'Operators', content: 'Arithmetic, relational, logical, bitwise, assignment, and ternary operators.' },
+      { title: 'Input / Output', content: 'Reading input using Scanner or BufferedReader, and outputting via System.out.println().' }
+    ]
   },
   {
-    id: 'jsp',
-    title: 'JSP',
-    Icon: Monitor,
-    color: '#06B6D4',
-    gradient: 'linear-gradient(135deg, #00B4D8, #0077B6)',
-    description: 'JSP Basics, Expression Language (EL), and JSTL libraries.',
-    difficulty: 'beginner',
-    duration: 'Locked',
+    id: 2,
+    title: 'Control Flow',
+    description: 'Master conditionals, switch statements, and loop controls.',
+    difficulty: 'Beginner',
+    duration: '40 mins',
+    xp: 120,
+    accent: '#06B6D4',
+    icon: Zap,
+    progress: 100,
+    topics: [
+      { title: 'if / else', content: 'Conditional branch execution based on boolean expressions.' },
+      { title: 'switch statement', content: 'Multi-way branching based on equality check of values.' },
+      { title: 'for loop', content: 'Iteration structures when the number of cycles is known beforehand.' },
+      { title: 'while & do-while', content: 'Pre-condition and post-condition loop controls.' },
+      { title: 'break & continue', content: 'Alter loop flows: break exits a loop completely, continue jumps to next iteration.' }
+    ]
+  },
+  {
+    id: 3,
+    title: 'Methods, Arrays & Strings',
+    description: 'Write modular functions and manipulate multi-dimensional sequences.',
+    difficulty: 'Beginner',
+    duration: '50 mins',
     xp: 150,
-    locked: true,
-    topics: []
+    accent: '#14B8A6',
+    icon: Code2,
+    progress: 100,
+    topics: [
+      { title: 'Methods & Parameters', content: 'Defining functional blocks with return values and parameter list.' },
+      { title: 'Method Overloading', content: 'Declaring multiple methods with same name but different signatures.' },
+      { title: 'Arrays & 2D Arrays', content: 'Indexed collections of elements of the same type. Matrix structures.' },
+      { title: 'Strings & StringBuilder', content: 'String is immutable. StringBuilder provides a mutable sequence of characters for optimal updates.' },
+      { title: 'Recursion Basics', content: 'Methods calling themselves with base terminating conditions.' }
+    ]
   },
   {
-    id: 'mvc-pattern',
-    title: 'MVC Architecture',
-    Icon: FolderOpen,
-    color: '#F59E0B',
-    gradient: 'linear-gradient(135deg, #F15BB5, #EEEF20)',
-    description: 'Model-View-Controller separation of concerns (Phase 2)',
-    difficulty: 'advanced',
-    duration: 'Locked',
-    xp: 200,
-    locked: true,
-    topics: []
+    id: 4,
+    title: 'OOP Concepts',
+    description: 'Classes, Objects, Inheritance, Polymorphism, Abstraction & Interfaces.',
+    difficulty: 'Intermediate',
+    duration: '90 mins',
+    xp: 250,
+    accent: '#8B5CF6',
+    icon: Award,
+    progress: 80,
+    topics: [
+      { title: 'Classes & Objects', content: 'Class is a blueprint. Object is an instance of a class containing state and behavior.' },
+      { title: 'Constructors', content: 'Special methods invoked during instantiation to initialize variables.' },
+      { title: 'Encapsulation', content: 'Hiding object internals using private variables and public getter/setter methods.' },
+      { title: 'Inheritance & Polymorphism', content: 'IS-A relationship using extends. Overriding methods dynamically at runtime.' },
+      { title: 'Abstraction & Interfaces', content: 'Defining contract methods using interfaces and abstract classes.' }
+    ]
   },
   {
-    id: 'security',
-    title: 'Security & Auth',
-    Icon: ShieldAlert,
-    color: '#EF4444',
-    gradient: 'linear-gradient(135deg, #FF9F1C, #FF4000)',
-    description: 'Servlet filters, CSRF, OAuth flows (Phase 2)',
-    difficulty: 'advanced',
-    duration: 'Locked',
+    id: 5,
+    title: 'Exception Handling',
+    description: 'Build robust applications using try, catch, finally, and custom exceptions.',
+    difficulty: 'Intermediate',
+    duration: '40 mins',
+    xp: 120,
+    accent: '#F97316',
+    icon: ShieldAlert,
+    progress: 60,
+    topics: [
+      { title: 'try-catch blocks', content: 'Intercepting throwables and preventing application crashes.' },
+      { title: 'finally block', content: 'Executing cleanup operations regardless of whether exceptions were raised.' },
+      { title: 'throw vs throws', content: 'throw triggers an exception. throws declares check exceptions in method signatures.' },
+      { title: 'Custom Exceptions', content: 'Extending Exception or RuntimeException to create business-specific faults.' }
+    ]
+  },
+  {
+    id: 6,
+    title: 'Collections Framework',
+    description: 'ArrayList, LinkedList, Lists, Maps, Sets, and Iterator classes.',
+    difficulty: 'Intermediate',
+    duration: '80 mins',
     xp: 300,
-    locked: true,
-    topics: []
+    accent: '#10B981',
+    icon: Layers,
+    progress: 40,
+    topics: [
+      { title: 'List (ArrayList & LinkedList)', content: 'Dynamic indexing. ArrayList uses dynamic arrays. LinkedList uses double-linked nodes.' },
+      { title: 'Set (HashSet & TreeSet)', content: 'Collections preventing duplicate elements. TreeSet maintains sorted order.' },
+      { title: 'Map (HashMap & TreeMap)', content: 'Key-value maps. HashMap uses hashing. TreeMap uses red-black tree hierarchy.' }
+    ]
+  },
+  {
+    id: 7,
+    title: 'File Handling',
+    description: 'Read and write disk files using streams, writers, and serialization.',
+    difficulty: 'Intermediate',
+    duration: '45 mins',
+    xp: 150,
+    accent: '#64748B',
+    icon: FileText,
+    progress: 25,
+    topics: [
+      { title: 'Reader & Writer classes', content: 'FileReader and FileWriter for character stream operations.' },
+      { title: 'Buffered Stream buffers', content: 'BufferedReader and BufferedWriter for optimal disk reading/writing.' },
+      { title: 'Serialization', content: 'Writing object states to byte streams via Serializable interfaces.' }
+    ]
+  },
+  {
+    id: 8,
+    title: 'Multithreading',
+    description: 'Concurrent runtimes, thread lifecycles, synchronization, and executors.',
+    difficulty: 'Advanced',
+    duration: '90 mins',
+    xp: 350,
+    accent: '#F59E0B',
+    icon: Zap,
+    progress: 10,
+    topics: [
+      { title: 'Thread Class & Runnable', content: 'Creating threads by extending Thread or implementing Runnable.' },
+      { title: 'Thread Lifecycle', content: 'New, Runnable, Blocked, Waiting, Timed Waiting, Terminated.' },
+      { title: 'Synchronization & Locks', content: 'Using synchronized keywords and reentrant locks to prevent race conditions.' },
+      { title: 'Deadlock', content: 'Circular wait blocks when multiple threads lock dependent resources.' }
+    ]
+  },
+  {
+    id: 9,
+    title: 'GUI Programming',
+    description: 'Build rich windows using Abstract Window Toolkit (AWT) and Swing.',
+    difficulty: 'Intermediate',
+    duration: '70 mins',
+    xp: 300,
+    accent: '#EC4899',
+    icon: PlayCircle,
+    progress: 0,
+    topics: [
+      { title: 'AWT Components', content: 'Operating system native widgets: Frame, Panel, Label, Button.' },
+      { title: 'Swing Components', content: 'Platform independent widgets: JFrame, JPanel, JButton, JTable.' },
+      { title: 'Event Handlers', content: 'Interceptors for user activity: ActionListener, MouseListener, KeyListener.' }
+    ]
+  },
+  {
+    id: 10,
+    title: 'Applets',
+    description: 'Legacy web-embedded graphics, lifecycle states, and draw routines.',
+    difficulty: 'Optional',
+    duration: 'Legacy',
+    xp: 80,
+    accent: '#9CA3AF',
+    icon: Info,
+    progress: 0,
+    legacy: true,
+    topics: [
+      { title: 'Applet Lifecycle', content: 'Applets run inside browser wrappers. Standard hooks: init(), start(), paint(), stop(), destroy().' }
+    ]
+  },
+  {
+    id: 11,
+    title: 'Networking Basics',
+    description: 'Implement client/server sockets and fetch URL connection streams.',
+    difficulty: 'Advanced',
+    duration: '60 mins',
+    xp: 250,
+    accent: '#6366F1',
+    icon: Compass,
+    progress: 0,
+    topics: [
+      { title: 'Socket & ServerSocket', content: 'Establishing two-way TCP connections between hosts.' },
+      { title: 'URL Connections', content: 'Fetching web resources and parsing headers programmatically.' }
+    ]
+  },
+  {
+    id: 12,
+    title: 'JDBC Basics',
+    description: 'Connect databases, compile statements, and scan cursors.',
+    difficulty: 'Advanced',
+    duration: '60 mins',
+    xp: 300,
+    accent: '#7C3AED',
+    icon: Database,
+    progress: 0,
+    topics: [
+      { title: 'Connection & PreparedStatement', content: 'Registering drivers, configuring endpoints, and binding query wildcards.' },
+      { title: 'ResultSet Cursors', content: 'Scanning database queries dynamically and closing streams.' }
+    ]
+  },
+  {
+    id: 13,
+    title: 'DSA with Java',
+    description: 'Implement searching, sorting, linked lists, and tree structures in Java.',
+    difficulty: 'Advanced',
+    duration: '120 mins',
+    xp: 500,
+    accent: '#EF4444',
+    icon: BrainCircuit,
+    progress: 0,
+    topics: [
+      { title: 'Linked List implementation', content: 'Implementing dynamic single/double linked lists using node links.' },
+      { title: 'Stack & Queue structures', content: 'LIFO and FIFO operations, node pointers, and collections mappings.' },
+      { title: 'Binary Trees', content: 'Hierarchical node traversal: pre-order, in-order, post-order, and insert/delete operations.' }
+    ]
+  },
+  {
+    id: 14,
+    title: 'Practice Hub',
+    description: 'Solve daily code challenges, earn badges, and maintain streaks.',
+    difficulty: 'Optional',
+    duration: 'Daily',
+    xp: 200,
+    accent: '#0EA5E9',
+    icon: Star,
+    progress: 0,
+    features: ['Daily Challenges', 'Timed Coding', 'AI Hints', 'Streak Rewards']
+  },
+  {
+    id: 15,
+    title: 'Quiz Arena',
+    description: 'Compete in weekly leaderboards and test your skills.',
+    difficulty: 'Optional',
+    duration: 'Weekly',
+    xp: 250,
+    accent: '#F43F5E',
+    icon: Trophy,
+    progress: 0,
+    features: ['Topic-wise Quizzes', 'Mock Tests', 'Leaderboards', 'XP Rewards']
+  },
+  {
+    id: 16,
+    title: 'Projects Lab',
+    description: 'Build portfolio projects: Student Registry, Banking, and Chat application.',
+    difficulty: 'Optional',
+    duration: 'Portfolio',
+    xp: 400,
+    accent: '#22C55E',
+    icon: Code,
+    progress: 0,
+    features: ['Calculator', 'Student Management System', 'Chat Application']
+  },
+  {
+    id: 17,
+    title: 'Progress Tracker',
+    description: 'Detailed metrics of your accuracy, strength, and weak points.',
+    difficulty: 'Optional',
+    duration: 'Analytics',
+    xp: 150,
+    accent: '#8B5CF6',
+    icon: TrendingUp,
+    progress: 0,
+    features: ['Topic Completion', 'XP Earned', 'Accuracy', 'Study Streak']
   }
 ];
 
-// ═══════════════════════════════════════════════════════════
-// SVG INTERACTIVE VISUALIZATIONS
-// ═══════════════════════════════════════════════════════════
-
-// 1. Servlet Lifecycle
-function ServletLifecycleViz({ step }) {
-  return (
-    <svg viewBox="0 0 500 280" className="db-viz-svg">
-      <defs>
-        <marker id="java-arrow" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L8,3 L0,6 Z" fill="var(--db-primary)" />
-        </marker>
-      </defs>
-      
-      {/* Container Box */}
-      <rect x="180" y="20" width="300" height="240" rx="12" fill="var(--db-card)" stroke="var(--db-border)" strokeWidth="1.5" />
-      <text x="330" y="42" textAnchor="middle" fill="var(--db-text-muted)" fontSize="11" fontWeight="700">Tomcat Servlet Container</text>
-
-      {/* Client Client */}
-      <rect x="20" y="110" width="100" height="60" rx="8" fill="var(--db-primary)" />
-      <text x="70" y="145" textAnchor="middle" fill="white" fontSize="12" fontWeight="700">HTTP Client</text>
-
-      {/* Flows */}
-      {step === 0 && (
-        <g>
-          <path d="M 120 140 L 220 140" fill="transparent" stroke="var(--db-primary)" strokeWidth="2.5" markerEnd="url(#java-arrow)" />
-          <text x="170" y="125" textAnchor="middle" fill="var(--db-primary)" fontSize="9" fontWeight="700">Startup Request</text>
-        </g>
-      )}
-
-      {/* Servlet Box */}
-      {step >= 0 && (
-        <g>
-          <rect x="240" y="80" width="180" height="130" rx="10" fill="var(--db-card)" stroke={step === 1 ? "var(--db-success)" : "var(--db-border)"} strokeWidth={step === 1 ? 2.5 : 1.5} />
-          <rect x="240" y="80" width="180" height="30" rx="10" fill="var(--db-primary)" />
-          <text x="330" y="100" textAnchor="middle" fill="white" fontSize="11" fontWeight="700">HelloServlet</text>
-          
-          <rect x="250" y="120" width="160" height="24" rx="4" fill={step === 0 ? "rgba(16, 185, 129, 0.15)" : "var(--db-card)"} stroke={step === 0 ? "var(--db-success)" : "var(--db-border)"} />
-          <text x="330" y="136" textAnchor="middle" fill={step === 0 ? "var(--db-success)" : "var(--db-text)"} fontSize="10" fontWeight="700">1. init()</text>
-
-          <rect x="250" y="150" width="160" height="24" rx="4" fill={step === 1 || step === 2 ? "rgba(37, 99, 235, 0.15)" : "var(--db-card)"} stroke={step === 1 || step === 2 ? "var(--db-primary)" : "var(--db-border)"} />
-          <text x="330" y="166" textAnchor="middle" fill={step === 1 || step === 2 ? "var(--db-primary)" : "var(--db-text)"} fontSize="10" fontWeight="700">2. service() / doGet()</text>
-
-          <rect x="250" y="180" width="160" height="24" rx="4" fill={step === 3 ? "rgba(239, 68, 68, 0.15)" : "var(--db-card)"} stroke={step === 3 ? "var(--db-danger)" : "var(--db-border)"} />
-          <text x="330" y="196" textAnchor="middle" fill={step === 3 ? "var(--db-danger)" : "var(--db-text)"} fontSize="10" fontWeight="700">3. destroy()</text>
-        </g>
-      )}
-
-      {/* Concurrent Threads */}
-      {step === 1 && (
-        <g>
-          <path d="M 120 140 C 180 140, 180 162, 240 162" fill="transparent" stroke="var(--db-primary)" strokeWidth="2" markerEnd="url(#java-arrow)" />
-          <text x="180" y="125" textAnchor="middle" fill="var(--db-primary)" fontSize="9" fontWeight="700">Thread Pool Req</text>
-        </g>
-      )}
-
-      {step === 2 && (
-        <g>
-          <path d="M 240 162 L 120 162" fill="transparent" stroke="var(--db-success)" strokeWidth="2" markerEnd="url(#java-arrow)" />
-          <text x="180" y="180" textAnchor="middle" fill="var(--db-success)" fontSize="9" fontWeight="700">"Hello World!" Response</text>
-        </g>
-      )}
-    </svg>
-  );
-}
-
-// 2. JDBC CRUD
-function JdbcCrudViz({ step }) {
-  return (
-    <svg viewBox="0 0 500 280" className="db-viz-svg">
-      <defs>
-        <marker id="java-arrow2" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L8,3 L0,6 Z" fill="var(--db-primary)" />
-        </marker>
-      </defs>
-      
-      {/* Code side statement compilation */}
-      <rect x="10" y="20" width="220" height="230" rx="12" fill="var(--db-card)" stroke="var(--db-border)" strokeWidth="1.5" />
-      <rect x="10" y="20" width="220" height="35" rx="12" fill="var(--db-primary)" />
-      <text x="120" y="42" textAnchor="middle" fill="white" fontSize="11" fontWeight="700">JVM PreparedStatement</text>
-
-      <text x="25" y="80" fill="var(--db-text)" fontSize="10" fontFamily="Fira Code, monospace">sql = "SELECT * FROM users"</text>
-      <text x="25" y="98" fill="var(--db-text)" fontSize="10" fontFamily="Fira Code, monospace">      "WHERE id = ?"</text>
-
-      {step >= 1 && (
-        <g>
-          <rect x="20" y="125" width="200" height="36" rx="6" fill="rgba(37, 99, 235, 0.08)" stroke="var(--db-primary)" strokeWidth="1.5" />
-          <text x="30" y="147" fill="var(--db-primary)" fontSize="10" fontWeight="700">pstmt.setInt(1, 101) ✓</text>
-        </g>
-      )}
-
-      {/* DB Connection line */}
-      {step === 2 && (
-        <path d="M 230 140 L 330 140" fill="transparent" stroke="var(--db-success)" strokeWidth="2.5" markerEnd="url(#java-arrow2)" />
-      )}
-
-      {/* Database side ResultSet */}
-      <g transform="translate(320, 20)">
-        <rect x="0" y="0" width="160" height="230" rx="12" fill="var(--db-card)" stroke="var(--db-border)" strokeWidth="1.5" />
-        <rect x="0" y="0" width="160" height="35" rx="12" fill="var(--db-accent)" />
-        <text x="80" y="22" textAnchor="middle" fill="white" fontSize="11" fontWeight="700">ResultSet Cache</text>
-
-        <rect x="5" y="45" width="150" height="32" rx="4" fill={step === 3 ? "rgba(16, 185, 129, 0.12)" : "var(--db-card)"} stroke={step === 3 ? "var(--db-success)" : "var(--db-border)"} />
-        <text x="15" y="65" fill="var(--db-text)" fontSize="9" fontWeight="700">id: 101 | Name: Alice</text>
-
-        <rect x="5" y="85" width="150" height="32" rx="4" fill="var(--db-card)" stroke="var(--db-border)" />
-        <text x="15" y="105" fill="var(--db-text)" fontSize="9">id: 102 | Name: Bob</text>
-
-        {step === 4 && (
-          <g>
-            <line x1="10" y1="140" x2="150" y2="140" stroke="var(--db-danger)" strokeWidth="2" strokeDasharray="4,2" />
-            <text x="80" y="165" textAnchor="middle" fill="var(--db-danger)" fontSize="9" fontWeight="700">rs.close() Invoked</text>
-          </g>
-        )}
-      </g>
-    </svg>
-  );
-}
-
-// 3. Spring Boot DI
-function SpringDiViz({ step }) {
-  return (
-    <svg viewBox="0 0 500 280" className="db-viz-svg">
-      <defs>
-        <marker id="java-arrow3" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L8,3 L0,6 Z" fill="var(--db-primary)" />
-        </marker>
-      </defs>
-
-      {/* Component scan */}
-      {step === 0 && (
-        <g>
-          <circle cx="250" cy="140" r="100" fill="transparent" stroke="var(--db-accent)" strokeWidth="2" strokeDasharray="5,3" />
-          <text x="250" y="255" textAnchor="middle" fill="var(--db-accent)" fontSize="11" fontWeight="700">Scanning beans...</text>
-        </g>
-      )}
-
-      {/* Spring IoC ApplicationContext bean registry */}
-      <rect x="150" y="30" width="200" height="220" rx="16" fill="var(--db-card)" stroke="var(--db-border)" strokeWidth="1.5" />
-      <rect x="150" y="30" width="200" height="40" rx="16" fill="var(--db-primary)" />
-      <text x="250" y="55" textAnchor="middle" fill="white" fontSize="11" fontWeight="700">Spring ApplicationContext</text>
-
-      {step >= 1 && (
-        <g>
-          <rect x="160" y="85" width="180" height="35" rx="8" fill="rgba(16, 185, 129, 0.08)" stroke="var(--db-success)" strokeWidth="1" />
-          <text x="250" y="107" textAnchor="middle" fill="var(--db-success)" fontSize="10" fontWeight="750">Bean: UserService</text>
-        </g>
-      )}
-
-      {step >= 2 && (
-        <g>
-          <rect x="160" y="130" width="180" height="35" rx="8" fill="rgba(37, 99, 235, 0.08)" stroke="var(--db-primary)" strokeWidth="1" />
-          <text x="250" y="152" textAnchor="middle" fill="var(--db-primary)" fontSize="10" fontWeight="750">Bean: UserController</text>
-        </g>
-      )}
-
-      {/* Autowired injection link */}
-      {step === 2 && (
-        <g>
-          <path d="M 250 130 L 250 120" fill="transparent" stroke="var(--db-primary)" strokeWidth="2" markerEnd="url(#java-arrow3)" />
-          <text x="290" y="128" fill="var(--db-primary)" fontSize="8.5" fontWeight="700">@Autowired Inject</text>
-        </g>
-      )}
-
-      {/* Request mapping flow */}
-      {step === 3 && (
-        <g>
-          <path d="M 20 180 L 140 180" fill="transparent" stroke="var(--db-accent)" strokeWidth="2.5" markerEnd="url(#java-arrow3)" />
-          <text x="80" y="168" textAnchor="middle" fill="var(--db-accent)" fontSize="9" fontWeight="700">GET /users</text>
-        </g>
-      )}
-    </svg>
-  );
-}
-
-// 4. Session Tracking
-function SessionTrackerViz({ step }) {
-  return (
-    <svg viewBox="0 0 500 280" className="db-viz-svg">
-      <defs>
-        <marker id="java-arrow4" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L8,3 L0,6 Z" fill="var(--db-primary)" />
-        </marker>
-      </defs>
-
-      {/* Client browser */}
-      <g transform="translate(10, 50)">
-        <rect x="0" y="0" width="150" height="150" rx="12" fill="var(--db-card)" stroke="var(--db-border)" />
-        <rect x="0" y="0" width="150" height="30" rx="12" fill="var(--db-text-muted)" />
-        <text x="75" y="18" textAnchor="middle" fill="white" fontSize="10" fontWeight="700">Client Browser</text>
-        
-        {step >= 1 && (
-          <g>
-            <rect x="10" y="45" width="130" height="40" rx="6" fill="rgba(245, 158, 11, 0.08)" stroke="var(--db-warning)" />
-            <text x="20" y="65" fill="var(--db-text)" fontSize="8" fontWeight="700">Cookie: JSESSIONID</text>
-            <text x="20" y="78" fill="var(--db-warning)" fontSize="7" fontWeight="700">UUID-99x88ff</text>
-          </g>
-        )}
-      </g>
-
-      {/* Server Context maps */}
-      <g transform="translate(310, 50)">
-        <rect x="0" y="0" width="180" height="150" rx="12" fill="var(--db-card)" stroke="var(--db-border)" />
-        <rect x="0" y="0" width="180" height="30" rx="12" fill="var(--db-primary)" />
-        <text x="90" y="18" textAnchor="middle" fill="white" fontSize="10" fontWeight="700">Server Session Context</text>
-
-        {step >= 2 && (
-          <g>
-            <rect x="10" y="45" width="160" height="60" rx="6" fill="rgba(16, 185, 129, 0.08)" stroke="var(--db-success)" />
-            <text x="18" y="65" fill="var(--db-success)" fontSize="8.5" fontWeight="750">Key: UUID-99x88ff</text>
-            <text x="18" y="80" fill="var(--db-text)" fontSize="8">visitCount: {step === 3 ? '2' : '1'}</text>
-          </g>
-        )}
-      </g>
-
-      {/* Flows */}
-      {step === 0 && (
-        <path d="M 160 120 L 300 120" fill="transparent" stroke="var(--db-primary)" strokeWidth="2.5" markerEnd="url(#java-arrow4)" />
-      )}
-
-      {step === 1 && (
-        <g>
-          <path d="M 300 140 L 160 140" fill="transparent" stroke="var(--db-warning)" strokeWidth="2" markerEnd="url(#java-arrow4)" />
-          <text x="230" y="160" textAnchor="middle" fill="var(--db-warning)" fontSize="8.5" fontWeight="700">Set-Cookie Header</text>
-        </g>
-      )}
-    </svg>
-  );
-}
-
-// Router switcher
-function JavaVizComponent({ vizType, step }) {
-  switch (vizType) {
-    case 'servletLifecycle':
-      return <ServletLifecycleViz step={step} />;
-    case 'jdbcCrud':
-      return <JdbcCrudViz step={step} />;
-    case 'springDi':
-      return <SpringDiViz step={step} />;
-    case 'sessionTracker':
-      return <SessionTrackerViz step={step} />;
-    default:
-      return <div className="text-center p-8 text-gray-400">Simulation not implemented</div>;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-// MAIN COMPONENT — follows exact DBMSLab.jsx structure
-// ═══════════════════════════════════════════════════════════
 export default function JavaLab() {
-  const [level, setLevel] = useState('categories'); // 'categories', 'topics', 'concept'
-  const [category, setCategory] = useState(null);
-  const [topic, setTopic] = useState(null);
-  const [step, setStep] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedModule, setSelectedModule] = useState(null);
+  const [activeTab, setActiveTab] = useState('learn'); // 'learn', 'visualize', 'code', 'practice', 'quiz', 'notes'
+  const [selectedTopicIdx, setSelectedTopicIdx] = useState(0);
+  const [userCode, setUserCode] = useState(`public class Main {\n  public static void main(String[] args) {\n    System.out.println("Hello, EduVerse!");\n  }\n}`);
+  const [consoleOutput, setConsoleOutput] = useState('Click "Run Code" to compile...');
+  const [vizStep, setVizStep] = useState(0);
+  const [showAiHint, setShowAiHint] = useState(false);
+  const [quizScore, setQuizScore] = useState(null);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
 
-  const [xp, setXp] = useState(() => Number(localStorage.getItem('java_xp') || 0));
-  const [completedTopics, setCompletedTopics] = useState(() => {
-    const saved = localStorage.getItem('java_completed_topics');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const totalXP = xp;
-  const streak = 5;
-  const totalCompleted = completedTopics.length;
-
-  const openCategory = (cat) => {
-    if (cat.locked) return;
-    setCategory(cat);
-    setLevel('topics');
+  // MOCK COMPILER RUN
+  const handleRunCode = () => {
+    setConsoleOutput('Compiling App.java...\nLinking binaries...\nExecuting main method...\n\nHello, EduVerse!\n\nProcess completed (0ms)');
   };
 
-  const openTopic = (t) => {
-    setTopic(t);
-    setStep(0);
-    setPlaying(false);
-    setLevel('concept');
-  };
-
-  const goHome = () => {
-    setLevel('categories');
-    setCategory(null);
-    setTopic(null);
-  };
-
-  const goTopics = () => {
-    setLevel('topics');
-    setTopic(null);
-  };
-
-  // Autoplay handler
-  useEffect(() => {
-    let timer = null;
-    if (playing && topic) {
-      timer = setInterval(() => {
-        setStep((currentStep) => {
-          if (currentStep < topic.steps - 1) {
-            return currentStep + 1;
-          } else {
-            setPlaying(false);
-            // Award XP on complete topic
-            if (!completedTopics.includes(topic.id)) {
-              const newCompleted = [...completedTopics, topic.id];
-              setCompletedTopics(newCompleted);
-              localStorage.setItem('java_completed_topics', JSON.stringify(newCompleted));
-              const newXP = xp + (category?.xp || 50);
-              setXp(newXP);
-              localStorage.setItem('java_xp', newXP.toString());
-            }
-            return currentStep;
-          }
-        });
-      }, 3500);
+  const handleOpenModule = (mod) => {
+    setSelectedModule(mod);
+    setSelectedTopicIdx(0);
+    setActiveTab('learn');
+    setVizStep(0);
+    setQuizScore(null);
+    setSelectedAnswer(null);
+    setShowAiHint(false);
+    
+    // Set default mock code based on module
+    if (mod.id === 1) {
+      setUserCode(`public class Main {\n  public static void main(String[] args) {\n    int a = 5;\n    int b = 10;\n    System.out.println("Sum is: " + (a + b));\n  }\n}`);
+    } else if (mod.id === 2) {
+      setUserCode(`public class Loops {\n  public static void main(String[] args) {\n    for (int i = 1; i <= 5; i++) {\n      System.out.println("Count: " + i);\n    }\n  }\n}`);
+    } else {
+      setUserCode(`public class App {\n  public static void main(String[] args) {\n    System.out.println("Executing " + "${mod.title}");\n  }\n}`);
     }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [playing, topic, completedTopics, category, xp]);
-
-  // Compute circular progress
-  const getCategoryProgress = (cat) => {
-    if (!cat.topics || cat.topics.length === 0) return 0;
-    const completedInCat = cat.topics.filter(t => completedTopics.includes(t.id)).length;
-    return Math.round((completedInCat / cat.topics.length) * 100);
   };
 
-  const pageVariants = {
-    initial: { opacity: 0, y: 16 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.35 } },
-    exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
+  // MOCK QUIZ DATA
+  const mockQuiz = {
+    question: "Which component of Java is responsible for executing bytecode class files?",
+    options: [
+      { id: 'a', text: 'JDK' },
+      { id: 'b', text: 'JRE' },
+      { id: 'c', text: 'JVM' },
+      { id: 'd', text: 'JIT Compiler' }
+    ],
+    correct: 'c',
+    explanation: 'JVM (Java Virtual Machine) acts as the engine that runs Java class bytecode files compiled by javac.'
   };
 
-  const filteredData = JAVA_DATA.filter(cat =>
-    cat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    cat.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleAnswerSubmit = (optionId) => {
+    setSelectedAnswer(optionId);
+    if (optionId === mockQuiz.correct) {
+      setQuizScore(100);
+    } else {
+      setQuizScore(0);
+    }
+  };
+
+  // SVG Visualizations rendering
+  const renderVisualizer = () => {
+    if (selectedModule.id === 13 || selectedModule.title.includes('DSA')) {
+      // Linked List Visualization
+      return (
+        <div className="viz-box">
+          <h4 className="text-sm font-bold mb-4 text-[var(--db-text-main)]">Singly Linked List Execution State</h4>
+          <svg viewBox="0 0 500 150" className="w-full max-h-[140px]">
+            {/* Node 1 */}
+            <rect x="20" y="40" width="80" height="50" rx="8" fill="var(--db-card-bg-elevated)" stroke="#3B82F6" strokeWidth="2" />
+            <text x="60" y="65" textAnchor="middle" fill="var(--db-text-main)" fontWeight="bold" fontSize="12">Data: 10</text>
+            <text x="60" y="82" textAnchor="middle" fill="#3B82F6" fontSize="10">Next: Node2</text>
+            
+            {/* Arrow 1 */}
+            <path d="M 100 65 L 140 65" fill="none" stroke="#3B82F6" strokeWidth="2" markerEnd="url(#arrow)" />
+            
+            {/* Node 2 */}
+            <rect x="150" y="40" width="80" height="50" rx="8" fill="var(--db-card-bg-elevated)" stroke="#8B5CF6" strokeWidth="2" />
+            <text x="190" y="65" textAnchor="middle" fill="var(--db-text-main)" fontWeight="bold" fontSize="12">Data: 20</text>
+            <text x="190" y="82" textAnchor="middle" fill="#8B5CF6" fontSize="10">Next: Node3</text>
+            
+            {/* Arrow 2 */}
+            <path d="M 230 65 L 270 65" fill="none" stroke="#8B5CF6" strokeWidth="2" markerEnd="url(#arrow)" />
+            
+            {/* Node 3 */}
+            <rect x="280" y="40" width="80" height="50" rx="8" fill="var(--db-card-bg-elevated)" stroke="#10B981" strokeWidth="2" />
+            <text x="320" y="65" textAnchor="middle" fill="var(--db-text-main)" fontWeight="bold" fontSize="12">Data: 30</text>
+            <text x="320" y="82" textAnchor="middle" fill="#10B981" fontSize="10">Next: null</text>
+
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#3B82F6" />
+              </marker>
+            </defs>
+          </svg>
+          <div className="flex gap-4 mt-2 justify-center">
+            <span className="text-xs text-[var(--db-text-muted)]"><b className="text-[#3B82F6]">Head:</b> Node 1</span>
+            <span className="text-xs text-[var(--db-text-muted)]"><b className="text-[#10B981]">Tail:</b> Node 3</span>
+            <span className="text-xs text-[var(--db-text-muted)]"><b>Length:</b> 3</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (selectedModule.id === 8 || selectedModule.title.includes('Multithreading')) {
+      // Thread Lifecycle Visualization
+      return (
+        <div className="viz-box">
+          <h4 className="text-sm font-bold mb-4 text-[var(--db-text-main)]">Thread State machine</h4>
+          <div className="flex justify-between items-center gap-2 overflow-x-auto py-2">
+            {[
+              { label: 'NEW', desc: 'Thread instantiated' },
+              { label: 'RUNNABLE', desc: 'Active execution' },
+              { label: 'WAITING', desc: 'Awaiting lock' },
+              { label: 'TERMINATED', desc: 'Finished execution' }
+            ].map((st, idx) => (
+              <div 
+                key={idx} 
+                className={`p-3 rounded-xl border text-center flex-1 min-w-[90px] transition-all duration-300 ${idx === vizStep ? 'border-[#3B82F6] bg-blue-50/10 shadow-[0_0_12px_rgba(59,130,246,0.15)]' : 'border-[var(--db-card-border)]'}`}
+              >
+                <div className={`text-xs font-bold ${idx === vizStep ? 'text-[#3B82F6]' : 'text-[var(--db-text-muted)]'}`}>{st.label}</div>
+                <div className="text-[9px] text-[var(--db-text-muted)] mt-1">{st.desc}</div>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between items-center mt-4">
+            <button 
+              disabled={vizStep === 0} 
+              onClick={() => setVizStep(prev => prev - 1)}
+              className="px-3 py-1.5 rounded-lg border border-[var(--db-card-border)] text-xs text-[var(--db-text-main)] disabled:opacity-50"
+            >
+              Previous State
+            </button>
+            <button 
+              disabled={vizStep === 3} 
+              onClick={() => setVizStep(prev => prev + 1)}
+              className="px-3 py-1.5 rounded-lg bg-[#3B82F6] text-white text-xs"
+            >
+              Next State
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Default Fallback Visualization
+    return (
+      <div className="viz-box text-center py-8">
+        <Info className="mx-auto text-[#3B82F6] mb-3" size={32} />
+        <h4 className="text-sm font-bold text-[var(--db-text-main)]">Interactive Simulation</h4>
+        <p className="text-xs text-[var(--db-text-muted)] max-w-sm mx-auto mt-2">
+          Step through internal memory models and runtime stacks. Press the play button to activate auto-compiled visual states.
+        </p>
+        <button className="mt-4 px-4 py-2 bg-[#3B82F6] text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 mx-auto hover:bg-[#2563EB] transition-colors">
+          <Play size={12} fill="currentColor" /> Activate Visual Engine
+        </button>
+      </div>
+    );
+  };
 
   return (
-    <div className="java-lab p-6">
-
-      {/* ─── Breadcrumbs ─── */}
-      {level !== 'categories' && (
-        <div className="db-breadcrumb">
-          <button className="db-breadcrumb-btn" onClick={goHome}>
-            <Home size={14} /> Java Lab
-          </button>
-          {level === 'topics' && (
-            <>
-              <span className="db-breadcrumb-sep">›</span>
-              <span className="db-breadcrumb-current">{category?.title}</span>
-            </>
-          )}
-          {level === 'concept' && (
-            <>
-              <span className="db-breadcrumb-sep">›</span>
-              <button className="db-breadcrumb-btn" onClick={goTopics}>{category?.title}</button>
-              <span className="db-breadcrumb-sep">›</span>
-              <span className="db-breadcrumb-current">{topic?.title}</span>
-            </>
-          )}
-        </div>
-      )}
-
+    <div className="java-learning-path max-w-[1440px] mx-auto p-4 sm:p-8">
+      
       <AnimatePresence mode="wait">
-
-        {/* ─── LEVEL 1: DASHBOARD CATEGORIES ─── */}
-        {level === 'categories' && (
-          <motion.div key="categories" {...pageVariants}>
-
-            {/* Top Stats bar */}
-            <div className="db-stats-banner">
-              <div className="db-stat-card">
-                <div className="db-stat-icon-wrapper" style={{ background: 'rgba(37, 99, 235, 0.1)', color: 'var(--db-primary)' }}>✨</div>
-                <div className="db-stat-info">
-                  <span className="db-stat-value">{totalXP}</span>
-                  <span className="db-stat-label">Total XP</span>
+        {!selectedModule ? (
+          <motion.div
+            key="dashboard"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.35 }}
+            className="space-y-8"
+          >
+            {/* HERO SECTION */}
+            <div className="db-hero-section card-glass p-6 md:p-8 rounded-[28px] border border-[var(--db-card-border)] shadow-[var(--db-shadow)] relative overflow-hidden flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+              {/* Background Glow */}
+              <div className="absolute right-0 top-0 w-96 h-96 bg-gradient-to-tr from-[#3B82F6]/5 to-[#8B5CF6]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+              
+              <div className="space-y-4 max-w-xl z-10">
+                <div className="flex items-center gap-2.5">
+                  <span className="px-3 py-1 bg-gradient-to-r from-[#3B82F6]/10 to-[#8B5CF6]/10 border border-[#3B82F6]/20 rounded-full text-xs font-bold text-[#3B82F6] flex items-center gap-1">
+                    <Sparkles size={12} /> Java Learning Path
+                  </span>
+                  <span className="text-xs text-[var(--db-text-muted)] font-medium">• 17 Interactive Modules</span>
                 </div>
-              </div>
-              <div className="db-stat-card">
-                <div className="db-stat-icon-wrapper" style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--db-warning)' }}>🔥</div>
-                <div className="db-stat-info">
-                  <span className="db-stat-value">{streak} Days</span>
-                  <span className="db-stat-label">Streak</span>
-                </div>
-              </div>
-              <div className="db-stat-card">
-                <div className="db-stat-icon-wrapper" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--db-success)' }}>🏆</div>
-                <div className="db-stat-info">
-                  <span className="db-stat-value">{totalCompleted}</span>
-                  <span className="db-stat-label">Modules Completed</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="db-header">
-              <div className="db-title-area">
-                <h1>☕ Advanced Java Lab</h1>
-                <p>Master enterprise Java concepts through interactive JVM simulations.</p>
-              </div>
-              <div className="db-search-bar">
-                <Search size={16} className="db-search-icon" />
-                <input
-                  type="text"
-                  placeholder="Search Java modules..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="db-grid">
-              {filteredData.map((cat) => {
-                const progress = getCategoryProgress(cat);
-                const radius = 16;
-                const circumference = 2 * Math.PI * radius;
-                const strokeDashoffset = circumference - (progress / 100) * circumference;
-
-                return (
-                  <motion.div
-                    key={cat.id}
-                    className={`db-card-el ${cat.locked ? 'opacity-70' : ''}`}
-                    style={{ '--card-color': cat.color, '--card-gradient': cat.gradient }}
-                    whileTap={cat.locked ? {} : { scale: 0.98 }}
+                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[var(--db-text-main)]">Java Developer Track</h1>
+                <p className="text-[var(--db-text-secondary)] leading-relaxed text-sm">
+                  A curated academic journey blending PowerPoint presentation structure with the power of Notion workspaces and interactive visual solvers. Master Core Java syntax, concurrency, datatypes, and DSA.
+                </p>
+                <div className="flex flex-wrap items-center gap-4 pt-2">
+                  <button className="px-5 py-3 rounded-2xl bg-[#3B82F6] text-white text-xs font-bold hover:bg-[#2563EB] transition-all flex items-center gap-2 shadow-lg shadow-blue-500/10"
+                    onClick={() => handleOpenModule(JAVA_MODULES[3])} // Quick jump to OOP Concepts
                   >
-                    <div className="db-card-top">
-                      <div className="db-card-icon" style={{ background: `linear-gradient(135deg, ${cat.color}20, ${cat.color}40)`, color: cat.color }}>
-                        <cat.Icon size={24} />
-                      </div>
+                    Continue Learning <ChevronRight size={14} />
+                  </button>
+                  <div className="text-xs text-[var(--db-text-muted)]">
+                    Last opened: <strong className="text-[var(--db-text-main)] font-semibold">OOP Concepts</strong>
+                  </div>
+                </div>
+              </div>
 
-                      {!cat.locked && (
-                        <div className="db-progress-ring-container">
-                          <svg width="36" height="36">
-                            <circle className="db-progress-ring-bg" cx="18" cy="18" r={radius} />
-                            <circle
-                              className="db-progress-ring-circle"
-                              cx="18"
-                              cy="18"
-                              r={radius}
-                              strokeDasharray={`${circumference} ${circumference}`}
-                              strokeDashoffset={strokeDashoffset}
-                              style={{ stroke: cat.color }}
-                            />
-                          </svg>
-                          <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '8px', fontWeight: 'bold' }}>
-                            {progress}%
+              {/* Progress Panel */}
+              <div className="flex items-center flex-wrap sm:flex-nowrap gap-6 w-full lg:w-auto bg-[var(--db-card-bg-elevated)] p-5 rounded-2xl border border-[var(--db-card-border)] z-10">
+                <div className="relative w-24 h-24 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle className="text-[var(--db-sidebar-border)]" strokeWidth="6" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" />
+                    <circle className="text-[#3B82F6]" strokeWidth="8" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * 41) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" />
+                  </svg>
+                  <div className="absolute flex flex-col items-center justify-center">
+                    <span className="text-xl font-bold text-[var(--db-text-main)]">41%</span>
+                    <span className="text-[9px] text-[var(--db-text-muted)] font-bold">COMPLETE</span>
+                  </div>
+                </div>
+                <div className="space-y-3 flex-grow">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                    <div>
+                      <span className="text-[10px] text-[var(--db-text-muted)] block font-semibold uppercase">Level</span>
+                      <strong className="text-lg font-bold text-[var(--db-text-main)]">08</strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-[var(--db-text-muted)] block font-semibold uppercase">XP Earned</span>
+                      <strong className="text-lg font-bold text-[var(--db-text-main)]">3.2k <span className="text-xs font-normal text-[var(--db-text-muted)]">/ 5k</span></strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-[var(--db-text-muted)] block font-semibold uppercase">Streak</span>
+                      <strong className="text-lg font-bold text-[#F59E0B] flex items-center gap-1">12 Days <Flame size={14} fill="#F59E0B" /></strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-[var(--db-text-muted)] block font-semibold uppercase">Completed</span>
+                      <strong className="text-lg font-bold text-[var(--db-text-main)]">7 / 17</strong>
+                    </div>
+                  </div>
+                  {/* Badges list */}
+                  <div className="flex gap-1.5 pt-1">
+                    <span className="px-2 py-0.5 rounded bg-blue-50/10 border border-[#3B82F6]/20 text-[9px] font-bold text-[#3B82F6]">Speed Demon</span>
+                    <span className="px-2 py-0.5 rounded bg-purple-50/10 border border-[#8B5CF6]/20 text-[9px] font-bold text-[#8B5CF6]">Ninja</span>
+                    <span className="px-2 py-0.5 rounded bg-emerald-50/10 border border-[#10B981]/20 text-[9px] font-bold text-[#10B981]">Collector</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ROADMAP TIMELINE */}
+            <div className="card-glass p-6 rounded-[24px] border border-[var(--db-card-border)]">
+              <h3 className="text-xs font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Compass size={14} /> Learning Roadmap Timeline
+              </h3>
+              <div className="flex items-center justify-between gap-2 overflow-x-auto py-3">
+                {[
+                  { name: 'Fundamentals', done: true, color: '#3B82F6' },
+                  { name: 'Control Flow', done: true, color: '#06B6D4' },
+                  { name: 'OOP', active: true, color: '#8B5CF6' },
+                  { name: 'Collections', color: '#10B981' },
+                  { name: 'DSA', color: '#EF4444' },
+                  { name: 'Projects', color: '#22C55E' }
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs"
+                        style={{
+                          background: item.done ? `${item.color}20` : (item.active ? item.color : 'var(--db-input-bg)'),
+                          border: `2px solid ${item.done || item.active ? item.color : 'var(--db-card-border)'}`,
+                          color: item.done ? item.color : (item.active ? '#fff' : 'var(--db-text-muted)')
+                        }}
+                      >
+                        {item.done ? '✓' : idx + 1}
+                      </div>
+                      <span className={`text-xs font-semibold ${item.active ? 'text-[var(--db-text-main)] underline decoration-[#8B5CF6] decoration-2 underline-offset-4' : 'text-[var(--db-text-secondary)]'}`}>
+                        {item.name}
+                      </span>
+                    </div>
+                    {idx < 5 && <span className="text-[var(--db-card-border)] font-bold px-2">→</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* MODULES GRID */}
+            <div>
+              <div className="flex justify-between items-end mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-[var(--db-text-main)]">Learning Modules</h2>
+                  <p className="text-xs text-[var(--db-text-muted)] mt-1">Staggered academic paths matching all levels of expertise.</p>
+                </div>
+                <div className="text-xs text-[var(--db-text-muted)] font-medium">
+                  Showing 17 modules
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {JAVA_MODULES.map((mod) => {
+                  const ModIcon = mod.icon || BookOpen;
+                  return (
+                    <motion.div
+                      key={mod.id}
+                      onClick={() => handleOpenModule(mod)}
+                      whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                      className="java-module-card cursor-pointer group flex flex-col justify-between"
+                      style={{ '--accent-color': mod.accent }}
+                    >
+                      {/* Accent Top Border */}
+                      <div className="mod-accent-border" />
+                      
+                      <div>
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="mod-icon-wrapper" style={{ background: `${mod.accent}12`, color: mod.accent }}>
+                            <ModIcon size={20} />
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                            mod.difficulty === 'Beginner' ? 'bg-emerald-500/10 text-emerald-500' :
+                            mod.difficulty === 'Intermediate' ? 'bg-amber-500/10 text-amber-500' :
+                            mod.difficulty === 'Advanced' ? 'bg-red-500/10 text-red-500' : 'bg-gray-500/10 text-gray-500'
+                          }`}>
+                            {mod.difficulty}
                           </span>
                         </div>
-                      )}
 
-                      {cat.locked && <span className="db-card-badge advanced" style={{ background: '#E2E8F0', color: '#64748B' }}>Locked</span>}
-                      {!cat.locked && <span className={`db-card-badge ${cat.difficulty}`}>{cat.difficulty}</span>}
-                    </div>
-
-                    <h3 className="db-card-title">{cat.title}</h3>
-                    <p className="db-card-desc">{cat.description}</p>
-
-                    <div className="db-card-footer">
-                      <div className="db-card-meta">
-                        <span className="db-meta-item">⏱ {cat.duration}</span>
-                        <span className="db-meta-item">💎 {cat.xp} XP</span>
+                        <h3 className="text-base font-bold text-[var(--db-text-main)] group-hover:text-[#3B82F6] transition-colors leading-tight mb-2">
+                          {mod.title}
+                        </h3>
+                        <p className="text-xs text-[var(--db-text-muted)] line-clamp-3 leading-relaxed">
+                          {mod.description}
+                        </p>
                       </div>
-                      <button
-                        className="db-card-btn"
-                        onClick={() => openCategory(cat)}
-                        disabled={cat.locked}
-                      >
-                        <ArrowRight size={20} strokeWidth={2.5} />
-                      </button>
-                    </div>
-                  </motion.div>
+
+                      <div className="space-y-4 pt-4">
+                        {/* Progress Bar */}
+                        {!mod.features && (
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[10px] text-[var(--db-text-muted)]">
+                              <span>Progress</span>
+                              <span>{mod.progress}%</span>
+                            </div>
+                            <div className="w-full bg-[var(--db-input-bg)] h-1.5 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full transition-all duration-500" 
+                                style={{ width: `${mod.progress}%`, backgroundColor: mod.accent }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {mod.features && (
+                          <div className="flex flex-wrap gap-1">
+                            {mod.features.slice(0, 2).map((f, i) => (
+                              <span key={i} className="text-[9px] px-1.5 py-0.5 bg-[var(--db-input-bg)] text-[var(--db-text-muted)] rounded border border-[var(--db-card-border)]">
+                                {f}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between border-t border-[var(--db-card-border)] pt-3 text-[10px] text-[var(--db-text-muted)]">
+                          <span className="flex items-center gap-1 font-medium">
+                            ⏱ {mod.duration}
+                          </span>
+                          <span className="font-bold text-[var(--db-text-main)]">
+                            💎 {mod.xp} XP
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          /* MODULE DETAIL VIEW */
+          <motion.div
+            key="detail"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.35 }}
+            className="space-y-6"
+          >
+            {/* BACK HEADER BAR */}
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--db-card-border)] pb-4">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSelectedModule(null)}
+                  className="p-2.5 rounded-xl border border-[var(--db-card-border)] text-[var(--db-text-muted)] hover:text-[#3B82F6] hover:bg-blue-50/15 transition-all flex items-center justify-center"
+                >
+                  <Compass size={18} className="transform rotate-180" />
+                </button>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-bold text-[#3B82F6] tracking-wider">Module {selectedModule.id}</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--db-card-border)]" />
+                    <span className="text-[10px] uppercase font-bold text-[var(--db-text-muted)] tracking-wider">{selectedModule.difficulty}</span>
+                  </div>
+                  <h2 className="text-2xl font-extrabold text-[var(--db-text-main)] leading-none mt-1">{selectedModule.title}</h2>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1.5 rounded-xl bg-blue-50/10 border border-[#3B82F6]/20 text-xs font-bold text-[#3B82F6]">
+                  💎 {selectedModule.xp} XP Available
+                </span>
+                <button
+                  onClick={() => setSelectedModule(null)}
+                  className="px-4 py-2 bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] hover:from-[#2563EB] hover:to-[#7C3AED] text-white text-xs font-bold rounded-xl transition"
+                >
+                  Mark Complete
+                </button>
+              </div>
+            </div>
+
+            {/* TAB LIST */}
+            <div className="flex items-center border-b border-[var(--db-card-border)] gap-2 overflow-x-auto py-1">
+              {[
+                { id: 'learn', label: 'Learn', icon: BookOpen },
+                { id: 'visualize', label: 'Visualize', icon: PlayCircle },
+                { id: 'code', label: 'Code Lab', icon: Code },
+                { id: 'practice', label: 'Practice', icon: Sparkles },
+                { id: 'quiz', label: 'Quiz', icon: HelpCircle },
+                { id: 'notes', label: 'Notes', icon: FileText }
+              ].map((tab) => {
+                const TabIcon = tab.icon;
+                const active = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold rounded-t-xl border-b-2 transition-all ${
+                      active 
+                        ? 'border-[#3B82F6] text-[#3B82F6] bg-blue-50/5' 
+                        : 'border-transparent text-[var(--db-text-muted)] hover:text-[var(--db-text-main)]'
+                    }`}
+                  >
+                    <TabIcon size={14} />
+                    {tab.label}
+                  </button>
                 );
               })}
             </div>
-          </motion.div>
-        )}
 
-        {/* ─── LEVEL 2: TOPICS LIST ─── */}
-        {level === 'topics' && category && (
-          <motion.div key="topics" {...pageVariants}>
-            <div className="db-header">
-              <div className="db-title-area">
-                <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <category.Icon size={32} style={{ color: category.color }} />
-                  {category.title}
-                </h1>
-                <p>{category.description}</p>
-              </div>
-              <button className="db-breadcrumb-btn" onClick={goHome} style={{ border: '1px solid var(--db-border)', padding: '10px 18px', borderRadius: '12px' }}>
-                <ArrowLeft size={16} /> Back to Dashboard
-              </button>
-            </div>
+            {/* TAB CONTAINER */}
+            <div className="min-h-[400px]">
+              {activeTab === 'learn' && (
+                <div className="grid lg:grid-cols-4 gap-6">
+                  {/* Left Column: Topics List */}
+                  <div className="lg:col-span-1 space-y-2 card-glass p-4 rounded-2xl border border-[var(--db-card-border)]">
+                    <h4 className="text-xs font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-3">Syllabus Topics</h4>
+                    {selectedModule.topics?.map((t, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedTopicIdx(idx)}
+                        className={`w-full text-left p-3 rounded-xl text-xs font-semibold transition-all border flex items-center gap-2 ${
+                          idx === selectedTopicIdx 
+                            ? 'border-[#3B82F6] bg-blue-50/10 text-[#3B82F6]' 
+                            : 'border-transparent text-[var(--db-text-secondary)] hover:bg-[var(--db-card-bg-elevated)]'
+                        }`}
+                      >
+                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                          idx === selectedTopicIdx ? 'bg-[#3B82F6] text-white' : 'bg-[var(--db-input-bg)] text-[var(--db-text-muted)]'
+                        }`}>
+                          {idx + 1}
+                        </span>
+                        <span className="truncate">{t.title}</span>
+                      </button>
+                    ))}
+                    {!selectedModule.topics && (
+                      <div className="text-xs text-[var(--db-text-muted)] p-2">Standard mock syllabus. Select visualizing or quiz tabs.</div>
+                    )}
+                  </div>
 
-            <div className="db-grid" style={{ marginTop: '24px' }}>
-              {category.topics.map((t, idx) => (
-                <div key={t.id} className="db-card-el">
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-500 mb-2">Topic {idx + 1}</span>
-                  <h3 className="db-card-title">{t.title}</h3>
-                  <p className="db-card-desc">{t.preview}</p>
-                  <div className="db-card-footer">
-                    <button className="db-card-btn" onClick={() => openTopic(t)} style={{ background: category.color }}>
-                      <Eye size={14} /> Visualize Lab
+                  {/* Right Column: Content Detail */}
+                  <div className="lg:col-span-3 card-glass p-6 rounded-2xl border border-[var(--db-card-border)] space-y-4">
+                    {selectedModule.topics?.[selectedTopicIdx] ? (
+                      <>
+                        <span className="text-[10px] uppercase font-extrabold text-[#3B82F6] tracking-wider">
+                          Section {selectedTopicIdx + 1}
+                        </span>
+                        <h3 className="text-xl font-bold text-[var(--db-text-main)] mt-1">
+                          {selectedModule.topics[selectedTopicIdx].title}
+                        </h3>
+                        <p className="text-sm text-[var(--db-text-secondary)] leading-relaxed whitespace-pre-wrap">
+                          {selectedModule.topics[selectedTopicIdx].content}
+                        </p>
+                        <div className="p-4 bg-[var(--db-card-bg-elevated)] rounded-xl border border-[var(--db-card-border)] flex items-start gap-3 mt-6">
+                          <Info className="text-[#3B82F6] flex-shrink-0 mt-0.5" size={16} />
+                          <div className="space-y-1">
+                            <span className="text-xs font-bold text-[var(--db-text-main)] block">Pro Tip</span>
+                            <span className="text-xs text-[var(--db-text-muted)] leading-relaxed">
+                              Run the "Code Lab" compiler side-by-side or launch the JVM visual diagram in the "Visualize" tab to watch variables alter memory registry blocks.
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-12 text-[var(--db-text-muted)] text-sm">
+                        No syllabus topic loaded. Please click on other tabs.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'visualize' && (
+                <div className="grid lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2 card-glass p-6 rounded-2xl border border-[var(--db-card-border)]">
+                    {renderVisualizer()}
+                  </div>
+                  <div className="lg:col-span-1 card-glass p-5 rounded-2xl border border-[var(--db-card-border)] space-y-4">
+                    <h4 className="text-xs font-bold text-[var(--db-text-muted)] uppercase tracking-wider">Visual Instructions</h4>
+                    <p className="text-xs text-[var(--db-text-secondary)] leading-relaxed">
+                      This visual solver renders dynamic structures of JVM heaps, variable allocations, threads, and linked structures.
+                    </p>
+                    <div className="space-y-2.5 pt-2">
+                      <div className="flex gap-2 items-start text-xs">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] mt-1.5 flex-shrink-0" />
+                        <span className="text-[var(--db-text-muted)]">Blue borders indicate the active stack frames.</span>
+                      </div>
+                      <div className="flex gap-2 items-start text-xs">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] mt-1.5 flex-shrink-0" />
+                        <span className="text-[var(--db-text-muted)]">Green borders signify finished reference objects.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'code' && (
+                <div className="grid lg:grid-cols-12 gap-6">
+                  {/* Left Column: Description & Instructions */}
+                  <div className="lg:col-span-3 card-glass p-5 rounded-2xl border border-[var(--db-card-border)] space-y-4">
+                    <h4 className="text-xs font-bold text-[#3B82F6] uppercase tracking-wider">Coding Workspace</h4>
+                    <h3 className="text-sm font-bold text-[var(--db-text-main)]">Challenge: Syntax Compiler</h3>
+                    <p className="text-xs text-[var(--db-text-secondary)] leading-relaxed">
+                      Modify the code block in the editor to print details. When complete, hit the compilation button to run main threads.
+                    </p>
+                    <div className="p-3 bg-[var(--db-card-bg-elevated)] rounded-xl border border-[var(--db-card-border)]">
+                      <span className="text-[10px] font-bold text-[#F59E0B] block">⚠️ Constraint</span>
+                      <span className="text-[10px] text-[var(--db-text-muted)] leading-relaxed">
+                        Ensure class name corresponds exactly to compiling parameters.
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Center Column: Live Editor */}
+                  <div className="lg:col-span-6 space-y-3">
+                    <div className="flex justify-between items-center bg-[#0F172A] px-4 py-2.5 rounded-t-2xl border-b border-slate-800">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444]" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
+                      </div>
+                      <span className="text-xs font-mono text-slate-400">Main.java</span>
+                      <button 
+                        onClick={handleRunCode}
+                        className="px-3 py-1.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1"
+                      >
+                        <Play size={10} fill="currentColor" /> Run Code
+                      </button>
+                    </div>
+                    <textarea
+                      value={userCode}
+                      onChange={(e) => setUserCode(e.target.value)}
+                      className="w-full h-80 bg-[#0F172A] text-[#E2E8F0] font-mono text-xs p-4 rounded-b-2xl border border-t-0 border-slate-800 focus:outline-none focus:ring-0 resize-none leading-relaxed"
+                      spellCheck="false"
+                    />
+                  </div>
+
+                  {/* Right Column: Output & Hints */}
+                  <div className="lg:col-span-3 space-y-4">
+                    <div className="card-glass p-5 rounded-2xl border border-[var(--db-card-border)] flex flex-col h-full justify-between gap-4">
+                      <div>
+                        <h4 className="text-xs font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1">
+                          <Terminal size={12} /> Execution Console
+                        </h4>
+                        <pre className="bg-[#0b0f19] text-xs font-mono p-3 rounded-xl border border-[var(--db-card-border)] text-emerald-400 min-h-[140px] whitespace-pre-wrap leading-relaxed">
+                          {consoleOutput}
+                        </pre>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <button 
+                          onClick={() => setShowAiHint(!showAiHint)}
+                          className="w-full py-2 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/20 text-xs font-bold text-[#8B5CF6] rounded-xl flex items-center justify-center gap-1 hover:from-purple-500/20 transition-all"
+                        >
+                          <Sparkles size={12} /> AI Copilot Hints
+                        </button>
+                        {showAiHint && (
+                          <div className="p-3 bg-purple-500/5 border border-purple-500/10 text-[10px] text-[var(--db-text-muted)] rounded-xl leading-relaxed">
+                            💡 Use <code>System.out.println()</code> blocks to write strings to console output.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'practice' && (
+                <div className="card-glass p-6 rounded-2xl border border-[var(--db-card-border)] space-y-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-[var(--db-text-main)]">Daily Code Practice Arena</h3>
+                    <p className="text-xs text-[var(--db-text-muted)] mt-1">Submit optimal code patterns to achieve performance badges.</p>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="p-4 bg-[var(--db-card-bg-elevated)] rounded-2xl border border-[var(--db-card-border)] space-y-3">
+                      <span className="px-2 py-0.5 bg-blue-50/10 border border-[#3B82F6]/20 text-[9px] font-bold text-[#3B82F6] uppercase rounded">Optimal Method</span>
+                      <h4 className="text-sm font-bold text-[var(--db-text-main)]">Recursive Fibonacci Algorithm</h4>
+                      <p className="text-xs text-[var(--db-text-muted)] leading-relaxed">
+                        Implement recursion techniques to print sequences. Run benchmarks to track complexity.
+                      </p>
+                      <button className="px-3.5 py-2 bg-[#3B82F6] text-white text-xs font-bold rounded-xl hover:bg-[#2563EB] transition-colors">
+                        Launch Practice Lab
+                      </button>
+                    </div>
+
+                    <div className="p-4 bg-[var(--db-card-bg-elevated)] rounded-2xl border border-[var(--db-card-border)] space-y-3">
+                      <span className="px-2 py-0.5 bg-purple-50/10 border border-[#8B5CF6]/20 text-[9px] font-bold text-[#8B5CF6] uppercase rounded">Benchmarks</span>
+                      <h4 className="text-sm font-bold text-[var(--db-text-main)]">Time & Space Complexity</h4>
+                      <div className="grid grid-cols-2 gap-3 pt-1">
+                        <div className="bg-[var(--db-input-bg)] p-2 rounded-lg border border-[var(--db-card-border)] text-center">
+                          <span className="text-[9px] text-[var(--db-text-muted)] block">Time</span>
+                          <strong className="text-xs text-[var(--db-text-main)] font-mono">O(2^N)</strong>
+                        </div>
+                        <div className="bg-[var(--db-input-bg)] p-2 rounded-lg border border-[var(--db-card-border)] text-center">
+                          <span className="text-[9px] text-[var(--db-text-muted)] block">Space</span>
+                          <strong className="text-xs text-[var(--db-text-main)] font-mono">O(N)</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'quiz' && (
+                <div className="card-glass p-6 rounded-2xl border border-[var(--db-card-border)] max-w-xl mx-auto space-y-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-[var(--db-text-main)]">Topic Evaluation</h3>
+                    <p className="text-xs text-[var(--db-text-muted)] mt-1">Submit the correct option to acquire XP points.</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <p className="text-sm font-semibold text-[var(--db-text-main)] leading-relaxed">
+                      {mockQuiz.question}
+                    </p>
+
+                    <div className="space-y-2">
+                      {mockQuiz.options.map((opt) => {
+                        const selected = selectedAnswer === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            disabled={quizScore !== null}
+                            onClick={() => handleAnswerSubmit(opt.id)}
+                            className={`w-full text-left p-3.5 rounded-xl text-xs font-semibold border transition-all flex justify-between items-center ${
+                              selected
+                                ? (opt.id === mockQuiz.correct ? 'border-emerald-500 bg-emerald-50/5 text-emerald-500' : 'border-red-500 bg-red-50/5 text-red-500')
+                                : 'border-[var(--db-card-border)] hover:bg-[var(--db-card-bg-elevated)] text-[var(--db-text-secondary)]'
+                            }`}
+                          >
+                            <span>{opt.id.toUpperCase()}. {opt.text}</span>
+                            {selected && opt.id === mockQuiz.correct && <CheckCircle size={14} className="text-emerald-500" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {quizScore !== null && (
+                      <div className="p-4 bg-[var(--db-card-bg-elevated)] rounded-xl border border-[var(--db-card-border)] space-y-2">
+                        <span className={`text-xs font-bold block ${quizScore === 100 ? 'text-emerald-500' : 'text-red-500'}`}>
+                          {quizScore === 100 ? '🎉 Correct Answer! (+50 XP)' : '❌ Incorrect Answer.'}
+                        </span>
+                        <p className="text-xs text-[var(--db-text-muted)] leading-relaxed">
+                          {mockQuiz.explanation}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'notes' && (
+                <div className="card-glass p-6 rounded-2xl border border-[var(--db-card-border)] space-y-4">
+                  <h3 className="text-lg font-bold text-[var(--db-text-main)]">Personal Study Notes</h3>
+                  <textarea
+                    placeholder="Capture key class constructs, exception handling syntaxes, or thread methods here. Notes are stored locally inside the profile..."
+                    className="w-full h-40 bg-[var(--db-input-bg)] text-[var(--db-text-main)] text-xs p-4 rounded-xl border border-[var(--db-input-border)] focus:outline-none leading-relaxed"
+                  />
+                  <div className="flex justify-end">
+                    <button className="px-4 py-2 bg-[#3B82F6] text-white text-xs font-bold rounded-xl hover:bg-[#2563EB] transition-colors">
+                      Save Notes
                     </button>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
-          </motion.div>
-        )}
-
-        {/* ─── LEVEL 3: CONCEPT SIMULATOR ─── */}
-        {level === 'concept' && topic && (
-          <motion.div key="concept" {...pageVariants}>
-            <div className="db-header">
-              <div className="db-title-area">
-                <h1>{topic.title}</h1>
-                <p>Run JVM lifecycle simulations and step through thread state modifications.</p>
-              </div>
-              <button className="db-breadcrumb-btn" onClick={goTopics} style={{ border: '1px solid var(--db-border)', padding: '10px 18px', borderRadius: '12px' }}>
-                <ArrowLeft size={16} /> Back to Topics
-              </button>
-            </div>
-
-            <div className="db-lab-panel">
-              {/* Visualization Canvas */}
-              <div className="db-viz-panel">
-                <div className="db-viz-topbar">
-                  <span className="db-viz-title">
-                    <span className="db-live-dot" style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#10B981' }} />
-                    JVM Thread Canvas
-                  </span>
-                  <span className="db-viz-badge">Step {step + 1} / {topic.steps}</span>
-                </div>
-                <div className="db-viz-canvas">
-                  <JavaVizComponent vizType={topic.vizType} step={step} />
-                </div>
-              </div>
-
-              {/* Code/Concept Panel */}
-              <div className="db-code-panel">
-                <div className="db-code-topbar">
-                  <div className="db-code-dots">
-                    <span /><span /><span />
-                  </div>
-                  <span className="db-code-filename">App.java</span>
-                  <span className="db-code-lang">Java</span>
-                </div>
-                <pre className="db-code-body">{topic.code}</pre>
-              </div>
-            </div>
-
-            {/* Timeline Playback Controls */}
-            <div className="db-timeline">
-              <div className="db-timeline-label">⏱ JVM Execution Timeline</div>
-              <div className="db-timeline-controls">
-                <button className="db-tl-btn" title="Reset" onClick={() => { setStep(0); setPlaying(false); }}>
-                  <RotateCcw size={15} />
-                </button>
-                <button className="db-tl-btn play-btn" title={playing ? 'Pause' : 'Play'} onClick={() => {
-                  if (step >= topic.steps - 1) setStep(0);
-                  setPlaying(!playing);
-                }}>
-                  {playing ? <Pause size={15} /> : <Play size={15} />}
-                </button>
-                <div className="db-tl-slider-wrap">
-                  <input
-                    type="range"
-                    className="db-tl-slider"
-                    min={0}
-                    max={topic.steps - 1}
-                    value={step}
-                    style={{ '--progress': `${(step / (topic.steps - 1)) * 100}%` }}
-                    onChange={e => { setStep(Number(e.target.value)); setPlaying(false); }}
-                  />
-                  <div className="db-tl-steps">
-                    {topic.stepLabels.map((lbl, idx) => (
-                      <span
-                        key={idx}
-                        className={`db-tl-step-label ${idx === step ? 'active' : ''}`}
-                        onClick={() => { setStep(idx); setPlaying(false); }}
-                      >
-                        {lbl}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Step Explanation Card */}
-            {topic.stepDescriptions?.[step] && (
-              <motion.div
-                key={`desc-${step}`}
-                className="db-step-info"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <h4>
-                  <span className="db-step-num-badge">{step + 1}</span>
-                  {topic.stepLabels?.[step]}
-                </h4>
-                <p>{topic.stepDescriptions[step]}</p>
-              </motion.div>
-            )}
 
           </motion.div>
         )}
-
       </AnimatePresence>
+      
     </div>
   );
 }

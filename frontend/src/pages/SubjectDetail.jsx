@@ -61,8 +61,8 @@ export default function SubjectDetail() {
     );
   }
 
-  // Advanced Java gets the interactive lab experience
-  if (subject.subject_name === 'Advanced Java') {
+  // Advanced Java & Core Java get the interactive lab experience
+  if (subject.subject_name === 'Advanced Java' || subject.subject_name === 'Java') {
     return (
       <div>
         <div style={{ marginBottom: 24 }}>

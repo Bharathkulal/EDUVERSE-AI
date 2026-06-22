@@ -1,35 +1,156 @@
 /* ═══════════════════════════════════════════════════════════
    JavaLab.css — Advanced Java Interactive Learning Hub
-   EduVerse AI | Matches DBMSLab.css structure exactly
+   EduVerse AI | Premium UI Styling for Java learning path
    ═══════════════════════════════════════════════════════════ */
 
-.java-lab {
-  --db-primary: #2563EB;
-  --db-primary-h: #1D4ED8;
-  --db-secondary: #60A5FA;
-  --db-accent: #06B6D4;
-  --db-success: #10B981;
-  --db-warning: #F59E0B;
-  --db-danger: #EF4444;
-  --db-bg: #F8FAFC;
-  --db-card: #FFFFFF;
-  --db-border: #E2E8F0;
-  --db-text: #0F172A;
-  --db-text-muted: #64748B;
-  --db-radius: 24px;
-  --db-radius-sm: 12px;
-
-  font-family: 'Inter', system-ui, sans-serif;
-  color: var(--db-text);
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+/* Layout & Container */
+.java-learning-path {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--db-text-main);
+  background: transparent;
+  min-height: 100vh;
+  transition: var(--db-transition);
 }
 
-[data-theme="dark"] .java-lab {
-  --db-bg: #0B0F19;
-  --db-card: rgba(17, 24, 39, 0.85);
-  --db-border: rgba(255, 255, 255, 0.08);
-  --db-text: #F3F4F6;
-  --db-text-muted: #9CA3AF;
+/* Card glass aesthetics */
+.card-glass {
+  background: var(--db-card-bg);
+  border: 1px solid var(--db-card-border);
+  box-shadow: var(--db-shadow);
+  border-radius: 24px;
+  transition: var(--db-transition);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Card list grid & Module Card */
+.java-module-card {
+  background: var(--db-card-bg);
+  border: 1px solid var(--db-card-border);
+  box-shadow: var(--db-shadow);
+  border-radius: 24px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 240px;
+}
+
+.java-module-card:hover {
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  border-color: var(--accent-color);
+  transform: translateY(-6px);
+}
+
+/* Theme dark specific shadows */
+[data-theme="dark"] .java-module-card:hover {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.mod-accent-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--accent-color);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+}
+
+.mod-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  transition: var(--db-transition);
+}
+
+/* Visualization Box */
+.viz-box {
+  background: var(--db-card-bg-elevated);
+  border: 1px solid var(--db-card-border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 16px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition: var(--db-transition);
+}
+
+[data-theme="dark"] .viz-box {
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Mock Code Editor Styles */
+.code-editor-textarea {
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: none;
+  background: #0F172A; /* Enforce dark background always */
+  color: #F8FAFC;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.code-editor-textarea:focus {
+  border-color: #3B82F6;
+}
+
+.console-output-box {
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
+  font-size: 12px;
+  background: #090D16;
+  color: #34D399;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 100px;
+  overflow-y: auto;
+}
+
+/* Tab buttons and Navigation */
+.detail-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  color: var(--db-text-secondary);
+  border: 1px solid transparent;
+}
+
+.detail-tab-btn:hover {
+  background: var(--db-card-bg-elevated);
+  color: var(--db-text-main);
+}
+
+.detail-tab-btn.active {
+  background: var(--db-card-bg-elevated);
+  color: #3B82F6;
+  border-color: var(--db-card-border);
+}
+
+/* Hero Circle Animation classes if any */
+.db-hero-section {
+  background: var(--db-card-bg);
+  transition: var(--db-transition);
+}
+
+/* Accessibility settings */
+@media (max-width: 640px) {
+  .java-learning-path {
+    padding: 12px;
+  }
 }
