@@ -6,6 +6,7 @@ import CSharpLab from '../components/CSharpLab';
 import DBMSLab from '../components/DBMSLab';
 import JavaLab from '../components/JavaLab';
 import DSALab from '../components/DSALab';
+import WebDevLab from '../components/WebDevLab';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Layers, List, GitCommit, GitMerge, Share2, PlayCircle, CheckCircle2 } from 'lucide-react';
 
@@ -47,6 +48,19 @@ export default function SubjectDetail() {
   };
 
   if (!subject) return <div className="animate-pulse h-96 bg-slate-200 rounded-xl" />;
+
+  // Web Development gets the interactive lab experience
+  if (subject.subject_name === 'Web Development') {
+    return (
+      <div>
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px' }}>{subject.subject_name}</h1>
+          <p style={{ color: '#64748B', margin: 0, fontSize: '0.9rem' }}>{subject.description}</p>
+        </div>
+        <WebDevLab />
+      </div>
+    );
+  }
 
   // DBMS gets the interactive lab experience
   if (subject.subject_name === 'DBMS') {
