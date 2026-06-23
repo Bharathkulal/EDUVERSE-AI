@@ -179,6 +179,72 @@ async function seed() {
          VALUES ($1::int, 15, 8)`,
         [studentId]
       );
+    } else {
+      // Let's update it to ensure it reflects our seeded counts
+      await db.query(
+        `UPDATE student_progress SET study_hours = 15, completed_topics = 8 WHERE student_id = $1`,
+        [studentId]
+      );
+    }
+
+    // Seed completed_topics
+    const allTopics = await db.query('SELECT t.id, t.title, s.subject_name FROM topics t JOIN subjects s ON t.subject_id = s.id');
+    const existingCompleted = await db.query('SELECT 1 FROM completed_topics WHERE student_id = $1', [studentId]);
+    if (existingCompleted.rows.length === 0 && allTopics.rows.length > 0) {
+      const completedList = [
+        { subject: 'FOC', title: 'Introduction', minutes: 20, daysAgo: 6 },
+        { subject: 'FOC', title: 'Core Concepts', minutes: 35, daysAgo: 6 },
+        { subject: 'Java', title: 'Introduction', minutes: 30, daysAgo: 5 },
+        { subject: 'Java', title: 'Core Concepts', minutes: 45, daysAgo: 4 },
+        { subject: 'Java', title: 'Practical Applications', minutes: 60, daysAgo: 3 },
+        { subject: 'DSA', title: 'Introduction', minutes: 40, daysAgo: 2 },
+        { subject: 'Web Development', title: 'Introduction', minutes: 25, daysAgo: 1 },
+        { subject: 'Web Development', title: 'Core Concepts', minutes: 50, daysAgo: 0 }
+      ];
+
+      for (const item of completedList) {
+        const targetTopic = allTopics.rows.find(t => t.subject_name === item.subject && t.title === item.title);
+        if (targetTopic) {
+          const completedDate = new Date();
+          completedDate.setDate(completedDate.getDate() - item.daysAgo);
+          await db.query(
+            `INSERT INTO completed_topics (student_id, topic_id, completed_at, study_minutes)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT (student_id, topic_id) DO NOTHING`,
+            [studentId, targetTopic.id, completedDate, item.minutes]
+          );
+        }
+      }
+    }
+
+    // Seed study_sessions
+    const existingSessions = await db.query('SELECT 1 FROM study_sessions WHERE student_id = $1', [studentId]);
+    if (existingSessions.rows.length === 0) {
+      const sessions = [
+        { daysAgo: 6, startHour: 9, durationMins: 45 },
+        { daysAgo: 6, startHour: 15, durationMins: 30 },
+        { daysAgo: 5, startHour: 10, durationMins: 60 },
+        { daysAgo: 4, startHour: 11, durationMins: 40 },
+        { daysAgo: 3, startHour: 14, durationMins: 90 },
+        { daysAgo: 2, startHour: 16, durationMins: 30 },
+        { daysAgo: 2, startHour: 19, durationMins: 30 },
+        { daysAgo: 1, startHour: 10, durationMins: 75 },
+        { daysAgo: 0, startHour: 11, durationMins: 50 }
+      ];
+
+      for (const s of sessions) {
+        const startTime = new Date();
+        startTime.setDate(startTime.getDate() - s.daysAgo);
+        startTime.setHours(s.startHour, 0, 0, 0);
+
+        const endTime = new Date(startTime.getTime() + s.durationMins * 60000);
+
+        await db.query(
+          `INSERT INTO study_sessions (student_id, session_start_time, session_end_time, created_at)
+           VALUES ($1, $2, $3, $4)`,
+          [studentId, startTime, endTime, startTime]
+        );
+      }
     }
 
     // Check if quiz result exists

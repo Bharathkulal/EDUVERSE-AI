@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useSessionTracker } from '../utils/sessionTracker';
 import '../pages/DashboardTheme.css';
 
 const studentNav = [
@@ -184,6 +185,7 @@ const TOP_LEVEL_PATHS = [
 
 export default function Layout({ children }) {
   const { user, logout, isAdmin } = useAuth();
+  useSessionTracker(user);
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -261,15 +263,14 @@ export default function Layout({ children }) {
         <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sleek Sidebar */}
       <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col justify-between p-6`}
         style={{ 
           background: 'var(--db-sidebar-bg)', 
           borderRight: '1px solid var(--db-sidebar-border)' 
         }}
       >
-        <div className="flex flex-col h-full justify-between overflow-hidden">
-          <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex flex-col h-full justify-between overflow-y-auto pr-1 custom-sidebar-scroll">
+          <div className="flex flex-col flex-1">
             {/* Logo */}
             <div className="db-sidebar-logo flex flex-col items-start gap-1 pb-4 border-b border-[var(--db-sidebar-border)] mb-4 flex-shrink-0">
               <div className="flex items-center gap-3">
@@ -557,7 +558,7 @@ export default function Layout({ children }) {
           </div>
         </header>
 
-        <main className="db-content-body overflow-hidden">
+        <main className="db-content-body overflow-y-auto custom-sidebar-scroll">
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, x: 20 }}

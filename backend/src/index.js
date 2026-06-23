@@ -22,6 +22,29 @@ const db = require('./config/db');
       ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_completed BOOLEAN DEFAULT false;
     `);
 
+    // Create completed_topics table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS completed_topics (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        topic_id INTEGER REFERENCES topics(id) ON DELETE CASCADE,
+        completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        study_minutes INTEGER DEFAULT 15,
+        UNIQUE(student_id, topic_id)
+      )
+    `);
+
+    // Create study_sessions table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS study_sessions (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        session_start_time TIMESTAMP NOT NULL,
+        session_end_time TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Create profiles table for student onboarding data
     await db.query(`
       CREATE TABLE IF NOT EXISTS profiles (
