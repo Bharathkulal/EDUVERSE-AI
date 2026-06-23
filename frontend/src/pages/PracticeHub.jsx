@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TypingQuest from './TypingQuest';
+import CodingBattleSystem from './CodingBattleSystem';
 
 export default function PracticeHub() {
   const [activeModule, setActiveModule] = useState(null);
@@ -74,6 +75,8 @@ export default function PracticeHub() {
           </motion.div>
         ) : activeModule === 'typing' ? (
           <TypingQuest key="typing-quest" onExit={() => setActiveModule(null)} />
+        ) : activeModule === 'coding' ? (
+          <CodingBattleSystem key="coding-battle" onExit={() => setActiveModule(null)} />
         ) : (
           <motion.div 
             key="module"
