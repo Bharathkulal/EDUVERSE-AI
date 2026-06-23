@@ -101,6 +101,12 @@ export default function SubjectDetail() {
     );
   }
 
+  // --- NEW FRAMER MOTION FOC PROTOTYPE ---
+  if (subject.subject_name === 'FOC') {
+    navigate('/foc');
+    return null;
+  }
+
   // --- NEW FRAMER MOTION DSA PROTOTYPE ---
   if (subject.subject_name === 'DSA') {
     const categories = [

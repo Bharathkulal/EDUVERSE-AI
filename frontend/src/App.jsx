@@ -37,6 +37,7 @@ const TreeVisualization = lazy(() => import('./pages/TreeVisualization'));
 const GraphVisualization = lazy(() => import('./pages/GraphVisualization'));
 const MathVisualization = lazy(() => import('./pages/MathVisualization'));
 const ExecutionSimulator = lazy(() => import('./pages/ExecutionSimulator'));
+const FocVisualization = lazy(() => import('./pages/FocVisualization'));
 
 // Lazy Loaded Admin Pages
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -98,6 +99,7 @@ export default function App() {
             <Route path="/dsa/graph" element={<ProtectedRoute><GraphVisualization /></ProtectedRoute>} />
             <Route path="/mathematics/numerical-methods" element={<ProtectedRoute><MathVisualization /></ProtectedRoute>} />
             <Route path="/dsa/stack/simulator" element={<ProtectedRoute><Layout><ExecutionSimulator /></Layout></ProtectedRoute>} />
+            <Route path="/foc" element={<ProtectedRoute><Layout><FocVisualization /></Layout></ProtectedRoute>} />
 
             <Route path="/practice-hub" element={<ProtectedRoute><Layout><PracticeHub /></Layout></ProtectedRoute>} />
 
