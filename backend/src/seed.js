@@ -272,6 +272,55 @@ async function seed() {
         );
       }
     }
+
+    // Seed user_xp_history (totaling 3104 XP)
+    const hasXpHistory = await db.query('SELECT 1 FROM user_xp_history WHERE user_id = $1', [studentId]);
+    if (hasXpHistory.rows.length === 0) {
+      const xpMilestones = [
+        { xp: 1000, action: 'Initialized profile & onboarding', daysAgo: 28 },
+        { xp: 500, action: 'Completed Unit 1 Roadmap', daysAgo: 25 },
+        { xp: 400, action: 'Passed Stack implementation challenge', daysAgo: 21 },
+        { xp: 300, action: 'Solved Two Sum Problem', daysAgo: 18 },
+        { xp: 300, action: 'Solved Binary Search Mastery', daysAgo: 14 },
+        { xp: 200, action: 'Completed Java Array operations quiz', daysAgo: 10 },
+        { xp: 200, action: 'Completed FOC basics quiz', daysAgo: 7 },
+        { xp: 100, action: 'Created first revision note', daysAgo: 3 },
+        { xp: 104, action: 'Weekly login streak bonus', daysAgo: 1 }
+      ];
+      for (const item of xpMilestones) {
+        const d = new Date();
+        d.setDate(d.getDate() - item.daysAgo);
+        await db.query(
+          'INSERT INTO user_xp_history (user_id, xp_amount, action, created_at) VALUES ($1, $2, $3, $4)',
+          [studentId, item.xp, item.action, d.toISOString()]
+        );
+      }
+    }
+
+    // Seed user_streaks (streak count 7)
+    const hasStreak = await db.query('SELECT 1 FROM user_streaks WHERE user_id = $1', [studentId]);
+    if (hasStreak.rows.length === 0) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      await db.query(
+        'INSERT INTO user_streaks (user_id, streak_count, last_activity_date) VALUES ($1, 7, $2)',
+        [studentId, todayStr]
+      );
+    }
+
+    // Seed notes
+    const hasNotes = await db.query('SELECT 1 FROM notes WHERE user_id = $1', [studentId]);
+    if (hasNotes.rows.length === 0) {
+      const sampleNotes = [
+        { title: 'Complexity of Binary Search', content: 'Binary Search has O(log n) average and worst-case time complexity.\nIt requires the array to be sorted beforehand.\n- Best Case: O(1)\n- Average Case: O(log n)\n- Space Complexity: O(1) iterative, O(log n) recursive.', pinned: true, favorite: true },
+        { title: 'Linear Regression Basics', content: 'Linear Regression is a supervised learning algorithm.\nEquation: y = mx + c\nUsed to predict numerical continuous values.', pinned: false, favorite: true }
+      ];
+      for (const note of sampleNotes) {
+        await db.query(
+          'INSERT INTO notes (user_id, title, content, pinned, favorite) VALUES ($1, $2, $3, $4, $5)',
+          [studentId, note.title, note.content, note.pinned, note.favorite]
+        );
+      }
+    }
   }
 
   console.log('Seed completed!');

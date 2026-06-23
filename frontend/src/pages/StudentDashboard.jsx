@@ -72,36 +72,54 @@ export default function StudentDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [dbData, setDbData] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch real database progress and stats
+  // Fetch real database progress and analytics
   useEffect(() => {
-    api.get('/progress/dashboard')
-      .then((res) => {
-        setDbData(res.data);
+    Promise.all([
+      api.get('/progress/dashboard'),
+      api.get('/progress/analytics')
+    ])
+      .then(([dashRes, analyticsRes]) => {
+        setDbData(dashRes.data);
+        setAnalytics(analyticsRes.data);
       })
-      .catch((err) => console.error('Error fetching dashboard progress:', err))
+      .catch((err) => {
+        console.error('Error fetching dashboard data:', err);
+        setError('Failed to load dashboard data');
+      })
       .finally(() => setLoading(false));
   }, []);
 
-  // Compute stats dynamically from DB
-  const studyHours = dbData?.studyHours || 0.0;
+  // All values derived from real API data
+  const totalXP = dbData?.profile?.xp || 0;
+  const userStreak = dbData?.profile?.streak || 0;
+  const userCoins = Math.round(totalXP * 0.1);
   const completedLessons = dbData?.completedLessons || 0;
+  const studyHours = dbData?.studyHours || 0;
   const quizAvg = dbData?.quizScores?.average || 0;
   const codingAvg = dbData?.codingScores?.average || 0;
 
-  // Level & XP Formula
+  // Level computed from real data
   const computedLevel = Math.max(1, Math.floor(studyHours * 2.5 + completedLessons * 1.5 + (quizAvg + codingAvg) / 20));
-  const totalXP = Math.round(studyHours * 100 + completedLessons * 50 + quizAvg * 5 + codingAvg * 8) || 1200;
-  
-  // Custom coins & streak calculation
-  const userCoins = Math.round(totalXP * 0.1) || 120;
-  const userStreak = dbData?.profile?.streak || 7;
-  const globalRank = Math.max(1, 150 - Math.floor(totalXP / 100)) || 42;
 
-  // Recommendations and Weak area
-  const weakSubject = dbData?.weakSubject || 'Binary Trees';
-  const recommendations = dbData?.recommendedTopics || 'Binary Trees, Graph Algorithms';
+  // Analytics-derived values
+  const currentSubject = analytics?.currentSubject || 'Not Started';
+  const currentTopicName = analytics?.currentTopicName || 'Not Started';
+  const nextRecommendedTopic = analytics?.nextRecommendedTopicName || 'Start your first topic';
+  const completedTopicsCount = analytics?.completedTopicsCount || 0;
+  const totalTopicsCount = analytics?.totalTopicsCount || 0;
+  const overallProgress = totalTopicsCount > 0 ? Math.round((completedTopicsCount / totalTopicsCount) * 100) : 0;
+  const subjectProgress = analytics?.subjectProgress || [];
+  const weaknesses = analytics?.weaknesses || 'None yet';
+  const strengths = analytics?.strengths || 'None yet';
+  const studyTimeChart = analytics?.studyTimeStats || { labels: [], data: [] };
+  const roadmap = analytics?.roadmap || [];
+
+  // Recent activity from XP history or roadmap — derived from real data
+  const recentQuizzes = dbData?.recentQuizzes || [];
 
   // Greeting by hour
   const greeting = (() => {
@@ -111,13 +129,40 @@ export default function StudentDashboard() {
     return 'Good Evening';
   })();
 
-  // Daily missions list
+  // Dynamic daily missions based on real activity
   const missions = [
-    { id: 1, label: 'Solve 3 DSA Problems', xp: 50, done: codingAvg > 0 },
-    { id: 2, label: 'Complete Theory Lesson', xp: 30, done: completedLessons > 0 },
-    { id: 3, label: 'Take a Quiz', xp: 20, done: quizAvg > 0 }
+    { id: 1, label: 'Solve a coding problem', xp: 50, done: (analytics?.codingStats?.total || 0) > 0 },
+    { id: 2, label: 'Complete a theory topic', xp: 30, done: completedLessons > 0 },
+    { id: 3, label: 'Take a quiz', xp: 20, done: (analytics?.quizStats?.attempts || 0) > 0 }
   ];
   const completedMissionsCount = missions.filter(m => m.done).length;
+
+  // Continue Learning Path from real roadmap data
+  const continuePathSteps = (() => {
+    if (!roadmap || roadmap.length === 0) return [];
+    // Group by subject, pick last completed + in-progress + next 2 locked per subject
+    const uniqueSubjects = [...new Set(roadmap.map(r => r.subject))];
+    const steps = [];
+    for (const sub of uniqueSubjects) {
+      const subNodes = roadmap.filter(r => r.subject === sub);
+      for (const node of subNodes) {
+        steps.push(node);
+      }
+    }
+    // Show the most relevant 5 nodes centered around in-progress
+    const inProgressIdx = steps.findIndex(s => s.status === 'In Progress');
+    if (inProgressIdx === -1) return steps.slice(0, 5);
+    const start = Math.max(0, inProgressIdx - 2);
+    return steps.slice(start, start + 5);
+  })();
+
+  // Recent Activity from real quiz data
+  const recentActivity = recentQuizzes.map((q) => ({
+    label: `Scored ${q.score}% on ${q.title || 'Quiz'}`,
+    xp: `+${Math.round(q.score / 5)} XP`,
+    time: new Date(q.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    icon: '📝'
+  }));
 
   if (loading) {
     return (
@@ -128,10 +173,25 @@ export default function StudentDashboard() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="w-full min-h-[60vh] flex flex-col items-center justify-center gap-3">
+        <span className="text-4xl">⚠️</span>
+        <span className="text-sm font-semibold text-red-400">{error}</span>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm font-bold"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-12 pr-2">
       
-      {/* ── HERO OVERVIEW SECTION (Dark background, strictly white texts via inline style override) ── */}
+      {/* ── HERO OVERVIEW SECTION ── */}
       <div className="relative overflow-hidden rounded-3xl border border-violet-950/60 bg-gradient-to-r from-[#0b071a] via-[#120c2b] to-[#060412]">
         {/* Glow Effects */}
         <div className="absolute top-0 right-0 w-72 h-72 bg-violet-600/10 rounded-full blur-[100px] pointer-events-none" />
@@ -153,23 +213,23 @@ export default function StudentDashboard() {
                 Continue Learning
               </div>
               <div>
-                <h3 className="text-lg font-bold" style={{ color: '#FFFFFF' }}>Binary Search in Arrays</h3>
-                <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.65)' }}>Data Structures & Algorithms</p>
+                <h3 className="text-lg font-bold" style={{ color: '#FFFFFF' }}>{currentTopicName}</h3>
+                <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.65)' }}>{currentSubject}</p>
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-[10px] font-bold" style={{ color: 'rgba(255, 255, 255, 0.65)' }}>
                   <span>Progress</span>
-                  <span>72% Complete</span>
+                  <span>{overallProgress}% Complete ({completedTopicsCount}/{totalTopicsCount} topics)</span>
                 </div>
                 <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-violet-500 rounded-full" style={{ width: '72%' }} />
+                  <div className="h-full bg-violet-500 rounded-full transition-all duration-700" style={{ width: `${overallProgress}%` }} />
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
               <button 
-                onClick={() => navigate('/coding')} 
+                onClick={() => navigate('/subjects')} 
                 className="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-violet-600/20 cursor-pointer"
                 style={{ color: '#FFFFFF' }}
               >
@@ -195,27 +255,33 @@ export default function StudentDashboard() {
             />
           </div>
 
-          {/* Hero overall progress gauge */}
+          {/* Hero overall progress gauge with REAL weekly study chart */}
           <div className="lg:col-span-3 p-5 rounded-2xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-md flex flex-col justify-between h-full space-y-4">
             <div className="flex justify-between items-start">
               <div>
                 <h4 className="text-xs font-bold" style={{ color: '#FFFFFF' }}>Your Progress</h4>
                 <p className="text-[10px]" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>This Week</p>
               </div>
-              <CircularProgress percentage={68} size={70} strokeWidth={6} color="#c084fc" />
+              <CircularProgress percentage={overallProgress} size={70} strokeWidth={6} color="#c084fc" />
             </div>
 
-            {/* Sparkline trend representation */}
+            {/* Real sparkline from study_sessions weekly data */}
             <div className="space-y-1">
               <div className="h-10 w-full flex items-end justify-between px-1">
-                {[10, 25, 45, 30, 55, 68, 65].map((val, i) => (
-                  <div key={i} className="w-1 bg-violet-500/20 rounded-full flex flex-col justify-end" style={{ height: '100%' }}>
-                    <div className="bg-violet-400 rounded-full" style={{ height: `${val}%` }} />
-                  </div>
-                ))}
+                {(studyTimeChart.data.length > 0 ? studyTimeChart.data : [0,0,0,0,0,0,0]).map((val, i) => {
+                  const maxVal = Math.max(...studyTimeChart.data, 1);
+                  const heightPct = Math.round((val / maxVal) * 100);
+                  return (
+                    <div key={i} className="w-1 bg-violet-500/20 rounded-full flex flex-col justify-end" style={{ height: '100%' }}>
+                      <div className="bg-violet-400 rounded-full" style={{ height: `${heightPct}%`, minHeight: val > 0 ? '2px' : '0' }} />
+                    </div>
+                  );
+                })}
               </div>
               <div className="flex justify-between text-[8px] font-bold uppercase tracking-wider px-0.5" style={{ color: 'rgba(255,255,255,0.65)' }}>
-                <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                {(studyTimeChart.labels.length > 0 ? studyTimeChart.labels : ['M','T','W','T','F','S','S']).map((label, i) => (
+                  <span key={i}>{label}</span>
+                ))}
               </div>
             </div>
 
@@ -230,7 +296,7 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* ── STATISTICS CARDS ROW (Adapts to current theme variables) ── */}
+      {/* ── STATISTICS CARDS ROW ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Total XP */}
         <div 
@@ -243,7 +309,7 @@ export default function StudentDashboard() {
           <div className="text-left">
             <span className="text-[12px] font-semibold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>Total XP</span>
             <span className="text-2xl font-bold block leading-none mt-0.5" style={{ color: 'var(--db-text-main)' }}><CountUp end={totalXP} /></span>
-            <span className="text-[12px] font-bold block mt-1" style={{ color: '#059669' }}>↑ 850 this week</span>
+            <span className="text-[12px] font-bold block mt-1" style={{ color: '#059669' }}>Level {computedLevel}</span>
           </div>
         </div>
 
@@ -258,7 +324,7 @@ export default function StudentDashboard() {
           <div className="text-left">
             <span className="text-[12px] font-semibold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>Day Streak</span>
             <span className="text-2xl font-bold block leading-none mt-0.5" style={{ color: 'var(--db-text-main)' }}><CountUp end={userStreak} /></span>
-            <span className="text-[12px] font-bold block mt-1" style={{ color: 'var(--db-amber-accent)' }}>Keep it going! 🔥</span>
+            <span className="text-[12px] font-bold block mt-1" style={{ color: 'var(--db-amber-accent)' }}>{userStreak > 0 ? 'Keep it going! 🔥' : 'Start today!'}</span>
           </div>
         </div>
 
@@ -273,22 +339,22 @@ export default function StudentDashboard() {
           <div className="text-left">
             <span className="text-[12px] font-semibold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>Coins</span>
             <span className="text-2xl font-bold block leading-none mt-0.5" style={{ color: 'var(--db-text-main)' }}><CountUp end={userCoins} /></span>
-            <span className="text-[12px] font-bold block mt-1" style={{ color: '#059669' }}>↑ 20 earned today</span>
+            <span className="text-[12px] font-bold block mt-1" style={{ color: '#059669' }}>From {totalXP} XP earned</span>
           </div>
         </div>
 
-        {/* Global Rank */}
+        {/* Study Hours */}
         <div 
           className="p-4 rounded-2xl border flex items-center gap-4 hover:shadow-md transition-all"
           style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
         >
           <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: 'rgba(59, 130, 246, 0.08)' }}>
-            🏆
+            ⏱️
           </div>
           <div className="text-left">
-            <span className="text-[12px] font-semibold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>Global Rank</span>
-            <span className="text-2xl font-bold block leading-none mt-0.5" style={{ color: 'var(--db-text-main)' }}>#{globalRank}</span>
-            <span className="text-[12px] font-bold block mt-1" style={{ color: '#2563EB' }}>Top 1% of learners</span>
+            <span className="text-[12px] font-semibold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>Study Hours</span>
+            <span className="text-2xl font-bold block leading-none mt-0.5" style={{ color: 'var(--db-text-main)' }}>{studyHours.toFixed(1)}h</span>
+            <span className="text-[12px] font-bold block mt-1" style={{ color: '#2563EB' }}>{completedLessons} topics done</span>
           </div>
         </div>
       </div>
@@ -341,7 +407,7 @@ export default function StudentDashboard() {
           </button>
         </div>
 
-        {/* Daily Challenge */}
+        {/* Daily Challenge - connected to real API data */}
         <div 
           className="rounded-2xl p-5 border text-left flex flex-col justify-between hover:shadow-md transition-all"
           style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
@@ -350,35 +416,37 @@ export default function StudentDashboard() {
             <div className="flex items-center justify-between">
               <h3 className="text-[16px] font-bold" style={{ color: 'var(--db-text-main)' }}>Daily Challenge</h3>
               <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md" style={{ backgroundColor: 'rgba(245,158,11,0.08)', color: 'var(--db-amber-accent)' }}>
-                Medium
+                {analytics?.codingStats?.total || 0} Solved
               </span>
             </div>
 
             <div>
-              <h4 className="text-base font-extrabold" style={{ color: 'var(--db-text-main)' }}>Two Sum Problem</h4>
+              <h4 className="text-base font-extrabold" style={{ color: 'var(--db-text-main)' }}>
+                {nextRecommendedTopic !== 'All Completed! Keep Practicing.' ? `Practice: ${currentSubject}` : 'All Caught Up! 🎉'}
+              </h4>
               <p className="text-[14px] mt-1 leading-relaxed" style={{ color: 'var(--db-text-secondary)' }}>
-                Given an array of integers, return indices of the two numbers such that they add up to a specific target.
+                {analytics?.aiSummary ? analytics.aiSummary.substring(0, 120) + '...' : 'Complete topics and quizzes to unlock AI-powered challenge recommendations.'}
               </p>
             </div>
 
             <div className="flex gap-2">
               <div className="flex-1 py-2 px-3 text-center rounded-xl border" style={{ backgroundColor: 'var(--db-badge-bg)', borderColor: 'var(--db-badge-border)' }}>
-                <span className="text-sm font-bold block" style={{ color: 'var(--db-text-accent)' }}>+100</span>
-                <span className="text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>XP</span>
+                <span className="text-sm font-bold block" style={{ color: 'var(--db-text-accent)' }}>+{Math.round((analytics?.codingStats?.solved || 0) * 50)}</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>XP Earned</span>
               </div>
               <div className="flex-1 py-2 px-3 text-center rounded-xl border" style={{ backgroundColor: 'rgba(245, 158, 11, 0.05)', borderColor: 'rgba(245, 158, 11, 0.15)' }}>
-                <span className="text-sm font-bold block" style={{ color: 'var(--db-amber-accent)' }}>+50</span>
-                <span className="text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>Coins</span>
+                <span className="text-sm font-bold block" style={{ color: 'var(--db-amber-accent)' }}>{analytics?.codingStats?.successRate || 0}%</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>Success Rate</span>
               </div>
             </div>
           </div>
 
-          <button onClick={() => navigate('/coding')} className="w-full mt-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer">
+          <button onClick={() => navigate('/practice')} className="w-full mt-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer">
             &lt;/&gt; Start Challenge
           </button>
         </div>
 
-        {/* AI Coach */}
+        {/* AI Coach - connected to real weaknesses/strengths */}
         <div 
           className="rounded-2xl p-5 border text-left flex flex-col justify-between hover:shadow-md transition-all"
           style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
@@ -393,36 +461,45 @@ export default function StudentDashboard() {
                 className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md border"
                 style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)', borderColor: 'var(--db-badge-border)' }}
               >
-                New
+                Live
               </span>
             </div>
 
             <div className="p-3.5 rounded-xl border" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)' }}>
               <p className="text-[14px] leading-relaxed font-semibold" style={{ color: 'var(--db-text-main)' }}>
-                Based on your performance, I recommend focusing on <span style={{ color: 'var(--db-text-accent)' }}>Binary Trees</span> next!
+                {nextRecommendedTopic !== 'All Completed! Keep Practicing.'
+                  ? <>I recommend focusing on <span style={{ color: 'var(--db-text-accent)' }}>{nextRecommendedTopic}</span> next!</>
+                  : <>Amazing work! You've completed all available topics. Keep practicing to maintain your skills! 🎯</>
+                }
               </p>
             </div>
 
             <div className="space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--db-text-muted)' }}>Your Weak Areas</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--db-text-muted)' }}>Performance Areas</p>
               <div className="flex flex-wrap gap-1.5">
-                {weakSubject.split(',').map((topic, i) => (
-                  <span 
-                    key={i} 
-                    className="px-2.5 py-1 border text-[12px] font-bold rounded-lg uppercase"
-                    style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)', borderColor: 'var(--db-badge-border)' }}
-                  >
-                    {topic.trim()}
-                  </span>
-                ))}
-                {recommendations.split(',').map((rec, i) => (
-                  <span 
-                    key={i} 
-                    className="px-2.5 py-1 border text-[12px] font-bold rounded-lg uppercase"
-                    style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)', borderColor: 'var(--db-badge-border)' }}
-                  >
-                    {rec.trim()}
-                  </span>
+                <span 
+                  className="px-2.5 py-1 border text-[12px] font-bold rounded-lg"
+                  style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.2)' }}
+                >
+                  ✓ {strengths}
+                </span>
+                <span 
+                  className="px-2.5 py-1 border text-[12px] font-bold rounded-lg"
+                  style={{ backgroundColor: 'rgba(239, 68, 68, 0.08)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.2)' }}
+                >
+                  ↑ {weaknesses}
+                </span>
+              </div>
+              {/* Subject breakdown from real data */}
+              <div className="space-y-1 mt-2">
+                {subjectProgress.slice(0, 3).map((sp, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold w-16 truncate" style={{ color: 'var(--db-text-muted)' }}>{sp.name}</span>
+                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--db-sidebar-border)' }}>
+                      <div className="h-full bg-violet-500 rounded-full" style={{ width: `${sp.percentage}%` }} />
+                    </div>
+                    <span className="text-[10px] font-bold w-8 text-right" style={{ color: 'var(--db-text-accent)' }}>{sp.percentage}%</span>
+                  </div>
                 ))}
               </div>
             </div>
@@ -441,7 +518,7 @@ export default function StudentDashboard() {
       {/* ── BOTTOM ROW: Continue Learning Path & Recent Activity ── */}
       <div className="grid md:grid-cols-3 gap-6">
         
-        {/* Continue Learning Path */}
+        {/* Continue Learning Path — from real roadmap */}
         <div 
           className="md:col-span-2 rounded-2xl p-5 border text-left flex flex-col justify-between hover:shadow-md transition-all"
           style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
@@ -454,39 +531,35 @@ export default function StudentDashboard() {
               </button>
             </div>
 
-            {/* Path timeline */}
+            {/* Path timeline from real roadmap */}
             <div className="relative flex justify-between items-center py-4 px-2">
               <div className="absolute top-1/2 left-0 right-0 h-0.5 -translate-y-1/2 z-0" style={{ backgroundColor: 'var(--db-sidebar-border)' }} />
-              {[
-                { name: 'Arrays', status: 'Completed', num: '✓' },
-                { name: 'Linked List', status: 'Completed', num: '✓' },
-                { name: 'Stacks & Queues', status: 'In Progress', num: '3' },
-                { name: 'Trees', status: 'Locked', num: '4' },
-                { name: 'Graphs', status: 'Locked', num: '5' }
-              ].map((step, idx) => {
+              {continuePathSteps.length > 0 ? continuePathSteps.map((step, idx) => {
                 const getStepStyle = () => {
                   if (step.status === 'Completed') return { bg: 'bg-emerald-600 text-white ring-4 ring-emerald-500/20', nameCol: 'var(--db-text-main)' };
                   if (step.status === 'In Progress') return { bg: 'bg-violet-600 text-white ring-4 ring-violet-500/20 font-bold', nameCol: 'var(--db-text-main)' };
                   return { bg: 'bg-slate-700 text-slate-400', nameCol: 'var(--db-text-muted)' };
                 };
-
                 const styleObj = getStepStyle();
-
                 return (
                   <div key={idx} className="relative z-10 flex flex-col items-center gap-2">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold ${styleObj.bg}`}>
-                      {step.num}
+                      {step.status === 'Completed' ? '✓' : idx + 1}
                     </div>
-                    <span className="text-[12px] font-bold whitespace-nowrap" style={{ color: styleObj.nameCol }}>{step.name}</span>
-                    <span className="text-[9px] font-extrabold uppercase tracking-widest leading-none" style={{ color: 'var(--db-text-muted)' }}>{step.status}</span>
+                    <span className="text-[11px] font-bold whitespace-nowrap max-w-[80px] truncate text-center" style={{ color: styleObj.nameCol }}>{step.title}</span>
+                    <span className="text-[8px] font-extrabold uppercase tracking-widest leading-none" style={{ color: 'var(--db-text-muted)' }}>{step.subject}</span>
                   </div>
                 );
-              })}
+              }) : (
+                <div className="w-full text-center py-4 z-10">
+                  <span className="text-sm font-semibold" style={{ color: 'var(--db-text-muted)' }}>Start a topic to see your learning path!</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Recent Activity */}
+        {/* Recent Activity — from real quiz results */}
         <div 
           className="rounded-2xl p-5 border text-left flex flex-col justify-between hover:shadow-md transition-all"
           style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
@@ -500,11 +573,7 @@ export default function StudentDashboard() {
             </div>
 
             <div className="space-y-2">
-              {[
-                { label: 'Solved Two Sum Problem', xp: '+100 XP', time: '2h ago', icon: '💻' },
-                { label: 'Completed Arrays Quiz', xp: '+30 XP', time: '4h ago', icon: '📝' },
-                { label: 'Watched Binary Search Video', xp: '+20 XP', time: 'Yesterday', icon: '🎥' }
-              ].map((act, i) => (
+              {recentActivity.length > 0 ? recentActivity.slice(0, 3).map((act, i) => (
                 <div 
                   key={i} 
                   className="flex justify-between items-center p-2 rounded-xl border"
@@ -519,7 +588,12 @@ export default function StudentDashboard() {
                   </div>
                   <span className="text-xs font-bold text-emerald-600 shrink-0">{act.xp}</span>
                 </div>
-              ))}
+              )) : (
+                <div className="text-center py-6">
+                  <span className="text-3xl block mb-2">📊</span>
+                  <span className="text-sm font-semibold" style={{ color: 'var(--db-text-muted)' }}>No activity yet. Take a quiz to get started!</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

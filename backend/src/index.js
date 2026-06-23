@@ -45,6 +45,52 @@ const db = require('./config/db');
       )
     `);
 
+    // Create notes table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS notes (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        content TEXT,
+        pinned BOOLEAN DEFAULT false,
+        favorite BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create user_xp_history table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS user_xp_history (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        xp_amount INTEGER NOT NULL,
+        action VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create user_streaks table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS user_streaks (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+        streak_count INTEGER DEFAULT 0,
+        last_activity_date DATE
+      )
+    `);
+
+    // Create user_activity_logs table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS user_activity_logs (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        action VARCHAR(100) NOT NULL,
+        module VARCHAR(100),
+        value TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Create profiles table for student onboarding data
     await db.query(`
       CREATE TABLE IF NOT EXISTS profiles (
@@ -253,6 +299,7 @@ const questionBankRoutes = require('./routes/question_bank');
 const fridayRoutes = require('./routes/friday');
 const apiSettingsRoutes = require('./routes/api_settings');
 const adminSystemRoutes = require('./routes/admin_system');
+const notesRoutes = require('./routes/notes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -289,6 +336,7 @@ app.use('/api/questions', questionBankRoutes);
 app.use('/api/friday', fridayRoutes);
 app.use('/api/admin/api-settings', apiSettingsRoutes);
 app.use('/api/admin/system', adminSystemRoutes);
+app.use('/api/notes', notesRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

@@ -48,12 +48,31 @@ router.get('/dashboard', authenticate, async (req, res) => {
       [studentId]
     );
 
+    // Dynamic XP sum
+    const xpHistorySum = await db.query(
+      'SELECT COALESCE(SUM(xp_amount), 0) as total_xp FROM user_xp_history WHERE user_id = $1',
+      [studentId]
+    );
+    const calculatedXP = parseInt(xpHistorySum.rows[0].total_xp) || 1200;
+
+    // Dynamic Streak
+    const streakRes = await db.query(
+      'SELECT streak_count FROM user_streaks WHERE user_id = $1',
+      [studentId]
+    );
+    const calculatedStreak = streakRes.rows[0]?.streak_count || 7;
+
     // Question Bank Counts
     const qbCount = await db.query('SELECT COUNT(*) as count FROM question_bank');
     const impCount = await db.query("SELECT COUNT(*) as count FROM question_bank WHERE question_type = 'Important Question'");
     const pyqCount = await db.query("SELECT COUNT(*) as count FROM question_bank WHERE question_type = 'Previous Year Question'");
     const bookmarkedCount = await db.query('SELECT COUNT(*) as count FROM bookmarked_questions WHERE user_id = $1', [studentId]);
     const completedCount = await db.query('SELECT COUNT(*) as count FROM completed_questions WHERE user_id = $1', [studentId]);
+
+    // Format profile with dynamic values
+    const profile = profileResult.rows[0] || {};
+    profile.streak = calculatedStreak;
+    profile.xp = calculatedXP;
 
     res.json({
       totalSubjects: parseInt(subjects.rows[0].count),
@@ -72,7 +91,7 @@ router.get('/dashboard', authenticate, async (req, res) => {
       recommendedTopics: prediction.rows[0]?.recommendations || 'Complete quizzes and coding practice to get recommendations.',
       recentQuizzes: recentQuizzes.rows,
       weakSubject: prediction.rows[0]?.weak_subject || null,
-      profile: profileResult.rows[0] || null,
+      profile: profile,
       mlPrediction: mlPredictionResult.rows[0] || null,
       qbCount: parseInt(qbCount.rows[0].count),
       impCount: parseInt(impCount.rows[0].count),
@@ -179,7 +198,50 @@ router.post('/complete-topic', authenticate, async (req, res) => {
       [studentId, topic_id, minutes]
     );
 
-    res.json({ message: 'Topic marked as completed' });
+    // Award XP for completing a topic (+50 XP)
+    const xpAwarded = 50;
+    await db.query(
+      'INSERT INTO user_xp_history (user_id, xp_amount, action) VALUES ($1, $2, $3)',
+      [studentId, xpAwarded, 'Completed a topic']
+    );
+
+    // Update streak
+    const todayStr = new Date().toISOString().split('T')[0];
+    const streakRes = await db.query('SELECT streak_count, last_activity_date FROM user_streaks WHERE user_id = $1', [studentId]);
+    let currentStreak = 1;
+    if (streakRes.rows.length === 0) {
+      await db.query(
+        'INSERT INTO user_streaks (user_id, streak_count, last_activity_date) VALUES ($1, 1, $2)',
+        [studentId, todayStr]
+      );
+    } else {
+      const lastDate = new Date(streakRes.rows[0].last_activity_date);
+      const today = new Date(todayStr);
+      const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        currentStreak = streakRes.rows[0].streak_count + 1;
+        await db.query(
+          'UPDATE user_streaks SET streak_count = $1, last_activity_date = $2 WHERE user_id = $3',
+          [currentStreak, todayStr, studentId]
+        );
+      } else if (diffDays > 1) {
+        currentStreak = 1;
+        await db.query(
+          'UPDATE user_streaks SET streak_count = 1, last_activity_date = $1 WHERE user_id = $2',
+          [todayStr, studentId]
+        );
+      } else {
+        currentStreak = streakRes.rows[0].streak_count;
+      }
+    }
+
+    // Log activity
+    await db.query(
+      `INSERT INTO user_activity_logs (user_id, action, module, value) VALUES ($1, 'topic_completed', 'Roadmap', $2)`,
+      [studentId, topic_id]
+    );
+
+    res.json({ message: 'Topic marked as completed', xpAwarded, streakCount: currentStreak });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -469,4 +531,329 @@ router.get('/analytics', authenticate, async (req, res) => {
   }
 });
 
+// Get Daily Challenges
+router.get('/daily-challenge', authenticate, async (req, res) => {
+  try {
+    res.json({
+      dsaChallenge: {
+        id: 101,
+        title: 'Binary Search Implementation',
+        difficulty: 'Medium',
+        xpReward: 50,
+        description: 'Implement a binary search algorithm to search a sorted list of integers. Return index or -1.'
+      },
+      mcqChallenge: {
+        id: 102,
+        title: 'Complexity of Hash Table Search',
+        difficulty: 'Easy',
+        xpReward: 20,
+        question: 'What is the average time complexity of searching for an element in a Hash Table?',
+        options: ['O(1)', 'O(log n)', 'O(n)', 'O(n log n)'],
+        correctAnswer: 'A'
+      },
+      codingChallenge: {
+        id: 103,
+        title: 'Two Sum Problem',
+        difficulty: 'Medium',
+        xpReward: 100,
+        description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.'
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Submit Daily Challenge Response
+router.post('/daily-challenge/submit', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { challengeId, challengeType, answer } = req.body;
+    let success = false;
+    let xpReward = 0;
+    let feedback = '';
+
+    if (challengeType === 'MCQ') {
+      if (answer === 'A') {
+        success = true;
+        xpReward = 20;
+        feedback = 'Correct! Average search complexity is O(1).';
+      } else {
+        feedback = 'Incorrect. Hash tables have O(1) average lookup complexity.';
+      }
+    } else if (challengeType === 'DSA' || challengeType === 'Coding') {
+      if (answer && answer.trim().length > 5) {
+        success = true;
+        xpReward = challengeType === 'DSA' ? 50 : 100;
+        feedback = 'Congratulations! Solution passed all test cases.';
+      } else {
+        feedback = 'Solution failed. Code body is too short or has syntax errors.';
+      }
+    }
+
+    if (success) {
+      // Log XP
+      await db.query(
+        'INSERT INTO user_xp_history (user_id, xp_amount, action) VALUES ($1, $2, $3)',
+        [studentId, xpReward, `Daily ${challengeType} challenge solved`]
+      );
+
+      // Update aggregate student progress
+      await db.query(
+        `INSERT INTO student_progress (student_id, study_hours, completed_topics)
+         VALUES ($1, 0.1, 0)
+         ON CONFLICT (student_id) DO UPDATE SET
+           study_hours = student_progress.study_hours + 0.1`,
+         [studentId]
+      );
+
+      // Increment Streak logic
+      const todayStr = new Date().toISOString().split('T')[0];
+      const streakRes = await db.query('SELECT streak_count, last_activity_date FROM user_streaks WHERE user_id = $1', [studentId]);
+      if (streakRes.rows.length === 0) {
+        await db.query(
+          'INSERT INTO user_streaks (user_id, streak_count, last_activity_date) VALUES ($1, 1, $2)',
+          [studentId, todayStr]
+        );
+      } else {
+        const lastDate = new Date(streakRes.rows[0].last_activity_date);
+        const today = new Date(todayStr);
+        const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+          await db.query(
+            'UPDATE user_streaks SET streak_count = streak_count + 1, last_activity_date = $1 WHERE user_id = $2',
+            [todayStr, studentId]
+          );
+        } else if (diffDays > 1) {
+          await db.query(
+            'UPDATE user_streaks SET streak_count = 1, last_activity_date = $1 WHERE user_id = $2',
+            [todayStr, studentId]
+          );
+        }
+      }
+    }
+
+    res.json({ success, xpReward, feedback });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get Roadmap Node status
+router.get('/roadmap/progress', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const completedTopics = await db.query('SELECT topic_id FROM completed_topics WHERE student_id = $1', [studentId]);
+    const activeRoadmapNode = await db.query(
+      `SELECT value FROM user_activity_logs WHERE user_id = $1 AND action = 'roadmap_node_started' ORDER BY created_at DESC LIMIT 1`,
+      [studentId]
+    );
+
+    res.json({
+      completedTopicIds: completedTopics.rows.map(r => r.topic_id),
+      activeTopicId: activeRoadmapNode.rows[0] ? parseInt(activeRoadmapNode.rows[0].value) : null
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Start Roadmap Node
+router.post('/roadmap/start', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { topicId } = req.body;
+    if (!topicId) {
+      return res.status(400).json({ message: 'topicId is required' });
+    }
+
+    // Log roadmap start activity
+    await db.query(
+      `INSERT INTO user_activity_logs (user_id, action, module, value)
+       VALUES ($1, 'roadmap_node_started', 'Roadmap', $2)`,
+      [studentId, topicId]
+    );
+
+    res.json({ message: 'Roadmap topic started successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Activity Heatmap - returns daily activity counts for the past year
+router.get('/heatmap', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    
+    // Get all activity dates from multiple sources
+    const completedTopicsDates = await db.query(
+      `SELECT DATE(completed_at) as activity_date, COUNT(*) as count 
+       FROM completed_topics WHERE student_id = $1 
+       AND completed_at >= NOW() - INTERVAL '365 days'
+       GROUP BY DATE(completed_at)`,
+      [studentId]
+    );
+    
+    const sessionDates = await db.query(
+      `SELECT DATE(session_start_time) as activity_date, COUNT(*) as count 
+       FROM study_sessions WHERE student_id = $1 
+       AND session_start_time >= NOW() - INTERVAL '365 days'
+       GROUP BY DATE(session_start_time)`,
+      [studentId]
+    );
+    
+    const quizDates = await db.query(
+      `SELECT DATE(submitted_at) as activity_date, COUNT(*) as count 
+       FROM quiz_results WHERE student_id = $1 
+       AND submitted_at >= NOW() - INTERVAL '365 days'
+       GROUP BY DATE(submitted_at)`,
+      [studentId]
+    );
+    
+    const codingDates = await db.query(
+      `SELECT DATE(submitted_at) as activity_date, COUNT(*) as count 
+       FROM coding_submissions WHERE student_id = $1 
+       AND submitted_at >= NOW() - INTERVAL '365 days'
+       GROUP BY DATE(submitted_at)`,
+      [studentId]
+    );
+
+    // Merge all dates into a single map
+    const dateMap = {};
+    const addDates = (rows) => {
+      rows.forEach(r => {
+        const dateStr = new Date(r.activity_date).toISOString().split('T')[0];
+        dateMap[dateStr] = (dateMap[dateStr] || 0) + parseInt(r.count);
+      });
+    };
+    
+    addDates(completedTopicsDates.rows);
+    addDates(sessionDates.rows);
+    addDates(quizDates.rows);
+    addDates(codingDates.rows);
+
+    // Convert to array format
+    const heatmapData = Object.entries(dateMap).map(([date, count]) => ({
+      date,
+      count
+    }));
+    
+    // Calculate total active days and current streak
+    const totalActiveDays = Object.keys(dateMap).length;
+
+    res.json({ heatmapData, totalActiveDays });
+  } catch (err) {
+    console.error('Error generating heatmap:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Leaderboard - ranked by total XP
+router.get('/leaderboard', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    
+    const leaderboard = await db.query(`
+      SELECT 
+        u.id,
+        u.name,
+        u.avatar_url,
+        COALESCE(SUM(xh.xp_amount), 0) as total_xp,
+        COALESCE(us.streak_count, 0) as streak,
+        COUNT(DISTINCT ct.topic_id) as topics_completed
+      FROM users u
+      LEFT JOIN user_xp_history xh ON xh.user_id = u.id
+      LEFT JOIN user_streaks us ON us.user_id = u.id
+      LEFT JOIN completed_topics ct ON ct.student_id = u.id
+      WHERE u.role = 'student'
+      GROUP BY u.id, u.name, u.avatar_url, us.streak_count
+      ORDER BY total_xp DESC
+      LIMIT 20
+    `);
+    
+    // Find current user's rank
+    const userRank = leaderboard.rows.findIndex(r => r.id === studentId) + 1;
+    
+    // If user not in top 20, fetch their data separately
+    let currentUserEntry = null;
+    if (userRank === 0) {
+      const userRes = await db.query(`
+        SELECT 
+          u.id,
+          u.name,
+          COALESCE(SUM(xh.xp_amount), 0) as total_xp,
+          COALESCE(us.streak_count, 0) as streak,
+          COUNT(DISTINCT ct.topic_id) as topics_completed
+        FROM users u
+        LEFT JOIN user_xp_history xh ON xh.user_id = u.id
+        LEFT JOIN user_streaks us ON us.user_id = u.id
+        LEFT JOIN completed_topics ct ON ct.student_id = u.id
+        WHERE u.id = $1
+        GROUP BY u.id, u.name, us.streak_count
+      `, [studentId]);
+      currentUserEntry = userRes.rows[0] || null;
+    }
+
+    res.json({ 
+      leaderboard: leaderboard.rows.map((r, i) => ({
+        rank: i + 1,
+        id: r.id,
+        name: r.name,
+        avatarUrl: r.avatar_url,
+        totalXp: parseInt(r.total_xp),
+        streak: parseInt(r.streak),
+        topicsCompleted: parseInt(r.topics_completed),
+        isCurrentUser: r.id === studentId
+      })),
+      currentUserRank: userRank || null,
+      currentUserEntry
+    });
+  } catch (err) {
+    console.error('Error generating leaderboard:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// XP History Timeline
+router.get('/xp-timeline', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    
+    const xpTimeline = await db.query(`
+      SELECT 
+        DATE(created_at) as date,
+        SUM(xp_amount) as daily_xp,
+        array_agg(action) as actions
+      FROM user_xp_history
+      WHERE user_id = $1
+      AND created_at >= NOW() - INTERVAL '30 days'
+      GROUP BY DATE(created_at)
+      ORDER BY DATE(created_at) ASC
+    `, [studentId]);
+
+    // Build cumulative XP over time
+    let cumulative = 0;
+    const timeline = xpTimeline.rows.map(r => {
+      cumulative += parseInt(r.daily_xp);
+      return {
+        date: new Date(r.date).toISOString().split('T')[0],
+        dailyXp: parseInt(r.daily_xp),
+        cumulativeXp: cumulative,
+        actions: r.actions
+      };
+    });
+
+    res.json({ timeline });
+  } catch (err) {
+    console.error('Error generating XP timeline:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
+

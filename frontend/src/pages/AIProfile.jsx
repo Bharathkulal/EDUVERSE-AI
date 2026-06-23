@@ -15,15 +15,18 @@ const cardVariant = {
 export default function AIProfile() {
   const [profile, setProfile] = useState(null);
   const [predictions, setPredictions] = useState(null);
+  const [dashData, setDashData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       api.get('/onboarding/profile').catch(() => ({ data: null })),
       api.get('/onboarding/predictions').catch(() => ({ data: null })),
-    ]).then(([profileRes, predRes]) => {
+      api.get('/progress/dashboard').catch(() => ({ data: null })),
+    ]).then(([profileRes, predRes, dashRes]) => {
       setProfile(profileRes.data);
       setPredictions(predRes.data);
+      setDashData(dashRes.data);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -64,6 +67,38 @@ export default function AIProfile() {
         <h1>🧠 AI Profile Analysis</h1>
         <p>Your personalized AI-powered learning insights</p>
       </div>
+
+      {/* Live Gamification Stats */}
+      {dashData && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} 
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '1rem',
+            marginBottom: '1.5rem',
+            padding: '1.25rem',
+            borderRadius: '1rem',
+            background: 'rgba(139, 92, 246, 0.04)',
+            border: '1px solid rgba(139, 92, 246, 0.1)',
+          }}
+        >
+          {[
+            { label: 'Total XP', value: dashData.profile?.xp || 0, icon: '⚡', color: '#a78bfa' },
+            { label: 'Level', value: Math.max(1, Math.floor((dashData.studyHours || 0) * 2.5 + (dashData.completedLessons || 0) * 1.5 + ((dashData.quizScores?.average || 0) + (dashData.codingScores?.average || 0)) / 20)), icon: '🏅', color: '#34d399' },
+            { label: 'Day Streak', value: dashData.profile?.streak || 0, icon: '🔥', color: '#f59e0b' },
+            { label: 'Coins', value: Math.round((dashData.profile?.xp || 0) * 0.1), icon: '🪙', color: '#10b981' },
+          ].map((stat, i) => (
+            <div key={i} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{stat.icon}</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: stat.color }}>{stat.value}</div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--db-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stat.label}</div>
+            </div>
+          ))}
+        </motion.div>
+      )}
 
       {/* Row 1: AI Profile + Learning Type + Performance */}
       <div className="ai-cards-grid">

@@ -92,7 +92,9 @@ function CountUp({ end, duration = 800 }) {
 export default function Progress() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview'); // overview, subjects, roadmap
+  const [activeTab, setActiveTab] = useState('overview'); // overview, subjects, roadmap, activity
+  const [heatmapData, setHeatmapData] = useState(null);
+  const [xpTimeline, setXpTimeline] = useState(null);
 
   const fetchAnalytics = () => {
     setLoading(true);
@@ -251,6 +253,28 @@ export default function Progress() {
         >
           Learning Roadmap
           {activeTab === 'roadmap' && (
+            <motion.div layoutId="activeTabIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500" />
+          )}
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('activity');
+            if (!heatmapData) {
+              Promise.all([
+                api.get('/progress/heatmap'),
+                api.get('/progress/xp-timeline')
+              ]).then(([heatRes, xpRes]) => {
+                setHeatmapData(heatRes.data);
+                setXpTimeline(xpRes.data);
+              }).catch(err => console.error(err));
+            }
+          }}
+          className={`pb-3 font-semibold text-sm transition-all relative ${
+            activeTab === 'activity' ? 'text-white' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          Activity Heatmap
+          {activeTab === 'activity' && (
             <motion.div layoutId="activeTabIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500" />
           )}
         </button>
@@ -555,6 +579,167 @@ export default function Progress() {
                   </motion.div>
                 );
               })}
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'activity' && (
+          <motion.div
+            key="activity"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
+          >
+            {/* Activity Heatmap */}
+            <div className="rounded-2xl p-6 border border-[rgba(139,92,246,0.12)] bg-[rgba(30,27,75,0.2)] backdrop-blur-md">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <span>🔥</span> Activity Heatmap
+                  </h3>
+                  <p className="text-xs text-indigo-200/50 mt-1">
+                    {heatmapData ? `${heatmapData.totalActiveDays} active days in the past year` : 'Loading...'}
+                  </p>
+                </div>
+              </div>
+
+              {heatmapData ? (
+                <div className="overflow-x-auto">
+                  <div className="flex gap-[3px] flex-wrap" style={{ maxWidth: '100%' }}>
+                    {(() => {
+                      const cells = [];
+                      const today = new Date();
+                      const dateMap = {};
+                      heatmapData.heatmapData.forEach(d => { dateMap[d.date] = d.count; });
+                      const maxCount = Math.max(1, ...heatmapData.heatmapData.map(d => d.count));
+
+                      for (let i = 364; i >= 0; i--) {
+                        const d = new Date(today);
+                        d.setDate(today.getDate() - i);
+                        const dateStr = d.toISOString().split('T')[0];
+                        const count = dateMap[dateStr] || 0;
+                        const intensity = count === 0 ? 0 : Math.min(4, Math.ceil((count / maxCount) * 4));
+                        const colors = [
+                          'rgba(139, 92, 246, 0.05)',
+                          'rgba(139, 92, 246, 0.25)',
+                          'rgba(139, 92, 246, 0.45)',
+                          'rgba(139, 92, 246, 0.65)',
+                          'rgba(139, 92, 246, 0.9)'
+                        ];
+
+                        cells.push(
+                          <div
+                            key={dateStr}
+                            title={`${dateStr}: ${count} activities`}
+                            className="rounded-sm transition-all hover:ring-1 hover:ring-violet-400 cursor-pointer"
+                            style={{
+                              width: '11px',
+                              height: '11px',
+                              backgroundColor: colors[intensity],
+                              border: '1px solid rgba(139, 92, 246, 0.08)'
+                            }}
+                          />
+                        );
+                      }
+                      return cells;
+                    })()}
+                  </div>
+                  <div className="flex items-center gap-2 mt-3 justify-end">
+                    <span className="text-[10px] text-indigo-200/40">Less</span>
+                    {[0, 1, 2, 3, 4].map(i => (
+                      <div
+                        key={i}
+                        className="rounded-sm"
+                        style={{
+                          width: '10px',
+                          height: '10px',
+                          backgroundColor: [
+                            'rgba(139, 92, 246, 0.05)',
+                            'rgba(139, 92, 246, 0.25)',
+                            'rgba(139, 92, 246, 0.45)',
+                            'rgba(139, 92, 246, 0.65)',
+                            'rgba(139, 92, 246, 0.9)'
+                          ][i]
+                        }}
+                      />
+                    ))}
+                    <span className="text-[10px] text-indigo-200/40">More</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-6 h-6 rounded-full border-3 border-t-violet-600 border-slate-700 animate-spin"></div>
+                </div>
+              )}
+            </div>
+
+            {/* XP Growth Timeline */}
+            <div className="rounded-2xl p-6 border border-[rgba(139,92,246,0.12)] bg-[rgba(30,27,75,0.2)] backdrop-blur-md">
+              <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
+                <span>📈</span> XP Growth Timeline (Last 30 Days)
+              </h3>
+              {xpTimeline && xpTimeline.timeline.length > 0 ? (
+                <div style={{ height: '250px' }}>
+                  <Line
+                    data={{
+                      labels: xpTimeline.timeline.map(t => {
+                        const d = new Date(t.date);
+                        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      }),
+                      datasets: [
+                        {
+                          fill: true,
+                          label: 'Cumulative XP',
+                          data: xpTimeline.timeline.map(t => t.cumulativeXp),
+                          borderColor: '#a78bfa',
+                          backgroundColor: 'rgba(167, 139, 250, 0.1)',
+                          tension: 0.4,
+                          pointBackgroundColor: '#8b5cf6',
+                          pointBorderColor: '#fff',
+                          pointHoverRadius: 6,
+                        },
+                        {
+                          fill: false,
+                          label: 'Daily XP',
+                          data: xpTimeline.timeline.map(t => t.dailyXp),
+                          borderColor: '#34d399',
+                          backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                          tension: 0.4,
+                          pointBackgroundColor: '#10b981',
+                          borderDash: [5, 5],
+                        }
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: true, labels: { color: '#a5b4fc', font: { size: 11 } } },
+                        tooltip: {
+                          backgroundColor: '#1e1b4b',
+                          titleColor: '#e0e7ff',
+                          bodyColor: '#c7d2fe',
+                          borderColor: 'rgba(139, 92, 246, 0.2)',
+                          borderWidth: 1,
+                          padding: 12,
+                          cornerRadius: 8,
+                        }
+                      },
+                      scales: {
+                        y: { grid: { color: 'rgba(139, 92, 246, 0.05)' }, ticks: { color: '#6366f1', font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { color: '#6366f1', font: { size: 10 }, maxRotation: 45 } }
+                      }
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="text-center py-10">
+                  <span className="text-3xl block mb-2">📊</span>
+                  <span className="text-sm text-indigo-200/50">No XP data yet. Complete topics and challenges to see your growth!</span>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
