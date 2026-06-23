@@ -43,13 +43,17 @@ export default function VoiceAssistant() {
   const recognitionRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  const isMountedRef = useRef(true);
+
   useEffect(() => {
+    isMountedRef.current = true;
     fetchHistory();
     fetchMentorData();
     fetchStats();
     initSpeechRecognition();
 
     return () => {
+      isMountedRef.current = false;
       if (recognitionRef.current) recognitionRef.current.abort();
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     };
@@ -129,9 +133,9 @@ export default function VoiceAssistant() {
       .trim();
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.onstart = () => setAssistantState('speaking');
-    utterance.onend = () => setAssistantState('idle');
-    utterance.onerror = () => setAssistantState('idle');
+    utterance.onstart = () => { if (isMountedRef.current) setAssistantState('speaking'); };
+    utterance.onend = () => { if (isMountedRef.current) setAssistantState('idle'); };
+    utterance.onerror = () => { if (isMountedRef.current) setAssistantState('idle'); };
 
     const voices = window.speechSynthesis.getVoices();
     const femaleVoice = voices.find(

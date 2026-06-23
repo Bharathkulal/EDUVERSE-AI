@@ -27,6 +27,22 @@ export default function QuestionBank() {
   const [filterDifficulty, setFilterDifficulty] = useState('');
   const [filterUnit, setFilterUnit] = useState('');
 
+  const [visibleCount, setVisibleCount] = useState(10);
+
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [questions]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 250) {
+        setVisibleCount((prev) => Math.min(prev + 10, questions.length));
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [questions.length]);
+
   useEffect(() => {
     // Fetch subjects list for dropdown
     api.get('/subjects')
@@ -289,7 +305,7 @@ export default function QuestionBank() {
         </div>
       ) : (
         <div className="qb-cards-grid">
-          {questions.map((q) => (
+          {questions.slice(0, visibleCount).map((q) => (
             <motion.div
               layout
               initial={{ opacity: 0, scale: 0.95 }}

@@ -1,8 +1,8 @@
+@import "@fontsource/geist-sans/index.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import "@fontsource/geist-sans/index.css";
 
 :root {
   --background: 260 87% 3%;

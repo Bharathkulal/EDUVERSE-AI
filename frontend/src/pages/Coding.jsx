@@ -1,8 +1,97 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 
 const languages = ['java', 'python', 'c', 'csharp'];
+
+function LazyMonacoEditor({ value, onChange, language }) {
+  const containerRef = useRef(null);
+  const editorRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    const initMonaco = () => {
+      if (!window.require) {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs/loader.min.js';
+        script.onload = () => {
+          if (active) loadEditor();
+        };
+        document.body.appendChild(script);
+      } else {
+        loadEditor();
+      }
+    };
+
+    const loadEditor = () => {
+      window.require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs' } });
+      window.require(['vs/editor/editor.main'], () => {
+        if (!active || !containerRef.current) return;
+        
+        if (editorRef.current) {
+          editorRef.current.dispose();
+        }
+
+        const monacoLang = language === 'csharp' ? 'csharp' : (language === 'c' ? 'cpp' : (language === 'java' ? 'java' : 'python'));
+
+        editorRef.current = window.monaco.editor.create(containerRef.current, {
+          value: value,
+          language: monacoLang,
+          theme: 'vs-dark',
+          automaticLayout: true,
+          minimap: { enabled: false },
+          fontSize: 14,
+        });
+
+        editorRef.current.onDidChangeModelContent(() => {
+          if (onChange) {
+            onChange(editorRef.current.getValue());
+          }
+        });
+
+        setLoading(false);
+      });
+    };
+
+    initMonaco();
+
+    return () => {
+      active = false;
+      if (editorRef.current) {
+        editorRef.current.dispose();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.getValue() !== value) {
+      editorRef.current.setValue(value);
+    }
+  }, [value]);
+
+  useEffect(() => {
+    if (editorRef.current && window.monaco) {
+      const model = editorRef.current.getModel();
+      if (model) {
+        const monacoLang = language === 'csharp' ? 'csharp' : (language === 'c' ? 'cpp' : (language === 'java' ? 'java' : 'python'));
+        window.monaco.editor.setModelLanguage(model, monacoLang);
+      }
+    }
+  }, [language]);
+
+  return (
+    <div className="relative w-full h-80 bg-slate-900">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold uppercase tracking-wider text-slate-400">
+          Initializing Monaco Editor...
+        </div>
+      )}
+      <div ref={containerRef} className="w-full h-full" />
+    </div>
+  );
+}
 
 export default function Coding() {
   const [problems, setProblems] = useState([]);
@@ -101,11 +190,10 @@ export default function Coding() {
                 {submitting ? 'Running...' : 'Submit Code'}
               </button>
             </div>
-            <textarea
+            <LazyMonacoEditor
               value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="w-full h-80 p-4 font-mono text-sm bg-slate-900 text-green-400 focus:outline-none resize-none"
-              spellCheck={false}
+              onChange={setCode}
+              language={language}
             />
           </div>
         </div>

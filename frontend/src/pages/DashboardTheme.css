@@ -217,6 +217,56 @@
   color: var(--db-text-accent);
 }
 
+/* Premium Sidebar Scroll and Sub-navigation connectors */
+.custom-sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: var(--db-sidebar-border);
+  border-radius: 4px;
+}
+.custom-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--db-text-muted);
+}
+
+.db-sub-nav-list {
+  border-left: 1px solid var(--db-sidebar-border);
+}
+
+.db-sub-nav-item {
+  position: relative;
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.db-sub-nav-item::before {
+  content: '';
+  position: absolute;
+  left: -17px;
+  top: 50%;
+  width: 8px;
+  height: 1px;
+  background-color: var(--db-sidebar-border);
+  transition: all 0.2s ease-in-out;
+}
+
+.db-sub-nav-item:hover::before {
+  background-color: var(--db-text-accent);
+  width: 12px;
+  left: -17px;
+}
+
+.db-sub-nav-item.active-child::before {
+  background-color: var(--db-text-accent);
+  width: 12px;
+  left: -17px;
+}
+
+
 .db-sidebar-footer {
   border-top: 1px solid var(--db-sidebar-border);
   padding-top: 1.25rem;

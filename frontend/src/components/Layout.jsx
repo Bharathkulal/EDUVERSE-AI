@@ -1,21 +1,161 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import '../pages/DashboardTheme.css';
 
 const studentNav = [
-  { path: '/dashboard', label: 'Dashboard', icon: '⚡' },
-  { path: '/subjects', label: 'Subjects', icon: '📚' },
-  { path: '/practice-hub', label: 'Practice Hub', icon: '🧪' },
-  { path: '/quizzes', label: 'Quizzes', icon: '📝' },
-  { path: '/coding', label: 'Coding Labs', icon: '💻' },
-  { path: '/progress', label: 'Progress Reports', icon: '📊' },
-  { path: '/ml-analytics', label: 'ML Insights', icon: '🧠' },
-  { path: '/ai-profile', label: 'AI Profile', icon: '👤' },
-  { path: '/question-bank', label: 'Question Bank', icon: '❓' },
-  { path: '/voice-assistant', label: 'Voice Assistant', icon: '🎙️' },
-  { path: '/settings', label: 'Settings', icon: '⚙️' },
+  {
+    path: '/dashboard',
+    label: 'Dashboard',
+    icon: '⚡',
+    children: [
+      { path: '/dashboard', label: 'Overview' },
+      { path: '/dashboard#goals', label: 'Daily Goals' },
+      { path: '/dashboard#xp', label: 'XP & Level' },
+      { path: '/dashboard#streaks', label: 'Streaks' },
+      { path: '/dashboard#activity', label: 'Recent Activity' },
+      { path: '/dashboard#continue', label: 'Quick Continue' }
+    ]
+  },
+  {
+    path: '/subjects',
+    label: 'Learn',
+    icon: '📚',
+    children: [
+      { path: '/subjects', label: 'Subjects' },
+      { path: '/subjects#courses', label: 'Courses' },
+      { path: '/subjects#roadmaps', label: 'Learning Roadmaps' },
+      { path: '/subjects#notes', label: 'Notes' },
+      { path: '/subjects#resources', label: 'Resource Library' },
+      { path: '/subjects#studio', label: 'Learning Studio' },
+      { path: '/subjects#bookmarks', label: 'Bookmarks' }
+    ]
+  },
+  {
+    path: '/practice-hub',
+    label: 'Practice',
+    icon: '🧪',
+    children: [
+      { path: '/practice-hub', label: 'Practice Hub' },
+      { path: '/question-bank', label: 'Question Bank' },
+      { path: '/practice-hub#challenges', label: 'Daily Challenges' },
+      { path: '/practice-hub#flashcards', label: 'Flash Cards' },
+      { path: '/practice-hub#mcq', label: 'MCQ Practice' },
+      { path: '/practice-hub#topic', label: 'Topic-wise Practice' },
+      { path: '/practice-hub#mock', label: 'Mock Tests' }
+    ]
+  },
+  {
+    path: '/coding',
+    label: 'Code',
+    icon: '💻',
+    children: [
+      { path: '/coding', label: 'Coding Labs' },
+      { path: '/coding#challenges', label: 'Coding Challenges' },
+      { path: '/coding#projects', label: 'Projects' },
+      { path: '/coding#playground', label: 'Code Playground' },
+      { path: '/coding#compiler', label: 'Compiler' },
+      { path: '/coding#cp', label: 'Competitive Programming' },
+      { path: '/coding#builder', label: 'Project Builder' }
+    ]
+  },
+  {
+    path: '/dsa',
+    label: 'Visualizers',
+    icon: '🧩',
+    children: [
+      { path: '/dsa/linked-list', label: 'Linked List' },
+      { path: '/dsa/stack', label: 'Stack' },
+      { path: '/dsa/queue', label: 'Queue' },
+      { path: '/dsa/tree', label: 'Tree' },
+      { path: '/dsa/graph', label: 'Graph' },
+      { path: '/dsa/sorting', label: 'Sorting' },
+      { path: '/dsa/pathfinding', label: 'Pathfinding' }
+    ]
+  },
+  {
+    path: '/ai-tutor',
+    label: 'AI Center',
+    icon: '🧠',
+    children: [
+      { path: '/ai-tutor#mentor', label: 'AI Mentor' },
+      { path: '/ai-tutor', label: 'AI Tutor' },
+      { path: '/ai-tutor#career', label: 'AI Career Guide' },
+      { path: '/ai-tutor#interviewer', label: 'AI Interviewer' },
+      { path: '/ai-tutor#resume', label: 'AI Resume Reviewer' },
+      { path: '/ai-tutor#planner', label: 'AI Study Planner' },
+      { path: '/voice-assistant', label: 'Voice Assistant' }
+    ]
+  },
+  {
+    path: '/quizzes',
+    label: 'Arena',
+    icon: '🏆',
+    children: [
+      { path: '/quizzes#battles', label: 'Quiz Battles' },
+      { path: '/coding#battles', label: 'Coding Battles' },
+      { path: '/dsa#battles', label: 'DSA Battles' },
+      { path: '/ai-tutor#battles', label: 'AI Battles' },
+      { path: '/quizzes#tournaments', label: 'Tournaments' },
+      { path: '/quizzes#leaderboards', label: 'Leaderboards' },
+      { path: '/progress#achievements', label: 'Achievements' }
+    ]
+  },
+  {
+    path: '/career-hub',
+    label: 'Career Hub',
+    icon: '🔥',
+    children: [
+      { path: '/career-hub#resume', label: 'Resume Builder' },
+      { path: '/career-hub#placement', label: 'Placement Prep' },
+      { path: '/career-hub#company', label: 'Company Questions' },
+      { path: '/career-hub#interview', label: 'Interview Prep' },
+      { path: '/career-hub#aptitude', label: 'Aptitude Practice' },
+      { path: '/career-hub#portfolio', label: 'Portfolio Builder' },
+      { path: '/career-hub#certifications', label: 'Certifications' }
+    ]
+  },
+  {
+    path: '/community',
+    label: 'Community',
+    icon: '🌐',
+    children: [
+      { path: '/community#forum', label: 'Discussion Forum' },
+      { path: '/community#groups', label: 'Study Groups' },
+      { path: '/community#clubs', label: 'Coding Clubs' },
+      { path: '/community#teams', label: 'Project Teams' },
+      { path: '/community#challenges', label: 'Challenges' },
+      { path: '/community#doubt', label: 'Doubt Solving' }
+    ]
+  },
+  {
+    path: '/progress',
+    label: 'Progress',
+    icon: '📊',
+    children: [
+      { path: '/progress', label: 'Analytics' },
+      { path: '/progress#skill-graph', label: 'Skill Graph' },
+      { path: '/progress#heatmap', label: 'Learning Heatmap' },
+      { path: '/progress#reports', label: 'Reports' },
+      { path: '/progress#achievements', label: 'Achievements' },
+      { path: '/progress#certificates', label: 'Certificates' },
+      { path: '/progress#ranking', label: 'Ranking History' }
+    ]
+  },
+  {
+    path: '/ai-profile',
+    label: 'Profile',
+    icon: '👤',
+    children: [
+      { path: '/ai-profile', label: 'AI Profile' },
+      { path: '/settings', label: 'Settings' },
+      { path: '/settings#subscription', label: 'Subscription' },
+      { path: '/settings#theme', label: 'Theme Customizer' },
+      { path: '/settings#notifications', label: 'Notifications' },
+      { path: '/settings#account', label: 'Account' }
+    ]
+  }
 ];
 
 const adminNav = [
@@ -47,12 +187,17 @@ export default function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [openMenus, setOpenMenus] = useState({});
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem('theme') !== 'light';
   });
 
-  // Show back button only on sub-pages (not top-level nav pages)
   const isSubPage = !TOP_LEVEL_PATHS.includes(location.pathname);
+
+  // Toggle dropdown menu
+  const toggleMenu = (label) => {
+    setOpenMenus(prev => ({ ...prev, [label]: !prev[label] }));
+  };
 
   // Derive a readable page title from the path
   const getPageTitle = () => {
@@ -65,6 +210,26 @@ export default function Layout({ children }) {
   };
 
   const navItems = isAdmin ? adminNav : studentNav;
+
+  // Auto-expand menu on load based on active path
+  useEffect(() => {
+    if (!navItems) return;
+    const activeParent = navItems.find(item => {
+      if (!item) return false;
+      const childMatch = item.children?.some(child => {
+        if (!child || !child.path) return false;
+        return location.pathname === child.path || 
+               (child.path.includes('#') && location.pathname + location.hash === child.path);
+      });
+      if (childMatch) return true;
+      if (!item.path) return false;
+      return location.pathname === item.path || 
+             (item.path !== '/' && location.pathname.startsWith(item.path + '/'));
+    });
+    if (activeParent) {
+      setOpenMenus(prev => ({ ...prev, [activeParent.label]: true }));
+    }
+  }, [location.pathname, location.hash, isAdmin]);
 
   // Apply theme class to html element for global access
   useEffect(() => {
@@ -103,10 +268,10 @@ export default function Layout({ children }) {
           borderRight: '1px solid var(--db-sidebar-border)' 
         }}
       >
-        <div className="flex flex-col h-full justify-between">
-          <div>
+        <div className="flex flex-col h-full justify-between overflow-hidden">
+          <div className="flex flex-col flex-1 overflow-hidden">
             {/* Logo */}
-            <div className="db-sidebar-logo flex flex-col items-start gap-1 pb-4 border-b border-[var(--db-sidebar-border)] mb-6">
+            <div className="db-sidebar-logo flex flex-col items-start gap-1 pb-4 border-b border-[var(--db-sidebar-border)] mb-4 flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="db-sidebar-logo-icon bg-gradient-to-tr from-[#2563EB] to-[#60A5FA] text-white font-bold text-lg rounded-xl w-9 h-9 flex items-center justify-center shadow-[0_4px_12px_rgba(37,99,235,0.2)]">E</div>
                 <span className="font-extrabold text-xl text-[var(--db-text-main)] tracking-tight">EduVerse AI</span>
@@ -115,19 +280,72 @@ export default function Layout({ children }) {
             </div>
 
             {/* Navigation Links */}
-            <nav className="db-nav-list">
+            <nav className="db-nav-list flex-1 overflow-y-auto pr-1 my-2 space-y-1 custom-sidebar-scroll">
               {navItems.map((item) => {
-                const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
+                const isMenuOpen = !!openMenus[item.label];
+                const isParentActive = (item.path && (location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path + '/')))) || 
+                                       item.children?.some(child => {
+                                         if (!child || !child.path) return false;
+                                         return location.pathname === child.path || 
+                                                (child.path.includes('#') && location.pathname + location.hash === child.path);
+                                       });
+
                 return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`db-nav-item ${isActive ? 'active' : ''}`}
-                  >
-                    <span className="db-nav-icon">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </Link>
+                  <div key={item.label} className="db-nav-group">
+                    <div
+                      onClick={() => {
+                        if (item.children) {
+                          toggleMenu(item.label);
+                        } else {
+                          navigate(item.path);
+                          setSidebarOpen(false);
+                        }
+                      }}
+                      className={`db-nav-item ${isParentActive ? 'active' : ''} flex items-center justify-between cursor-pointer py-2 px-3 rounded-xl`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="db-nav-icon">{item.icon}</span>
+                        <span>{item.label}</span>
+                      </div>
+                      {item.children && (
+                        <motion.span
+                          animate={{ rotate: isMenuOpen ? 90 : 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="text-[9px] opacity-60 mr-1"
+                        >
+                          ▶
+                        </motion.span>
+                      )}
+                    </div>
+
+                    {item.children && (
+                      <AnimatePresence initial={false}>
+                        {isMenuOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                            className="db-sub-nav-list pl-4 ml-4 border-l border-[var(--db-sidebar-border)] flex flex-col gap-1 mt-1 overflow-hidden"
+                          >
+                            {item.children.map((child) => {
+                              const isChildActive = location.pathname === child.path || (child.path.includes('#') && location.pathname + location.hash === child.path);
+                              return (
+                                <Link
+                                  key={child.path}
+                                  to={child.path}
+                                  onClick={() => setSidebarOpen(false)}
+                                  className={`db-sub-nav-item py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-between ${isChildActive ? 'active-child font-semibold text-[var(--db-text-accent)] bg-[var(--db-badge-bg)]' : 'text-[var(--db-text-muted)] hover:text-[var(--db-text-accent)] hover:bg-[var(--db-btn-secondary-hover)]'}`}
+                                >
+                                  <span>{child.label}</span>
+                                </Link>
+                              );
+                            })}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    )}
+                  </div>
                 );
               })}
             </nav>
