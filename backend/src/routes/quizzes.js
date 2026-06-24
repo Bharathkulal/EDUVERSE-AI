@@ -188,38 +188,19 @@ router.get('/results/student', authenticate, async (req, res) => {
 router.post('/ai-generate', authenticate, authorizeAdmin, async (req, res) => {
   try {
     const { subject_id, topic_name, difficulty = 'medium', question_count = 5 } = req.body;
-    const { generateContentWithFailover } = require('../utils/ai_helper');
+    const aiGateway = require('../services/aiGateway');
 
     if (!subject_id || !topic_name) {
       return res.status(400).json({ message: 'Subject ID and Topic name are required' });
     }
 
-    const prompt = `Generate a quiz on the topic "${topic_name}" with difficulty "${difficulty}".
-    Provide exactly ${question_count} multiple choice questions.
-    You MUST output ONLY a valid JSON object matching the following structure:
-    {
-      "title": "Quiz Title",
-      "questions": [
-        {
-          "question": "Question text here?",
-          "option_a": "Option A text",
-          "option_b": "Option B text",
-          "option_c": "Option C text",
-          "option_d": "Option D text",
-          "correct_answer": "a"
-        }
-      ]
-    }
-    Make sure correct_answer is lowercase ('a', 'b', 'c', or 'd'). Do not wrap in markdown tags or write conversational text. Output raw JSON.`;
-
-    let generatedText = '';
+    let parsedData;
     try {
-      const apiResult = await generateContentWithFailover(prompt);
-      generatedText = apiResult.text;
+      parsedData = await aiGateway.generateQuiz(topic_name, difficulty, question_count);
     } catch (apiErr) {
-      console.error('AI Failover failed for quiz generation:', apiErr);
+      console.error('AI Gateway failed for quiz generation:', apiErr);
       // Fallback fallback mock questions
-      generatedText = JSON.stringify({
+      parsedData = {
         title: `AI Generated Quiz: ${topic_name}`,
         questions: Array.from({ length: parseInt(question_count) }).map((_, i) => ({
           question: `Sample Question ${i + 1} about ${topic_name}?`,
@@ -229,21 +210,7 @@ router.post('/ai-generate', authenticate, authorizeAdmin, async (req, res) => {
           option_d: 'Option D',
           correct_answer: 'a'
         }))
-      });
-    }
-
-    // Clean JSON
-    let parsedData;
-    try {
-      const jsonStart = generatedText.indexOf('{');
-      const jsonEnd = generatedText.lastIndexOf('}');
-      if (jsonStart !== -1 && jsonEnd !== -1) {
-        generatedText = generatedText.substring(jsonStart, jsonEnd + 1);
-      }
-      parsedData = JSON.parse(generatedText);
-    } catch (parseErr) {
-      console.error('Error parsing generated quiz JSON:', parseErr, generatedText);
-      return res.status(500).json({ message: 'AI returned invalid JSON format. Please try again.' });
+      };
     }
 
     const quizResult = await db.query(

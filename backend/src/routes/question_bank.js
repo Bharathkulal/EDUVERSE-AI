@@ -19,100 +19,16 @@ const requireAdmin = (req, res, next) => {
 // AI provider priority logic
 async function callAiProviders(question) {
   const prompt = `You are an expert college professor. Provide a detailed model answer for the following student question. Make it structured, clear, and comprehensive. Keep it clean and readable.\n\nQuestion: ${question}`;
+  const aiGateway = require('../services/aiGateway');
 
-  // 1. Gemini
-  if (process.env.GEMINI_API_KEY) {
-    try {
-      console.log('Calling Gemini...');
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-      const result = await model.generateContent(prompt);
-      const answer = result.response.text();
-      if (answer) return { answer, provider: 'Gemini' };
-    } catch (e) {
-      console.error('Gemini error:', e.message);
-    }
+  try {
+    const res = await aiGateway.generateResponse(prompt);
+    return { answer: res.text, provider: res.providerUsed };
+  } catch (err) {
+    console.error('All AI Gateway providers failed, using fallback:', err.message);
+    const mockAnswer = `1. **Introduction**: The topic of "${question}" covers key structural components within the syllabus.\n\n2. **Detailed Breakdown**:\n   - Platform independence and portability allow running programs across systems.\n   - Object-oriented modeling maps real-world entities into reusable code modules.\n   - Built-in security structures ensure robust runtime execution.\n\n3. **Practical Example**:\n   - Implementation demonstrates modular scaling for high availability systems.\n\n*This is an AI-generated model answer created in demonstration mode. Configure provider API keys for live AI generation.*`;
+    return { answer: mockAnswer, provider: 'Demo AI Manager' };
   }
-
-  // 2. Groq
-  if (process.env.GROQ_API_KEY) {
-    try {
-      console.log('Calling Groq...');
-      const response = await axios.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        {
-          model: 'llama3-8b-8192',
-          messages: [{ role: 'user', content: prompt }],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 8000,
-        }
-      );
-      const answer = response.data?.choices?.[0]?.message?.content;
-      if (answer) return { answer, provider: 'Groq' };
-    } catch (e) {
-      console.error('Groq error:', e.message);
-    }
-  }
-
-  // 3. OpenRouter
-  if (process.env.OPENROUTER_API_KEY) {
-    try {
-      console.log('Calling OpenRouter...');
-      const response = await axios.post(
-        'https://openrouter.ai/api/v1/chat/completions',
-        {
-          model: 'openchat/openchat-7b:free',
-          messages: [{ role: 'user', content: prompt }],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 8000,
-        }
-      );
-      const answer = response.data?.choices?.[0]?.message?.content;
-      if (answer) return { answer, provider: 'OpenRouter' };
-    } catch (e) {
-      console.error('OpenRouter error:', e.message);
-    }
-  }
-
-  // 4. Mistral
-  if (process.env.MISTRAL_API_KEY) {
-    try {
-      console.log('Calling Mistral...');
-      const response = await axios.post(
-        'https://api.mistral.ai/v1/chat/completions',
-        {
-          model: 'mistral-tiny',
-          messages: [{ role: 'user', content: prompt }],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.MISTRAL_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 8000,
-        }
-      );
-      const answer = response.data?.choices?.[0]?.message?.content;
-      if (answer) return { answer, provider: 'Mistral' };
-    } catch (e) {
-      console.error('Mistral error:', e.message);
-    }
-  }
-
-  // Fallback to static mock answer generator
-  console.log('All AI keys unavailable. Returning mock explanation.');
-  const mockAnswer = `1. **Introduction**: The topic of "${question}" covers key structural components within the syllabus.\n\n2. **Detailed Breakdown**:\n   - Platform independence and portability allow running programs across systems.\n   - Object-oriented modeling maps real-world entities into reusable code modules.\n   - Built-in security structures ensure robust runtime execution.\n\n3. **Practical Example**:\n   - Implementation demonstrates modular scaling for high availability systems.\n\n*This is an AI-generated model answer created in demonstration mode. Configure provider API keys for live AI generation.*`;
-  return { answer: mockAnswer, provider: 'Demo AI Manager' };
 }
 
 // Search endpoint for students

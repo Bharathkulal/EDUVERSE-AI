@@ -14,6 +14,7 @@ export default function AdminApiSettings() {
   const [stats, setStats] = useState(null);
   const [failovers, setFailovers] = useState([]);
   const [keys, setKeys] = useState({}); // Stores editing keys
+  const [models, setModels] = useState({}); // Stores editing model names
   const [showKeys, setShowKeys] = useState({}); // Toggles show/hide
   const [testingStatus, setTestingStatus] = useState({}); // Toggles loader per provider
   const [loading, setLoading] = useState(true);
@@ -49,10 +50,13 @@ export default function AdminApiSettings() {
       
       // Initialize edit keys map with existing masked values
       const initialKeys = {};
+      const initialModels = {};
       configsRes.data.forEach(p => {
         initialKeys[p.provider] = p.api_key || '';
+        initialModels[p.provider] = p.model_name || '';
       });
       setKeys(initialKeys);
+      setModels(initialModels);
     } catch (err) {
       toast.error('Failed to load API settings');
     } finally {
@@ -64,34 +68,33 @@ export default function AdminApiSettings() {
     setKeys(prev => ({ ...prev, [provider]: val }));
   };
 
+  const handleModelChange = (provider, val) => {
+    setModels(prev => ({ ...prev, [provider]: val }));
+  };
+
   const toggleShowKey = (provider) => {
     setShowKeys(prev => ({ ...prev, [provider]: !prev[provider] }));
   };
 
-  // SAVE API KEY
+  // SAVE API KEY & MODEL
   const handleSaveKey = async (provider) => {
     const keyVal = keys[provider];
-    if (!keyVal) {
-      toast.error('Please enter an API Key first');
-      return;
-    }
+    const modelVal = models[provider];
     
-    // Skip if they didn't edit the masked key representation
-    if (keyVal.includes('************')) {
-      toast.error('No changes detected in key.');
-      return;
-    }
+    // Check if key is dirty (touched/edited)
+    const keyIsDirty = keyVal && !keyVal.includes('************');
 
     try {
-      const toastId = toast.loading(`Saving ${provider} key...`);
+      const toastId = toast.loading(`Saving ${provider} settings...`);
       await api.post('/admin/api-settings/key', {
         provider,
-        api_key: keyVal
+        api_key: keyIsDirty ? keyVal : '',
+        model_name: modelVal
       });
-      toast.success(`${provider} API Key saved securely!`, { id: toastId });
+      toast.success(`${provider} settings saved securely!`, { id: toastId });
       fetchData();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save key');
+      toast.error(err.response?.data?.message || 'Failed to save settings');
     }
   };
 
@@ -465,8 +468,8 @@ export default function AdminApiSettings() {
               </div>
 
               {/* Password field input */}
-              <div className="flex-1 min-w-[200px]">
-                <div className="relative flex items-center">
+              <div className="flex-1 min-w-[200px] flex flex-col md:flex-row gap-2">
+                <div className="relative flex-1 flex items-center">
                   <input
                     type={showKeys[p.provider] ? 'text' : 'password'}
                     placeholder="Enter API Key or use Environment Fallback"
@@ -480,6 +483,15 @@ export default function AdminApiSettings() {
                   >
                     {showKeys[p.provider] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
+                </div>
+                <div className="w-full md:w-[150px]">
+                  <input
+                    type="text"
+                    placeholder="Default Model"
+                    className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 outline-none focus:border-cyan-500/30 transition"
+                    value={models[p.provider] || ''}
+                    onChange={(e) => handleModelChange(p.provider, e.target.value)}
+                  />
                 </div>
               </div>
 

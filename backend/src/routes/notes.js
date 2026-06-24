@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../config/db');
 const { authenticate } = require('../middleware/auth');
-const { generateContentWithFailover } = require('../utils/ai_helper');
+const aiGateway = require('../services/aiGateway');
 
 const router = express.Router();
 
@@ -158,10 +158,10 @@ ${content}
 
     let summaryText = '';
     try {
-      const apiResult = await generateContentWithFailover(prompt);
+      const apiResult = await aiGateway.generateResponse(prompt);
       summaryText = apiResult.text;
     } catch (apiErr) {
-      console.error('AI Failover failed for note summary:', apiErr);
+      console.error('AI Gateway failed for note summary:', apiErr);
       summaryText = `[Demo Summary Fallback] regarding note "${title}":\n- Highlights the fundamental core concepts.\n- Recommends revising this chapter before upcoming quizzes.\n- Suggests practicing related coding exercises in Coding Labs.`;
     }
 

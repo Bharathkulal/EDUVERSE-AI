@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../config/db');
 const { authenticate, authorizeAdmin } = require('../middleware/auth');
-const { generateContentWithFailover } = require('../utils/ai_helper');
+const aiGateway = require('../services/aiGateway');
 
 const router = express.Router();
 
@@ -209,10 +209,10 @@ router.post('/ai-generate', authenticate, authorizeAdmin, async (req, res) => {
 
     let notesText = '';
     try {
-      const apiResult = await generateContentWithFailover(prompt);
+      const apiResult = await aiGateway.generateResponse(prompt);
       notesText = apiResult.text;
     } catch (apiErr) {
-      console.error('AI Failover failed for notes generation:', apiErr);
+      console.error('AI Gateway failed for notes generation:', apiErr);
       notesText = `### ${topic}\n\nThis is a fallback generated note on ${topic}. High latency or missing keys prevented real AI processing. Please check connection configurations.`;
     }
 

@@ -3,7 +3,7 @@ const multer = require('multer');
 const pdfParse = require('pdf-parse');
 const db = require('../config/db');
 const { authenticate } = require('../middleware/auth');
-const { generateContentWithFailover } = require('../utils/ai_helper');
+const aiGateway = require('../services/aiGateway');
 
 const router = express.Router();
 
@@ -63,7 +63,7 @@ Present your answers using rich formatting, bullet points, and clear code blocks
 
     let apiCallResult = null;
     try {
-      apiCallResult = await generateContentWithFailover(finalPrompt, category === 'search');
+      apiCallResult = await aiGateway.generateResponse(finalPrompt, { enableSearch: category === 'search' });
     } catch (apiErr) {
       console.error('All failovers exhausted:', apiErr);
     }
@@ -145,7 +145,6 @@ router.post('/pdf-action', authenticate, async (req, res) => {
       return res.status(400).json({ message: 'No active PDF context. Please upload a PDF first.' });
     }
 
-    const model = getModel();
     let prompt = '';
 
     if (action === 'summary') {
@@ -180,10 +179,9 @@ ${context.text.slice(0, 15000)}`;
       return res.status(400).json({ message: 'Invalid action requested.' });
     }
 
-    let responseText = '';
     let apiCallResult = null;
     try {
-      apiCallResult = await generateContentWithFailover(prompt);
+      apiCallResult = await aiGateway.generateResponse(prompt);
     } catch (apiErr) {
       console.error('All failovers exhausted for PDF action:', apiErr);
     }
@@ -219,7 +217,6 @@ router.get('/mentor', authenticate, async (req, res) => {
     const progress = progressRes.rows[0] || {};
     const recentQuizzes = quizRes.rows || [];
 
-    const model = getModel();
     const studentContext = `
 Student Information:
 - Course: ${profile.course || 'BCA'}
@@ -239,7 +236,7 @@ Format each recommendation clearly as a bullet point. Make it sound like F.R.I.D
     let recommendations = [];
     let apiCallResult = null;
     try {
-      apiCallResult = await generateContentWithFailover(`${systemPrompt}\n\n${studentContext}`);
+      apiCallResult = await aiGateway.generateResponse(`${systemPrompt}\n\n${studentContext}`);
     } catch (apiErr) {
       console.error('All failovers exhausted for mentor recommendation:', apiErr);
     }

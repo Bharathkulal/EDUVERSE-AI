@@ -3,7 +3,7 @@ const { body } = require('express-validator');
 const db = require('../config/db');
 const validate = require('../middleware/validate');
 const { authenticate } = require('../middleware/auth');
-const { generateContentWithFailover } = require('../utils/ai_helper');
+const aiGateway = require('../services/aiGateway');
 
 const router = express.Router();
 
@@ -32,7 +32,7 @@ router.post(
 
       let apiCallResult = null;
       try {
-        apiCallResult = await generateContentWithFailover(systemPrompt);
+        apiCallResult = await aiGateway.generateResponse(systemPrompt);
       } catch (apiErr) {
         console.error('All failovers exhausted for AI Tutor:', apiErr);
       }

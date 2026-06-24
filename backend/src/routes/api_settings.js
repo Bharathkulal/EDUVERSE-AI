@@ -39,7 +39,7 @@ const getProviderKey = async (providerName) => {
 router.get('/', authenticate, authorizeAdmin, async (req, res) => {
   try {
     const configs = await db.query(
-      `SELECT provider, priority, status, disabled, consecutive_failures, cooldown_until, last_used 
+      `SELECT provider, priority, status, disabled, consecutive_failures, cooldown_until, last_used, model_name 
        FROM api_configurations 
        ORDER BY priority ASC`
     );
@@ -91,29 +91,38 @@ router.get('/', authenticate, authorizeAdmin, async (req, res) => {
 // 2. SAVE provider key
 router.post('/key', authenticate, authorizeAdmin, async (req, res) => {
   try {
-    const { provider, api_key } = req.body;
+    const { provider, api_key, model_name } = req.body;
     if (!provider) {
       return res.status(400).json({ message: 'Provider name is required' });
     }
 
-    const encryptedKey = encrypt(api_key);
-    await db.query(
-      `INSERT INTO api_configurations (provider, api_key, status, disabled, consecutive_failures, updated_at) 
-       VALUES ($1, $2, 'Disconnected', false, 0, NOW())
-       ON CONFLICT (provider) DO UPDATE SET api_key = $2, status = 'Disconnected', disabled = false, consecutive_failures = 0, updated_at = NOW()`,
-      [provider, encryptedKey]
-    );
+    if (api_key && !api_key.includes('************')) {
+      const encryptedKey = encrypt(api_key);
+      await db.query(
+        `INSERT INTO api_configurations (provider, api_key, status, disabled, consecutive_failures, model_name, updated_at) 
+         VALUES ($1, $2, 'Disconnected', false, 0, $3, NOW())
+         ON CONFLICT (provider) DO UPDATE SET api_key = $2, status = 'Disconnected', disabled = false, consecutive_failures = 0, model_name = COALESCE($3, api_configurations.model_name), updated_at = NOW()`,
+        [provider, encryptedKey, model_name || '']
+      );
+    } else if (model_name !== undefined) {
+      await db.query(
+        `INSERT INTO api_configurations (provider, api_key, status, disabled, consecutive_failures, model_name, updated_at) 
+         VALUES ($1, '', 'Disconnected', false, 0, $2, NOW())
+         ON CONFLICT (provider) DO UPDATE SET model_name = $2, updated_at = NOW()`,
+        [provider, model_name]
+      );
+    }
 
     // Audit Log
     await db.query(
       'INSERT INTO api_audit_logs (admin_id, action, provider, details) VALUES ($1, $2, $3, $4)',
-      [req.user.id, 'UPDATE_KEY', provider, `Updated key for ${provider}`]
+      [req.user.id, 'UPDATE_KEY', provider, `Updated key/model for ${provider}`]
     );
 
-    res.json({ message: `API Key for ${provider} saved securely.` });
+    res.json({ message: `API Key/Model for ${provider} saved securely.` });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error saving API Key' });
+    res.status(500).json({ message: 'Server error saving API Key/Model' });
   }
 });
 

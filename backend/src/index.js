@@ -204,6 +204,7 @@ const db = require('./config/db');
       ALTER TABLE api_configurations ADD COLUMN IF NOT EXISTS disabled BOOLEAN DEFAULT false;
       ALTER TABLE api_configurations ADD COLUMN IF NOT EXISTS cooldown_until TIMESTAMP NULL;
       ALTER TABLE api_configurations ADD COLUMN IF NOT EXISTS last_used TIMESTAMP NULL;
+      ALTER TABLE api_configurations ADD COLUMN IF NOT EXISTS model_name VARCHAR(100) DEFAULT '';
     `);
 
     // Add student control fields to users table
@@ -301,12 +302,24 @@ const db = require('./config/db');
 
     // Seed default providers
     const providers = ['gemini', 'openrouter', 'groq', 'together', 'deepgram', 'elevenlabs', 'assemblyai', 'azure_speech', 'custom'];
+    const defaultModels = {
+      gemini: 'gemini-2.0-flash',
+      openrouter: 'google/gemini-2.5-flash',
+      groq: 'llama3-8b-8192',
+      together: 'meta-llama/Llama-3-8b-chat-hf',
+      deepgram: 'nova-2',
+      elevenlabs: 'eleven_monolingual_v1',
+      assemblyai: 'best',
+      azure_speech: 'default',
+      custom: 'default'
+    };
     for (let i = 0; i < providers.length; i++) {
+      const p = providers[i];
       await db.query(`
-        INSERT INTO api_configurations (provider, api_key, priority, status)
-        VALUES ($1, '', $2, 'Disconnected')
-        ON CONFLICT (provider) DO NOTHING
-      `, [providers[i], i + 1]);
+        INSERT INTO api_configurations (provider, api_key, priority, status, model_name)
+        VALUES ($1, '', $2, 'Disconnected', $3)
+        ON CONFLICT (provider) DO UPDATE SET model_name = CASE WHEN api_configurations.model_name IS NULL OR api_configurations.model_name = '' THEN EXCLUDED.model_name ELSE api_configurations.model_name END
+      `, [p, i + 1, defaultModels[p] || '']);
     }
 
     // Enterprise Admin Panel - content_versions table

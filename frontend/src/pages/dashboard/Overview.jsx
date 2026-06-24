@@ -117,7 +117,7 @@ export default function Overview() {
 
   const handleDownloadReport = () => {
     const reportData = {
-      student: user?.name,
+      student: user?.name || 'Student',
       level: computedLevel,
       xp: totalXP,
       streak: userStreak,
@@ -130,7 +130,8 @@ export default function Overview() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `academic_report_${user?.name?.replace(/\s+/g, '_')}.json`;
+    const safeName = (user?.name || 'Student').replace(/\s+/g, '_');
+    link.download = `academic_report_${safeName}.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
