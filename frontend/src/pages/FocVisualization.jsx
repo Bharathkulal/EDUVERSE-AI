@@ -5,7 +5,8 @@ import {
   ArrowLeft, Play, Pause, SkipForward, RotateCcw, 
   BookOpen, HelpCircle, CheckCircle, ChevronDown, 
   Layers, Volume2, ShieldAlert, Cpu, Database, 
-  Binary, Terminal, RefreshCw, Send, Zap, Award, Edit3
+  Binary, Terminal, RefreshCw, Send, Zap, Award, Edit3,
+  Info, Lightbulb, Hash, ArrowRight, Star, AlertCircle
 } from 'lucide-react';
 
 // Core topics
@@ -29,6 +30,169 @@ const SPECIAL_CARDS = [
   { id: 'practice-lab', title: 'Practice Lab', icon: '🧪', desc: 'Write expression logic and compile simulations.', diff: 'Lab', time: 'Unlimited', progress: 0, category: 'special' },
   { id: 'ai-tutor', title: 'AI Tutor Mode', icon: '🤖', desc: 'Get smart context-aware tips from the AI tutor.', diff: 'AI Assistant', time: 'Custom', progress: 95, category: 'special' }
 ];
+
+const NUMBER_SYSTEM_NOTES = `📘 NUMBER SYSTEM — COMPLETE STUDY NOTES
+═══════════════════════════════════════
+
+1️⃣ DECIMAL SYSTEM (Base-10)
+   • Digits: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+   • Used in everyday counting
+   • Each position = digit × 10^position
+   • Example: 259 = 2×100 + 5×10 + 9×1
+
+2️⃣ BINARY SYSTEM (Base-2)
+   • Digits: 0, 1
+   • Foundation of all digital computing
+   • Each position = bit × 2^position
+   • Example: 10011 = 1×16 + 0×8 + 0×4 + 1×2 + 1×1 = 19
+
+3️⃣ OCTAL SYSTEM (Base-8)
+   • Digits: 0, 1, 2, 3, 4, 5, 6, 7
+   • Used in Unix file permissions (chmod 755)
+   • 1 octal digit = 3 binary bits
+   • Example: 23₈ = 2×8 + 3×1 = 19
+
+4️⃣ HEXADECIMAL SYSTEM (Base-16)
+   • Digits: 0-9, A(10), B(11), C(12), D(13), E(14), F(15)
+   • Used in memory addresses, color codes (#FF5733)
+   • 1 hex digit = 4 binary bits
+   • Example: 13₁₆ = 1×16 + 3×1 = 19
+
+═══════════════════════════════════════
+📐 CONVERSION FORMULAS
+
+🔹 Decimal → Binary: Divide by 2, collect remainders (bottom→top)
+🔹 Binary → Decimal: Multiply each bit by 2^position, sum all
+🔹 Decimal → Octal: Divide by 8, collect remainders
+🔹 Decimal → Hex: Divide by 16, collect remainders (10→A, 11→B...)
+🔹 Binary → Octal: Group 3 bits from right, convert each group
+🔹 Binary → Hex: Group 4 bits from right, convert each group
+
+═══════════════════════════════════════
+⚡ COMPLEMENTS
+
+🔹 1's Complement: Flip all bits (0↔1)
+   Example: 10011 → 01100
+
+🔹 2's Complement: 1's complement + 1
+   Example: 10011 → 01100 + 1 = 01101
+   Used for negative number representation
+
+═══════════════════════════════════════
+🧮 BINARY ARITHMETIC
+
+🔹 Addition Rules:
+   0+0=0  |  0+1=1  |  1+0=1  |  1+1=10 (carry 1)
+
+🔹 Subtraction: Use 2's complement method
+   A - B = A + (2's complement of B)
+
+═══════════════════════════════════════
+💡 QUICK REFERENCE TABLE
+
+  Dec  |  Bin    |  Oct  |  Hex
+  ─────┼─────────┼───────┼─────
+   0   |  0000   |  0    |  0
+   5   |  0101   |  5    |  5
+   8   |  1000   |  10   |  8
+  10   |  1010   |  12   |  A
+  15   |  1111   |  17   |  F
+  16   |  10000  |  20   |  10
+  19   |  10011  |  23   |  13
+  31   |  11111  |  37   |  1F
+  255  |  11111111| 377   |  FF
+
+═══════════════════════════════════════
+✍️ MY PERSONAL NOTES:
+
+`;
+
+const MEMORY_ORG_NOTES = `📘 MEMORY ORGANIZATION — COMPLETE STUDY NOTES
+═══════════════════════════════════════
+
+1️⃣ REGISTERS (The Pocket)
+   • Fastest accessible memory
+   • Smallest capacity (Bytes to Kilobytes)
+   • Located inside the CPU core
+   • Holds data currently being processed
+
+2️⃣ CACHE MEMORY (The Backpack)
+   • Very fast memory
+   • Small capacity (Megabytes)
+   • Located on or very near the CPU (L1, L2, L3)
+   • Stores frequently used data to speed up processing
+
+3️⃣ MAIN MEMORY / RAM (The Desk)
+   • Fast access
+   • Medium capacity (Gigabytes)
+   • Volatile: loses data when powered off
+   • Holds the OS and currently running applications
+
+4️⃣ SECONDARY STORAGE (The Filing Cabinet / Warehouse)
+   • SSDs and HDDs
+   • Slower access times
+   • Huge capacity (Terabytes)
+   • Non-volatile: keeps data when powered off
+   • Long-term storage of files, programs, and the OS
+
+═══════════════════════════════════════
+⚡ KEY PRINCIPLES
+
+🔹 The Memory Hierarchy Trade-off:
+   As you move closer to the CPU:
+   ↑ Speed Increases
+   ↑ Cost per Byte Increases
+   ↓ Capacity Decreases
+
+🔹 Volatility:
+   • Volatile (requires power): RAM, Cache, Registers
+   • Non-volatile (keeps data without power): SSD, HDD, ROM
+
+═══════════════════════════════════════
+✍️ MY PERSONAL NOTES:
+
+`;
+
+const COMPUTER_ARCH_NOTES = `📘 COMPUTER ARCHITECTURE — COMPLETE STUDY NOTES
+═══════════════════════════════════════
+
+1️⃣ CPU (Central Processing Unit)
+   • The "brain" of the computer.
+   • Executes instructions and manages data flow.
+   • Contains ALU, Control Unit, and Registers.
+
+2️⃣ ALU (Arithmetic Logic Unit)
+   • Performs all mathematical calculations (addition, subtraction, etc.).
+   • Executes all logical operations (AND, OR, NOT).
+
+3️⃣ CONTROL UNIT (CU)
+   • Directs the operation of the processor.
+   • Fetches instructions from memory and decodes them.
+   • Sends timing and control signals to other components.
+
+4️⃣ REGISTERS
+   • Tiny, lightning-fast memory locations inside the CPU.
+   • Program Counter (PC): Holds address of next instruction.
+   • Instruction Register (IR): Holds the current instruction.
+   • Accumulator (ACC): Holds intermediate ALU results.
+
+5️⃣ BUS SYSTEM
+   • Data Bus: Carries actual data between components.
+   • Address Bus: Carries memory addresses where data should be read/written.
+   • Control Bus: Carries control signals (read/write commands).
+
+═══════════════════════════════════════
+⚡ THE FETCH-DECODE-EXECUTE CYCLE
+
+   1. Fetch: Get instruction from RAM using the PC.
+   2. Decode: CU figures out what the instruction means.
+   3. Execute: ALU performs the operation.
+   4. Store: Save the result back to memory or register.
+
+═══════════════════════════════════════
+✍️ MY PERSONAL NOTES:
+
+`;
 
 export default function FocVisualization() {
   const navigate = useNavigate();
@@ -56,6 +220,7 @@ export default function FocVisualization() {
   
   // Memory & Arch states
   const [activeStorageIndex, setActiveStorageIndex] = useState(-1);
+  const [activeArchNode, setActiveArchNode] = useState(null);
 
   // Quiz States
   const [quizScore, setQuizScore] = useState(0);
@@ -72,19 +237,25 @@ export default function FocVisualization() {
       if (selectedTopic.id === 'number-system') {
         setOperation('decimal-binary');
         setInputValue('19');
+        setUserNotes(NUMBER_SYSTEM_NOTES);
       } else if (selectedTopic.id === 'logic-gates') {
         setOperation('AND');
         setGateType('AND');
+        setUserNotes('Type your logic gates notes here...');
       } else if (selectedTopic.id === 'flowcharts') {
         setOperation('Even/Odd');
         setFlowchartTopic('Even/Odd');
+        setUserNotes('Type your flowcharts notes here...');
       } else if (selectedTopic.id === 'ascii-unicode') {
         setOperation('char-binary');
         setInputValue('A');
+        setUserNotes('Type your ASCII/Unicode notes here...');
       } else if (selectedTopic.id === 'memory-org') {
         setOperation('hierarchy');
+        setUserNotes(MEMORY_ORG_NOTES);
       } else if (selectedTopic.id === 'computer-arch') {
         setOperation('data-path');
+        setUserNotes(COMPUTER_ARCH_NOTES);
       }
       setAnimationStep(0);
       setIsAnimating(false);
@@ -184,11 +355,270 @@ export default function FocVisualization() {
     return 'Explore computer basics dynamically.';
   };
 
+  // ========== NUMBER SYSTEM DETAILED CONTENT ==========
+
+  // Comprehensive explanation content per operation
+  const NUMBER_SYSTEM_EXPLANATIONS = {
+    'decimal-binary': {
+      title: 'Decimal to Binary Conversion',
+      concept: 'The decimal (base-10) system uses digits 0–9, while binary (base-2) uses only 0 and 1. Every digital device processes data in binary because transistors have two states: ON (1) and OFF (0).',
+      keyPoints: [
+        'Binary is a positional number system with base 2',
+        'Each position represents a power of 2 (1, 2, 4, 8, 16, 32...)',
+        'Method: Repeatedly divide by 2 and collect remainders',
+        'Read remainders from bottom to top for the binary result'
+      ],
+      realWorld: '🌾 Farmer Analogy: Imagine you have seeds to distribute into baskets labeled 16, 8, 4, 2, 1. Start from the biggest basket — if you have enough seeds, fill it (1). Otherwise skip it (0).',
+      formula: 'Decimal N → Binary: Divide N by 2 repeatedly. Remainders in reverse = binary.',
+      conversionTable: [
+        { dec: '0', bin: '0000', oct: '0', hex: '0' },
+        { dec: '5', bin: '0101', oct: '5', hex: '5' },
+        { dec: '10', bin: '1010', oct: '12', hex: 'A' },
+        { dec: '15', bin: '1111', oct: '17', hex: 'F' },
+        { dec: '19', bin: '10011', oct: '23', hex: '13' },
+        { dec: '31', bin: '11111', oct: '37', hex: '1F' }
+      ]
+    },
+    'binary-decimal': {
+      title: 'Binary to Decimal Conversion',
+      concept: 'To convert binary to decimal, multiply each bit by its positional power of 2, then sum all values. The rightmost bit is 2⁰, next is 2¹, then 2², and so on.',
+      keyPoints: [
+        'Each binary digit is multiplied by 2 raised to its position',
+        'Position counting starts from 0 (rightmost)',
+        'Sum all the products to get the decimal value',
+        'Example: 10011 = 1×16 + 0×8 + 0×4 + 1×2 + 1×1 = 19'
+      ],
+      realWorld: '🌾 Farmer Analogy: Count how many seeds are in each basket (16, 8, 4, 2, 1). If there\'s a seed (1), count that basket\'s value. Add them all up!',
+      formula: 'Binary b₄b₃b₂b₁b₀ → Decimal = b₄×2⁴ + b₃×2³ + b₂×2² + b₁×2¹ + b₀×2⁰'
+    },
+    'decimal-octal': {
+      title: 'Decimal to Octal Conversion',
+      concept: 'Octal (base-8) uses digits 0–7. It\'s commonly used in Unix file permissions and as a shorthand for binary (each octal digit = 3 binary bits).',
+      keyPoints: [
+        'Octal is base-8: digits are 0, 1, 2, 3, 4, 5, 6, 7',
+        'Method: Repeatedly divide by 8 and collect remainders',
+        'Read remainders from bottom to top',
+        '1 octal digit = exactly 3 binary digits'
+      ],
+      realWorld: '🌾 Farmer Analogy: Instead of 2-seed baskets, imagine baskets that hold up to 7 seeds each. Fill from the largest group of 8 first!',
+      formula: 'Decimal N → Octal: Divide N by 8 repeatedly. Remainders in reverse = octal.'
+    },
+    'decimal-hex': {
+      title: 'Decimal to Hexadecimal Conversion',
+      concept: 'Hexadecimal (base-16) uses digits 0–9 and letters A–F (where A=10, B=11, C=12, D=13, E=14, F=15). It\'s widely used in memory addresses, color codes (#FF5733), and programming.',
+      keyPoints: [
+        'Hex is base-16: 0-9 and A(10), B(11), C(12), D(13), E(14), F(15)',
+        'Method: Repeatedly divide by 16 and collect remainders',
+        'Remainders ≥ 10 are replaced with letters A-F',
+        '1 hex digit = exactly 4 binary digits'
+      ],
+      realWorld: '🌾 Farmer Analogy: Super-sized baskets! Each basket can hold up to 15 seeds. When counting past 9, use letter names (A=10 seeds, B=11...).',
+      formula: 'Decimal N → Hex: Divide N by 16 repeatedly. Remainders (using A-F for 10-15) in reverse = hex.'
+    },
+    'binary-addition': {
+      title: 'Binary Addition',
+      concept: 'Binary addition follows the same principle as decimal addition, but carries happen at 2 instead of 10. The rules are: 0+0=0, 0+1=1, 1+0=1, 1+1=10 (0 carry 1).',
+      keyPoints: [
+        '0 + 0 = 0 (no carry)',
+        '0 + 1 = 1 (no carry)',
+        '1 + 0 = 1 (no carry)',
+        '1 + 1 = 10 (write 0, carry 1)',
+        '1 + 1 + 1 = 11 (write 1, carry 1)'
+      ],
+      realWorld: '🌾 Farmer Analogy: When two seed baskets overflow (both have 1), combine them and carry one seed to the next bigger basket!',
+      formula: 'Add column by column from right to left, carrying over when sum ≥ 2.'
+    },
+    'ones-complement': {
+      title: "1's Complement",
+      concept: "1's complement is found by flipping (inverting) every bit of the binary number. 0 becomes 1, and 1 becomes 0. It's used in older systems to represent negative numbers.",
+      keyPoints: [
+        'Flip every bit: 0→1 and 1→0',
+        'Used for representing negative numbers in some systems',
+        'Has two representations of zero (+0 and -0)',
+        'Range for n bits: -(2ⁿ⁻¹ - 1) to +(2ⁿ⁻¹ - 1)'
+      ],
+      realWorld: "🌾 Farmer Analogy: For every basket that HAS a seed, remove it. For every EMPTY basket, add a seed. It's like swapping full and empty!",
+      formula: "1's complement of N = Flip all bits (0↔1)"
+    },
+    'twos-complement': {
+      title: "2's Complement",
+      concept: "2's complement is the most widely used method for representing signed (negative) integers in computers. It's calculated by taking 1's complement and adding 1.",
+      keyPoints: [
+        "Step 1: Find 1's complement (flip all bits)",
+        'Step 2: Add 1 to the result',
+        'Only one representation of zero',
+        'Range for n bits: -2ⁿ⁻¹ to +(2ⁿ⁻¹ - 1)',
+        'Used in all modern processors for signed arithmetic'
+      ],
+      realWorld: "🌾 Farmer Analogy: Swap all seeds and empties (1's complement), then add one extra seed to the smallest basket!",
+      formula: "2's complement of N = (Flip all bits) + 1"
+    }
+  };
+
+  const MEMORY_ORG_EXPLANATION = {
+    title: 'Memory Hierarchy',
+    concept: 'Computer memory is organized in a hierarchy based on speed, capacity, and cost. Faster memory is more expensive and smaller in capacity, while slower memory is cheaper and larger.',
+    keyPoints: [
+      'Cache (L1/L2/L3): Extremely fast, small capacity, located on or near the CPU.',
+      'RAM (Main Memory): Fast volatile memory used for active processes.',
+      'SSD/HDD (Secondary Storage): Slower, non-volatile memory for long-term storage.',
+      'Registers: The fastest and smallest memory locations directly within the CPU.'
+    ],
+    realWorld: '🌾 Farmer Analogy: Think of it like accessing tools! Tools in your pocket (Cache) are accessed instantly. Tools in your bag (RAM) take a bit longer to get. Tools in the shed (SSD) take a walk to fetch, and tools in a distant warehouse (HDD) take a truck ride!',
+    formula: 'Speed vs Capacity Trade-off: As you move down the hierarchy, Capacity increases but Speed decreases.'
+  };
+
+  const COMPUTER_ARCH_EXPLANATION = {
+    title: 'Hardware Data-Pathways',
+    concept: 'Computer Architecture defines how the physical components of a computer system are organized and interact. The core principle is the movement of data between memory, the processor, and input/output devices through a shared bus system.',
+    keyPoints: [
+      'The CPU consists of the ALU (math/logic) and Control Unit (orchestrator).',
+      'The System Bus acts as the highway, moving data, addresses, and control signals.',
+      'RAM stores both the instructions and the data being processed (Von Neumann architecture).',
+      'Data flows from input (Keyboard) → RAM → CPU (Processing) → RAM → output (Monitor).'
+    ],
+    realWorld: '🌾 Farmer Analogy: Think of a factory! The RAM is the warehouse. The CPU is the factory floor where workers (ALU) assemble items. The Control Unit is the manager directing workers. The Bus is the conveyor belt moving raw materials and finished goods around!',
+    formula: 'Fetch-Decode-Execute Cycle: The fundamental operating sequence of all modern computers.'
+  };
+
+  // Dynamic steps generator per operation
+  const getNumberSystemSteps = () => {
+    const val = parseInt(inputValue, 10) || 0;
+    
+    if (operation === 'decimal-binary') {
+      const steps = [];
+      let n = val;
+      steps.push({ label: 'Start', detail: `Convert decimal ${val} to binary using repeated division by 2.`, icon: '🚀' });
+      let divisions = [];
+      let tempN = val;
+      while (tempN > 0) {
+        const remainder = tempN % 2;
+        const quotient = Math.floor(tempN / 2);
+        divisions.push({ dividend: tempN, quotient, remainder });
+        tempN = quotient;
+      }
+      if (divisions.length === 0) divisions.push({ dividend: 0, quotient: 0, remainder: 0 });
+      divisions.forEach((d, i) => {
+        steps.push({ label: `Division ${i + 1}`, detail: `${d.dividend} ÷ 2 = ${d.quotient}, remainder = ${d.remainder}`, icon: '➗' });
+      });
+      const binary = val.toString(2);
+      steps.push({ label: 'Collect', detail: `Read remainders bottom → top: ${binary}`, icon: '📋' });
+      steps.push({ label: 'Result', detail: `Decimal ${val} = Binary ${binary}`, icon: '✅' });
+      return steps;
+    }
+    
+    if (operation === 'binary-decimal') {
+      const binary = val.toString(2);
+      const steps = [{ label: 'Start', detail: `Convert binary of ${val} back to decimal using positional weights.`, icon: '🚀' }];
+      const bits = binary.split('');
+      bits.forEach((bit, i) => {
+        const power = bits.length - 1 - i;
+        const contribution = parseInt(bit) * Math.pow(2, power);
+        steps.push({ label: `Bit ${i + 1}`, detail: `${bit} × 2^${power} = ${bit} × ${Math.pow(2, power)} = ${contribution}`, icon: bit === '1' ? '🌾' : '⬜' });
+      });
+      steps.push({ label: 'Sum', detail: `Add all: ${bits.map((b, i) => parseInt(b) * Math.pow(2, bits.length - 1 - i)).join(' + ')} = ${val}`, icon: '➕' });
+      steps.push({ label: 'Result', detail: `Binary ${binary} = Decimal ${val}`, icon: '✅' });
+      return steps;
+    }
+    
+    if (operation === 'decimal-octal') {
+      const steps = [{ label: 'Start', detail: `Convert decimal ${val} to octal using repeated division by 8.`, icon: '🚀' }];
+      let tempN = val;
+      let divisions = [];
+      while (tempN > 0) {
+        const remainder = tempN % 8;
+        const quotient = Math.floor(tempN / 8);
+        divisions.push({ dividend: tempN, quotient, remainder });
+        tempN = quotient;
+      }
+      if (divisions.length === 0) divisions.push({ dividend: 0, quotient: 0, remainder: 0 });
+      divisions.forEach((d, i) => {
+        steps.push({ label: `Division ${i + 1}`, detail: `${d.dividend} ÷ 8 = ${d.quotient}, remainder = ${d.remainder}`, icon: '➗' });
+      });
+      const octal = val.toString(8);
+      steps.push({ label: 'Collect', detail: `Read remainders bottom → top: ${octal}`, icon: '📋' });
+      steps.push({ label: 'Result', detail: `Decimal ${val} = Octal ${octal}`, icon: '✅' });
+      return steps;
+    }
+    
+    if (operation === 'decimal-hex') {
+      const steps = [{ label: 'Start', detail: `Convert decimal ${val} to hexadecimal using repeated division by 16.`, icon: '🚀' }];
+      let tempN = val;
+      let divisions = [];
+      while (tempN > 0) {
+        const remainder = tempN % 16;
+        const quotient = Math.floor(tempN / 16);
+        const hexChar = remainder >= 10 ? String.fromCharCode(55 + remainder) : remainder.toString();
+        divisions.push({ dividend: tempN, quotient, remainder, hexChar });
+        tempN = quotient;
+      }
+      if (divisions.length === 0) divisions.push({ dividend: 0, quotient: 0, remainder: 0, hexChar: '0' });
+      divisions.forEach((d, i) => {
+        steps.push({ label: `Division ${i + 1}`, detail: `${d.dividend} ÷ 16 = ${d.quotient}, remainder = ${d.remainder}${d.remainder >= 10 ? ` (${d.hexChar})` : ''}`, icon: '➗' });
+      });
+      const hex = val.toString(16).toUpperCase();
+      steps.push({ label: 'Collect', detail: `Read remainders bottom → top: ${hex}`, icon: '📋' });
+      steps.push({ label: 'Result', detail: `Decimal ${val} = Hexadecimal 0x${hex}`, icon: '✅' });
+      return steps;
+    }
+    
+    if (operation === 'binary-addition') {
+      return [
+        { label: 'Setup', detail: 'Write both binary numbers aligned by right side.', icon: '🚀' },
+        { label: 'Rule 1', detail: '0 + 0 = 0 (no carry)', icon: '📝' },
+        { label: 'Rule 2', detail: '0 + 1 = 1 or 1 + 0 = 1 (no carry)', icon: '📝' },
+        { label: 'Rule 3', detail: '1 + 1 = 10 → write 0, carry 1 to next column', icon: '📝' },
+        { label: 'Rule 4', detail: '1 + 1 + 1 (with carry) = 11 → write 1, carry 1', icon: '📝' },
+        { label: 'Process', detail: 'Add column by column from rightmost bit to left.', icon: '⚡' },
+        { label: 'Done', detail: 'Include final carry bit if present.', icon: '✅' }
+      ];
+    }
+    
+    if (operation === 'ones-complement') {
+      const binary = val.toString(2).padStart(5, '0');
+      const flipped = binary.split('').map(b => b === '0' ? '1' : '0').join('');
+      return [
+        { label: 'Start', detail: `Find 1\'s complement of decimal ${val}.`, icon: '🚀' },
+        { label: 'Convert', detail: `Decimal ${val} in binary = ${binary}`, icon: '🔄' },
+        ...binary.split('').map((b, i) => ({ label: `Flip bit ${i + 1}`, detail: `Bit ${b} → ${b === '0' ? '1' : '0'}`, icon: b === '0' ? '🌾' : '⬜' })),
+        { label: 'Result', detail: `1\'s complement of ${binary} = ${flipped}`, icon: '✅' }
+      ];
+    }
+    
+    if (operation === 'twos-complement') {
+      const binary = val.toString(2).padStart(5, '0');
+      const onesComp = binary.split('').map(b => b === '0' ? '1' : '0').join('');
+      const twosVal = parseInt(onesComp, 2) + 1;
+      const twosComp = twosVal.toString(2).padStart(5, '0');
+      return [
+        { label: 'Start', detail: `Find 2\'s complement of decimal ${val}.`, icon: '🚀' },
+        { label: 'Convert', detail: `Decimal ${val} in binary = ${binary}`, icon: '🔄' },
+        { label: "1's Complement", detail: `Flip all bits: ${binary} → ${onesComp}`, icon: '🔁' },
+        { label: 'Add 1', detail: `${onesComp} + 1 = ${twosComp}`, icon: '➕' },
+        { label: 'Result', detail: `2\'s complement of ${val} = ${twosComp}`, icon: '✅' }
+      ];
+    }
+    
+    return [
+      { label: 'Start', detail: 'Select an operation and input a value to see steps.', icon: '🚀' },
+      { label: 'Process', detail: 'The conversion will be shown step by step.', icon: '⚙️' },
+      { label: 'Result', detail: 'Final result will appear here.', icon: '✅' }
+    ];
+  };
+
   // Quizzes list
   const QUIZ_QUESTIONS = {
     'number-system': [
       { q: "What is the binary representation of decimal 19?", o: ["10011", "10101", "11001", "10001"], a: 0 },
-      { q: "How is binary addition 1 + 1 calculated?", o: ["0 with carry 0", "1 with carry 1", "0 with carry 1", "2"], a: 2 }
+      { q: "How is binary addition 1 + 1 calculated?", o: ["0 with carry 0", "1 with carry 1", "0 with carry 1", "2"], a: 2 },
+      { q: "What is the octal equivalent of decimal 19?", o: ["21", "23", "17", "19"], a: 1 },
+      { q: "What is the hexadecimal equivalent of decimal 255?", o: ["EF", "FF", "FE", "1F"], a: 1 },
+      { q: "What is the 1's complement of binary 10011?", o: ["01100", "10100", "01101", "11100"], a: 0 },
+      { q: "What is the 2's complement of binary 10011?", o: ["01100", "01101", "10100", "01110"], a: 1 },
+      { q: "How many binary bits does one hexadecimal digit represent?", o: ["2 bits", "3 bits", "4 bits", "8 bits"], a: 2 },
+      { q: "What is binary 1010 in decimal?", o: ["8", "10", "12", "11"], a: 1 },
+      { q: "Which number system is base-8?", o: ["Binary", "Decimal", "Hexadecimal", "Octal"], a: 3 },
+      { q: "In hexadecimal, what letter represents decimal 12?", o: ["A", "B", "C", "D"], a: 2 }
     ],
     'logic-gates': [
       { q: "Which gate gives output 1 only when both inputs are 1?", o: ["OR", "AND", "XOR", "NAND"], a: 1 },
@@ -198,10 +628,28 @@ export default function FocVisualization() {
       { q: "What shape represents a decision block in a flowchart?", o: ["Rectangle", "Oval", "Diamond", "Parallelogram"], a: 2 }
     ],
     'memory-org': [
-      { q: "Which memory level is the fastest?", o: ["RAM", "SSD", "Hard Disk", "Cache"], a: 3 }
+      { q: "Which memory level is the fastest?", o: ["RAM", "SSD", "Hard Disk", "Cache"], a: 3 },
+      { q: "Which memory is volatile and loses data when power is turned off?", o: ["ROM", "SSD", "RAM", "Hard Disk"], a: 2 },
+      { q: "Which of these provides the largest storage capacity typically?", o: ["Cache", "RAM", "Registers", "Hard Disk"], a: 3 },
+      { q: "Where is L1 cache located?", o: ["On the motherboard", "Inside the CPU", "In the RAM stick", "In the Hard Drive"], a: 1 },
+      { q: "Which type of memory uses magnetic platters to store data?", o: ["SSD", "RAM", "HDD", "Cache"], a: 2 },
+      { q: "What does SSD stand for?", o: ["Solid State Drive", "Super Speed Disk", "System Storage Device", "Silicon State Disk"], a: 0 },
+      { q: "What is the primary function of RAM?", o: ["Long term storage", "Storing the OS permanently", "Holding active programs and data", "Cooling the CPU"], a: 2 },
+      { q: "Which memory is closest to the CPU execution units?", o: ["L3 Cache", "RAM", "Registers", "L1 Cache"], a: 2 },
+      { q: "As you go down the memory hierarchy (from CPU outwards), what happens?", o: ["Speed increases, capacity decreases", "Speed decreases, capacity increases", "Both increase", "Both decrease"], a: 1 },
+      { q: "Which type of storage uses flash memory instead of spinning disks?", o: ["HDD", "SSD", "CD-ROM", "Floppy Disk"], a: 1 }
     ],
     'computer-arch': [
-      { q: "What unit executes arithmetic operations in the CPU?", o: ["ALU", "Control Unit", "Registers", "Cache"], a: 0 }
+      { q: "What unit executes arithmetic operations in the CPU?", o: ["ALU", "Control Unit", "Registers", "Cache"], a: 0 },
+      { q: "What does the Control Unit do?", o: ["Stores data permanently", "Performs math", "Directs processor operations", "Draws graphics"], a: 2 },
+      { q: "Which part of the CPU stores the current instruction being executed?", o: ["ALU", "Instruction Register (IR)", "Program Counter (PC)", "RAM"], a: 1 },
+      { q: "What carries memory addresses between components?", o: ["Data Bus", "Control Bus", "Address Bus", "USB"], a: 2 },
+      { q: "What is the sequence of the fundamental CPU cycle?", o: ["Execute-Fetch-Decode", "Fetch-Decode-Execute", "Decode-Execute-Fetch", "Fetch-Execute-Decode"], a: 1 },
+      { q: "Which component is considered the 'brain' of the computer?", o: ["RAM", "Motherboard", "CPU", "Hard Drive"], a: 2 },
+      { q: "What architecture uses the same memory for both instructions and data?", o: ["Harvard Architecture", "Von Neumann Architecture", "Turing Architecture", "RISC Architecture"], a: 1 },
+      { q: "What does the Accumulator register do?", o: ["Holds intermediate ALU results", "Keeps track of time", "Holds the next memory address", "Controls the power supply"], a: 0 },
+      { q: "Which bus carries signals like read/write commands?", o: ["Data Bus", "Address Bus", "Control Bus", "Universal Bus"], a: 2 },
+      { q: "What is the primary function of the Program Counter (PC)?", o: ["Counts the number of active programs", "Holds the address of the next instruction", "Stores user input", "Calculates math equations"], a: 1 }
     ]
   };
 
@@ -262,7 +710,7 @@ export default function FocVisualization() {
                   onClick={() => setMode(m)}
                   className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
                     mode === m 
-                      ? 'bg-black text-white shadow-sm' 
+                      ? 'bg-white text-black shadow-sm' 
                       : 'text-neutral-500 hover:text-black hover:bg-neutral-200'
                   }`}
                 >
@@ -603,9 +1051,9 @@ export default function FocVisualization() {
                         setAnimationStep(0);
                       }}
                       disabled={isAnimating}
-                      className="bg-black hover:bg-neutral-800 text-white font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs shadow-md disabled:opacity-40"
+                      className="bg-white hover:bg-neutral-50 text-black border border-neutral-200 font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs shadow-sm disabled:opacity-40"
                     >
-                      <Play className="w-3.5 h-3.5 fill-white" /> Run
+                      <Play className="w-3.5 h-3.5 fill-black text-black" /> Run
                     </button>
                     <button 
                       onClick={() => setIsAnimating(false)}
@@ -992,68 +1440,68 @@ export default function FocVisualization() {
                       <motion.div 
                         onClick={() => setActiveStorageIndex(0)}
                         className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${
-                          activeStorageIndex === 0 ? 'bg-neutral-100 border-black' : 'bg-white border-neutral-200'
+                          activeStorageIndex === 0 ? 'bg-white border-indigo-500 shadow-md ring-2 ring-indigo-500/20 scale-[1.02]' : 'bg-white border-neutral-200'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">👖</span>
                           <div>
-                            <h5 className="font-bold text-sm text-black">Pocket (Cache Memory)</h5>
+                            <h5 className={`font-bold text-sm ${activeStorageIndex === 0 ? 'text-indigo-900' : 'text-black'}`}>Pocket (Cache Memory)</h5>
                             <p className="text-[10px] text-neutral-500">Extremely fast, but tiny storage capacity.</p>
                           </div>
                         </div>
-                        <span className="text-xs font-mono font-bold text-black">SPEED: 0.5ns | CAP: 32MB</span>
+                        <span className={`text-xs font-mono font-bold ${activeStorageIndex === 0 ? 'text-indigo-600' : 'text-black'}`}>SPEED: 0.5ns | CAP: 32MB</span>
                       </motion.div>
 
                       {/* Bag (RAM) */}
                       <motion.div 
                         onClick={() => setActiveStorageIndex(1)}
                         className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${
-                          activeStorageIndex === 1 ? 'bg-neutral-100 border-black' : 'bg-white border-neutral-200'
+                          activeStorageIndex === 1 ? 'bg-white border-indigo-500 shadow-md ring-2 ring-indigo-500/20 scale-[1.02]' : 'bg-white border-neutral-200'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">🎒</span>
                           <div>
-                            <h5 className="font-bold text-sm text-black">Bag (RAM - Random Access)</h5>
+                            <h5 className={`font-bold text-sm ${activeStorageIndex === 1 ? 'text-indigo-900' : 'text-black'}`}>Bag (RAM - Random Access)</h5>
                             <p className="text-[10px] text-neutral-500">Fast volatile memory for open applications.</p>
                           </div>
                         </div>
-                        <span className="text-xs font-mono font-bold text-black">SPEED: 15ns | CAP: 16GB</span>
+                        <span className={`text-xs font-mono font-bold ${activeStorageIndex === 1 ? 'text-indigo-600' : 'text-black'}`}>SPEED: 15ns | CAP: 16GB</span>
                       </motion.div>
 
                       {/* Store Room (SSD) */}
                       <motion.div 
                         onClick={() => setActiveStorageIndex(2)}
                         className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${
-                          activeStorageIndex === 2 ? 'bg-neutral-100 border-black' : 'bg-white border-neutral-200'
+                          activeStorageIndex === 2 ? 'bg-white border-indigo-500 shadow-md ring-2 ring-indigo-500/20 scale-[1.02]' : 'bg-white border-neutral-200'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">🚪</span>
                           <div>
-                            <h5 className="font-bold text-sm text-black">Store Room (Solid State Drive)</h5>
+                            <h5 className={`font-bold text-sm ${activeStorageIndex === 2 ? 'text-indigo-900' : 'text-black'}`}>Store Room (Solid State Drive)</h5>
                             <p className="text-[10px] text-neutral-500">High-speed non-volatile storage.</p>
                           </div>
                         </div>
-                        <span className="text-xs font-mono font-bold text-black">SPEED: 100μs | CAP: 1TB</span>
+                        <span className={`text-xs font-mono font-bold ${activeStorageIndex === 2 ? 'text-indigo-600' : 'text-black'}`}>SPEED: 100μs | CAP: 1TB</span>
                       </motion.div>
 
                       {/* Warehouse (Hard Disk) */}
                       <motion.div 
                         onClick={() => setActiveStorageIndex(3)}
                         className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${
-                          activeStorageIndex === 3 ? 'bg-neutral-100 border-black' : 'bg-white border-neutral-200'
+                          activeStorageIndex === 3 ? 'bg-white border-indigo-500 shadow-md ring-2 ring-indigo-500/20 scale-[1.02]' : 'bg-white border-neutral-200'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">🏭</span>
                           <div>
-                            <h5 className="font-bold text-sm text-black">Warehouse (Mechanical Hard Disk)</h5>
+                            <h5 className={`font-bold text-sm ${activeStorageIndex === 3 ? 'text-indigo-900' : 'text-black'}`}>Warehouse (Mechanical Hard Disk)</h5>
                             <p className="text-[10px] text-neutral-500">Huge capacity, slowest access times.</p>
                           </div>
                         </div>
-                        <span className="text-xs font-mono font-bold text-black">SPEED: 5ms | CAP: 16TB</span>
+                        <span className={`text-xs font-mono font-bold ${activeStorageIndex === 3 ? 'text-indigo-600' : 'text-black'}`}>SPEED: 5ms | CAP: 16TB</span>
                       </motion.div>
                     </div>
                   </div>
@@ -1069,31 +1517,51 @@ export default function FocVisualization() {
 
                     <div className="flex items-center justify-between w-full px-6 relative h-40">
                       {/* Keyboard */}
-                      <div className="flex flex-col items-center gap-2 bg-neutral-50 border border-neutral-200 p-3 rounded-xl w-28">
+                      <motion.div 
+                        onClick={() => setActiveArchNode('keyboard')}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-xl w-28 cursor-pointer transition-all ${
+                          activeArchNode === 'keyboard' ? 'bg-white border-2 border-pink-500 shadow-md ring-2 ring-pink-500/20 scale-[1.05]' : 'bg-neutral-50 border border-neutral-200 hover:bg-white hover:border-neutral-300'
+                        }`}
+                      >
                         <span className="text-3xl">⌨️</span>
                         <span className="text-xs font-bold font-mono">Keyboard</span>
-                      </div>
+                      </motion.div>
 
                       {/* CPU / ALU */}
-                      <div className="flex flex-col items-center gap-2 bg-neutral-50 border-2 border-black p-4 rounded-2xl w-36 shadow-sm relative">
+                      <motion.div 
+                        onClick={() => setActiveArchNode('cpu')}
+                        className={`flex flex-col items-center gap-2 p-4 rounded-2xl w-36 shadow-sm relative cursor-pointer transition-all ${
+                          activeArchNode === 'cpu' ? 'bg-white border-2 border-pink-500 shadow-lg ring-4 ring-pink-500/20 scale-[1.05]' : 'bg-white border-2 border-black hover:border-neutral-800 hover:scale-[1.02]'
+                        }`}
+                      >
                         <span className="text-3xl">⚙️</span>
                         <span className="text-xs font-extrabold font-mono">CPU Core</span>
                         <div className="text-[9px] text-neutral-500 bg-white border border-neutral-200 px-1.5 py-0.5 rounded font-mono">
                           ALU + Control Unit
                         </div>
-                      </div>
+                      </motion.div>
 
                       {/* Memory */}
-                      <div className="flex flex-col items-center gap-2 bg-neutral-50 border border-neutral-200 p-3 rounded-xl w-28">
+                      <motion.div 
+                        onClick={() => setActiveArchNode('ram')}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-xl w-28 cursor-pointer transition-all ${
+                          activeArchNode === 'ram' ? 'bg-white border-2 border-pink-500 shadow-md ring-2 ring-pink-500/20 scale-[1.05]' : 'bg-neutral-50 border border-neutral-200 hover:bg-white hover:border-neutral-300'
+                        }`}
+                      >
                         <span className="text-3xl">💾</span>
                         <span className="text-xs font-bold font-mono">RAM</span>
-                      </div>
+                      </motion.div>
 
                       {/* Monitor */}
-                      <div className="flex flex-col items-center gap-2 bg-neutral-50 border border-neutral-200 p-3 rounded-xl w-28">
+                      <motion.div 
+                        onClick={() => setActiveArchNode('monitor')}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-xl w-28 cursor-pointer transition-all ${
+                          activeArchNode === 'monitor' ? 'bg-white border-2 border-pink-500 shadow-md ring-2 ring-pink-500/20 scale-[1.05]' : 'bg-neutral-50 border border-neutral-200 hover:bg-white hover:border-neutral-300'
+                        }`}
+                      >
                         <span className="text-3xl">🖥️</span>
                         <span className="text-xs font-bold font-mono">Monitor</span>
-                      </div>
+                      </motion.div>
 
                       {/* Glowing dot packet travel */}
                       <AnimatePresence>
@@ -1152,56 +1620,484 @@ export default function FocVisualization() {
                 {/* Tab contents */}
                 <div className="flex-1 p-4 overflow-hidden flex flex-col justify-between">
                   
-                  <div className="space-y-4 flex-1 overflow-hidden">
+                  <div className="space-y-4 flex-1 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#d4d4d4 transparent' }}>
+                    
+                    {/* ======================== EXPLANATION TAB ======================== */}
                     {activeTab === 'explanation' && (
-                      <div className="space-y-3">
-                        <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Description</h4>
-                        <p className="text-sm text-neutral-800 leading-relaxed font-semibold">
-                          {selectedTopic.desc}
-                        </p>
-                        <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3">
-                          <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">LIVE FEEDBACK</span>
-                          <p className="text-xs text-neutral-700 leading-relaxed font-mono font-medium">
-                            {getExplanation()}
-                          </p>
-                        </div>
+                      <div className="space-y-4">
+                        {/* Topic-specific rich explanation for Number System */}
+                        {selectedTopic.id === 'number-system' && NUMBER_SYSTEM_EXPLANATIONS[operation] ? (
+                          <>
+                            {/* Title & Concept */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-7 h-7 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-center">
+                                  <Hash className="w-3.5 h-3.5 text-blue-600" />
+                                </div>
+                                <h4 className="text-sm font-black text-black tracking-tight">
+                                  {NUMBER_SYSTEM_EXPLANATIONS[operation].title}
+                                </h4>
+                              </div>
+                              <p className="text-[11.5px] text-neutral-700 leading-relaxed font-medium">
+                                {NUMBER_SYSTEM_EXPLANATIONS[operation].concept}
+                              </p>
+                            </div>
+
+                            {/* Key Points */}
+                            <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 space-y-2">
+                              <div className="flex items-center gap-1.5">
+                                <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+                                <span className="text-[10px] font-black text-amber-700 uppercase tracking-widest">Key Points</span>
+                              </div>
+                              <ul className="space-y-1.5">
+                                {NUMBER_SYSTEM_EXPLANATIONS[operation].keyPoints.map((point, i) => (
+                                  <li key={i} className="flex items-start gap-2 text-[11px] text-amber-900 font-medium leading-relaxed">
+                                    <span className="text-amber-500 font-black mt-0.5">•</span>
+                                    {point}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            {/* Farmer Analogy */}
+                            <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-3">
+                              <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest block mb-1">🌾 Farmer Analogy</span>
+                              <p className="text-[11px] text-emerald-900 leading-relaxed font-medium">
+                                {NUMBER_SYSTEM_EXPLANATIONS[operation].realWorld}
+                              </p>
+                            </div>
+
+                            {/* Formula Box */}
+                            <div className="bg-neutral-900 text-white rounded-xl p-3">
+                              <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">📐 Formula</span>
+                              <p className="text-[11px] font-mono font-bold text-emerald-400 leading-relaxed">
+                                {NUMBER_SYSTEM_EXPLANATIONS[operation].formula}
+                              </p>
+                            </div>
+
+                            {/* Conversion Table (only for decimal-binary) */}
+                            {NUMBER_SYSTEM_EXPLANATIONS[operation].conversionTable && (
+                              <div className="border border-neutral-200 rounded-xl overflow-hidden">
+                                <div className="bg-neutral-100 px-3 py-1.5">
+                                  <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Quick Reference Table</span>
+                                </div>
+                                <table className="w-full text-[10px] font-mono">
+                                  <thead>
+                                    <tr className="bg-neutral-50 border-b border-neutral-200">
+                                      <th className="px-2 py-1.5 text-left font-black text-neutral-500">DEC</th>
+                                      <th className="px-2 py-1.5 text-left font-black text-neutral-500">BIN</th>
+                                      <th className="px-2 py-1.5 text-left font-black text-neutral-500">OCT</th>
+                                      <th className="px-2 py-1.5 text-left font-black text-neutral-500">HEX</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {NUMBER_SYSTEM_EXPLANATIONS[operation].conversionTable.map((row, i) => (
+                                      <tr key={i} className={`border-b border-neutral-100 ${parseInt(row.dec) === parseInt(inputValue) ? 'bg-blue-50 font-black' : ''}`}>
+                                        <td className="px-2 py-1.5 font-bold">{row.dec}</td>
+                                        <td className="px-2 py-1.5 text-blue-600 font-bold">{row.bin}</td>
+                                        <td className="px-2 py-1.5 text-purple-600 font-bold">{row.oct}</td>
+                                        <td className="px-2 py-1.5 text-emerald-600 font-bold">{row.hex}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+
+                            {/* Live Animation Feedback */}
+                            <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3">
+                              <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">⚡ LIVE ANIMATION FEEDBACK</span>
+                              <p className="text-[11px] text-neutral-700 leading-relaxed font-mono font-semibold">
+                                {getExplanation()}
+                              </p>
+                            </div>
+                          </>
+                        ) : selectedTopic.id === 'memory-org' ? (
+                          <>
+                            {/* Title & Concept */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-7 h-7 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center justify-center">
+                                  <Database className="w-3.5 h-3.5 text-indigo-600" />
+                                </div>
+                                <h4 className="text-sm font-black text-black tracking-tight">
+                                  {MEMORY_ORG_EXPLANATION.title}
+                                </h4>
+                              </div>
+                              <p className="text-[11.5px] text-neutral-700 leading-relaxed font-medium">
+                                {MEMORY_ORG_EXPLANATION.concept}
+                              </p>
+                            </div>
+
+                            {/* Key Points */}
+                            <div className="bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl p-3 space-y-2">
+                              <div className="flex items-center gap-1.5">
+                                <Lightbulb className="w-3.5 h-3.5 text-indigo-600" />
+                                <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">Key Points</span>
+                              </div>
+                              <ul className="space-y-1.5">
+                                {MEMORY_ORG_EXPLANATION.keyPoints.map((point, i) => (
+                                  <li key={i} className="flex items-start gap-2 text-[11px] text-indigo-900 font-medium leading-relaxed">
+                                    <span className="text-indigo-500 font-black mt-0.5">•</span>
+                                    {point}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            {/* Farmer Analogy */}
+                            <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-3">
+                              <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest block mb-1">🌾 Farmer Analogy</span>
+                              <p className="text-[11px] text-emerald-900 leading-relaxed font-medium">
+                                {MEMORY_ORG_EXPLANATION.realWorld}
+                              </p>
+                            </div>
+
+                            {/* Formula Box */}
+                            <div className="bg-neutral-900 text-white rounded-xl p-3">
+                              <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">📐 Principle</span>
+                              <p className="text-[11px] font-mono font-bold text-emerald-400 leading-relaxed">
+                                {MEMORY_ORG_EXPLANATION.formula}
+                              </p>
+                            </div>
+                            
+                            {/* Live Animation Feedback */}
+                            <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3">
+                              <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">⚡ LIVE ANIMATION FEEDBACK</span>
+                              <p className="text-[11px] text-neutral-700 leading-relaxed font-mono font-semibold">
+                                {activeStorageIndex === -1 ? 'Click on a storage layer to interact.' : `Selected layer index: ${activeStorageIndex}. Notice the capacity and speed metrics.`}
+                              </p>
+                            </div>
+                          </>
+                        ) : selectedTopic.id === 'computer-arch' ? (
+                          <>
+                            {/* Title & Concept */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-7 h-7 bg-pink-50 border border-pink-200 rounded-lg flex items-center justify-center">
+                                  <Cpu className="w-3.5 h-3.5 text-pink-600" />
+                                </div>
+                                <h4 className="text-sm font-black text-black tracking-tight">
+                                  {COMPUTER_ARCH_EXPLANATION.title}
+                                </h4>
+                              </div>
+                              <p className="text-[11.5px] text-neutral-700 leading-relaxed font-medium">
+                                {COMPUTER_ARCH_EXPLANATION.concept}
+                              </p>
+                            </div>
+
+                            {/* Key Points */}
+                            <div className="bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-200 rounded-xl p-3 space-y-2">
+                              <div className="flex items-center gap-1.5">
+                                <Lightbulb className="w-3.5 h-3.5 text-pink-600" />
+                                <span className="text-[10px] font-black text-pink-700 uppercase tracking-widest">Key Points</span>
+                              </div>
+                              <ul className="space-y-1.5">
+                                {COMPUTER_ARCH_EXPLANATION.keyPoints.map((point, i) => (
+                                  <li key={i} className="flex items-start gap-2 text-[11px] text-pink-900 font-medium leading-relaxed">
+                                    <span className="text-pink-500 font-black mt-0.5">•</span>
+                                    {point}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            {/* Farmer Analogy */}
+                            <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-3">
+                              <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest block mb-1">🌾 Farmer Analogy</span>
+                              <p className="text-[11px] text-emerald-900 leading-relaxed font-medium">
+                                {COMPUTER_ARCH_EXPLANATION.realWorld}
+                              </p>
+                            </div>
+
+                            {/* Formula Box */}
+                            <div className="bg-neutral-900 text-white rounded-xl p-3">
+                              <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">📐 Principle</span>
+                              <p className="text-[11px] font-mono font-bold text-emerald-400 leading-relaxed">
+                                {COMPUTER_ARCH_EXPLANATION.formula}
+                              </p>
+                            </div>
+                            
+                            {/* Live Animation Feedback */}
+                            <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3">
+                              <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">⚡ LIVE ANIMATION FEEDBACK</span>
+                              <p className="text-[11px] text-neutral-700 leading-relaxed font-mono font-semibold">
+                                {activeArchNode === 'keyboard' ? '⌨️ Keyboard: Input device sending electrical signals to the CPU/RAM.' :
+                                 activeArchNode === 'cpu' ? '⚙️ CPU Core: The brain. Fetches instructions, decodes them, and executes mathematical/logic operations.' :
+                                 activeArchNode === 'ram' ? '💾 RAM: Volatile memory storing the actively running program and its data.' :
+                                 activeArchNode === 'monitor' ? '🖥️ Monitor: Output device displaying the final rendered frames and text.' :
+                                 isAnimating ? "Simulating data travel across the hardware buses..." : "Click a component to learn more, or click Run to simulate bus line data packets."}
+                              </p>
+                            </div>
+                          </>
+                        ) : (
+                          /* Default explanation for non-number-system topics */
+                          <div className="space-y-3">
+                            <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Description</h4>
+                            <p className="text-sm text-neutral-800 leading-relaxed font-semibold">
+                              {selectedTopic.desc}
+                            </p>
+                            <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3">
+                              <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">LIVE FEEDBACK</span>
+                              <p className="text-xs text-neutral-700 leading-relaxed font-mono font-medium">
+                                {getExplanation()}
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
+                    {/* ======================== STEPS TAB ======================== */}
                     {activeTab === 'steps' && (
                       <div className="space-y-3">
-                        <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Execution Steps</h4>
-                        <div className="space-y-2">
-                          <div className={`p-2.5 rounded-lg border text-xs font-mono transition-all ${
-                            animationStep === 0 ? 'bg-black text-white border-black' : 'bg-neutral-50 border-neutral-200 text-neutral-400'
-                          }`}>
-                            01. Initialize system variables and clear workspace.
-                          </div>
-                          <div className={`p-2.5 rounded-lg border text-xs font-mono transition-all ${
-                            animationStep === 1 ? 'bg-black text-white border-black' : 'bg-neutral-50 border-neutral-200 text-neutral-400'
-                          }`}>
-                            02. Input parameters validation and logic testing.
-                          </div>
-                          <div className={`p-2.5 rounded-lg border text-xs font-mono transition-all ${
-                            animationStep === 2 ? 'bg-black text-white border-black' : 'bg-neutral-50 border-neutral-200 text-neutral-400'
-                          }`}>
-                            03. Execute mathematical conversion or flowchart decision.
-                          </div>
-                          <div className={`p-2.5 rounded-lg border text-xs font-mono transition-all ${
-                            animationStep >= 3 ? 'bg-black text-white border-black' : 'bg-neutral-50 border-neutral-200 text-neutral-400'
-                          }`}>
-                            04. Format final outputs and render completed elements.
-                          </div>
-                        </div>
+                        {selectedTopic.id === 'number-system' ? (
+                          <>
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Step-by-Step Breakdown</h4>
+                              <span className="text-[9px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-bold font-mono">
+                                {getNumberSystemSteps().length} steps
+                              </span>
+                            </div>
+
+                            {/* Operation label */}
+                            <div className="bg-white border border-neutral-200 text-black rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
+                              <Zap className="w-3.5 h-3.5 text-amber-500" />
+                              <span className="text-[10px] font-bold font-mono tracking-wider">
+                                {NUMBER_SYSTEM_EXPLANATIONS[operation]?.title || 'Conversion Steps'}
+                              </span>
+                            </div>
+
+                            {/* Dynamic Steps */}
+                            <div className="space-y-1.5">
+                              {getNumberSystemSteps().map((step, i) => {
+                                const isActive = animationStep === i;
+                                const isDone = animationStep > i;
+                                return (
+                                  <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: i * 0.05 }}
+                                    className={`p-2.5 rounded-lg border text-[11px] font-mono transition-all duration-300 flex items-start gap-2.5 ${
+                                      isActive 
+                                        ? 'bg-white text-emerald-900 border-emerald-400 shadow-md scale-[1.02] ring-2 ring-emerald-500/10' 
+                                        : isDone 
+                                          ? 'bg-emerald-50 border-emerald-300 text-emerald-800' 
+                                          : 'bg-neutral-50 border-neutral-200 text-neutral-400'
+                                    }`}
+                                  >
+                                    <span className="text-sm flex-shrink-0 mt-0.5">
+                                      {isDone ? '✅' : isActive ? '▶️' : step.icon}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <span className={`text-[9px] font-black uppercase tracking-widest block ${
+                                        isActive ? 'text-emerald-500' : isDone ? 'text-emerald-600' : 'text-neutral-300'
+                                      }`}>
+                                        {step.label}
+                                      </span>
+                                      <span className="block leading-relaxed font-semibold mt-0.5 break-words">
+                                        {step.detail}
+                                      </span>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+
+                            {/* Progress indicator */}
+                            <div className="flex items-center gap-2 pt-1">
+                              <div className="flex-1 bg-neutral-100 h-1.5 rounded-full overflow-hidden">
+                                <motion.div 
+                                  className="h-full bg-black rounded-full"
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${Math.min(100, (animationStep / Math.max(1, getNumberSystemSteps().length - 1)) * 100)}%` }}
+                                  transition={{ duration: 0.5 }}
+                                />
+                              </div>
+                              <span className="text-[9px] font-mono font-bold text-neutral-400">
+                                {animationStep}/{getNumberSystemSteps().length - 1}
+                              </span>
+                            </div>
+                          </>
+                        ) : selectedTopic.id === 'memory-org' ? (
+                          <>
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Step-by-Step Breakdown</h4>
+                              <span className="text-[9px] bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full font-bold font-mono">
+                                4 levels
+                              </span>
+                            </div>
+
+                            {/* Operation label */}
+                            <div className="bg-white border border-neutral-200 text-black rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
+                              <Database className="w-3.5 h-3.5 text-indigo-500" />
+                              <span className="text-[10px] font-bold font-mono tracking-wider">
+                                Access Flow
+                              </span>
+                            </div>
+
+                            {/* Dynamic Steps */}
+                            <div className="space-y-1.5">
+                              {[
+                                { label: 'CPU Request', detail: 'CPU needs data, checks Cache (L1/L2) first. (~0.5ns)', icon: '👖' },
+                                { label: 'Cache Miss', detail: 'Data not in Cache. CPU checks RAM. (~15ns)', icon: '🎒' },
+                                { label: 'Page Fault', detail: 'Data not in RAM. OS fetches from SSD/HDD. (~100μs / 5ms)', icon: '🚪' },
+                                { label: 'Data Loaded', detail: 'Data moved to RAM, then Cache, then CPU Register.', icon: '✅' }
+                              ].map((step, i) => {
+                                const isActive = animationStep === i;
+                                const isDone = animationStep > i;
+                                return (
+                                  <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: i * 0.05 }}
+                                    className={`p-2.5 rounded-lg border text-[11px] font-mono transition-all duration-300 flex items-start gap-2.5 ${
+                                      isActive 
+                                        ? 'bg-white text-indigo-900 border-indigo-400 shadow-md scale-[1.02] ring-2 ring-indigo-500/10' 
+                                        : isDone 
+                                          ? 'bg-indigo-50 border-indigo-300 text-indigo-800' 
+                                          : 'bg-neutral-50 border-neutral-200 text-neutral-400'
+                                    }`}
+                                  >
+                                    <span className="text-sm flex-shrink-0 mt-0.5">
+                                      {isDone ? '✅' : isActive ? '▶️' : step.icon}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <span className={`text-[9px] font-black uppercase tracking-widest block ${
+                                        isActive ? 'text-indigo-500' : isDone ? 'text-indigo-600' : 'text-neutral-300'
+                                      }`}>
+                                        {step.label}
+                                      </span>
+                                      <span className="block leading-relaxed font-semibold mt-0.5 break-words">
+                                        {step.detail}
+                                      </span>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        ) : selectedTopic.id === 'computer-arch' ? (
+                          <>
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Step-by-Step Breakdown</h4>
+                              <span className="text-[9px] bg-pink-50 text-pink-700 border border-pink-200 px-2 py-0.5 rounded-full font-bold font-mono">
+                                4 phases
+                              </span>
+                            </div>
+
+                            {/* Operation label */}
+                            <div className="bg-white border border-neutral-200 text-black rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
+                              <Cpu className="w-3.5 h-3.5 text-pink-500" />
+                              <span className="text-[10px] font-bold font-mono tracking-wider">
+                                Fetch-Execute Cycle
+                              </span>
+                            </div>
+
+                            {/* Dynamic Steps */}
+                            <div className="space-y-1.5">
+                              {[
+                                { label: 'Input Generation', detail: 'User types on Keyboard. Signal sent to RAM.', icon: '⌨️' },
+                                { label: 'Fetch Phase', detail: 'Control Unit retrieves instructions/data from RAM.', icon: '⚡' },
+                                { label: 'Execute Phase', detail: 'ALU performs processing on the data packet.', icon: '⚙️' },
+                                { label: 'Output Phase', detail: 'Result is routed via bus to the Monitor display.', icon: '🖥️' }
+                              ].map((step, i) => {
+                                const isActive = isAnimating && (Math.floor(animationStep) % 4 === i);
+                                const isDone = !isAnimating || (Math.floor(animationStep) % 4 > i);
+                                return (
+                                  <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: i * 0.05 }}
+                                    className={`p-2.5 rounded-lg border text-[11px] font-mono transition-all duration-300 flex items-start gap-2.5 ${
+                                      isActive 
+                                        ? 'bg-white text-pink-900 border-pink-400 shadow-md scale-[1.02] ring-2 ring-pink-500/10' 
+                                        : isDone 
+                                          ? 'bg-pink-50 border-pink-300 text-pink-800' 
+                                          : 'bg-neutral-50 border-neutral-200 text-neutral-400'
+                                    }`}
+                                  >
+                                    <span className="text-sm flex-shrink-0 mt-0.5">
+                                      {isDone ? '✅' : isActive ? '▶️' : step.icon}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <span className={`text-[9px] font-black uppercase tracking-widest block ${
+                                        isActive ? 'text-pink-500' : isDone ? 'text-pink-600' : 'text-neutral-300'
+                                      }`}>
+                                        {step.label}
+                                      </span>
+                                      <span className="block leading-relaxed font-semibold mt-0.5 break-words">
+                                        {step.detail}
+                                      </span>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        ) : (
+                          /* Default steps for other topics */
+                          <>
+                            <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Execution Steps</h4>
+                            <div className="space-y-2">
+                              <div className={`p-2.5 rounded-lg border text-xs font-mono transition-all ${
+                                animationStep === 0 ? 'bg-white text-black border-neutral-400 shadow-sm' : 'bg-neutral-50 border-neutral-200 text-neutral-400'
+                              }`}>
+                                01. Initialize system variables and clear workspace.
+                              </div>
+                              <div className={`p-2.5 rounded-lg border text-xs font-mono transition-all ${
+                                animationStep === 1 ? 'bg-white text-black border-neutral-400 shadow-sm' : 'bg-neutral-50 border-neutral-200 text-neutral-400'
+                              }`}>
+                                02. Input parameters validation and logic testing.
+                              </div>
+                              <div className={`p-2.5 rounded-lg border text-xs font-mono transition-all ${
+                                animationStep === 2 ? 'bg-white text-black border-neutral-400 shadow-sm' : 'bg-neutral-50 border-neutral-200 text-neutral-400'
+                              }`}>
+                                03. Execute mathematical conversion or flowchart decision.
+                              </div>
+                              <div className={`p-2.5 rounded-lg border text-xs font-mono transition-all ${
+                                animationStep >= 3 ? 'bg-white text-black border-neutral-400 shadow-sm' : 'bg-neutral-50 border-neutral-200 text-neutral-400'
+                              }`}>
+                                04. Format final outputs and render completed elements.
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
 
+                    {/* ======================== QUIZ TAB ======================== */}
                     {activeTab === 'quiz' && (
                       <div className="space-y-3">
                         <div className="flex justify-between items-center">
                           <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Practice Quiz</h4>
-                          <span className="text-xs font-bold font-mono text-black">Score: {quizScore}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[9px] bg-neutral-100 border border-neutral-200 text-neutral-500 px-2 py-0.5 rounded-full font-mono font-bold">
+                              Q{quizIndex + 1}/{getQuizQuestions().length}
+                            </span>
+                            <span className="text-xs font-bold font-mono text-black flex items-center gap-1">
+                              <Star className="w-3 h-3 text-amber-500" /> {quizScore}
+                            </span>
+                          </div>
                         </div>
+
+                        {/* Score bar for quizzes */}
+                        {(selectedTopic.id === 'number-system' || selectedTopic.id === 'memory-org') && (
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 bg-neutral-100 h-1.5 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
+                                style={{ width: `${(quizScore / getQuizQuestions().length) * 100}%` }} 
+                              />
+                            </div>
+                            <span className="text-[9px] font-mono font-bold text-neutral-400">
+                              {Math.round((quizScore / getQuizQuestions().length) * 100)}%
+                            </span>
+                          </div>
+                        )}
 
                         <div className="bg-neutral-50 border border-neutral-200 p-3 rounded-xl space-y-3">
                           <p className="text-xs font-bold leading-relaxed text-black">
@@ -1231,10 +2127,25 @@ export default function FocVisualization() {
                                       : 'bg-white hover:bg-neutral-100 border-neutral-200 hover:border-black text-black'
                                 }`}
                               >
+                                <span className="font-bold mr-2 text-[10px]">{String.fromCharCode(65 + oIdx)}.</span>
                                 {opt}
                               </button>
                             ))}
                           </div>
+
+                          {/* Answer feedback for specific topics */}
+                          {quizAnswered && (selectedTopic.id === 'number-system' || selectedTopic.id === 'memory-org') && (
+                            <div className={`p-2.5 rounded-lg text-[11px] font-semibold ${
+                              selectedAnswer === getQuizQuestions()[quizIndex].a 
+                                ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                                : 'bg-red-50 border border-red-200 text-red-800'
+                            }`}>
+                              {selectedAnswer === getQuizQuestions()[quizIndex].a 
+                                ? '🎉 Correct! Great understanding!'
+                                : `❌ Not quite. The correct answer is: ${getQuizQuestions()[quizIndex].o[getQuizQuestions()[quizIndex].a]}`
+                              }
+                            </div>
+                          )}
 
                           {quizAnswered && (
                             <button
@@ -1243,23 +2154,98 @@ export default function FocVisualization() {
                                 setSelectedAnswer(null);
                                 setQuizIndex((prev) => (prev + 1) % getQuizQuestions().length);
                               }}
-                              className="w-full bg-black text-white font-bold text-[10px] py-2 rounded-lg mt-2 transition-all uppercase tracking-wider"
+                              className="w-full bg-black text-white font-bold text-[10px] py-2 rounded-lg mt-2 transition-all uppercase tracking-wider hover:bg-neutral-800 flex items-center justify-center gap-1.5"
                             >
-                              Next Question
+                              <ArrowRight className="w-3 h-3" />
+                              {quizIndex + 1 >= getQuizQuestions().length ? 'Restart Quiz' : 'Next Question'}
                             </button>
                           )}
                         </div>
+
+                        {/* Reset quiz button */}
+                        {(selectedTopic.id === 'number-system' || selectedTopic.id === 'memory-org') && (quizIndex > 0 || quizScore > 0) && (
+                          <button
+                            onClick={() => {
+                              setQuizIndex(0);
+                              setQuizScore(0);
+                              setQuizAnswered(false);
+                              setSelectedAnswer(null);
+                            }}
+                            className="w-full bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 text-black font-bold text-[10px] py-2 rounded-lg transition-all uppercase tracking-wider flex items-center justify-center gap-1.5"
+                          >
+                            <RotateCcw className="w-3 h-3" /> Reset Quiz
+                          </button>
+                        )}
                       </div>
                     )}
 
+                    {/* ======================== NOTES TAB ======================== */}
                     {activeTab === 'notes' && (
                       <div className="space-y-3 h-full flex flex-col">
-                        <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">My Lab Notes</h4>
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">My Lab Notes</h4>
+                          {selectedTopic.id === 'number-system' && (
+                            <button 
+                              onClick={() => setUserNotes(NUMBER_SYSTEM_NOTES)}
+                              className="text-[9px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-bold hover:bg-blue-100 transition-all flex items-center gap-1"
+                            >
+                              <BookOpen className="w-3 h-3" /> Load Study Notes
+                            </button>
+                          )}
+                          {selectedTopic.id === 'memory-org' && (
+                            <button 
+                              onClick={() => setUserNotes(MEMORY_ORG_NOTES)}
+                              className="text-[9px] bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full font-bold hover:bg-indigo-100 transition-all flex items-center gap-1"
+                            >
+                              <BookOpen className="w-3 h-3" /> Load Study Notes
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Quick formula cards for Number System */}
+                        {selectedTopic.id === 'number-system' && (
+                          <div className="grid grid-cols-2 gap-1.5">
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 text-center">
+                              <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest block">Dec→Bin</span>
+                              <span className="text-[10px] font-mono font-bold text-blue-800">÷ 2 method</span>
+                            </div>
+                            <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 text-center">
+                              <span className="text-[8px] font-black text-purple-500 uppercase tracking-widest block">Dec→Oct</span>
+                              <span className="text-[10px] font-mono font-bold text-purple-800">÷ 8 method</span>
+                            </div>
+                            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-center">
+                              <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest block">Dec→Hex</span>
+                              <span className="text-[10px] font-mono font-bold text-emerald-800">÷ 16 method</span>
+                            </div>
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-center">
+                              <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest block">2's Comp</span>
+                              <span className="text-[10px] font-mono font-bold text-amber-800">Flip + 1</span>
+                            </div>
+                          </div>
+                        )}
+
                         <textarea
                           value={userNotes}
                           onChange={(e) => setUserNotes(e.target.value)}
-                          className="flex-1 w-full bg-neutral-50 border border-neutral-200 rounded-xl p-3 text-xs text-black focus:outline-none focus:border-black font-mono resize-none h-[180px]"
+                          placeholder={selectedTopic.id === 'number-system' || selectedTopic.id === 'memory-org'
+                            ? 'Click "Load Study Notes" above to fill with comprehensive notes, or type your own notes here...' 
+                            : 'Type your study notes here for reference...'}
+                          className="flex-1 w-full bg-neutral-50 border border-neutral-200 rounded-xl p-3 text-[11px] text-black focus:outline-none focus:border-black font-mono resize-none transition-all" 
+                          style={{ minHeight: '200px' }}
                         />
+
+                        {/* Notes action bar */}
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="text-[9px] text-neutral-400 font-mono">
+                            {userNotes.length} characters
+                          </span>
+                          <button 
+                            onClick={() => setUserNotes('')}
+                            className="text-[9px] text-neutral-400 hover:text-red-500 font-bold transition-colors"
+                          >
+                            Clear notes
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
