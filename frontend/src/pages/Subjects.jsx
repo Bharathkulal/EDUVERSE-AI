@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api/axios';
+import { useHashNavigation } from '../utils/useHashNavigation';
 
 const subjectIcons = {
   FOC: '🔢', Java: '☕', 'Advanced Java': '⚡', DSA: '🌳', 'C#': '🔷',
@@ -23,7 +24,18 @@ const subjectBlobColors = {
 export default function Subjects() {
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('subjects'); // subjects | roadmap | notes
+  const [activeTab, setActiveTab] = useState('subjects');
+  const [bookmarks, setBookmarks] = useState(() => JSON.parse(localStorage.getItem('eduverse_bookmarks') || '[]'));
+
+  // Hash-based navigation from sidebar
+  useHashNavigation({
+    '#courses': 'subjects',
+    '#roadmaps': 'roadmap',
+    '#notes': 'notes',
+    '#resources': 'resources',
+    '#studio': 'subjects',
+    '#bookmarks': 'bookmarks',
+  }, setActiveTab);
   const [roadmapData, setRoadmapData] = useState(null);
   const [roadmapLoading, setRoadmapLoading] = useState(false);
   const [notes, setNotes] = useState([]);
@@ -197,10 +209,21 @@ export default function Subjects() {
     }
   };
 
+  const toggleBookmark = (subject) => {
+    setBookmarks(prev => {
+      const exists = prev.find(b => b.id === subject.id);
+      const updated = exists ? prev.filter(b => b.id !== subject.id) : [...prev, subject];
+      localStorage.setItem('eduverse_bookmarks', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const tabs = [
     { id: 'subjects', label: 'Learning Modules', icon: '📚' },
     { id: 'roadmap', label: 'Roadmap', icon: '🗺️' },
     { id: 'notes', label: 'Notes', icon: '📝' },
+    { id: 'resources', label: 'Resources', icon: '📂' },
+    { id: 'bookmarks', label: 'Bookmarks', icon: '🔖' },
   ];
 
   if (loading) {
@@ -544,6 +567,101 @@ export default function Subjects() {
                       </button>
                     </div>
                   </motion.div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* ─── RESOURCES TAB ─── */}
+        {activeTab === 'resources' && (
+          <motion.div 
+            key="resources"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-6"
+          >
+            <div>
+              <h1 className="text-2xl font-bold" style={{ color: 'var(--db-text-main)' }}>Resource Library</h1>
+              <p style={{ color: 'var(--db-text-muted)' }}>Curated learning resources for each subject</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { title: 'Java Documentation', type: 'PDF', subject: 'Java', icon: '☕', color: 'from-orange-500 to-red-500', url: 'https://docs.oracle.com/en/java/' },
+                { title: 'DSA Cheat Sheet', type: 'PDF', subject: 'DSA', icon: '🌳', color: 'from-green-500 to-emerald-500', url: '#' },
+                { title: 'Python Official Docs', type: 'Link', subject: 'Python', icon: '🐍', color: 'from-blue-500 to-cyan-500', url: 'https://docs.python.org/3/' },
+                { title: 'C# Programming Guide', type: 'Link', subject: 'C#', icon: '🔷', color: 'from-purple-500 to-violet-500', url: 'https://learn.microsoft.com/en-us/dotnet/csharp/' },
+                { title: 'SQL Basics Tutorial', type: 'Video', subject: 'DBMS', icon: '🗄️', color: 'from-yellow-500 to-amber-500', url: '#' },
+                { title: 'Web Dev Roadmap 2026', type: 'Article', subject: 'Web Dev', icon: '🌐', color: 'from-pink-500 to-rose-500', url: '#' },
+                { title: 'FOC Study Notes', type: 'PDF', subject: 'FOC', icon: '🔢', color: 'from-indigo-500 to-blue-500', url: '#' },
+                { title: 'Numerical Methods Guide', type: 'PDF', subject: 'Mathematics', icon: '🧮', color: 'from-teal-500 to-cyan-500', url: '#' },
+              ].map((res, i) => (
+                <a
+                  key={i}
+                  href={res.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-5 rounded-2xl border flex flex-col gap-3 hover:shadow-lg transition-all group cursor-pointer"
+                  style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${res.color} flex items-center justify-center text-lg text-white shadow-md`}>
+                      {res.icon}
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md" style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)' }}>
+                      {res.type}
+                    </span>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold group-hover:text-[var(--db-text-accent)] transition-colors" style={{ color: 'var(--db-text-main)' }}>{res.title}</h4>
+                    <span className="text-[11px]" style={{ color: 'var(--db-text-muted)' }}>{res.subject}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--db-text-accent)' }}>
+                    Open Resource →
+                  </div>
+                </a>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ─── BOOKMARKS TAB ─── */}
+        {activeTab === 'bookmarks' && (
+          <motion.div 
+            key="bookmarks"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-6"
+          >
+            <div>
+              <h1 className="text-2xl font-bold" style={{ color: 'var(--db-text-main)' }}>My Bookmarks</h1>
+              <p style={{ color: 'var(--db-text-muted)' }}>Subjects you've saved for quick access</p>
+            </div>
+            {bookmarks.length === 0 ? (
+              <div className="text-center py-16 space-y-4">
+                <span className="text-5xl block">🔖</span>
+                <h3 className="text-lg font-bold" style={{ color: 'var(--db-text-main)' }}>No bookmarks yet</h3>
+                <p className="text-sm" style={{ color: 'var(--db-text-muted)' }}>Go to Learning Modules and click the bookmark icon on any subject to save it here!</p>
+                <button onClick={() => setActiveTab('subjects')} className="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold rounded-xl transition-all cursor-pointer">
+                  Browse Subjects
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {bookmarks.map((s) => (
+                  <div key={s.id} className="p-5 rounded-2xl border flex flex-col gap-3 hover:shadow-lg transition-all" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+                    <div className="flex justify-between items-start">
+                      <div className="text-3xl">{subjectIcons[s.subject_name] || '📚'}</div>
+                      <button onClick={() => toggleBookmark(s)} className="text-lg cursor-pointer hover:scale-110 transition-transform">🔖</button>
+                    </div>
+                    <h3 className="font-semibold text-base" style={{ color: 'var(--db-text-main)' }}>{s.subject_name}</h3>
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--db-text-muted)' }}>{s.description}</p>
+                    <Link to={`/subjects/${s.id}`} className="text-xs font-bold mt-auto pt-2" style={{ color: 'var(--db-text-accent)' }}>
+                      Continue Learning →
+                    </Link>
+                  </div>
                 ))}
               </div>
             )}

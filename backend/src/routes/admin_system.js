@@ -281,4 +281,163 @@ router.post('/ml/train', authenticate, authorizeAdmin, async (req, res) => {
   }
 });
 
+// 8. Create Student (POST /students)
+router.post('/students', authenticate, authorizeAdmin, async (req, res) => {
+  try {
+    const { name, email, password, role = 'student', api_limit = 100 } = req.body;
+    const bcrypt = require('bcryptjs');
+
+    const existing = await db.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const result = await db.query(
+      `INSERT INTO users (name, email, password, role, api_limit) 
+       VALUES ($1, $2, $3, $4, $5) 
+       RETURNING id, name, email, role, api_limit, created_at`,
+      [name, email.toLowerCase(), hashedPassword, role, api_limit]
+    );
+
+    const user = result.rows[0];
+    if (role === 'student') {
+      await db.query(
+        'INSERT INTO student_progress (student_id) VALUES ($1) ON CONFLICT (student_id) DO NOTHING',
+        [user.id]
+      );
+      await db.query(
+        'INSERT INTO user_streaks (user_id, streak_count, last_activity_date) VALUES ($1, 0, CURRENT_DATE) ON CONFLICT (user_id) DO NOTHING',
+        [user.id]
+      );
+    }
+
+    res.status(201).json({ message: 'Student created successfully', user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error creating student account' });
+  }
+});
+
+// 9. Edit Student (PUT /students/:id)
+router.put('/students/:id', authenticate, authorizeAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, role, api_limit, blocked, password } = req.body;
+    
+    let query = 'UPDATE users SET name = COALESCE($1, name), email = COALESCE($2, email), role = COALESCE($3, role), api_limit = COALESCE($4, api_limit), blocked = COALESCE($5, blocked)';
+    const params = [name, email ? email.toLowerCase() : null, role, api_limit !== undefined ? parseInt(api_limit) : null, blocked];
+    let paramIndex = 6;
+
+    if (password) {
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash(password, 12);
+      query += `, password = $${paramIndex}`;
+      params.push(hashedPassword);
+      paramIndex++;
+    }
+
+    query += ` WHERE id = $${paramIndex} RETURNING id, name, email, role, api_limit, blocked`;
+    params.push(parseInt(id));
+
+    const result = await db.query(query, params);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ message: 'Student updated successfully', user: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error updating student account' });
+  }
+});
+
+// 10. Delete Student (DELETE /students/:id)
+router.delete('/students/:id', authenticate, authorizeAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await db.query('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ message: 'Student deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error deleting student account' });
+  }
+});
+
+// 11. GET Student Profile Details, XP, streaks, performance, history
+router.get('/students/:id', authenticate, authorizeAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userRes = await db.query(
+      'SELECT id, name, email, role, blocked, api_limit, api_used_today, created_at FROM users WHERE id = $1',
+      [id]
+    );
+
+    if (userRes.rows.length === 0) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    const user = userRes.rows[0];
+
+    // Profile details
+    const profileRes = await db.query('SELECT * FROM profiles WHERE user_id = $1', [id]);
+    const profile = profileRes.rows[0] || null;
+
+    // Streaks
+    const streakRes = await db.query('SELECT streak_count FROM user_streaks WHERE user_id = $1', [id]);
+    const streak = streakRes.rows[0] ? streakRes.rows[0].streak_count : 0;
+
+    // XP
+    const xpRes = await db.query('SELECT COALESCE(SUM(xp_amount), 0)::int as total_xp FROM user_xp_history WHERE user_id = $1', [id]);
+    const totalXp = xpRes.rows[0].total_xp;
+
+    // Subject Performance / Completion
+    const progressRes = await db.query('SELECT completed_topics, study_hours, subject_completion FROM student_progress WHERE student_id = $1', [id]);
+    const progress = progressRes.rows[0] || { completed_topics: 0, study_hours: 0, subject_completion: {} };
+
+    // Quiz Performance
+    const quizRes = await db.query(`
+      SELECT qr.score, qr.total_questions, qr.submitted_at, q.title as quiz_title, s.subject_name
+      FROM quiz_results qr
+      JOIN quizzes q ON qr.quiz_id = q.id
+      JOIN subjects s ON q.subject_id = s.id
+      WHERE qr.student_id = $1
+      ORDER BY qr.submitted_at DESC LIMIT 10
+    `, [id]);
+
+    // Login History
+    const loginHistory = await db.query(`
+      SELECT created_at as login_time, value as ip_address
+      FROM user_activity_logs
+      WHERE user_id = $1 AND action = 'login'
+      ORDER BY created_at DESC LIMIT 15
+    `, [id]);
+
+    // Activity Timeline
+    const timeline = await db.query(`
+      SELECT id, action, module, value, created_at
+      FROM user_activity_logs
+      WHERE user_id = $1
+      ORDER BY created_at DESC LIMIT 30
+    `, [id]);
+
+    res.json({
+      user,
+      profile,
+      streak,
+      totalXp,
+      progress,
+      quizPerformance: quizRes.rows,
+      loginHistory: loginHistory.rows,
+      timeline: timeline.rows
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error retrieving student profile metrics' });
+  }
+});
+
 module.exports = router;

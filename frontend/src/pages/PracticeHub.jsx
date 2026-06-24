@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import TypingQuest from './TypingQuest';
 import CodingBattleSystem from './CodingBattleSystem';
 import api from '../api/axios';
+
+const HASH_TO_MODULE = {
+  '#challenges': 'daily',
+  '#flashcards': 'quiz',
+  '#mcq': 'quiz',
+  '#topic': 'daily',
+  '#mock': 'interview',
+};
 
 export default function PracticeHub() {
   const [activeModule, setActiveModule] = useState(null);
@@ -15,6 +24,17 @@ export default function PracticeHub() {
   const [userStats, setUserStats] = useState(null);
   const [leaderboard, setLeaderboard] = useState(null);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const location = useLocation();
+
+  // Hash-based navigation from sidebar
+  useEffect(() => {
+    const hash = location.hash;
+    if (hash && HASH_TO_MODULE[hash]) {
+      const mod = HASH_TO_MODULE[hash];
+      setActiveModule(mod);
+      if (mod === 'daily') loadDailyChallenge();
+    }
+  }, [location.hash]);
 
   // Load user stats and daily challenge
   useEffect(() => {

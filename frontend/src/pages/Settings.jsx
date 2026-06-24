@@ -1,13 +1,29 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
+const HASH_TO_TAB = {
+  '#subscription': 'goals',
+  '#theme': 'profile',
+  '#notifications': 'goals',
+  '#account': 'security',
+};
+
 export default function Settings() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('profile');
+
+  // Hash-based navigation from sidebar
+  useEffect(() => {
+    const hash = location.hash;
+    if (hash && HASH_TO_TAB[hash]) {
+      setActiveTab(HASH_TO_TAB[hash]);
+    }
+  }, [location.hash]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 

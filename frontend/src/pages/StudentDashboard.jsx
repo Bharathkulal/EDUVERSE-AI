@@ -441,7 +441,7 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          <button onClick={() => navigate('/practice')} className="w-full mt-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer">
+          <button onClick={() => navigate('/practice-hub')} className="w-full mt-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer">
             &lt;/&gt; Start Challenge
           </button>
         </div>

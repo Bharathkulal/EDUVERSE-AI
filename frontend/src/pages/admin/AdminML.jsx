@@ -5,6 +5,7 @@ import './AdminApiSettings.css';
 
 export default function AdminML() {
   const [jobs, setJobs] = useState([]);
+  const [trainingLogs, setTrainingLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const pollIntervalRef = useRef(null);
@@ -12,8 +13,14 @@ export default function AdminML() {
   const loadJobs = async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const { data } = await api.get('/admin/system/ml');
+      const { data } = await api.get('/ml/jobs');
       setJobs(data || []);
+      
+      const activeJob = (data || []).find(job => job.status === 'Running');
+      if (activeJob) {
+        const { data: logsData } = await api.get(`/ml/logs?job_id=${activeJob.id}`);
+        setTrainingLogs(logsData || []);
+      }
     } catch (err) {
       console.error(err);
       toast.error('Failed to load ML training jobs.');
@@ -29,7 +36,7 @@ export default function AdminML() {
       if (!pollIntervalRef.current) {
         pollIntervalRef.current = setInterval(() => {
           loadJobs(true);
-        }, 2000);
+        }, 3000);
       }
     } else {
       if (pollIntervalRef.current) {
@@ -52,7 +59,7 @@ export default function AdminML() {
   const handleStartTraining = async () => {
     setSubmitting(true);
     try {
-      const { data } = await api.post('/admin/system/ml/train', { action: 'START' });
+      const { data } = await api.post('/ml/train', { model_type: 'student_performance' });
       toast.success(data.message || 'ML Training sequence initialized.');
       loadJobs();
     } catch (err) {
@@ -63,9 +70,12 @@ export default function AdminML() {
   };
 
   const handleStopTraining = async () => {
+    const activeJob = jobs.find(job => job.status === 'Running');
+    if (!activeJob) return;
+
     setSubmitting(true);
     try {
-      const { data } = await api.post('/admin/system/ml/train', { action: 'STOP' });
+      const { data } = await api.post('/ml/stop', { job_id: activeJob.id });
       toast.success(data.message || 'ML Training sequence aborted.');
       loadJobs();
     } catch (err) {
@@ -162,14 +172,16 @@ export default function AdminML() {
                 </div>
 
                 {/* Hologram scan terminal log */}
-                <div className="hologram-scan p-4 rounded-xl text-xs space-y-1 text-cyan-300/80 max-h-48 overflow-y-auto">
-                  <p className="text-cyan-400">[SYSTEM] Connection established with ML core executor...</p>
-                  <p className="text-cyan-400">[SYSTEM] Pulled dataset size: {activeJob.dataset_size} samples.</p>
-                  <p className="text-purple-400">[TRAIN] Initializing layer weights & biases...</p>
-                  {activeJob.epochs > 0 && <p className="text-slate-300">[EPOCH] Step 10/100 completed. Current loss: {Number(activeJob.loss || 0.4).toFixed(4)}</p>}
-                  {activeJob.epochs > 20 && <p className="text-slate-300">[EPOCH] Step 30/100 completed. Gradient update success.</p>}
-                  {activeJob.epochs > 50 && <p className="text-emerald-400">[VAL] Accuracy checkpoint crossed 80% threshold.</p>}
-                  {activeJob.epochs > 80 && <p className="text-slate-300">[EPOCH] Step 90/100 completed. Learning rate decayed.</p>}
+                <div className="hologram-scan p-4 rounded-xl text-xs space-y-1 text-cyan-300/80 max-h-48 overflow-y-auto font-mono">
+                  {trainingLogs.length > 0 ? (
+                    trainingLogs.map((log, idx) => (
+                      <p key={idx} className="text-cyan-400">
+                        <span className="text-slate-500">[{new Date(log.created_at).toLocaleTimeString()}]</span> {log.log_message}
+                      </p>
+                    ))
+                  ) : (
+                    <p className="text-slate-500">Initializing logs channel...</p>
+                  )}
                   <p className="text-cyan-400 animate-pulse">[SYSTEM] Streaming metrics... Epochs: {activeJob.epochs || 0}/100</p>
                 </div>
               </div>

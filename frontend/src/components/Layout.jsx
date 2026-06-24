@@ -177,7 +177,7 @@ const adminNav = [
 const TOP_LEVEL_PATHS = [
   '/dashboard', '/subjects', '/practice-hub', '/quizzes', '/coding', '/dbms-lab', '/ai-tutor',
   '/progress', '/ml-analytics', '/ai-profile', '/question-bank',
-  '/voice-assistant', '/settings',
+  '/voice-assistant', '/settings', '/community', '/career-hub',
   '/admin', '/admin/students', '/admin/content', '/admin/quizzes',
   '/admin/dataset', '/admin/ml', '/admin/questions', '/admin/api-settings',
   '/admin/logs', '/admin/analytics', '/admin/alerts',

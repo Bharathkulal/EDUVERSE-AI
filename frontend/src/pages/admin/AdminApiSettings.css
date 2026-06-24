@@ -167,7 +167,7 @@
   color: var(--db-text-main) !important;
 }
 
-.light-theme .friday-admin-container .text-white,
+.light-theme .friday-admin-container .text-white:not(.btn):not(button):not([class*="bg-"]):not(.badge):not(.db-badge),
 .light-theme .friday-admin-container .text-slate-200,
 .light-theme .friday-admin-container .text-slate-300 {
   color: var(--db-text-main) !important;

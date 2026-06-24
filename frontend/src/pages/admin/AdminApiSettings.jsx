@@ -12,6 +12,7 @@ import '../VoiceAssistant.css'; // Reuse HUD scanlines and overlays
 export default function AdminApiSettings() {
   const [providers, setProviders] = useState([]);
   const [stats, setStats] = useState(null);
+  const [failovers, setFailovers] = useState([]);
   const [keys, setKeys] = useState({}); // Stores editing keys
   const [showKeys, setShowKeys] = useState({}); // Toggles show/hide
   const [testingStatus, setTestingStatus] = useState({}); // Toggles loader per provider
@@ -37,12 +38,14 @@ export default function AdminApiSettings() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [configsRes, statsRes] = await Promise.all([
+      const [configsRes, statsRes, failoversRes] = await Promise.all([
         api.get('/admin/api-settings'),
-        api.get('/admin/api-settings/stats')
+        api.get('/admin/api-settings/stats'),
+        api.get('/admin/api-settings/failovers')
       ]);
       setProviders(configsRes.data);
       setStats(statsRes.data);
+      setFailovers(failoversRes.data || []);
       
       // Initialize edit keys map with existing masked values
       const initialKeys = {};
@@ -715,6 +718,36 @@ export default function AdminApiSettings() {
                     </td>
                     <td className="capitalize text-slate-300">{log.provider || '-'}</td>
                     <td className="text-slate-400 max-w-xs truncate">{log.details}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      {/* Failover Logs Row */}
+      {failovers && failovers.length > 0 && (
+        <div className="friday-cyber-card p-6 rounded-2xl mt-6">
+          <h3 className="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-rose-500 animate-pulse" /> Automatic Provider Failover Matrix Logs
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead>
+                <tr className="text-slate-400 border-b border-white/5 pb-2">
+                  <th className="pb-2">Timestamp</th>
+                  <th className="pb-2">Failed Provider</th>
+                  <th className="pb-2">Fallback Provider</th>
+                  <th className="pb-2">Error Context</th>
+                </tr>
+              </thead>
+              <tbody>
+                {failovers.map(f => (
+                  <tr key={f.id} className="border-b border-white/5 hover:bg-white/5 transition font-mono">
+                    <td className="py-2.5 text-slate-500">{new Date(f.created_at).toLocaleString()}</td>
+                    <td className="text-rose-400 font-semibold uppercase">{f.failed_provider}</td>
+                    <td className="text-emerald-400 font-semibold uppercase">{f.fallback_provider}</td>
+                    <td className="text-slate-400">{f.error_message || 'N/A'}</td>
                   </tr>
                 ))}
               </tbody>

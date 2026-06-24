@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Line, Bar } from 'react-chartjs-2';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -26,6 +27,15 @@ ChartJS.register(
   Legend,
   Filler
 );
+
+const HASH_TO_TAB = {
+  '#skill-graph': 'subjects',
+  '#heatmap': 'activity',
+  '#reports': 'overview',
+  '#achievements': 'overview',
+  '#certificates': 'overview',
+  '#ranking': 'overview',
+};
 
 function AnimatedProgressRing({ percentage, size = 120, strokeWidth = 8, color = '#8B5CF6' }) {
   const radius = (size - strokeWidth) / 2;
@@ -92,9 +102,27 @@ function CountUp({ end, duration = 800 }) {
 export default function Progress() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview'); // overview, subjects, roadmap, activity
+  const [activeTab, setActiveTab] = useState('overview');
   const [heatmapData, setHeatmapData] = useState(null);
   const [xpTimeline, setXpTimeline] = useState(null);
+  const location = useLocation();
+
+  // Hash-based navigation from sidebar
+  useEffect(() => {
+    const hash = location.hash;
+    if (hash && HASH_TO_TAB[hash]) {
+      setActiveTab(HASH_TO_TAB[hash]);
+      if (HASH_TO_TAB[hash] === 'activity' && !heatmapData) {
+        Promise.all([
+          api.get('/progress/heatmap'),
+          api.get('/progress/xp-timeline')
+        ]).then(([heatRes, xpRes]) => {
+          setHeatmapData(heatRes.data);
+          setXpTimeline(xpRes.data);
+        }).catch(err => console.error(err));
+      }
+    }
+  }, [location.hash]);
 
   const fetchAnalytics = () => {
     setLoading(true);

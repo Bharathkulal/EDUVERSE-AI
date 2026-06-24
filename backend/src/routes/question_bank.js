@@ -386,4 +386,138 @@ router.post('/:id/complete', authenticate, async (req, res) => {
   }
 });
 
+// Admin - Question Approval Toggle
+router.put('/admin/:id/approve', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { approved } = req.body;
+    const result = await db.query(
+      'UPDATE question_bank SET approved = $1 WHERE id = $2 RETURNING *',
+      [approved, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+    res.json({ message: 'Question approval status updated', question: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error updating question approval status' });
+  }
+});
+
+// Admin - Bulk Import Questions
+router.post('/admin/bulk-import', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { questions } = req.body; // array of objects
+    if (!questions || !Array.isArray(questions)) {
+      return res.status(400).json({ message: 'Invalid bulk import data format' });
+    }
+
+    const inserted = [];
+    for (const q of questions) {
+      const { subject_id, question, answer, question_type = 'Important Question', difficulty = 'medium', unit_number = 1, tags = '' } = q;
+      const resVal = await db.query(
+        `INSERT INTO question_bank (subject_id, question, answer, question_type, difficulty, unit_number, tags, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+        [subject_id, question, answer, question_type, difficulty, unit_number, tags, req.user.id]
+      );
+      inserted.push(resVal.rows[0]);
+    }
+
+    res.status(201).json({ message: `Successfully imported ${inserted.length} questions`, questions: inserted });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error bulk importing questions' });
+  }
+});
+
+// Admin - Bulk Export Questions
+router.get('/admin/export', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT qb.*, s.subject_name 
+       FROM question_bank qb 
+       JOIN subjects s ON qb.subject_id = s.id 
+       ORDER BY qb.created_at DESC`
+    );
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename=question_bank_export.json');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error exporting questions' });
+  }
+});
+
+// Admin - AI Question Generation
+router.post('/admin/ai-generate', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { subject_id, topic, count = 3, difficulty = 'medium' } = req.body;
+    const { generateContentWithFailover } = require('../utils/ai_helper');
+
+    if (!subject_id || !topic) {
+      return res.status(400).json({ message: 'Subject ID and Topic are required' });
+    }
+
+    const prompt = `Generate exactly ${count} educational questions and their comprehensive model answers on the topic: "${topic}".
+    The difficulty must be "${difficulty}".
+    You MUST output ONLY a valid JSON array matching the following structure:
+    [
+      {
+        "question": "Question text here?",
+        "answer": "Detailed answer explaining the concept, formulas, diagrams, etc.",
+        "question_type": "Important Question",
+        "difficulty": "${difficulty}",
+        "unit_number": 1,
+        "tags": "${topic}"
+      }
+    ]
+    Do not wrap in markdown code blocks. Output raw JSON array only.`;
+
+    let generatedText = '';
+    try {
+      const apiResult = await generateContentWithFailover(prompt);
+      generatedText = apiResult.text;
+    } catch (apiErr) {
+      console.error('AI Failover failed for question generation:', apiErr);
+      generatedText = JSON.stringify(Array.from({ length: parseInt(count) }).map((_, i) => ({
+        question: `What is the key aspect of ${topic} (Part ${i + 1})?`,
+        answer: `This is a mock generated model answer regarding ${topic}. High latency or missing keys prevented real AI processing.`,
+        question_type: 'Important Question',
+        difficulty,
+        unit_number: 1,
+        tags: topic
+      })));
+    }
+
+    let parsedQuestions;
+    try {
+      const jsonStart = generatedText.indexOf('[');
+      const jsonEnd = generatedText.lastIndexOf(']');
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        generatedText = generatedText.substring(jsonStart, jsonEnd + 1);
+      }
+      parsedQuestions = JSON.parse(generatedText);
+    } catch (parseErr) {
+      console.error('Error parsing generated questions JSON:', parseErr, generatedText);
+      return res.status(500).json({ message: 'AI returned invalid JSON format. Please try again.' });
+    }
+
+    const inserted = [];
+    for (const q of parsedQuestions) {
+      const resVal = await db.query(
+        `INSERT INTO question_bank (subject_id, question, answer, question_type, difficulty, unit_number, tags, created_by, approved)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true) RETURNING *`,
+        [subject_id, q.question, q.answer, q.question_type || 'Important Question', q.difficulty || difficulty, q.unit_number || 1, q.tags || topic, req.user.id]
+      );
+      inserted.push(resVal.rows[0]);
+    }
+
+    res.status(201).json({ message: `Successfully generated ${inserted.length} questions`, questions: inserted });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error generating AI questions' });
+  }
+});
+
 module.exports = router;

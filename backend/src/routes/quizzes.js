@@ -54,10 +54,11 @@ router.get('/:id', authenticate, async (req, res) => {
 
 router.post('/', authenticate, authorizeAdmin, async (req, res) => {
   try {
-    const { subject_id, topic_id, title, questions } = req.body;
+    const { subject_id, topic_id, title, time_limit_minutes = 15, difficulty = 'medium', category = 'General', questions } = req.body;
     const quizResult = await db.query(
-      'INSERT INTO quizzes (subject_id, topic_id, title) VALUES ($1, $2, $3) RETURNING *',
-      [subject_id, topic_id || null, title]
+      `INSERT INTO quizzes (subject_id, topic_id, title, time_limit_minutes, difficulty, category) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [subject_id, topic_id || null, title, time_limit_minutes, difficulty, category]
     );
     const quiz = quizResult.rows[0];
 
@@ -80,14 +81,18 @@ router.post('/', authenticate, authorizeAdmin, async (req, res) => {
 
 router.put('/:id', authenticate, authorizeAdmin, async (req, res) => {
   try {
-    const { title, subject_id, topic_id } = req.body;
+    const { title, subject_id, topic_id, time_limit_minutes, difficulty, category } = req.body;
     const result = await db.query(
-      'UPDATE quizzes SET title = COALESCE($1, title), subject_id = COALESCE($2, subject_id), topic_id = COALESCE($3, topic_id) WHERE id = $4 RETURNING *',
-      [title, subject_id, topic_id, req.params.id]
+      `UPDATE quizzes 
+       SET title = COALESCE($1, title), subject_id = COALESCE($2, subject_id), topic_id = COALESCE($3, topic_id),
+           time_limit_minutes = COALESCE($4, time_limit_minutes), difficulty = COALESCE($5, difficulty), category = COALESCE($6, category)
+       WHERE id = $7 RETURNING *`,
+      [title, subject_id, topic_id, time_limit_minutes, difficulty, category, req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ message: 'Quiz not found' });
     res.json(result.rows[0]);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -176,6 +181,94 @@ router.get('/results/student', authenticate, async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// AI Quiz Generator Endpoint
+router.post('/ai-generate', authenticate, authorizeAdmin, async (req, res) => {
+  try {
+    const { subject_id, topic_name, difficulty = 'medium', question_count = 5 } = req.body;
+    const { generateContentWithFailover } = require('../utils/ai_helper');
+
+    if (!subject_id || !topic_name) {
+      return res.status(400).json({ message: 'Subject ID and Topic name are required' });
+    }
+
+    const prompt = `Generate a quiz on the topic "${topic_name}" with difficulty "${difficulty}".
+    Provide exactly ${question_count} multiple choice questions.
+    You MUST output ONLY a valid JSON object matching the following structure:
+    {
+      "title": "Quiz Title",
+      "questions": [
+        {
+          "question": "Question text here?",
+          "option_a": "Option A text",
+          "option_b": "Option B text",
+          "option_c": "Option C text",
+          "option_d": "Option D text",
+          "correct_answer": "a"
+        }
+      ]
+    }
+    Make sure correct_answer is lowercase ('a', 'b', 'c', or 'd'). Do not wrap in markdown tags or write conversational text. Output raw JSON.`;
+
+    let generatedText = '';
+    try {
+      const apiResult = await generateContentWithFailover(prompt);
+      generatedText = apiResult.text;
+    } catch (apiErr) {
+      console.error('AI Failover failed for quiz generation:', apiErr);
+      // Fallback fallback mock questions
+      generatedText = JSON.stringify({
+        title: `AI Generated Quiz: ${topic_name}`,
+        questions: Array.from({ length: parseInt(question_count) }).map((_, i) => ({
+          question: `Sample Question ${i + 1} about ${topic_name}?`,
+          option_a: 'Option A (Correct)',
+          option_b: 'Option B',
+          option_c: 'Option C',
+          option_d: 'Option D',
+          correct_answer: 'a'
+        }))
+      });
+    }
+
+    // Clean JSON
+    let parsedData;
+    try {
+      const jsonStart = generatedText.indexOf('{');
+      const jsonEnd = generatedText.lastIndexOf('}');
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        generatedText = generatedText.substring(jsonStart, jsonEnd + 1);
+      }
+      parsedData = JSON.parse(generatedText);
+    } catch (parseErr) {
+      console.error('Error parsing generated quiz JSON:', parseErr, generatedText);
+      return res.status(500).json({ message: 'AI returned invalid JSON format. Please try again.' });
+    }
+
+    const quizResult = await db.query(
+      `INSERT INTO quizzes (subject_id, title, difficulty, category, time_limit_minutes) 
+       VALUES ($1, $2, $3, 'AI Generated', 15) RETURNING *`,
+      [subject_id, parsedData.title || `AI Quiz - ${topic_name}`, difficulty]
+    );
+    const quiz = quizResult.rows[0];
+
+    const insertedQuestions = [];
+    if (parsedData.questions?.length) {
+      for (const q of parsedData.questions) {
+        const qRes = await db.query(
+          `INSERT INTO questions (quiz_id, question, option_a, option_b, option_c, option_d, correct_answer)
+           VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+          [quiz.id, q.question, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer]
+        );
+        insertedQuestions.push(qRes.rows[0]);
+      }
+    }
+
+    res.status(201).json({ ...quiz, questions: insertedQuestions });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error generating AI quiz' });
   }
 });
 

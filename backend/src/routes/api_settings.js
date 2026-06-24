@@ -421,4 +421,71 @@ router.get('/stats', authenticate, authorizeAdmin, async (req, res) => {
   }
 });
 
+// Failover Engine - Trigger automatic failover
+router.post('/failover', authenticate, authorizeAdmin, async (req, res) => {
+  try {
+    const { failed_provider, error_message } = req.body;
+
+    if (!failed_provider) {
+      return res.status(400).json({ message: 'Failed provider name is required' });
+    }
+
+    // Mark the failed provider status to 'Disconnected' or increment consecutive failures
+    await db.query(
+      `UPDATE api_configurations 
+       SET status = 'Disconnected', consecutive_failures = consecutive_failures + 1, last_used = NOW() 
+       WHERE provider = $1`,
+      [failed_provider]
+    );
+
+    // Find the next priority healthy and enabled provider
+    const nextProviderRes = await db.query(
+      `SELECT provider FROM api_configurations 
+       WHERE provider != $1 AND disabled = false AND status != 'Disconnected' AND api_key != ''
+       ORDER BY priority ASC LIMIT 1`,
+      [failed_provider]
+    );
+
+    let fallbackProvider = 'custom';
+    if (nextProviderRes.rows.length > 0) {
+      fallbackProvider = nextProviderRes.rows[0].provider;
+    }
+
+    // Insert failover log
+    const failoverRecord = await db.query(
+      `INSERT INTO provider_failovers (failed_provider, fallback_provider, error_message) 
+       VALUES ($1, $2, $3) RETURNING *`,
+      [failed_provider, fallbackProvider, error_message || 'Latency or timeout threshold exceeded']
+    );
+
+    // Trigger system alert
+    await db.query(
+      `INSERT INTO system_alerts (priority, title, message) 
+       VALUES ('High', 'AI Provider Failover', 'Automatic failover triggered from ' || $1 || ' to ' || $2)`,
+      [failed_provider, fallbackProvider]
+    );
+
+    res.json({
+      message: 'Failover triggered successfully',
+      failed_provider,
+      fallback_provider: fallbackProvider,
+      failover: failoverRecord.rows[0]
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failover engine trigger failed' });
+  }
+});
+
+// GET failover history
+router.get('/failovers', authenticate, authorizeAdmin, async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM provider_failovers ORDER BY created_at DESC LIMIT 30');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error loading failover logs' });
+  }
+});
+
 module.exports = router;

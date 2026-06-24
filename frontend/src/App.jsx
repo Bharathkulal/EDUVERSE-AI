@@ -28,6 +28,10 @@ const AIProfile = lazy(() => import('./pages/AIProfile'));
 const QuestionBank = lazy(() => import('./pages/QuestionBank'));
 const VoiceAssistant = lazy(() => import('./pages/VoiceAssistant'));
 const StudentOnboarding = lazy(() => import('./pages/StudentOnboarding'));
+const TypingQuest = lazy(() => import('./pages/TypingQuest'));
+const CodingBattleSystem = lazy(() => import('./pages/CodingBattleSystem'));
+const Community = lazy(() => import('./pages/Community'));
+const CareerHub = lazy(() => import('./pages/CareerHub'));
 
 // Lazy Loaded DSA/Math Visualizer Pages
 const StackVisualization = lazy(() => import('./pages/StackVisualization'));
@@ -79,7 +83,7 @@ export default function App() {
       <AIChatLayer />
       <AnimatePresence mode="wait">
         <Suspense fallback={<PageLoader />}>
-          <Routes location={location} key={location.pathname}>
+          <Routes location={location} key={location.pathname + location.hash}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -114,6 +118,17 @@ export default function App() {
             <Route path="/question-bank" element={<ProtectedRoute><Layout><QuestionBank /></Layout></ProtectedRoute>} />
             <Route path="/voice-assistant" element={<ProtectedRoute><Layout><VoiceAssistant /></Layout></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
+            <Route path="/typing-quest" element={<ProtectedRoute><Layout><TypingQuest /></Layout></ProtectedRoute>} />
+            <Route path="/coding-battle" element={<ProtectedRoute><Layout><CodingBattleSystem /></Layout></ProtectedRoute>} />
+
+            {/* Career Hub & Community */}
+            <Route path="/career-hub" element={<ProtectedRoute><Layout><CareerHub /></Layout></ProtectedRoute>} />
+            <Route path="/community" element={<ProtectedRoute><Layout><Community /></Layout></ProtectedRoute>} />
+
+            {/* DSA index route — redirect to first visualizer */}
+            <Route path="/dsa" element={<Navigate to="/dsa/stack" replace />} />
+            <Route path="/dsa/sorting" element={<ProtectedRoute><Layout><StudentDashboard /></Layout></ProtectedRoute>} />
+            <Route path="/dsa/pathfinding" element={<ProtectedRoute><Layout><StudentDashboard /></Layout></ProtectedRoute>} />
 
             <Route path="/admin" element={<ProtectedRoute adminOnly><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
             <Route path="/admin/students" element={<ProtectedRoute adminOnly><Layout><AdminStudents /></Layout></ProtectedRoute>} />
@@ -127,7 +142,7 @@ export default function App() {
             <Route path="/admin/analytics" element={<ProtectedRoute adminOnly><Layout><AdminAnalytics /></Layout></ProtectedRoute>} />
             <Route path="/admin/alerts" element={<ProtectedRoute adminOnly><Layout><AdminAlerts /></Layout></ProtectedRoute>} />
 
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>
         </Suspense>
       </AnimatePresence>

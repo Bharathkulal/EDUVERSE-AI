@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 
@@ -7,7 +8,20 @@ const modes = [
   { id: 'explain', label: 'Explain Concept', icon: '📖' },
   { id: 'example', label: 'Generate Examples', icon: '💡' },
   { id: 'practice', label: 'Practice Questions', icon: '📝' },
+  { id: 'career', label: 'AI Career Guide', icon: '🎯' },
+  { id: 'interview', label: 'AI Interviewer', icon: '🎙️' },
+  { id: 'resume', label: 'Resume Reviewer', icon: '📄' },
+  { id: 'planner', label: 'Study Planner', icon: '📅' },
 ];
+
+const HASH_TO_MODE = {
+  '#mentor': 'doubt',
+  '#career': 'career',
+  '#interviewer': 'interview',
+  '#resume': 'resume',
+  '#planner': 'planner',
+  '#battles': 'practice',
+};
 
 export default function AITutor() {
   const [message, setMessage] = useState('');
@@ -16,6 +30,15 @@ export default function AITutor() {
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
+  const location = useLocation();
+
+  // Hash-based navigation from sidebar
+  useEffect(() => {
+    const hash = location.hash;
+    if (hash && HASH_TO_MODE[hash]) {
+      setMode(HASH_TO_MODE[hash]);
+    }
+  }, [location.hash]);
 
   useEffect(() => {
     api.get('/ai/history').then((res) => setChats(res.data.reverse()));
