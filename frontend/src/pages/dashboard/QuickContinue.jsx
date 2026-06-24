@@ -3,14 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import { 
-  Play, BookOpen, CheckCircle, Code, ShieldCheck, Sparkles,
-  ArrowRight, AlertCircle, HelpCircle
+  Play, BookOpen, Sparkles, ArrowRight, HelpCircle
 } from 'lucide-react';
 
 export default function QuickContinue() {
   const navigate = useNavigate();
   const [analytics, setAnalytics] = useState(null);
-  const [roadmapProgress, setRoadmapProgress] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,12 +18,10 @@ export default function QuickContinue() {
   const fetchContinueDetails = async () => {
     try {
       setLoading(true);
-      const [analyticsRes, roadmapRes] = await Promise.all([
-        api.get('/progress/analytics'),
-        api.get('/progress/roadmap/progress')
+      const [analyticsRes] = await Promise.all([
+        api.get('/progress/analytics')
       ]);
       setAnalytics(analyticsRes.data);
-      setRoadmapProgress(roadmapRes.data);
     } catch (err) {
       toast.error('Failed to sync learning resume state');
     } finally {
@@ -61,7 +57,7 @@ export default function QuickContinue() {
           <div className="lg:col-span-2 space-y-6">
             
             {/* Primary resume block */}
-            <div className="p-6 rounded-2xl border border-white/5 bg-slate-950/40 text-left relative overflow-hidden">
+            <div className="friday-cyber-card p-6 text-left relative overflow-hidden">
               <div className="absolute top-0 right-0 w-48 h-48 bg-violet-500/5 rounded-full blur-[60px] pointer-events-none" />
               <span className="text-[9px] text-violet-400 font-bold font-mono uppercase tracking-widest block">Last Started Node</span>
               <h2 className="text-xl font-extrabold text-white mt-1">{currentTopicName}</h2>
@@ -85,7 +81,7 @@ export default function QuickContinue() {
 
             {/* Smart Resume Engine layout options */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-5 rounded-xl border border-white/5 bg-slate-950/40 text-left flex flex-col justify-between">
+              <div className="friday-cyber-card p-5 text-left flex flex-col justify-between">
                 <div>
                   <span className="text-[10px] text-violet-400 font-bold uppercase tracking-wider block">Practice Arena</span>
                   <h4 className="text-sm font-bold text-white mt-1">Coding Challenge</h4>
@@ -96,7 +92,7 @@ export default function QuickContinue() {
                 </button>
               </div>
 
-              <div className="p-5 rounded-xl border border-white/5 bg-slate-950/40 text-left flex flex-col justify-between">
+              <div className="friday-cyber-card p-5 text-left flex flex-col justify-between">
                 <div>
                   <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">Assessment Matrix</span>
                   <h4 className="text-sm font-bold text-white mt-1">Practice Hub</h4>
@@ -111,7 +107,7 @@ export default function QuickContinue() {
           </div>
 
           {/* AI Recommendations */}
-          <div className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 text-left space-y-4 h-fit">
+          <div className="friday-cyber-card p-5 text-left space-y-4 h-fit">
             <div className="flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-violet-400" />
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">AI Suggested Next Topics</h3>

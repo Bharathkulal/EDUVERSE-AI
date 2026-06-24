@@ -1132,4 +1132,129 @@
   }
 }
 
+/* ====================================================
+   PREMIUM CYBER HUD INTERFACE DESIGN SYSTEM
+   ==================================================== */
+.dark-theme .friday-cyber-card,
+.dark-theme .cyber-card {
+  background: rgba(15, 10, 34, 0.6) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(139, 92, 246, 0.15) !important;
+  box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4),
+              inset 0 0 24px rgba(139, 92, 246, 0.05) !important;
+  border-radius: 20px !important;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #F8FAFC !important;
+}
+
+.dark-theme .friday-cyber-card:hover,
+.dark-theme .cyber-card:hover {
+  border-color: rgba(139, 92, 246, 0.35) !important;
+  box-shadow: 0 15px 50px 0 rgba(139, 92, 246, 0.15),
+              inset 0 0 30px rgba(139, 92, 246, 0.08) !important;
+  transform: translateY(-3px) !important;
+}
+
+.light-theme .friday-cyber-card,
+.light-theme .cyber-card {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 8px 30px rgba(165, 180, 252, 0.06),
+              inset 0 0 20px rgba(139, 92, 246, 0.01) !important;
+  border-radius: 20px !important;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #0F172A !important;
+}
+
+.light-theme .friday-cyber-card:hover,
+.light-theme .cyber-card:hover {
+  border-color: #3B82F6 !important;
+  box-shadow: 0 12px 40px rgba(165, 180, 252, 0.12) !important;
+  transform: translateY(-3px) !important;
+}
+
+/* Specific text color safety rules inside cards */
+.dark-theme .friday-cyber-card p,
+.dark-theme .cyber-card p {
+  color: #94A3B8 !important;
+}
+.dark-theme .friday-cyber-card span:not([class*="text-"]),
+.dark-theme .cyber-card span:not([class*="text-"]) {
+  color: #94A3B8 !important;
+}
+
+.light-theme .friday-cyber-card p,
+.light-theme .cyber-card p {
+  color: #4B5563 !important;
+}
+.light-theme .friday-cyber-card span:not([class*="text-"]),
+.light-theme .cyber-card span:not([class*="text-"]) {
+  color: #4B5563 !important;
+}
+
+/* ====================================================
+   HIGHLIGHT HERO CARD DEEP NAVY / DARK BLUE
+   ==================================================== */
+.db-page-wrapper .friday-cyber-card-highlight {
+  background: linear-gradient(135deg, #0b1528 0%, #0f2a5a 50%, #1e1b4b 100%) !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.3), inset 0 0 30px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Force light text inside highlighted cards regardless of light/dark theme */
+.db-page-wrapper .friday-cyber-card-highlight h1,
+.db-page-wrapper .friday-cyber-card-highlight h2,
+.db-page-wrapper .friday-cyber-card-highlight h3,
+.db-page-wrapper .friday-cyber-card-highlight h4,
+.db-page-wrapper .friday-cyber-card-highlight .text-white,
+.db-page-wrapper .friday-cyber-card-highlight span.text-white {
+  color: #FFFFFF !important;
+}
+
+.db-page-wrapper .friday-cyber-card-highlight p,
+.db-page-wrapper .friday-cyber-card-highlight span:not([class*="text-"]),
+.db-page-wrapper .friday-cyber-card-highlight .text-slate-400,
+.db-page-wrapper .friday-cyber-card-highlight .text-slate-300 {
+  color: #94A3B8 !important;
+}
+
+.db-page-wrapper .friday-cyber-card-highlight .text-violet-400 {
+  color: #a78bfa !important;
+}
+
+.db-page-wrapper .friday-cyber-card-highlight .text-slate-500 {
+  color: #64748b !important;
+}
+
+.db-page-wrapper .friday-cyber-card-highlight .bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.db-page-wrapper .friday-cyber-card-highlight .bg-white\/5 {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.db-page-wrapper .friday-cyber-card-highlight .border-white\/10 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.db-page-wrapper .friday-cyber-card-highlight .border-white\/5 {
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Nested cards inside highlight card */
+.db-page-wrapper .friday-cyber-card-highlight .friday-cyber-card {
+  background: rgba(15, 23, 42, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+}
+
+.db-page-wrapper .friday-cyber-card-highlight .friday-cyber-card h4 {
+  color: #FFFFFF !important;
+}
+
+
 

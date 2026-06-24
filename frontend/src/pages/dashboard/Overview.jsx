@@ -162,7 +162,7 @@ export default function Overview() {
   return (
     <div className="space-y-6 pb-12 pr-2">
       {/* Hero Overview */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-slate-950/40 p-6 md:p-8">
+      <div className="friday-cyber-card friday-cyber-card-highlight relative overflow-hidden p-6 md:p-8">
         <div className="absolute top-0 right-0 w-72 h-72 bg-violet-600/5 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-indigo-600/5 rounded-full blur-[100px] pointer-events-none" />
 
@@ -202,7 +202,7 @@ export default function Overview() {
           </div>
 
           {/* Quick Stats Panel */}
-          <div className="lg:col-span-3 p-5 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col justify-between h-full space-y-4">
+          <div className="friday-cyber-card lg:col-span-3 p-5 flex flex-col justify-between h-full space-y-4">
             <div className="flex justify-between items-start">
               <div>
                 <h4 className="text-xs font-bold text-white">Target Accuracy</h4>
@@ -236,25 +236,25 @@ export default function Overview() {
 
       {/* Overview Analytics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl border border-white/5 bg-slate-950/40 text-left">
+        <div className="friday-cyber-card p-4 text-left">
           <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Level Progress</span>
           <span className="text-2xl font-black text-white mt-1 block"><CountUp end={computedLevel} /></span>
           <span className="text-[10px] text-emerald-400 font-bold mt-1 block">+{totalXP} Current XP</span>
         </div>
 
-        <div className="p-4 rounded-2xl border border-white/5 bg-slate-950/40 text-left">
+        <div className="friday-cyber-card p-4 text-left">
           <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Study Streaks</span>
           <span className="text-2xl font-black text-amber-400 mt-1 block"><CountUp end={userStreak} /> Days</span>
           <span className="text-[10px] text-slate-400 block mt-1">Streak multiplier active</span>
         </div>
 
-        <div className="p-4 rounded-2xl border border-white/5 bg-slate-950/40 text-left">
+        <div className="friday-cyber-card p-4 text-left">
           <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Coins Wallet</span>
           <span className="text-2xl font-black text-emerald-400 mt-1 block"><CountUp end={userCoins} /> Coins</span>
           <span className="text-[10px] text-slate-400 block mt-1">Convertable in rewards market</span>
         </div>
 
-        <div className="p-4 rounded-2xl border border-white/5 bg-slate-950/40 text-left">
+        <div className="friday-cyber-card p-4 text-left">
           <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Learning Clock</span>
           <span className="text-2xl font-black text-indigo-400 mt-1 block">{studyHours.toFixed(1)}h</span>
           <span className="text-[10px] text-slate-400 block mt-1">{completedLessons} lessons processed</span>
@@ -264,7 +264,7 @@ export default function Overview() {
       {/* Main Breakdown Grid */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Subject completion chart */}
-        <div className="lg:col-span-2 p-5 rounded-2xl border border-white/5 bg-slate-950/40 space-y-4 text-left">
+        <div className="friday-cyber-card lg:col-span-2 p-5 space-y-4 text-left">
           <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
             <TrendingUp className="w-4 h-4 text-violet-400" /> Subject Curriculum progress
           </h3>
@@ -287,7 +287,7 @@ export default function Overview() {
         </div>
 
         {/* AI Tutor Insights */}
-        <div className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 space-y-4 text-left flex flex-col justify-between">
+        <div className="friday-cyber-card p-5 space-y-4 text-left flex flex-col justify-between">
           <div className="space-y-4">
             <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
               <Brain className="w-4 h-4 text-violet-400" /> AI Recommendations

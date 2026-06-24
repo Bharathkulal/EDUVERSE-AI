@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import { 
-  History, Filter, FileText, CheckCircle, Code, Award,
-  BookOpen, Clock, AlertCircle
+  History, Award, Code, AlertCircle
 } from 'lucide-react';
 
 export default function RecentActivity() {
@@ -113,7 +112,7 @@ export default function RecentActivity() {
           <div className="w-8 h-8 rounded-full border-2 border-t-violet-500 border-slate-700 animate-spin" />
         </div>
       ) : (
-        <div className="p-6 rounded-2xl border border-white/5 bg-slate-950/40 text-left space-y-6">
+        <div className="friday-cyber-card p-6 text-left space-y-6">
           <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
             <History className="w-4 h-4 text-violet-400" /> Complete Performance Timeline
           </h3>

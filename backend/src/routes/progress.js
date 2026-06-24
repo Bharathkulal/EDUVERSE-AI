@@ -322,14 +322,26 @@ router.get('/analytics', authenticate, async (req, res) => {
     const topicsRes = await db.query('SELECT id, subject_id, title, order_index FROM topics ORDER BY subject_id, order_index');
     const topics = topicsRes.rows;
 
-    // Calculate subject-wise completion
-    const subjectProgress = subjects.map(sub => {
-      const subTopics = topics.filter(t => t.subject_id === sub.id);
+    // Calculate subject-wise completion, grouping duplicate subjects by name
+    const subjectGroups = {};
+    subjects.forEach(sub => {
+      const nameKey = sub.subject_name.toLowerCase().trim();
+      if (!subjectGroups[nameKey]) {
+        subjectGroups[nameKey] = {
+          name: sub.subject_name,
+          ids: [sub.id]
+        };
+      } else {
+        subjectGroups[nameKey].ids.push(sub.id);
+      }
+    });
+
+    const subjectProgress = Object.values(subjectGroups).map(group => {
+      const subTopics = topics.filter(t => group.ids.includes(t.subject_id));
       const subTopicsCount = subTopics.length;
       const subCompletedCount = subTopics.filter(t => completedTopicsList.some(ct => ct.topic_id === t.id)).length;
       return {
-        id: sub.id,
-        name: sub.subject_name,
+        name: group.name,
         completedTopics: subCompletedCount,
         totalTopics: subTopicsCount,
         percentage: subTopicsCount > 0 ? Math.round((subCompletedCount / subTopicsCount) * 100) : 0
@@ -987,5 +999,5 @@ router.post('/goals/ai-generate', authenticate, async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router; // trigger restart
 

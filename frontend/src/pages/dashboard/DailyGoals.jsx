@@ -4,7 +4,7 @@ import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import { 
   Plus, Trash2, Award, Sparkles, CheckCircle, Circle, 
-  AlertCircle, ShieldAlert, BarChart2, Star, CheckSquare
+  BarChart2, Star, CheckSquare
 } from 'lucide-react';
 
 export default function DailyGoals() {
@@ -119,7 +119,7 @@ export default function DailyGoals() {
 
       {/* Analytics Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl border border-white/5 bg-slate-950/40 text-left flex items-center gap-4">
+        <div className="friday-cyber-card p-4 text-left flex items-center gap-4">
           <div className="p-3 bg-violet-500/10 rounded-xl text-violet-400">
             <CheckSquare className="w-5 h-5" />
           </div>
@@ -129,7 +129,7 @@ export default function DailyGoals() {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl border border-white/5 bg-slate-950/40 text-left flex items-center gap-4">
+        <div className="friday-cyber-card p-4 text-left flex items-center gap-4">
           <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
             <Award className="w-5 h-5" />
           </div>
@@ -139,7 +139,7 @@ export default function DailyGoals() {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl border border-white/5 bg-slate-950/40 text-left flex items-center gap-4">
+        <div className="friday-cyber-card p-4 text-left flex items-center gap-4">
           <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-400">
             <BarChart2 className="w-5 h-5" />
           </div>
@@ -157,7 +157,7 @@ export default function DailyGoals() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Creation panel */}
-        <div className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 text-left space-y-4 h-fit">
+        <div className="friday-cyber-card p-5 text-left space-y-4 h-fit">
           <h3 className="text-xs font-bold text-white uppercase tracking-wider">Schedule New Goal</h3>
           <form onSubmit={handleCreateGoal} className="space-y-4">
             <div className="space-y-1">
@@ -195,7 +195,7 @@ export default function DailyGoals() {
         </div>
 
         {/* Goals List */}
-        <div className="lg:col-span-2 p-5 rounded-2xl border border-white/5 bg-slate-950/40 text-left space-y-4">
+        <div className="friday-cyber-card lg:col-span-2 p-5 text-left space-y-4">
           <h3 className="text-xs font-bold text-white uppercase tracking-wider">Active Goals</h3>
 
           {loading ? (

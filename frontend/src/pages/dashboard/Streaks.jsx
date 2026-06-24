@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import { 
-  Flame, Calendar, ShieldCheck, Heart, Award, Gift,
-  HelpCircle, RefreshCw, Star
+  Flame, Calendar, Heart, Gift
 } from 'lucide-react';
 
 export default function Streaks() {
@@ -89,7 +88,7 @@ export default function Streaks() {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Calendar Heatmap & Summary */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="p-6 rounded-2xl border border-white/5 bg-slate-950/40 text-left relative overflow-hidden">
+            <div className="friday-cyber-card p-6 text-left relative overflow-hidden">
               <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-[60px] pointer-events-none" />
               <div className="grid md:grid-cols-2 gap-6 items-center">
                 <div className="flex items-center gap-4">
@@ -115,7 +114,7 @@ export default function Streaks() {
             </div>
 
             {/* Study calendar grid */}
-            <div className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 text-left space-y-4">
+            <div className="friday-cyber-card p-5 text-left space-y-4">
               <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-violet-400" /> Study Calendar (Last 28 Days)
               </h3>
@@ -132,7 +131,7 @@ export default function Streaks() {
           </div>
 
           {/* Reward Milestones */}
-          <div className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 text-left space-y-4 h-fit">
+          <div className="friday-cyber-card p-5 text-left space-y-4 h-fit">
             <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
               <Gift className="w-4 h-4 text-amber-400" /> Milestone Reward Claims
             </h3>

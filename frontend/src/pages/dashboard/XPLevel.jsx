@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import { 
-  Award, Zap, Shield, Star, Crown, ChevronRight, 
-  History, Calendar, Gift, Lock
+  Crown, History, Award
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer 
@@ -76,7 +75,7 @@ export default function XPLevel() {
           {/* XP & Level progress */}
           <div className="lg:col-span-2 space-y-6">
             {/* Level status card */}
-            <div className="p-6 rounded-2xl border border-white/5 bg-slate-950/40 text-left relative overflow-hidden">
+            <div className="friday-cyber-card p-6 text-left relative overflow-hidden">
               <div className="absolute top-0 right-0 w-48 h-48 bg-violet-500/5 rounded-full blur-[60px] pointer-events-none" />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
@@ -101,7 +100,7 @@ export default function XPLevel() {
             </div>
 
             {/* XP Chart */}
-            <div className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 text-left space-y-4">
+            <div className="friday-cyber-card p-5 text-left space-y-4">
               <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
                 <History className="w-4 h-4 text-violet-400" /> XP Growth History (30 Days)
               </h3>
@@ -130,7 +129,7 @@ export default function XPLevel() {
             </div>
 
             {/* Badges system */}
-            <div className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 text-left space-y-4">
+            <div className="friday-cyber-card p-5 text-left space-y-4">
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">Achievement Badges</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {badges.map((b, idx) => (
@@ -148,7 +147,7 @@ export default function XPLevel() {
           </div>
 
           {/* Leaderboards */}
-          <div className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 text-left space-y-4 h-fit">
+          <div className="friday-cyber-card p-5 text-left space-y-4 h-fit">
             <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
               <Crown className="w-4 h-4 text-violet-400" /> Leaderboard Standing
             </h3>
