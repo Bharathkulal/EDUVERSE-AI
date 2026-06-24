@@ -12,11 +12,11 @@ const studentNav = [
     icon: '⚡',
     children: [
       { path: '/dashboard', label: 'Overview' },
-      { path: '/dashboard#goals', label: 'Daily Goals' },
-      { path: '/dashboard#xp', label: 'XP & Level' },
-      { path: '/dashboard#streaks', label: 'Streaks' },
-      { path: '/dashboard#activity', label: 'Recent Activity' },
-      { path: '/dashboard#continue', label: 'Quick Continue' }
+      { path: '/dashboard/goals', label: 'Daily Goals' },
+      { path: '/dashboard/xp', label: 'XP & Level' },
+      { path: '/dashboard/streaks', label: 'Streaks' },
+      { path: '/dashboard/activity', label: 'Recent Activity' },
+      { path: '/dashboard/continue', label: 'Quick Continue' }
     ]
   },
   {
@@ -175,7 +175,9 @@ const adminNav = [
 
 // All top-level nav paths — back button hidden on these
 const TOP_LEVEL_PATHS = [
-  '/dashboard', '/subjects', '/practice-hub', '/quizzes', '/coding', '/dbms-lab', '/ai-tutor',
+  '/dashboard', '/dashboard/goals', '/dashboard/xp', '/dashboard/streaks',
+  '/dashboard/activity', '/dashboard/continue',
+  '/subjects', '/practice-hub', '/quizzes', '/coding', '/dbms-lab', '/ai-tutor',
   '/progress', '/ml-analytics', '/ai-profile', '/question-bank',
   '/voice-assistant', '/settings', '/community', '/career-hub',
   '/admin', '/admin/students', '/admin/content', '/admin/quizzes',

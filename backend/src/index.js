@@ -239,6 +239,20 @@ const db = require('./config/db');
       )
     `);
 
+    // Create student_goals table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS student_goals (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        priority VARCHAR(50) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
+        completed BOOLEAN DEFAULT false,
+        xp_reward INTEGER DEFAULT 20,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Create ml_training_jobs table
     await db.query(`
       CREATE TABLE IF NOT EXISTS ml_training_jobs (

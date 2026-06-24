@@ -855,5 +855,137 @@ router.get('/xp-timeline', authenticate, async (req, res) => {
   }
 });
 
+// GET student goals
+router.get('/goals', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const result = await db.query(
+      'SELECT * FROM student_goals WHERE student_id = $1 ORDER BY id DESC',
+      [studentId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error loading goals' });
+  }
+});
+
+// CREATE a new goal
+router.post('/goals', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { title, priority = 'medium', xp_reward = 20 } = req.body;
+    if (!title) {
+      return res.status(400).json({ message: 'Goal title is required' });
+    }
+    const result = await db.query(
+      `INSERT INTO student_goals (student_id, title, priority, xp_reward)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [studentId, title, priority, xp_reward]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error creating goal' });
+  }
+});
+
+// TOGGLE goal completed state
+router.put('/goals/:id', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { id } = req.params;
+    const { completed } = req.body;
+
+    const goalCheck = await db.query('SELECT * FROM student_goals WHERE id = $1 AND student_id = $2', [id, studentId]);
+    if (goalCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Goal not found' });
+    }
+
+    const goal = goalCheck.rows[0];
+    if (goal.completed === completed) {
+      return res.json(goal);
+    }
+
+    const result = await db.query(
+      'UPDATE student_goals SET completed = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      [completed, id]
+    );
+
+    if (completed) {
+      // Award XP
+      await db.query(
+        'INSERT INTO user_xp_history (user_id, xp_amount, action) VALUES ($1, $2, $3)',
+        [studentId, goal.xp_reward, `Completed goal: ${goal.title}`]
+      );
+    } else {
+      // Deduct XP
+      await db.query(
+        'INSERT INTO user_xp_history (user_id, xp_amount, action) VALUES ($1, $2, $3)',
+        [studentId, -goal.xp_reward, `Reopened goal: ${goal.title}`]
+      );
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error updating goal' });
+  }
+});
+
+// DELETE a goal
+router.delete('/goals/:id', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { id } = req.params;
+
+    const result = await db.query(
+      'DELETE FROM student_goals WHERE id = $1 AND student_id = $2 RETURNING id',
+      [id, studentId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Goal not found' });
+    }
+
+    res.json({ message: 'Goal deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error deleting goal' });
+  }
+});
+
+// AI GOAL GENERATOR (Simulated intelligent generator based on student needs)
+router.post('/goals/ai-generate', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    
+    // Fetch predictions or weaknesses to customize
+    const predictionRes = await db.query('SELECT weak_subject FROM predictions WHERE student_id = $1 ORDER BY created_at DESC LIMIT 1', [studentId]);
+    const weakSub = predictionRes.rows[0]?.weak_subject || 'Algorithms & Data Structures';
+
+    const generated = [
+      { title: `Complete a practice session in ${weakSub}`, priority: 'high', xp_reward: 40 },
+      { title: 'Score above 80% on a Mock Quiz', priority: 'medium', xp_reward: 30 },
+      { title: 'Write code in Playground for 15 minutes', priority: 'low', xp_reward: 20 }
+    ];
+
+    const inserted = [];
+    for (const g of generated) {
+      const result = await db.query(
+        `INSERT INTO student_goals (student_id, title, priority, xp_reward)
+         VALUES ($1, $2, $3, $4) RETURNING *`,
+        [studentId, g.title, g.priority, g.xp_reward]
+      );
+      inserted.push(result.rows[0]);
+    }
+
+    res.json({ message: 'AI goals generated and assigned!', goals: inserted });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error generating AI goals' });
+  }
+});
+
 module.exports = router;
 

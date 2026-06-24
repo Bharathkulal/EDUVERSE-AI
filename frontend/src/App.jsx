@@ -13,7 +13,12 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 
 // Lazy Loaded Student Pages
-const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
+const Overview = lazy(() => import('./pages/dashboard/Overview'));
+const DailyGoals = lazy(() => import('./pages/dashboard/DailyGoals'));
+const XPLevel = lazy(() => import('./pages/dashboard/XPLevel'));
+const Streaks = lazy(() => import('./pages/dashboard/Streaks'));
+const RecentActivity = lazy(() => import('./pages/dashboard/RecentActivity'));
+const QuickContinue = lazy(() => import('./pages/dashboard/QuickContinue'));
 const Subjects = lazy(() => import('./pages/Subjects'));
 const SubjectDetail = lazy(() => import('./pages/SubjectDetail'));
 const PracticeHub = lazy(() => import('./pages/PracticeHub'));
@@ -91,7 +96,12 @@ export default function App() {
 
             <Route path="/onboarding" element={<ProtectedRoute><StudentOnboarding /></ProtectedRoute>} />
 
-            <Route path="/dashboard" element={<ProtectedRoute><Layout><StudentDashboard /></Layout></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Layout><Overview /></Layout></ProtectedRoute>} />
+            <Route path="/dashboard/goals" element={<ProtectedRoute><Layout><DailyGoals /></Layout></ProtectedRoute>} />
+            <Route path="/dashboard/xp" element={<ProtectedRoute><Layout><XPLevel /></Layout></ProtectedRoute>} />
+            <Route path="/dashboard/streaks" element={<ProtectedRoute><Layout><Streaks /></Layout></ProtectedRoute>} />
+            <Route path="/dashboard/activity" element={<ProtectedRoute><Layout><RecentActivity /></Layout></ProtectedRoute>} />
+            <Route path="/dashboard/continue" element={<ProtectedRoute><Layout><QuickContinue /></Layout></ProtectedRoute>} />
             <Route path="/subjects" element={<ProtectedRoute><Layout><Subjects /></Layout></ProtectedRoute>} />
             <Route path="/subjects/:id" element={<ProtectedRoute><Layout><SubjectDetail /></Layout></ProtectedRoute>} />
             
@@ -127,8 +137,8 @@ export default function App() {
 
             {/* DSA index route — redirect to first visualizer */}
             <Route path="/dsa" element={<Navigate to="/dsa/stack" replace />} />
-            <Route path="/dsa/sorting" element={<ProtectedRoute><Layout><StudentDashboard /></Layout></ProtectedRoute>} />
-            <Route path="/dsa/pathfinding" element={<ProtectedRoute><Layout><StudentDashboard /></Layout></ProtectedRoute>} />
+            <Route path="/dsa/sorting" element={<ProtectedRoute><Layout><Overview /></Layout></ProtectedRoute>} />
+            <Route path="/dsa/pathfinding" element={<ProtectedRoute><Layout><Overview /></Layout></ProtectedRoute>} />
 
             <Route path="/admin" element={<ProtectedRoute adminOnly><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
             <Route path="/admin/students" element={<ProtectedRoute adminOnly><Layout><AdminStudents /></Layout></ProtectedRoute>} />
