@@ -27,6 +27,8 @@ const QuizTake = lazy(() => import('./pages/QuizTake'));
 const Coding = lazy(() => import('./pages/Coding'));
 const AITutor = lazy(() => import('./pages/AITutor'));
 const Progress = lazy(() => import('./pages/Progress'));
+const Certificates = lazy(() => import('./pages/Certificates'));
+const StudyReport = lazy(() => import('./pages/StudyReport'));
 const MLAnalytics = lazy(() => import('./pages/MLAnalytics'));
 const Settings = lazy(() => import('./pages/Settings'));
 const AIProfile = lazy(() => import('./pages/AIProfile'));
@@ -123,6 +125,8 @@ export default function App() {
             <Route path="/dbms-lab" element={<ProtectedRoute><Layout><DBMSLab /></Layout></ProtectedRoute>} />
             <Route path="/ai-tutor" element={<ProtectedRoute><Layout><AITutor /></Layout></ProtectedRoute>} />
             <Route path="/progress" element={<ProtectedRoute><Layout><Progress /></Layout></ProtectedRoute>} />
+            <Route path="/certificates" element={<ProtectedRoute><Layout><Certificates /></Layout></ProtectedRoute>} />
+            <Route path="/study-report" element={<ProtectedRoute><Layout><StudyReport /></Layout></ProtectedRoute>} />
             <Route path="/ml-analytics" element={<ProtectedRoute><Layout><MLAnalytics /></Layout></ProtectedRoute>} />
             <Route path="/ai-profile" element={<ProtectedRoute><Layout><AIProfile /></Layout></ProtectedRoute>} />
             <Route path="/question-bank" element={<ProtectedRoute><Layout><QuestionBank /></Layout></ProtectedRoute>} />

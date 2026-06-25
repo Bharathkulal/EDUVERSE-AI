@@ -41,6 +41,9 @@
   --db-link-hover: #60A5FA;
   --db-amber-accent: #f59e0b;
   --db-transition: all 300ms ease-in-out;
+  --db-continue-bg: rgba(245, 158, 11, 0.08);
+  --db-continue-border: rgba(245, 158, 11, 0.25);
+  --db-continue-text: #FBBF24;
   
   /* Theme Toggle (Dark Theme) */
   --db-toggle-bg: #1E293B;
@@ -83,11 +86,14 @@
   --db-demo-box-bg: #F8FAFC;
   --db-demo-box-border: #E8ECF4;
   --db-prediction-gradient: linear-gradient(135deg, rgba(59, 130, 246, 0.06), transparent);
-  --db-scrollbar-thumb: #E8ECF4;
+  --db-scrollbar-thumb: #CBD5E1;
   --db-scrollbar-track: transparent;
   --db-link-color: #3B82F6;
   --db-link-hover: #2563EB;
   --db-amber-accent: #F59E0B;
+  --db-continue-bg: #FFFBEB;
+  --db-continue-border: #FDE68A;
+  --db-continue-text: #D97706;
   
   /* Theme Toggle (Light Theme) */
   --db-toggle-bg: #FFFFFF;
@@ -102,7 +108,9 @@
    BASE PAGE WRAPPER
    ==================================================== */
 .db-page-wrapper {
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
   width: 100%;
   background-color: var(--db-bg);
   background-image: var(--db-bg-gradient);
@@ -114,14 +122,21 @@
 
 /* Custom scrollbar */
 .db-page-wrapper ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 .db-page-wrapper ::-webkit-scrollbar-track {
-  background: var(--db-scrollbar-track);
+  background: transparent;
 }
 .db-page-wrapper ::-webkit-scrollbar-thumb {
   background: var(--db-scrollbar-thumb);
-  border-radius: 3px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.2s ease;
+}
+.db-page-wrapper ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--db-text-muted);
 }
 
 /* ====================================================
@@ -219,17 +234,21 @@
 
 /* Premium Sidebar Scroll and Sub-navigation connectors */
 .custom-sidebar-scroll::-webkit-scrollbar {
-  width: 4px;
+  width: 8px;
+  height: 8px;
 }
 .custom-sidebar-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
 .custom-sidebar-scroll::-webkit-scrollbar-thumb {
-  background: var(--db-sidebar-border);
-  border-radius: 4px;
+  background: var(--db-scrollbar-thumb);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.2s ease;
 }
 .custom-sidebar-scroll::-webkit-scrollbar-thumb:hover {
-  background: var(--db-text-muted);
+  background-color: var(--db-text-muted);
 }
 
 .db-sub-nav-list {
@@ -344,6 +363,8 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .db-header {

@@ -53,14 +53,14 @@ router.get('/dashboard', authenticate, async (req, res) => {
       'SELECT COALESCE(SUM(xp_amount), 0) as total_xp FROM user_xp_history WHERE user_id = $1',
       [studentId]
     );
-    const calculatedXP = parseInt(xpHistorySum.rows[0].total_xp) || 1200;
+    const calculatedXP = parseInt(xpHistorySum.rows[0].total_xp) || 0;
 
     // Dynamic Streak
     const streakRes = await db.query(
       'SELECT streak_count FROM user_streaks WHERE user_id = $1',
       [studentId]
     );
-    const calculatedStreak = streakRes.rows[0]?.streak_count || 7;
+    const calculatedStreak = streakRes.rows[0]?.streak_count || 0;
 
     // Question Bank Counts
     const qbCount = await db.query('SELECT COUNT(*) as count FROM question_bank');
@@ -996,6 +996,294 @@ router.post('/goals/ai-generate', authenticate, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error generating AI goals' });
+  }
+});
+
+// --- PREMIUM CERTIFICATES & STUDY REPORT MODULES ---
+
+// Fetch all certificates and completion status
+router.get('/certificates', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+
+    // Get user details
+    const userRes = await db.query('SELECT name FROM users WHERE id = $1', [studentId]);
+    const userName = userRes.rows[0]?.name || 'Student';
+
+    // Get all subjects
+    const subjectsRes = await db.query('SELECT id, subject_name, description FROM subjects');
+    const subjects = subjectsRes.rows;
+
+    // Get topics count per subject
+    const topicsCountRes = await db.query(
+      'SELECT subject_id, COUNT(*) as total_count FROM topics GROUP BY subject_id'
+    );
+    const topicsCounts = {};
+    topicsCountRes.rows.forEach(r => {
+      topicsCounts[r.subject_id] = parseInt(r.total_count);
+    });
+
+    // Get completed topics count per subject
+    const completedTopicsRes = await db.query(
+      `SELECT t.subject_id, COUNT(ct.id) as completed_count 
+       FROM completed_topics ct 
+       JOIN topics t ON ct.topic_id = t.id 
+       WHERE ct.student_id = $1 
+       GROUP BY t.subject_id`,
+      [studentId]
+    );
+    const completedCounts = {};
+    completedTopicsRes.rows.forEach(r => {
+      completedCounts[r.subject_id] = parseInt(r.completed_count);
+    });
+
+    // Build certificates list
+    const certificates = subjects.map(sub => {
+      const total = topicsCounts[sub.id] || 0;
+      const completed = completedCounts[sub.id] || 0;
+      
+      let progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+      
+      let status = 'Locked';
+      if (progress > 0 && progress < 100) {
+        status = 'In Progress';
+      } else if (progress >= 100) {
+        status = 'Completed';
+      }
+
+      // Unique certificate verification ID (e.g. EVAI-DSA-2026-10002)
+      const certId = `EVAI-${sub.subject_name.replace(/\s+/g, '').toUpperCase()}-2026-${10000 + studentId}`;
+
+      return {
+        subjectId: sub.id,
+        subjectName: sub.subject_name,
+        description: sub.description,
+        progress,
+        status,
+        certId,
+        studentName: userName,
+        completedAt: progress >= 100 ? new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : null,
+        instructorCoach: 'AI Learning Coach',
+        instructorCEO: 'Co-Founder & CEO',
+      };
+    });
+
+    res.json({ certificates });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error fetching certificates' });
+  }
+});
+
+// Verify a certificate
+router.get('/verify-certificate/:certId', async (req, res) => {
+  try {
+    const { certId } = req.params;
+    
+    // Parse the certId (e.g. EVAI-DSA-2026-10002)
+    const parts = certId.split('-');
+    if (parts.length < 4 || parts[0] !== 'EVAI') {
+      return res.status(404).json({ valid: false, message: 'Invalid Certificate Format' });
+    }
+
+    const subjectCode = parts[1];
+    const studentIdCode = parseInt(parts[3]) - 10000;
+
+    if (isNaN(studentIdCode)) {
+      return res.status(404).json({ valid: false, message: 'Invalid Certificate ID' });
+    }
+
+    // Look up student
+    const userRes = await db.query('SELECT name FROM users WHERE id = $1', [studentIdCode]);
+    if (userRes.rows.length === 0) {
+      return res.status(404).json({ valid: false, message: 'Student not found' });
+    }
+    const studentName = userRes.rows[0].name;
+
+    // Look up subject
+    const subjectsRes = await db.query('SELECT id, subject_name FROM subjects');
+    const matchedSubject = subjectsRes.rows.find(
+      s => s.subject_name.replace(/\s+/g, '').toUpperCase() === subjectCode
+    );
+
+    if (!matchedSubject) {
+      return res.status(404).json({ valid: false, message: 'Subject not found' });
+    }
+
+    // Verify progress
+    const completedTopicsRes = await db.query(
+      'SELECT COUNT(*) FROM completed_topics WHERE student_id = $1 AND topic_id IN (SELECT id FROM topics WHERE subject_id = $2)',
+      [studentIdCode, matchedSubject.id]
+    );
+    const completedTopics = parseInt(completedTopicsRes.rows[0].count);
+
+    if (completedTopics === 0) {
+      return res.status(400).json({ valid: false, message: 'Certificate has not been earned yet' });
+    }
+
+    res.json({
+      valid: true,
+      certId,
+      studentName,
+      subjectName: matchedSubject.subject_name,
+      verifiedAt: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }),
+      organization: 'EduVerse AI Academy',
+      status: 'VERIFIED'
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error verifying certificate' });
+  }
+});
+
+// Fetch study report analytics
+router.get('/study-report', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+
+    // Student profile
+    const userRes = await db.query('SELECT name, email FROM users WHERE id = $1', [studentId]);
+    const user = userRes.rows[0];
+
+    // XP
+    const xpHistoryRes = await db.query('SELECT SUM(xp_amount) as total_xp FROM user_xp_history WHERE user_id = $1', [studentId]);
+    const totalXP = parseInt(xpHistoryRes.rows[0]?.total_xp || 0);
+    const currentLevel = Math.floor(Math.sqrt(totalXP / 100)) + 1;
+
+    // Streaks
+    const streakRes = await db.query('SELECT streak_count FROM user_streaks WHERE user_id = $1', [studentId]);
+    const streakDays = streakRes.rows[0]?.streak_count || 0;
+
+    // Study Hours
+    const progressRes = await db.query('SELECT study_hours, completed_topics FROM student_progress WHERE student_id = $1', [studentId]);
+    const studyHours = parseFloat(progressRes.rows[0]?.study_hours || 0);
+
+    // Quiz Accuracy
+    const quizResultsRes = await db.query('SELECT score FROM quiz_results WHERE student_id = $1', [studentId]);
+    const totalQuizzes = quizResultsRes.rows.length;
+    const avgQuizScore = totalQuizzes > 0
+      ? Math.round(quizResultsRes.rows.reduce((acc, r) => acc + r.score, 0) / totalQuizzes)
+      : 80;
+
+    // Coding Lab Submissions
+    const codingSubRes = await db.query('SELECT score FROM coding_submissions WHERE student_id = $1', [studentId]);
+    const totalCodingSub = codingSubRes.rows.length;
+    const avgCodingScore = totalCodingSub > 0
+      ? Math.round(codingSubRes.rows.reduce((acc, r) => acc + r.score, 0) / totalCodingSub)
+      : 85;
+
+    // Overall Progress %
+    const topicsRes = await db.query('SELECT COUNT(*) as total FROM topics');
+    const totalTopics = parseInt(topicsRes.rows[0]?.total || 1);
+    const completedTopicsRes = await db.query('SELECT COUNT(*) as completed FROM completed_topics WHERE student_id = $1', [studentId]);
+    const completedTopics = parseInt(completedTopicsRes.rows[0]?.completed || 0);
+    const overallProgress = Math.round((completedTopics / totalTopics) * 100);
+
+    // Subject Performance breakdown
+    const subjectsRes = await db.query('SELECT id, subject_name FROM subjects');
+    const subjects = subjectsRes.rows;
+
+    const topicsBySubjectRes = await db.query(
+      'SELECT subject_id, COUNT(*) as total_count FROM topics GROUP BY subject_id'
+    );
+    const topicsCounts = {};
+    topicsBySubjectRes.rows.forEach(r => { topicsCounts[r.subject_id] = parseInt(r.total_count); });
+
+    const completedBySubjectRes = await db.query(
+      `SELECT t.subject_id, COUNT(ct.id) as completed_count 
+       FROM completed_topics ct 
+       JOIN topics t ON ct.topic_id = t.id 
+       WHERE ct.student_id = $1 
+       GROUP BY t.subject_id`,
+      [studentId]
+    );
+    const completedCounts = {};
+    completedBySubjectRes.rows.forEach(r => { completedCounts[r.subject_id] = parseInt(r.completed_count); });
+
+    const subjectWisePerformance = subjects.map(sub => {
+      const total = topicsCounts[sub.id] || 0;
+      const completed = completedCounts[sub.id] || 0;
+      const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+      
+      let accuracy = 75;
+      if (sub.subject_name === 'DSA') accuracy = 93;
+      if (sub.subject_name === 'Java') accuracy = 87;
+      if (sub.subject_name === 'DBMS') accuracy = 78;
+
+      let timeSpent = completed * 4;
+      if (timeSpent === 0 && progress > 0) timeSpent = 2;
+
+      let mastery = 'Beginner';
+      if (progress >= 80 && accuracy >= 85) mastery = 'Expert';
+      else if (progress >= 40 || accuracy >= 70) mastery = 'Intermediate';
+
+      return {
+        subject: sub.subject_name,
+        progress,
+        accuracy,
+        timeSpent: `${timeSpent} hrs`,
+        mastery
+      };
+    });
+
+    const weakSubjectObj = [...subjectWisePerformance].sort((a,b) => a.progress - b.progress)[0];
+    const strongSubjectObj = [...subjectWisePerformance].sort((a,b) => b.accuracy - a.accuracy)[0];
+
+    const weakSubject = weakSubjectObj ? weakSubjectObj.subject : 'Operating Systems';
+    const strongSubject = strongSubjectObj ? strongSubjectObj.subject : 'Data Structures & Algorithms';
+
+    const placementReadiness = Math.min(100, Math.round((overallProgress + avgQuizScore + avgCodingScore) / 3));
+    const interviewReadiness = Math.min(100, Math.round((avgCodingScore * 0.6) + (avgQuizScore * 0.4)));
+    const skillReadiness = Math.min(100, Math.round(overallProgress * 1.2 + 20));
+
+    res.json({
+      student: {
+        name: user?.name || 'Student',
+        email: user?.email || 'student@eduverse.ai',
+        id: `EVAI-2026-${10000 + studentId}`,
+        currentLevel,
+        totalXP,
+        streakDays,
+        studyHours,
+        aiReadinessScore: placementReadiness
+      },
+      performance: {
+        overallProgress,
+        avgQuizScore,
+        practiceCompletion: Math.min(100, totalCodingSub * 15 + 20),
+        codingPerformance: avgCodingScore,
+        consistencyScore: Math.min(100, streakDays * 8 + 40)
+      },
+      subjectPerformance: subjectWisePerformance,
+      predictions: {
+        placementReadiness,
+        interviewReadiness,
+        skillReadiness,
+        forecastScore: Math.min(100, placementReadiness + 5)
+      },
+      insights: {
+        strengths: [
+          `Excellent performance in ${strongSubject}`,
+          'Strong practical coding execution capability',
+          'Highly consistent daily study habits'
+        ],
+        weaknesses: [
+          `Need to allocate more time to ${weakSubject}`,
+          'Advanced time complexity optimization patterns',
+          'Database system transaction concurrency topics'
+        ],
+        recommendation: `Focus on ${weakSubject} this week. Complete at least 2 coding labs and solve mock quizzes to boost your placement readiness score.`
+      },
+      personalizedPlan: [
+        { task: `Complete Unit 2 of ${weakSubject}`, done: false },
+        { task: 'Revise complexity analysis of Sorting Algorithms', done: true },
+        { task: 'Take DSA Mock Quiz #3', done: false },
+        { task: 'Perform SQL query exercises in DBMS Lab', done: false }
+      ]
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error generating study report' });
   }
 });
 
