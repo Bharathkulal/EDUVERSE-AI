@@ -151,7 +151,7 @@ export default function SubjectDetail() {
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px' }}>{subject.subject_name}</h1>
           <p style={{ color: '#64748B', margin: 0, fontSize: '0.9rem' }}>{subject.description}</p>
         </div>
-        <JavaLab />
+        <JavaLab subjectName={subject.subject_name} />
       </div>
     );
   }

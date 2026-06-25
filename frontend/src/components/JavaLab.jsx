@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, Play, Code, CheckCircle, HelpCircle, FileText,
@@ -317,8 +318,18 @@ const JAVA_MODULES = [
   }
 ];
 
-export default function JavaLab() {
+export default function JavaLab({ subjectName }) {
   const [selectedModule, setSelectedModule] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (subjectName === 'Advanced Java') {
+      setSelectedModule({ id: 99, title: 'Advanced Java' });
+    } else {
+      setSelectedModule(null);
+    }
+  }, [subjectName]);
+
   const [activeTab, setActiveTab] = useState('learn'); // 'learn', 'visualize', 'code', 'practice', 'quiz', 'notes'
   const [selectedTopicIdx, setSelectedTopicIdx] = useState(0);
   const [userCode, setUserCode] = useState(`public class Main {\n  public static void main(String[] args) {\n    System.out.println("Hello, EduVerse!");\n  }\n}`);
@@ -698,7 +709,7 @@ export default function JavaLab() {
         ) : (
           /* MODULE DETAIL VIEW */
           selectedModule.id === 99 ? (
-            <AdvancedJavaLMS selectedModule={selectedModule} setSelectedModule={setSelectedModule} />
+            <AdvancedJavaLMS selectedModule={selectedModule} setSelectedModule={setSelectedModule} subjectName={subjectName} />
           ) : selectedModule.id === 1 ? (
             <motion.div
               key="guided-intro"
@@ -1962,13 +1973,385 @@ public class InputDemo {
 }
 
 // ═══════════════════════════════════════════════════════════
+// THEORY-FIRST CURRICULUM WORKSPACE MODULE COMPONENT (15 STEPS)
+// ═══════════════════════════════════════════════════════════
+function TheoryFirstModule({
+  title,
+  icon: Icon,
+  introduction,
+  theoryContent,
+  aiExplanation,
+  useCases,
+  architectureDiagram,
+  workflowDiagram,
+  steps,
+  interviewQuestions,
+  importantNotes,
+  visualization,
+  simulator,
+  practiceQuestions,
+  codingExercise,
+  miniProject,
+  quiz
+}) {
+  const [expandedQA, setExpandedQA] = useState({});
+  const [practiceAnswers, setPracticeAnswers] = useState({});
+  const [practiceFeedback, setPracticeFeedback] = useState({});
+  const [code, setCode] = useState(codingExercise?.boilerplate || '');
+  const [codeFeedback, setCodeFeedback] = useState('');
+  const [quizAnswers, setQuizAnswers] = useState({});
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [quizScore, setQuizScore] = useState(null);
+
+  const toggleQA = (idx) => {
+    setExpandedQA(prev => ({ ...prev, [idx]: !prev[idx] }));
+  };
+
+  const handlePracticeSubmit = (idx, selectedOpt) => {
+    const isCorrect = selectedOpt === practiceQuestions[idx].correct;
+    setPracticeAnswers(prev => ({ ...prev, [idx]: selectedOpt }));
+    setPracticeFeedback(prev => ({
+      ...prev,
+      [idx]: {
+        isCorrect,
+        explanation: practiceQuestions[idx].explanation
+      }
+    }));
+    if (isCorrect) {
+      toast.success('Correct Answer! +10 XP');
+    } else {
+      toast.error('Incorrect. Read the explanation.');
+    }
+  };
+
+  const checkCode = () => {
+    if (!codingExercise) return;
+    const testRegex = new RegExp(codingExercise.solutionRegex, 'i');
+    if (testRegex.test(code)) {
+      setCodeFeedback('✓ Code matches required pattern! Compilation successful.');
+      toast.success('Coding exercise solved! +30 XP');
+    } else {
+      setCodeFeedback('✗ Solution check failed. Please ensure your implementation matches instructions.');
+      toast.error('Check failed. Try again.');
+    }
+  };
+
+  const handleQuizSubmit = () => {
+    if (!quiz) return;
+    let correctCount = 0;
+    quiz.forEach((q, idx) => {
+      if (quizAnswers[idx] === q.correct) correctCount++;
+    });
+    const score = Math.round((correctCount / quiz.length) * 100);
+    setQuizScore(score);
+    setQuizSubmitted(true);
+    if (score >= 70) {
+      toast.success(`Quiz passed with ${score}%! +50 XP`);
+    } else {
+      toast.error(`Score: ${score}%. Minimum 70% required to pass.`);
+    }
+  };
+
+  return (
+    <div className="space-y-12 text-left">
+      {/* 1. INTRODUCTION */}
+      <section className="card-glass p-6 rounded-[28px] border border-white/10 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-2xl">
+            <Icon size={24} />
+          </div>
+          <div>
+            <span className="text-[10px] uppercase tracking-widest font-bold text-purple-400">Step 1 of 15 • Introduction</span>
+            <h2 className="text-2xl font-extrabold text-white">{title} Overview</h2>
+          </div>
+        </div>
+        <p className="text-slate-300 text-sm leading-relaxed">{introduction}</p>
+      </section>
+
+      {/* 2. THEORY EXPLANATION */}
+      <section className="card-glass p-6 rounded-[28px] border border-white/10 space-y-4">
+        <span className="text-[10px] uppercase tracking-widest font-bold text-blue-400">Step 2 of 15 • Advanced Theory Deep-Dive</span>
+        <div className="prose prose-invert text-slate-300 text-sm leading-relaxed space-y-4 font-normal">
+          {theoryContent}
+        </div>
+      </section>
+
+      {/* 3. AI SIMPLIFIED EXPLANATION */}
+      <section className="p-6 rounded-[24px] bg-gradient-to-r from-violet-600/10 via-indigo-600/10 to-transparent border border-violet-500/20 space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🤖</span>
+          <span className="text-[10px] uppercase tracking-widest font-bold text-violet-400">Step 3 of 15 • AI ELI5 Simplified Explanation</span>
+        </div>
+        <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-xs italic text-slate-300 leading-normal">
+          {aiExplanation}
+        </div>
+      </section>
+
+      {/* 4. REAL WORLD USE CASES */}
+      <section className="card-glass p-6 rounded-[28px] border border-white/10 space-y-4">
+        <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-400">Step 4 of 15 • Real-World Industry Application</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {useCases.map((uc, i) => (
+            <div key={i} className="p-4 bg-white/5 border border-white/5 rounded-2xl space-y-2">
+              <strong className="text-sm text-emerald-400 block font-bold">🚀 {uc.title}</strong>
+              <p className="text-xs text-slate-400 leading-relaxed">{uc.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 5 & 6. DIAGRAMS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section className="card-glass p-6 rounded-[28px] border border-white/10 space-y-4">
+          <span className="text-[10px] uppercase tracking-widest font-bold text-amber-400">Step 5 of 15 • System Architecture Diagram</span>
+          <div className="py-4 bg-slate-950 border border-white/5 rounded-xl flex items-center justify-center">
+            {architectureDiagram}
+          </div>
+        </section>
+
+        <section className="card-glass p-6 rounded-[28px] border border-white/10 space-y-4">
+          <span className="text-[10px] uppercase tracking-widest font-bold text-indigo-400">Step 6 of 15 • Request/Response Workflow Diagram</span>
+          <div className="py-4 bg-slate-950 border border-white/5 rounded-xl flex items-center justify-center">
+            {workflowDiagram}
+          </div>
+        </section>
+      </div>
+
+      {/* 7. STEP-BY-STEP CONCEPTS */}
+      <section className="card-glass p-6 rounded-[28px] border border-white/10 space-y-4">
+        <span className="text-[10px] uppercase tracking-widest font-bold text-purple-400">Step 7 of 15 • Step-by-Step Concepts</span>
+        <div className="space-y-3">
+          {steps.map((st, i) => (
+            <div key={i} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
+              <div>
+                <strong className="text-sm text-slate-200 block mb-1 font-semibold">{st.title}</strong>
+                <p className="text-xs text-slate-400 leading-normal">{st.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 8. INTERVIEW QUESTIONS */}
+      <section className="card-glass p-6 rounded-[28px] border border-white/10 space-y-4">
+        <span className="text-[10px] uppercase tracking-widest font-bold text-blue-400">Step 8 of 15 • Top Interview Prep Q&A</span>
+        <div className="space-y-3">
+          {interviewQuestions.map((q, i) => {
+            const isOpen = !!expandedQA[i];
+            return (
+              <div key={i} className="border border-white/10 rounded-2xl overflow-hidden bg-white/5">
+                <button
+                  onClick={() => toggleQA(i)}
+                  className="w-full text-left p-4 flex justify-between items-center text-xs font-bold text-white hover:bg-white/5 transition"
+                >
+                  <span>Q{i + 1}: {q.q}</span>
+                  <span className="text-slate-400">{isOpen ? '▼' : '▶'}</span>
+                </button>
+                {isOpen && (
+                  <div className="p-4 bg-black/35 border-t border-white/10 text-xs text-slate-300 leading-relaxed text-left">
+                    {q.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 9. IMPORTANT NOTES */}
+      <section className="p-6 rounded-[24px] bg-red-500/5 border border-red-500/20 space-y-3">
+        <span className="text-[10px] uppercase tracking-widest font-bold text-red-400">Step 9 of 15 • Important Architectural Notes</span>
+        <ul className="list-disc pl-5 text-xs text-slate-300 space-y-2 leading-relaxed">
+          {importantNotes.map((note, i) => (
+            <li key={i}>{note}</li>
+          ))}
+        </ul>
+      </section>
+
+      {/* 10. INTERACTIVE VISUALIZATION */}
+      <section className="card-glass p-6 rounded-[28px] border border-white/10 space-y-4">
+        <span className="text-[10px] uppercase tracking-widest font-bold text-amber-400">Step 10 of 15 • Interactive Memory/Runtime Visualization</span>
+        <div className="p-4 bg-slate-900 border border-white/5 rounded-2xl">
+          {visualization}
+        </div>
+      </section>
+
+      {/* 11. LIVE SIMULATOR */}
+      <section className="card-glass p-6 rounded-[28px] border border-white/10 space-y-4">
+        <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-400">Step 11 of 15 • Live Interactive Simulator Playground</span>
+        <div className="p-4 bg-slate-900 border border-white/5 rounded-2xl">
+          {simulator}
+        </div>
+      </section>
+
+      {/* 12. PRACTICE QUESTIONS */}
+      <section className="card-glass p-6 rounded-[28px] border border-white/10 space-y-4">
+        <span className="text-[10px] uppercase tracking-widest font-bold text-indigo-400">Step 12 of 15 • Daily Practice Challenge Checks</span>
+        <div className="space-y-4">
+          {practiceQuestions.map((pq, idx) => {
+            const feedback = practiceFeedback[idx];
+            const selected = practiceAnswers[idx];
+            return (
+              <div key={idx} className="p-4 bg-white/5 border border-white/5 rounded-2xl space-y-3">
+                <span className="text-xs font-bold text-slate-300 block">Question {idx + 1}: {pq.q}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {pq.options.map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => handlePracticeSubmit(idx, opt)}
+                      className={`p-3 border rounded-xl text-left text-xs transition-all cursor-pointer ${
+                        selected === opt 
+                          ? (opt === pq.correct ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-bold' : 'border-red-500 bg-red-500/10 text-red-400')
+                          : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+                {feedback && (
+                  <div className="p-3 bg-black/45 rounded-xl border border-white/5 text-[11px] text-slate-300 leading-normal">
+                    <span className={`font-bold block mb-1 ${feedback.isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {feedback.isCorrect ? '✓ Correct Answer!' : '✗ Try again!'}
+                    </span>
+                    {feedback.explanation}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 13. CODING EXERCISE */}
+      {codingExercise && (
+        <section className="card-glass p-6 rounded-[28px] border border-white/10 space-y-4">
+          <span className="text-[10px] uppercase tracking-widest font-bold text-blue-400">Step 13 of 15 • Sandbox Coding Exercise</span>
+          <div className="p-4 bg-white/5 border border-white/5 rounded-2xl space-y-3">
+            <span className="text-xs font-bold text-slate-300 block">Task Instructions</span>
+            <p className="text-xs text-slate-400 leading-relaxed">{codingExercise.instructions}</p>
+            
+            <textarea
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              className="w-full h-44 bg-slate-950 text-emerald-400 font-mono text-xs p-3 rounded-xl border border-white/10 outline-none focus:border-blue-500 resize-none"
+            />
+            
+            <div className="flex gap-2">
+              <button 
+                onClick={checkCode}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+              >
+                Compile & Check Solution
+              </button>
+              <button 
+                onClick={() => setCode(codingExercise.boilerplate)}
+                className="px-3 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 text-xs font-bold rounded-xl cursor-pointer"
+              >
+                Reset Boilerplate
+              </button>
+            </div>
+            {codeFeedback && (
+              <pre className={`p-3 rounded-xl text-xs font-mono leading-relaxed overflow-x-auto ${
+                codeFeedback.startsWith('✓') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
+              }`}>
+                {codeFeedback}
+              </pre>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* 14. MINI PROJECT */}
+      {miniProject && (
+        <section className="card-glass p-6 rounded-[28px] border border-white/10 space-y-4">
+          <span className="text-[10px] uppercase tracking-widest font-bold text-amber-400">Step 14 of 15 • Portfolio Mini Project</span>
+          <div className="p-4 bg-white/5 border border-white/5 rounded-2xl space-y-3">
+            <h4 className="text-sm font-bold text-white">{miniProject.title}</h4>
+            <p className="text-xs text-slate-400 leading-relaxed">{miniProject.description}</p>
+            <button
+              onClick={() => {
+                toast.success('Mini project template copied to workspace clipboard.');
+              }}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+            >
+              Initialize Project Workspace Template
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* 15. MODULE QUIZ */}
+      {quiz && (
+        <section className="card-glass p-6 rounded-[28px] border border-white/10 space-y-4">
+          <span className="text-[10px] uppercase tracking-widest font-bold text-purple-400">Step 15 of 15 • Final Module Evaluation Quiz</span>
+          <div className="p-4 bg-white/5 border border-white/5 rounded-2xl space-y-4">
+            {quiz.map((q, idx) => (
+              <div key={idx} className="space-y-2 text-left">
+                <span className="text-xs font-bold text-slate-300 block">{idx + 1}. {q.q}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {q.options.map((opt) => {
+                    const isSelected = quizAnswers[idx] === opt;
+                    return (
+                      <button
+                        key={opt}
+                        disabled={quizSubmitted}
+                        onClick={() => setQuizAnswers(prev => ({ ...prev, [idx]: opt }))}
+                        className={`p-3 border rounded-xl text-left text-xs transition-all cursor-pointer ${
+                          isSelected 
+                            ? 'border-purple-500 bg-purple-500/10 text-purple-400 font-bold'
+                            : 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {!quizSubmitted ? (
+              <button
+                onClick={handleQuizSubmit}
+                className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+              >
+                Submit Answers for Grading
+              </button>
+            ) : (
+              <div className="p-4 bg-slate-900 border border-white/10 rounded-2xl space-y-2 text-center">
+                <span className="text-lg font-bold text-white block">Grading Complete</span>
+                <span className={`text-xl font-black ${quizScore >= 70 ? 'text-emerald-400' : 'text-red-400'}`}>{quizScore}% Score</span>
+                <button
+                  onClick={() => {
+                    setQuizSubmitted(false);
+                    setQuizAnswers({});
+                    setQuizScore(null);
+                  }}
+                  className="mt-2 px-4 py-1.5 bg-white/5 border border-white/10 text-slate-300 text-xs rounded-xl cursor-pointer hover:bg-white/10"
+                >
+                  Retake Evaluation Quiz
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
 // ADVANCED JAVA LEARNING MANAGEMENT SYSTEM (LMS) VIEW
 // ═══════════════════════════════════════════════════════════
-function AdvancedJavaLMS({ selectedModule, setSelectedModule }) {
+function AdvancedJavaLMS({ selectedModule, setSelectedModule, subjectName }) {
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [modulesList, setModulesList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activePanel, setActivePanel] = useState('dashboard');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Interactive Playgrounds State
   const [jdbcUrl, setJdbcUrl] = useState('jdbc:postgresql://localhost:5432/eduverse');
@@ -2153,430 +2536,1149 @@ function AdvancedJavaLMS({ selectedModule, setSelectedModule }) {
 
   return (
     <div className="java-learning-path max-w-[1440px] mx-auto p-4 sm:p-8 space-y-6 text-slate-100 font-sans text-left">
-      
-      {/* HEADER BAR */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-white/10 pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setSelectedModule(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition text-slate-400 hover:text-white cursor-pointer">
-              <Compass className="transform rotate-180" size={16} />
-            </button>
-            <h1 className="text-3xl font-extrabold text-white">Advanced Java</h1>
+      {activePanel === 'dashboard' ? (
+        <div className="space-y-6">
+          {/* HEADER BAR */}
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => navigate('/subjects')} 
+                  className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition text-slate-400 hover:text-white cursor-pointer"
+                >
+                  <Compass className="transform rotate-180" size={16} />
+                </button>
+                <h1 className="text-3xl font-extrabold text-white">Advanced Java</h1>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">Enterprise Backend Development & Java Web Technologies</p>
+            </div>
           </div>
-          <p className="text-xs text-slate-400 mt-1">Enterprise Backend Development & Java Web Technologies</p>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-4 bg-white/5 border border-white/10 px-5 py-3 rounded-2xl">
-          <div className="text-center">
-            <span className="text-[10px] text-slate-400 block uppercase font-bold">XP Earned</span>
-            <strong className="text-sm font-black text-blue-400">{progress.current_level * 1000 + 450} XP</strong>
+          {/* STAT CARDS ROW */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Card 1: Total XP */}
+            <div className="bg-white/[0.02] border border-white/10 p-6 rounded-3xl backdrop-blur-md flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                <Sparkles size={20} />
+              </div>
+              <div>
+                <strong className="text-2xl font-black text-white">{progress.current_level * 1000 + 450}</strong>
+                <span className="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mt-0.5">Total XP</span>
+              </div>
+            </div>
+
+            {/* Card 2: Streak */}
+            <div className="bg-white/[0.02] border border-white/10 p-6 rounded-3xl backdrop-blur-md flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-400 flex items-center justify-center">
+                <Flame size={20} fill="currentColor" />
+              </div>
+              <div>
+                <strong className="text-2xl font-black text-white">{progress.learning_streak} Days</strong>
+                <span className="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mt-0.5">Streak</span>
+              </div>
+            </div>
+
+            {/* Card 3: Modules Completed */}
+            <div className="bg-white/[0.02] border border-white/10 p-6 rounded-3xl backdrop-blur-md flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                <Trophy size={20} />
+              </div>
+              <div>
+                <strong className="text-2xl font-black text-white">{progress.completed_topics || 0}</strong>
+                <span className="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mt-0.5">Modules Completed</span>
+              </div>
+            </div>
           </div>
-          <div className="w-px h-8 bg-white/10" />
-          <div className="text-center">
-            <span className="text-[10px] text-slate-400 block uppercase font-bold">Level</span>
-            <strong className="text-sm font-black text-purple-400">Lv.{progress.current_level}</strong>
+
+          {/* CONTROL / SEARCH ROW */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 border-t border-white/5">
+            <p className="text-xs text-slate-400 leading-relaxed text-left">
+              Choose a module to begin. Visualize concepts, run code, and simulate execution step-by-step.
+            </p>
+            <div className="relative min-w-[280px]">
+              <input 
+                type="text" 
+                placeholder="Search Advanced Java modules..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2.5 bg-slate-900/60 border border-white/10 rounded-2xl text-xs text-white placeholder-slate-500 outline-none focus:border-purple-500 transition-colors"
+              />
+            </div>
           </div>
-          <div className="w-px h-8 bg-white/10" />
-          <div className="text-center">
-            <span className="text-[10px] text-slate-400 block uppercase font-bold">Streak</span>
-            <strong className="text-sm font-black text-orange-400 flex items-center gap-1">
-              {progress.learning_streak} Days <Flame size={12} fill="orange" />
-            </strong>
+
+          {/* CARDS GRID */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
+            {[
+              { id: 'jdbc', label: 'JDBC Database Connectivity', desc: 'Connect Java apps to SQL databases, manage drivers, construct statements, and read ResultSet cursors.', icon: Database, accent: '#3B82F6', index: 1 },
+              { id: 'servlets', label: 'Java Servlets Lifecycle', desc: 'Process HTTP client requests on the web server side, and manage request-response handler hooks.', icon: Layers, accent: '#10B981', index: 2 },
+              { id: 'jsp', label: 'Java Server Pages (JSP)', desc: 'Design template dynamic HTML layouts, bind data values, and build interactive container views.', icon: FileText, accent: '#8B5CF6', index: 3 },
+              { id: 'session', label: 'Session Management', desc: 'Identify stateful clients across stateless HTTP requests using Cookies and HTTPSession memory bindings.', icon: ShieldAlert, accent: '#EF4444', index: 4 },
+              { id: 'hibernate', label: 'Hibernate ORM Framework', desc: 'Map Java object entities to relational database tables, and configure dynamic query mappings.', icon: RefreshCw, accent: '#F59E0B', index: 5 },
+              { id: 'spring-core', label: 'Spring Core & IoC', desc: 'Resolve object dependencies dynamically via Dependency Injection and configure Spring bean structures.', icon: Zap, accent: '#3B82F6', index: 6 },
+              { id: 'spring-mvc', label: 'Spring MVC Routing', desc: 'Dispatch HTTP requests to annotation-driven handler controllers and configure DispatcherServlets.', icon: Compass, accent: '#06B6D4', index: 7 },
+              { id: 'spring-boot', label: 'Spring Boot Orchestrator', desc: 'Build zero-XML standalone enterprise services utilizing auto-configurations and embedded Tomcat runtimes.', icon: Award, accent: '#14B8A6', index: 8 },
+              { id: 'rest-api', label: 'REST APIs Services', desc: 'Design decoupled client-server web APIs utilizing path variables, query params, and JSON payloads.', icon: Terminal, accent: '#10B981', index: 9 },
+              { id: 'spring-sec', label: 'Spring Security Chains', desc: 'Intercept incoming network routes using security filters and enforce method-level role authorization.', icon: ShieldAlert, accent: '#8B5CF6', index: 10 },
+              { id: 'maven-gradle', label: 'Maven & Gradle Builds', desc: 'Automate compiling, packaging, testing, and dependency resolution of backend Java applications.', icon: Flame, accent: '#F97316', index: 11 },
+              { id: 'microservices', label: 'Microservices & Discovery', desc: 'Deploy decentralized services, configure API Gateway routing, and register heartbeats with Eureka.', icon: Compass, accent: '#6366F1', index: 12 },
+              { id: 'coding-lab', label: 'JVM Coding Lab Sandbox', desc: 'Compile and run advanced Java source code inside the terminal compiler workspace sandbox.', icon: PlayCircle, accent: '#38BDF8', index: 13, isTool: true },
+              { id: 'practice', label: 'Curriculum Practice', desc: 'Solve multiple-choice challenges, view automated scoring, and study code explanations.', icon: Sparkles, accent: '#EC4899', index: 14, isTool: true },
+              { id: 'mentor', label: 'AI Study Mentor Guidance', desc: 'Engage with custom AI study models for feedback, code verification, and real interview preparation.', icon: BrainCircuit, accent: '#A855F7', index: 15, isTool: true },
+              { id: 'analytics', label: 'Performance Analytics', desc: 'Analyze dynamic progress graphs, strength distributions, and weak points tracking stats.', icon: TrendingUp, accent: '#10B981', index: 16, isTool: true },
+              { id: 'achievements', label: 'Badges & Streak Rewards', desc: 'Earn badges, accumulate XP credits, track study streaks, and unlock certification steps.', icon: Trophy, accent: '#F59E0B', index: 17, isTool: true },
+              { id: 'certification', label: 'Advanced Java Certificate', desc: 'Verify complete progress, claim credentials, and download export-ready PDF certificates.', icon: Award, accent: '#E11D48', index: 18, isTool: true }
+            ]
+              .filter(card => 
+                card.label.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                card.desc.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map((card) => {
+                const CardIcon = card.icon;
+                const completedCount = progress.completed_topics || 0;
+                
+                // Determine module status
+                let percent = 0;
+                let status = 'NOT STARTED';
+                let badgeClass = 'bg-slate-500/10 text-slate-500 border border-slate-500/20';
+                
+                if (card.isTool) {
+                  status = 'ACTIVE';
+                  percent = 100;
+                  badgeClass = 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
+                } else {
+                  if (completedCount >= card.index) {
+                    percent = 100;
+                    status = 'COMPLETED';
+                    badgeClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                  } else if (completedCount + 1 === card.index) {
+                    percent = 33;
+                    status = 'ACTIVE';
+                    badgeClass = 'bg-pink-500/10 text-pink-400 border border-pink-500/20';
+                  }
+                }
+
+                return (
+                  <div
+                    key={card.id}
+                    onClick={() => setActivePanel(card.id)}
+                    className="bg-white/5 border border-white/10 rounded-[28px] hover:bg-white/10 transition-all duration-300 p-6 flex flex-col justify-between cursor-pointer text-left hover:scale-[1.01] hover:border-white/20 group relative overflow-hidden"
+                  >
+                    {/* Top Row with Icon, Progress Ring, and Badge */}
+                    <div className="flex justify-between items-center w-full mb-6">
+                      <div 
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                        style={{ background: `${card.accent}12`, color: card.accent }}
+                      >
+                        <CardIcon size={20} />
+                      </div>
+
+                      {/* Small Progress Ring */}
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-8 h-8 flex items-center justify-center">
+                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <circle className="text-white/10" strokeWidth="3" stroke="currentColor" fill="transparent" r="16" cx="18" cy="18" />
+                            <circle 
+                              style={{ stroke: card.accent }}
+                              strokeWidth="3" 
+                              strokeDasharray="100" 
+                              strokeDashoffset={100 - percent} 
+                              strokeLinecap="round" 
+                              stroke="currentColor" 
+                              fill="transparent" 
+                              r="16" 
+                              cx="18" 
+                              cy="18" 
+                            />
+                          </svg>
+                          <span className="absolute text-[8px] font-black text-slate-300">{percent}%</span>
+                        </div>
+
+                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${badgeClass}`}>
+                          {status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Card Title & Desc */}
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors">
+                        {card.label}
+                      </h3>
+                      <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                        {card.desc}
+                      </p>
+                    </div>
+
+                    {/* Action footer */}
+                    <div className="flex items-center justify-between mt-6 pt-3 border-t border-white/5 text-[10px] text-slate-500 font-bold uppercase">
+                      <span>Course Module</span>
+                      <span className="text-slate-300 group-hover:text-purple-400 transition-colors">Begin Study →</span>
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         </div>
-      </div>
-
-      {/* TOP DASHBOARD OVERVIEW */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="bg-white/[0.02] border border-white/10 p-5 rounded-3xl backdrop-blur-md flex items-center gap-4">
-          <div className="relative w-20 h-20 flex-shrink-0 flex items-center justify-center">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-              <circle className="text-slate-800" strokeWidth="6" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" />
-              <circle className="text-purple-500" strokeWidth="8" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * (progress.completed_topics * 10)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" />
-            </svg>
-            <strong className="absolute text-sm font-black">{Math.round((progress.completed_topics / 7) * 100)}%</strong>
-          </div>
-          <div>
-            <h4 className="text-xs font-bold text-slate-400">Course Completion</h4>
-            <span className="text-[10px] text-slate-500 block mt-1">Syllabus Progress</span>
-            <div className="text-sm font-bold text-white mt-1">{progress.completed_topics} / 7 Modules Completed</div>
-          </div>
-        </div>
-
-        <div className="bg-white/[0.02] border border-white/10 p-5 rounded-3xl backdrop-blur-md">
-          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Today's Daily Goal</h4>
-          <strong className="text-sm text-white block mt-2">Complete {dashboardData?.nextTopic?.title || 'JDBC Operations'}</strong>
-          <span className="text-[10px] text-emerald-400 block mt-1.5 font-bold">Reward: +100 XP Points</span>
-        </div>
-
-        <div className="bg-white/[0.02] border border-white/10 p-5 rounded-3xl backdrop-blur-md">
-          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">AI Placement Readiness</h4>
-          <div className="flex items-center gap-2 mt-2">
-            <strong className="text-2xl font-black text-blue-400">92%</strong>
-            <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/30 rounded text-[9px] text-blue-400 font-bold uppercase">Ready</span>
-          </div>
-          <span className="text-[10px] text-slate-500 block mt-1">Consistency health score is highly optimal.</span>
-        </div>
-
-        <div className="bg-white/[0.02] border border-white/10 p-5 rounded-3xl backdrop-blur-md">
-          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Next Recommended Module</h4>
-          <strong className="text-sm text-white block mt-2">{dashboardData?.nextTopic?.module_title || 'JDBC Module'}</strong>
-          <span className="text-[10px] text-slate-500 block mt-1">Est. Completion: July 5, 2026</span>
-        </div>
-      </div>
-
-      {/* CORE WORKSPACE PANELS */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* SIDEBAR TABS */}
-        <div className="lg:col-span-3 bg-white/[0.02] border border-white/10 p-4 rounded-3xl backdrop-blur-md space-y-1">
-          <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-2 mb-3">LMS Syllabus</h5>
-          {[
-            { id: 'dashboard', label: 'Overview Dashboard', icon: Compass },
-            { id: 'jdbc', label: 'JDBC Module', icon: Database },
-            { id: 'servlets', label: 'Servlets Web Module', icon: Layers },
-            { id: 'jsp', label: 'JSP Pages', icon: FileText },
-            { id: 'session', label: 'Session Management', icon: ShieldAlert },
-            { id: 'hibernate', label: 'Hibernate ORM', icon: RefreshCw },
-            { id: 'spring', label: 'Spring Boot Framework', icon: Zap },
-            { id: 'rest-api', label: 'REST API Tester', icon: Terminal },
-            { id: 'projects', label: 'Enterprise Projects', icon: Code },
-            { id: 'practice', label: 'Practice Quiz Hub', icon: Sparkles },
-            { id: 'coding-lab', label: 'Online Compiler', icon: PlayCircle },
-            { id: 'mentor', label: 'AI Mentor System', icon: BrainCircuit },
-            { id: 'analytics', label: 'Analytics Panel', icon: TrendingUp },
-            { id: 'achievements', label: 'Achievements List', icon: Trophy }
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const active = activePanel === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActivePanel(tab.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition border cursor-pointer ${
-                  active 
-                    ? 'bg-purple-600/10 border-purple-500 text-purple-400 font-bold' 
-                    : 'border-transparent text-slate-400 hover:bg-white/5 hover:text-white'
-                }`}
+      ) : (
+        <div className="space-y-6">
+          {/* FULL SCREEN WORKSPACE VIEW HEADER WITH BACK BUTTON */}
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-white/10 pb-4">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setActivePanel('dashboard')}
+                className="flex items-center gap-1.5 px-3 py-2 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer"
               >
-                <Icon size={14} />
-                <span>{tab.label}</span>
+                ← Back to Dashboard
               </button>
-            );
-          })}
-        </div>
+              <div className="text-left">
+                <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider">Advanced Java Developer Track</span>
+                <h2 className="text-xl font-extrabold text-white mt-0.5">Workspace Lab</h2>
+              </div>
+            </div>
+          </div>
 
-        {/* WORKSPACE DETAIL PANEL */}
-        <div className="lg:col-span-9 bg-white/[0.02] border border-white/10 p-6 rounded-3xl backdrop-blur-md space-y-6">
+          {/* WORKSPACE CONTENT FULL WIDTH */}
+          <div className="w-full">
           
           {/* DASHBOARD TAB */}
           {activePanel === 'dashboard' && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">Course Overview</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Welcome to Advanced Java Workspace. This module bridges core object-oriented structures with enterprise backend development, preparing you to deploy high-throughput database systems and REST APIs.
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
-                  <span className="text-xs font-bold text-blue-400">💡 AI Study Recommendation</span>
-                  <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-                    {dashboardData?.aiRecommendations?.recommendations}
+            <div className="space-y-6 text-left">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4">
+                <div className="text-left">
+                  <h3 className="text-2xl font-black text-white">Advanced Java LMS Dashboard</h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Bridge core Java fundamentals with enterprise backend architectures, persistent databases, and secure REST APIs.
                   </p>
-                  <span className="text-[10px] text-slate-500 block mt-2 font-mono">Next Recommended Action: {dashboardData?.aiRecommendations?.next_best_action}</span>
+                </div>
+                {/* Claim certificate banner */}
+                <div className="px-4 py-2 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/20 rounded-xl flex items-center gap-3">
+                  <span className="text-[10px] text-slate-300">Syllabus complete? Claim certificate!</span>
+                  <button 
+                    onClick={handleClaimCertificate}
+                    className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-[10px] font-bold rounded-lg cursor-pointer transition"
+                  >
+                    Claim Certificate
+                  </button>
+                </div>
+              </div>
+
+              {/* AI Study recommendation header card */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-left">
+                  <span className="text-xs font-bold text-blue-400 flex items-center gap-1.5">💡 AI Study Recommendation</span>
+                  <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                    {dashboardData?.aiRecommendations?.recommendations || 'Focus on Spring Core IoC dependency injection lifecycles and JDBC DriverManager configurations to complete current daily tasks.'}
+                  </p>
+                  <span className="text-[10px] text-slate-500 block mt-2 font-mono">Next Recommended Action: {dashboardData?.aiRecommendations?.next_best_action || 'Launch JDBC module and run prepared statement simulator.'}</span>
                 </div>
 
-                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
-                  <span className="text-xs font-bold text-purple-400">🎯 Learning Strengths</span>
-                  <ul className="text-xs text-slate-300 space-y-1 mt-2 list-disc pl-4">
-                    <li>DriverManager and JDBC configurations</li>
-                    <li>REST API methods routing</li>
+                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-left">
+                  <span className="text-xs font-bold text-purple-400 flex items-center gap-1.5">🎯 Learning Strengths</span>
+                  <ul className="text-xs text-slate-300 space-y-1.5 mt-2 list-disc pl-4">
+                    <li>DriverManager and JDBC connection parameters</li>
+                    <li>REST API controller method mappings</li>
+                    <li>Tomcat Servlet runtime server hooks</li>
                   </ul>
                 </div>
               </div>
 
-              {/* Achievements banner */}
-              <div className="p-4 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/20 rounded-2xl flex items-center justify-between">
-                <div>
-                  <strong className="text-xs text-white block">Ready to unlock certification?</strong>
-                  <span className="text-[10px] text-slate-400">Ensure all 5 modules are complete and code submissions are reviewed.</span>
+              {/* DYNAMIC CURRICULUM SYLLABUS CARDS GRID */}
+              <div>
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest text-left mb-4">LMS Course Curriculum Modules</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[
+                    { id: 'jdbc', label: 'JDBC Database Connectivity', desc: 'Connect Java apps to SQL databases, manage drivers, construct statements, and read ResultSet cursors.', icon: Database, accent: '#3B82F6', type: 'Core Database' },
+                    { id: 'servlets', label: 'Java Servlets Lifecycle', desc: 'Process HTTP client requests on the web server side, and manage request-response handler hooks.', icon: Layers, accent: '#10B981', type: 'Web Container' },
+                    { id: 'jsp', label: 'Java Server Pages (JSP)', desc: 'Design template dynamic HTML layouts, bind data values, and build interactive container views.', icon: FileText, accent: '#8B5CF6', type: 'Views Template' },
+                    { id: 'session', label: 'Session Management', desc: 'Identify stateful clients across stateless HTTP requests using Cookies and HTTPSession memory bindings.', icon: ShieldAlert, accent: '#EF4444', type: 'Security State' },
+                    { id: 'hibernate', label: 'Hibernate ORM Framework', desc: 'Map Java object entities to relational database tables, and configure dynamic query mappings.', icon: RefreshCw, accent: '#F59E0B', type: 'ORM Persistency' },
+                    { id: 'spring-core', label: 'Spring Core & IoC', desc: 'Resolve object dependencies dynamically via Dependency Injection and configure Spring bean structures.', icon: Zap, accent: '#3B82F6', type: 'IoC Engine' },
+                    { id: 'spring-mvc', label: 'Spring MVC Routing', desc: 'Dispatch HTTP requests to annotation-driven handler controllers and configure DispatcherServlets.', icon: Compass, accent: '#06B6D4', type: 'Web MVC' },
+                    { id: 'spring-boot', label: 'Spring Boot Orchestrator', desc: 'Build zero-XML standalone enterprise services utilizing auto-configurations and embedded Tomcat runtimes.', icon: Award, accent: '#14B8A6', type: 'Auto-Config Server' },
+                    { id: 'rest-api', label: 'REST APIs Services', desc: 'Design decoupled client-server web APIs utilizing path variables, query params, and JSON payloads.', icon: Terminal, accent: '#10B981', type: 'API endpoints' },
+                    { id: 'spring-sec', label: 'Spring Security Chains', desc: 'Intercept incoming network routes using security filters and enforce method-level role authorization.', icon: ShieldAlert, accent: '#8B5CF6', type: 'Security Filter' },
+                    { id: 'maven-gradle', label: 'Maven & Gradle Builds', desc: 'Automate compiling, packaging, testing, and dependency resolution of backend Java applications.', icon: Flame, accent: '#F97316', type: 'Build Automation' },
+                    { id: 'microservices', label: 'Microservices & Discovery', desc: 'Deploy decentralized services, configure API Gateway routing, and register heartbeats with Eureka.', icon: Compass, accent: '#6366F1', type: 'Cloud Infrastructure' },
+                    { id: 'coding-lab', label: 'JVM Coding Lab Sandbox', desc: 'Compile and run advanced Java source code inside the terminal compiler workspace sandbox.', icon: PlayCircle, accent: '#38BDF8', type: 'Developer Console' },
+                    { id: 'practice', label: 'Curriculum Practice', desc: 'Solve multiple-choice challenges, view automated scoring, and study code explanations.', icon: Sparkles, accent: '#EC4899', type: 'Evaluation Corner' },
+                    { id: 'mentor', label: 'AI Study Mentor Guidance', desc: 'Engage with custom AI study models for feedback, code verification, and real interview preparation.', icon: BrainCircuit, accent: '#A855F7', type: 'Generative AI Tutor' },
+                    { id: 'analytics', label: 'Performance Analytics', desc: 'Analyze dynamic progress graphs, strength distributions, and weak points tracking stats.', icon: TrendingUp, accent: '#10B981', type: 'Progress Reports' },
+                    { id: 'achievements', label: 'Badges & Streak Rewards', desc: 'Earn badges, accumulate XP credits, track study streaks, and unlock certification steps.', icon: Trophy, accent: '#F59E0B', type: 'Milestone Rewards' },
+                    { id: 'certification', label: 'Advanced Java Certificate', desc: 'Verify complete progress, claim credentials, and download export-ready PDF certificates.', icon: Award, accent: '#E11D48', type: 'Professional Credential' }
+                  ].map((card) => {
+                    const CardIcon = card.icon;
+                    return (
+                      <div
+                        key={card.id}
+                        onClick={() => setActivePanel(card.id)}
+                        className="bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all duration-300 p-4 flex flex-col justify-between cursor-pointer text-left hover:scale-[1.01] hover:border-white/20 group"
+                      >
+                        <div>
+                          <div className="flex justify-between items-start mb-3">
+                            <span 
+                              className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                              style={{ background: `${card.accent}15`, color: card.accent }}
+                            >
+                              {card.type}
+                            </span>
+                            <div 
+                              className="p-1.5 rounded-lg"
+                              style={{ background: `${card.accent}12`, color: card.accent }}
+                            >
+                              <CardIcon size={16} />
+                            </div>
+                          </div>
+                          <h4 className="text-sm font-bold text-white mb-1.5 group-hover:text-purple-400 transition-colors">
+                            {card.label}
+                          </h4>
+                          <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-3">
+                            {card.desc}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-4 pt-2 border-t border-white/5 text-[10px] text-slate-500">
+                          <span>Progress ready</span>
+                          <span className="font-semibold text-slate-300 group-hover:text-purple-400 transition-colors">Launch Module →</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <button 
-                  onClick={handleClaimCertificate}
-                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl cursor-pointer transition"
-                >
-                  Claim Certificate
-                </button>
               </div>
             </div>
           )}
-
-          {/* JDBC PLAYGROUND TAB */}
-          {activePanel === 'jdbc' && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">JDBC Interactive Playground</h3>
-              
-              {/* Connection Form */}
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
-                <span className="text-xs font-bold text-slate-300 block">Database Connection Parameters</span>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] text-slate-500 block">JDBC URL</label>
-                    <input 
-                      type="text" 
-                      value={jdbcUrl} 
-                      onChange={(e) => setJdbcUrl(e.target.value)}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white outline-none focus:border-blue-500"
-                    />
+            <TheoryFirstModule
+              title="Java Database Connectivity (JDBC)"
+              icon={Database}
+              introduction="Java Database Connectivity (JDBC) is the industry-standard Java API that enables Java applications to connect to, query, and manipulate relational databases. It provides a standard set of interfaces that abstract database-specific driver implementations, allowing you to write write-once database logic."
+              theoryContent={
+                <div className="space-y-4 text-left">
+                  <p>
+                    Relational databases form the backbone of modern enterprise storage. JDBC acts as a bridge between the object-oriented Java programming language and relational SQL databases. Before JDBC, developers had to write database-specific native code, making applications tightly coupled to a single vendor (e.g. Oracle, MySQL).
+                  </p>
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <h5 className="font-bold text-white mb-2">Core JDBC Components:</h5>
+                    <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                      <li><strong>DriverManager:</strong> Manages the list of database drivers and establishes connections.</li>
+                      <li><strong>Connection:</strong> Represents a physical session with the database.</li>
+                      <li><strong>Statement:</strong> Interface used to execute static SQL statements and return results.</li>
+                      <li><strong>PreparedStatement:</strong> Pre-compiles SQL queries on the server to prevent SQL Injection and optimize execution.</li>
+                      <li><strong>ResultSet:</strong> A cursor pointing to the rows returned by an executed database query.</li>
+                    </ul>
                   </div>
-                  <div>
-                    <label className="text-[10px] text-slate-500 block">Driver Class</label>
-                    <input 
-                      type="text" 
-                      value="org.postgresql.Driver" 
-                      disabled
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-slate-500 outline-none"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={testJdbcConnection} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer transition">
-                    Test Connection
-                  </button>
-                </div>
-                {jdbcStatus && (
-                  <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed">
-                    {jdbcStatus}
+                  <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed overflow-x-auto">
+{`// Classic JDBC Connection Lifecycle
+Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/db", "user", "pass");
+PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM students WHERE id = ?");
+pstmt.setInt(1, 101);
+ResultSet rs = pstmt.executeQuery();
+while(rs.next()) {
+    System.out.println("Student: " + rs.getString("name"));
+}
+conn.close();`}
                   </pre>
-                )}
-              </div>
-
-              {/* CRUD SIMULATOR */}
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
-                <span className="text-xs font-bold text-slate-300 block">CRUD Simulator Table</span>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-white/10 text-slate-400">
-                        <th className="pb-2">ID</th>
-                        <th className="pb-2">Student Name</th>
-                        <th className="pb-2">Course</th>
-                        <th className="pb-2">Operations</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {crudSimRecords.map((rec) => (
-                        <tr key={rec.id}>
-                          <td className="py-2 font-mono text-blue-400">{rec.id}</td>
-                          <td className="py-2">{rec.name}</td>
-                          <td className="py-2 font-mono">{rec.course}</td>
-                          <td className="py-2">
-                            <button 
-                              onClick={() => {
-                                setCrudSimRecords(crudSimRecords.filter(r => r.id !== rec.id));
-                                toast.success('Record Deleted');
-                              }}
-                              className="text-red-400 hover:text-red-300 text-[10px] font-bold cursor-pointer"
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
+              }
+              aiExplanation="Think of JDBC like a universal adapter for databases. Imagine your Java program is a phone, and databases (Postgres, Oracle, MySQL) are different wall sockets worldwide. JDBC is the universal travel plug adapter that lets your phone charge from any socket without changing its charger cord!"
+              useCases={[
+                { title: "Enterprise Database Integrations", desc: "Connecting enterprise CRM or ERP platforms to centralized SQL data warehouses." },
+                { title: "High-Throughput ETL Pipelines", desc: "Extracting transaction data batches from production servers and transforming them to analysis grids." }
+              ]}
+              architectureDiagram={
+                <svg viewBox="0 0 400 160" className="w-full max-h-[140px]">
+                  <rect x="10" y="10" width="380" height="30" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="2" />
+                  <text x="200" y="30" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">Java Application (Java Code)</text>
 
-                <div className="flex gap-2 items-center">
-                  <input 
-                    type="text" 
-                    placeholder="New Student Name"
-                    value={newRecordName}
-                    onChange={(e) => setNewRecordName(e.target.value)}
-                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs text-white outline-none focus:border-blue-500"
-                  />
-                  <button 
-                    onClick={() => {
-                      if (!newRecordName) return;
-                      setCrudSimRecords([...crudSimRecords, { id: crudSimRecords.length + 1, name: newRecordName, course: 'JDBC Syllabus' }]);
-                      setNewRecordName('');
-                      toast.success('Record Inserted');
-                    }}
-                    className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl cursor-pointer"
-                  >
-                    Insert Record
-                  </button>
+                  <path d="M 200 40 L 200 65" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <rect x="10" y="65" width="380" height="30" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="200" y="85" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">JDBC API Wrapper (DriverManager)</text>
+
+                  <path d="M 100 95 L 60 120" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+                  <path d="M 300 95 L 340 120" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <rect x="10" y="120" width="160" height="30" rx="6" fill="#0f172a" stroke="#10B981" strokeWidth="1.5" />
+                  <text x="90" y="138" textAnchor="middle" fill="#10B981" fontSize="10">PostgreSQL Driver</text>
+
+                  <rect x="230" y="120" width="160" height="30" rx="6" fill="#0f172a" stroke="#10B981" strokeWidth="1.5" />
+                  <text x="310" y="138" textAnchor="middle" fill="#10B981" fontSize="10">MySQL Driver</text>
+                </svg>
+              }
+              workflowDiagram={
+                <svg viewBox="0 0 500 80" className="w-full max-h-[70px]">
+                  <g transform="translate(10, 10)">
+                    <rect x="0" y="0" width="80" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="1" />
+                    <text x="40" y="24" textAnchor="middle" fill="#fff" fontSize="9">1. Connect</text>
+                  </g>
+                  <path d="M 95 30 L 125 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+                  
+                  <g transform="translate(130, 10)">
+                    <rect x="0" y="0" width="80" height="40" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="1" />
+                    <text x="40" y="24" textAnchor="middle" fill="#fff" fontSize="9">2. Prepare SQL</text>
+                  </g>
+                  <path d="M 215 30 L 245 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(250, 10)">
+                    <rect x="0" y="0" width="80" height="40" rx="6" fill="#1e1b4b" stroke="#10B981" strokeWidth="1" />
+                    <text x="40" y="24" textAnchor="middle" fill="#fff" fontSize="9">3. Execute</text>
+                  </g>
+                  <path d="M 335 30 L 365 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(370, 10)">
+                    <rect x="0" y="0" width="110" height="40" rx="6" fill="#1e1b4b" stroke="#F59E0B" strokeWidth="1" />
+                    <text x="55" y="24" textAnchor="middle" fill="#fff" fontSize="9">4. Read ResultSet</text>
+                  </g>
+                </svg>
+              }
+              steps={[
+                { title: "Load Database Driver", desc: "Use Class.forName() to dynamically load the vendor-specific database driver class into the JVM memory space." },
+                { title: "Establish Connection", desc: "Call DriverManager.getConnection() with connection string, username, and password credentials." },
+                { title: "Compile PreparedStatement", desc: "Prepare and pre-compile SQL queries to optimize access execution paths on database server." },
+                { title: "Execute Query & Read ResultSet", desc: "Execute query, scan row blocks, extract columns, and release connection resources in a finally block." }
+              ]}
+              interviewQuestions={[
+                { q: "What is the difference between Statement and PreparedStatement?", a: "Statement compiles SQL queries at runtime on every execution. PreparedStatement pre-compiles query templates on the database server, enabling parameter binding, which drastically improves performance and prevents SQL injection attacks." },
+                { q: "How do you handle transactions in JDBC?", a: "By default, JDBC operates in auto-commit mode where every statement commits immediately. To manage transactions manually, call conn.setAutoCommit(false), execute statements, and invoke conn.commit() on success or conn.rollback() on exceptions inside a catch block." }
+              ]}
+              importantNotes={[
+                "Always close ResultSet, Statement, and Connection objects to prevent severe database connection leaks.",
+                "Using connection pooling (e.g. HikariCP) is mandatory in production web services to avoid connection initiation latency."
+              ]}
+              visualization={
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold text-slate-300">Connection Pool Simulator State</h4>
+                  <div className="flex justify-around items-center gap-2 p-3 bg-black/45 rounded-xl">
+                    <div className="text-center">
+                      <span className="text-[10px] text-slate-400 block">Active Connections</span>
+                      <strong className="text-lg text-red-400 font-bold">{connectionPool.active}</strong>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-[10px] text-slate-400 block">Idle Connections</span>
+                      <strong className="text-lg text-emerald-400 font-bold">{connectionPool.idle}</strong>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-[10px] text-slate-400 block">Total Pool Capacity</span>
+                      <strong className="text-lg text-blue-400 font-bold">{connectionPool.total}</strong>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        if (connectionPool.idle > 0) {
+                          setConnectionPool({ active: connectionPool.active + 1, idle: connectionPool.idle - 1, total: 10 });
+                          toast.success('Connection leased from HikariCP Pool');
+                        }
+                      }}
+                      className="px-3 py-1 bg-blue-600/30 hover:bg-blue-600/50 text-blue-400 text-xs font-bold rounded-lg cursor-pointer"
+                    >
+                      Lease Connection
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (connectionPool.active > 0) {
+                          setConnectionPool({ active: connectionPool.active - 1, idle: connectionPool.idle + 1, total: 10 });
+                          toast.success('Connection returned to HikariCP Pool');
+                        }
+                      }}
+                      className="px-3 py-1 bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-400 text-xs font-bold rounded-lg cursor-pointer"
+                    >
+                      Release Connection
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
+              }
+              simulator={
+                <div className="space-y-4">
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                    <span className="text-xs font-bold text-slate-300 block">Database Connection URL Configuration</span>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value={jdbcUrl} 
+                        onChange={(e) => setJdbcUrl(e.target.value)}
+                        className="flex-grow px-3 py-1.5 bg-slate-850 border border-white/10 rounded-xl text-xs text-white outline-none focus:border-blue-500"
+                      />
+                      <button onClick={testJdbcConnection} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer transition">
+                        Connect
+                      </button>
+                    </div>
+                    {jdbcStatus && (
+                      <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed">
+                        {jdbcStatus}
+                      </pre>
+                    )}
+                  </div>
+
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                    <span className="text-xs font-bold text-slate-300 block font-mono">PreparedStatement Parameter Binding</span>
+                    <div className="flex gap-2 items-center">
+                      <input 
+                        type="text" 
+                        placeholder="SQL Input parameter" 
+                        value={preparedVal} 
+                        onChange={(e) => setPreparedVal(e.target.value)}
+                        className="px-3 py-1.5 bg-slate-850 border border-white/10 rounded-xl text-xs text-white outline-none focus:border-blue-500"
+                      />
+                      <button 
+                        onClick={() => {
+                          setPrepResult(`Executing: ${preparedSql.replace('?', `'${preparedVal}'`)}\n\nQuery ResultSet:\n{ id: ${preparedVal}, name: 'Jane Doe', enrolled_course: 'Advanced Java' }`);
+                          toast.success('Query executed safely');
+                        }}
+                        className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                      >
+                        Bind & Execute Statement
+                      </button>
+                    </div>
+                    {prepResult && (
+                      <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed">
+                        {prepResult}
+                      </pre>
+                    )}
+                  </div>
+                </div>
+              }
+              practiceQuestions={[
+                { q: "Which JDBC statement compiles SQL query templates on the database server?", options: ["Statement", "PreparedStatement", "CallableStatement", "ResultSet"], correct: "PreparedStatement", explanation: "PreparedStatement pre-compiles query templates on the database server." }
+              ]}
+              codingExercise={{
+                instructions: "Complete the statement to retrieve database connection instance using DriverManager.",
+                boilerplate: "Connection conn = DriverManager.________(\"jdbc:postgresql://localhost:5432/db\", \"user\", \"pass\");",
+                solutionRegex: "getConnection"
+              }}
+              miniProject={{
+                title: "Relational Student Directory Manager",
+                description: "Implement a student record registry application executing direct SQL queries via PreparedStatement driver connections."
+              }}
+              quiz={[
+                { q: "What exception is thrown when JDBC driver connection fails?", options: ["ConnectionException", "SQLException", "DatabaseException", "IOException"], correct: "SQLException", explanation: "SQLException handles failures occurring inside JDBC pipelines." }
+              ]}
+            />
           )}
 
           {/* SERVLETS TAB */}
           {activePanel === 'servlets' && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">Java Web Servlet Sandbox</h3>
-              
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
-                <span className="text-xs font-bold text-slate-300 block">HTTP GET / POST Request Engine</span>
-                <div className="flex gap-2">
-                  {['GET', 'POST'].map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setServletMethod(m)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                        servletMethod === m ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-400'
-                      }`}
-                    >
-                      {m}
-                    </button>
-                  ))}
-                </div>
-
-                <button 
-                  onClick={() => {
-                    setServletOutput(`HTTP/1.1 200 OK\nContent-Type: text/html\nDate: Jun 2026\n\n<h3>Servlet Executed Successfully</h3>\n<p>Response method: ${servletMethod}</p>`);
-                    toast.success('Servlet Response Received');
-                  }}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl cursor-pointer"
-                >
-                  Fire Request
-                </button>
-
-                {servletOutput && (
-                  <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed">
-                    {servletOutput}
+            <TheoryFirstModule
+              title="Java Servlets"
+              icon={Layers}
+              introduction="Java Servlets are server-side Java program modules that run inside a servlet container (such as Apache Tomcat) and dynamically handle client HTTP request-response lifecycles, forming the foundation of Java enterprise web architectures."
+              theoryContent={
+                <div className="space-y-4 text-left">
+                  <p>
+                    A Servlet is a Java class that extends `HttpServlet` and overrides methods like `doGet()` and `doPost()` to process user requests. The Servlet container manages the instantiation, execution, and destruction of servlets.
+                  </p>
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <h5 className="font-bold text-white mb-2">Servlet Lifecycle Hooks:</h5>
+                    <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                      <li><strong>init():</strong> Invoked exactly once when the servlet is initialized by the container.</li>
+                      <li><strong>service():</strong> Called for every incoming client request, dispatching to doGet/doPost.</li>
+                      <li><strong>destroy():</strong> Called before the container removes the servlet from memory to clean resources.</li>
+                    </ul>
+                  </div>
+                  <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed overflow-x-auto">
+{`@WebServlet("/hello")
+public class HelloServlet extends HttpServlet {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
+            throws ServletException, IOException {
+        resp.setContentType("text/html");
+        PrintWriter out = resp.getWriter();
+        out.println("<h1>Hello from Java Servlet Container!</h1>");
+    }
+}`}
                   </pre>
-                )}
-              </div>
-            </div>
+                </div>
+              }
+              aiExplanation="Think of a Web Servlet like a waiter at a restaurant. A customer (the browser) comes in and makes an order (HTTP GET request). The waiter (Servlet) goes to the kitchen (database/business logic), gets the food (data), and brings it back to the customer's table (HTTP response) formatted on a plate (HTML)!"
+              useCases={[
+                { title: "Dynamic HTML Generation", desc: "Serving personalized web page templates based on authenticated user session parameters." },
+                { title: "Controller Router Layer", desc: "Interpreting route paths and forwarding requests to MVC backend workflows." }
+              ]}
+              architectureDiagram={
+                <svg viewBox="0 0 400 160" className="w-full max-h-[140px]">
+                  <rect x="10" y="10" width="100" height="140" rx="8" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="2" />
+                  <text x="60" y="80" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">Client Browser</text>
+
+                  <path d="M 110 50 L 190 50" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+                  <text x="150" y="42" textAnchor="middle" fill="#3B82F6" fontSize="9">GET /hello</text>
+
+                  <path d="M 190 110 L 110 110" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+                  <text x="150" y="125" textAnchor="middle" fill="#10B981" fontSize="9">HTTP 200 (HTML)</text>
+
+                  <rect x="200" y="10" width="190" height="140" rx="8" fill="#0f172a" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="295" y="30" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">Tomcat Servlet Container</text>
+
+                  <rect x="215" y="55" width="160" height="40" rx="6" fill="#1e1b4b" stroke="#10B981" strokeWidth="1.5" />
+                  <text x="295" y="80" textAnchor="middle" fill="#10B981" fontSize="10">HelloServlet Instance</text>
+                </svg>
+              }
+              workflowDiagram={
+                <svg viewBox="0 0 500 80" className="w-full max-h-[70px]">
+                  <g transform="translate(10, 10)">
+                    <rect x="0" y="0" width="100" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="1" />
+                    <text x="50" y="24" textAnchor="middle" fill="#fff" fontSize="9">init() - Startup</text>
+                  </g>
+                  <path d="M 115 30 L 145 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+                  
+                  <g transform="translate(150, 10)">
+                    <rect x="0" y="0" width="100" height="40" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="1" />
+                    <text x="50" y="24" textAnchor="middle" fill="#fff" fontSize="9">service() - Dispatch</text>
+                  </g>
+                  <path d="M 255 30 L 285 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(290, 10)">
+                    <rect x="0" y="0" width="100" height="40" rx="6" fill="#1e1b4b" stroke="#10B981" strokeWidth="1" />
+                    <text x="50" y="24" textAnchor="middle" fill="#fff" fontSize="9">doGet() / doPost()</text>
+                  </g>
+                  <path d="M 395 30 L 425 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(430, 10)">
+                    <rect x="0" y="0" width="60" height="40" rx="6" fill="#1e1b4b" stroke="#EF4444" strokeWidth="1" />
+                    <text x="30" y="24" textAnchor="middle" fill="#fff" fontSize="9">destroy()</text>
+                  </g>
+                </svg>
+              }
+              steps={[
+                { title: "Servlet Loading", desc: "Servlet class file is loaded into the memory space by the ClassLoader of Tomcat Servlet Container." },
+                { title: "Servlet Instantiation", desc: "Container instantiates the servlet class using default no-arg constructor." },
+                { title: "Initialization (init)", desc: "init() method is called to configure setup states, such as database pooling setups." },
+                { title: "Request Handling (service)", desc: "For every query request, service() intercepts it and delegates to corresponding HTTP handlers." }
+              ]}
+              interviewQuestions={[
+                { q: "Are Java Servlets thread-safe?", a: "No. The servlet container creates only a single shared instance of a servlet class. Multiple concurrent threads access this instance, meaning local instance variables are not thread-safe. Keep all servlet operations stateless." },
+                { q: "What is the difference between sendRedirect and RequestDispatcher?", a: "RequestDispatcher forwards the request internally on the server side without notifying the browser client (maintains URL). sendRedirect returns a 302 HTTP response instructing the browser to execute a fresh URL query request." }
+              ]}
+              importantNotes={[
+                "Avoid using instance variables in servlet classes to prevent race conditions during concurrent user access.",
+                "Register filters using @WebFilter annotations to handle session audits and authentication globally."
+              ]}
+              visualization={
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold text-slate-300">Tomcat Service Thread Simulator</h4>
+                  <div className="p-3 bg-black/45 rounded-xl text-xs space-y-1 text-slate-300 font-mono">
+                    <div>Active Request Dispatch Thread count: <b>4</b></div>
+                    <div>JVM Heap Context Status: <b>Single Servlet Instance Leased</b></div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      toast.success('Simulation thread dispatched. doGet() callback triggered.');
+                    }}
+                    className="px-4 py-2 bg-blue-600/30 hover:bg-blue-600/50 text-blue-400 text-xs font-bold rounded-lg cursor-pointer"
+                  >
+                    Simulate Client Concurrent Request
+                  </button>
+                </div>
+              }
+              simulator={
+                <div className="space-y-4">
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                    <span className="text-xs font-bold text-slate-300 block">Servlet Request Method Simulator</span>
+                    <div className="flex gap-2">
+                      {['GET', 'POST'].map((m) => (
+                        <button
+                          key={m}
+                          onClick={() => setServletMethod(m)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                            servletMethod === m ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-400'
+                          }`}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setServletOutput(`HTTP/1.1 200 OK\nContent-Type: text/html\nDate: Jun 2026\n\n<h3>Servlet Executed Successfully</h3>\n<p>Response method: ${servletMethod}</p>`);
+                        toast.success('Servlet request processed');
+                      }}
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                    >
+                      Fire Request to /hello
+                    </button>
+                    {servletOutput && (
+                      <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed">
+                        {servletOutput}
+                      </pre>
+                    )}
+                  </div>
+                </div>
+              }
+              practiceQuestions={[
+                { q: "Which class does a web developer extend to write user-defined servlets?", options: ["GenericServlet", "HttpServlet", "Servlet", "WebResponse"], correct: "HttpServlet", explanation: "HttpServlet handles all web request protocols directly." }
+              ]}
+              codingExercise={{
+                instructions: "Override the standard HTTP GET request processing method hook header.",
+                boilerplate: "protected void ________(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException",
+                solutionRegex: "doGet"
+              }}
+              miniProject={{
+                title: "Authentication Filter Gateway",
+                description: "Implement a Web Filter checking session credentials before routing request dispatchers."
+              }}
+              quiz={[
+                { q: "Which lifecycle method is invoked only once when the container initializes the servlet?", options: ["service()", "init()", "doGet()", "destroy()"], correct: "init()", explanation: "init() configures initialization variables once at startup." }
+              ]}
+            />
           )}
 
           {/* JSP TAB */}
           {activePanel === 'jsp' && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">JSP Live Playground</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <span className="text-xs font-bold text-slate-300">JSP Source Code</span>
-                  <textarea 
-                    value={jspCode}
-                    onChange={(e) => setJspCode(e.target.value)}
-                    className="w-full h-48 bg-slate-900 text-slate-300 font-mono text-xs p-3 rounded-xl border border-white/10 outline-none focus:border-blue-500 resize-none"
-                  />
+            <TheoryFirstModule
+              title="JavaServer Pages (JSP)"
+              icon={FileText}
+              introduction="JavaServer Pages (JSP) is a server-side presentation technology that allows developers to write template text (HTML, XML) integrated with dynamic Java scripting elements to build responsive web page views."
+              theoryContent={
+                <div className="space-y-4 text-left">
+                  <p>
+                    JSP files are essentially HTML documents with embedded Java code using JSP tags. When a request hits a JSP page, the container translates the `.jsp` file into a Java Servlet class compilation unit, compiles it, and executes it.
+                  </p>
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <h5 className="font-bold text-white mb-2">Core JSP Scripting Elements:</h5>
+                    <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                      <li><strong>Scriptlets <code>{`<% ... %>`}</code>:</strong> Execute block statements.</li>
+                      <li><strong>Expressions <code>{`<%= ... %>`}</code>:</strong> Evaluates and inserts values directly into HTML output streams.</li>
+                      <li><strong>Declarations <code>{`<%! ... %>`}</code>:</strong> Declare instance variables and methods.</li>
+                      <li><strong>Directives <code>{`<%@ ... %>`}</code>:</strong> Global page setups (import packages, session declarations).</li>
+                    </ul>
+                  </div>
+                  <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed overflow-x-auto">
+{`<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+<body>
+    <%-- JSP Comment: Dynamic date rendering --%>
+    <h3>Current Time: <%= new java.util.Date() %></h3>
+</body>
+</html>`}
+                  </pre>
+                </div>
+              }
+              aiExplanation="Think of JSP like a fill-in-the-blank letter. The HTML is the pre-written text of the letter, and the JSP scriptlets are the blanks where Java dynamically fills in customized details (like user name) before sending the completed page to the user!"
+              useCases={[
+                { title: "Dashboard Client Rendering", desc: "Constructing user portals, inserting active profiles, table records, and notification banners dynamically." },
+                { title: "Dynamic E-commerce Catalogs", desc: "Iterating through products array and populating HTML grid items on the server side." }
+              ]}
+              architectureDiagram={
+                <svg viewBox="0 0 400 160" className="w-full max-h-[140px]">
+                  <rect x="10" y="10" width="100" height="30" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="2" />
+                  <text x="60" y="28" textAnchor="middle" fill="#fff" fontSize="10">index.jsp Source</text>
+                  
+                  <path d="M 110 25 L 150 25" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+                  <text x="130" y="18" textAnchor="middle" fill="#3B82F6" fontSize="8">Compile</text>
+
+                  <rect x="160" y="10" width="100" height="30" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="210" y="28" textAnchor="middle" fill="#fff" fontSize="10">Servlet Class</text>
+
+                  <path d="M 260 25 L 300 25" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+                  <text x="280" y="18" textAnchor="middle" fill="#10B981" fontSize="8">Execute</text>
+
+                  <rect x="310" y="10" width="80" height="30" rx="6" fill="#0f172a" stroke="#10B981" strokeWidth="1.5" />
+                  <text x="350" y="28" textAnchor="middle" fill="#10B981" fontSize="10">HTML Output</text>
+                </svg>
+              }
+              workflowDiagram={
+                <svg viewBox="0 0 500 80" className="w-full max-h-[70px]">
+                  <g transform="translate(10, 10)">
+                    <rect x="0" y="0" width="120" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="1" />
+                    <text x="60" y="24" textAnchor="middle" fill="#fff" fontSize="9">Client Requests JSP</text>
+                  </g>
+                  <path d="M 135 30 L 165 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(170, 10)">
+                    <rect x="0" y="0" width="120" height="40" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="1" />
+                    <text x="60" y="24" textAnchor="middle" fill="#fff" fontSize="9">JSP -> Servlet Translation</text>
+                  </g>
+                  <path d="M 295 30 L 325 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(330, 10)">
+                    <rect x="0" y="0" width="150" height="40" rx="6" fill="#1e1b4b" stroke="#10B981" strokeWidth="1" />
+                    <text x="75" y="24" textAnchor="middle" fill="#fff" fontSize="9">Response HTML returned</text>
+                  </g>
+                </svg>
+              }
+              steps={[
+                { title: "Translation Phase", desc: "JSP container reads .jsp code and generates equivalent Java servlet source code." },
+                { title: "Compilation Phase", desc: "Container compiles Java servlet file into executable bytecode .class file." },
+                { title: "Instantiation & Initialization", desc: "Servlet class loaded, instance created, _jspInit() lifecycle method called." },
+                { title: "Execution (_jspService)", desc: "For every query request, container calls _jspService() which dynamically pipes HTML response to client." }
+              ]}
+              interviewQuestions={[
+                { q: "What are the implicit objects in JSP?", a: "Implicit objects are pre-defined Java variables available to developers inside scriptlets without declaration. Key implicit objects: request, response, out, session, application, config, pageContext, page, and exception." },
+                { q: "Why should we avoid scriptlets in modern JSP?", a: "Scriptlets mix business code (Java) with view logic (HTML), making maintenance hard. Modern JSP uses JSTL (JSP Standard Tag Library) and EL (Expression Language) to keep views clean." }
+              ]}
+              importantNotes={[
+                "First-time access to a JSP page has a compilation delay. Pre-compiling JSP before deployment is recommended.",
+                "Always use Expression Language (EL) ${} instead of scriptlets to secure dynamic data fields."
+              ]}
+              visualization={
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold text-slate-300">JSP Engine Lifecycle Simulator</h4>
+                  <div className="p-3 bg-black/45 rounded-xl text-xs space-y-1 text-slate-300 font-mono">
+                    <div>Active translation buffer: <b>Ready</b></div>
+                    <div>Cached compiled servlet classes: <b>index_jsp.class</b></div>
+                  </div>
                   <button 
                     onClick={() => {
-                      setJspPreview('<div class="p-3 bg-white/5 rounded-xl border border-white/10"><h3>Welcome Admin User!</h3><p>Evaluated expression: <b>JSP Directives Active</b></p></div>');
-                      toast.success('JSP Compiled');
+                      toast.success('JSP Engine triggered translation. Servlet compiled.');
                     }}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                    className="px-4 py-2 bg-blue-600/30 hover:bg-blue-600/50 text-blue-400 text-xs font-bold rounded-lg cursor-pointer"
                   >
-                    Compile & Preview
+                    Force Translate & Compile
                   </button>
                 </div>
+              }
+              simulator={
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <span className="text-xs font-bold text-slate-300">JSP Source Code Editor</span>
+                      <textarea 
+                        value={jspCode}
+                        onChange={(e) => setJspCode(e.target.value)}
+                        className="w-full h-40 bg-slate-950 text-slate-300 font-mono text-xs p-3 rounded-xl border border-white/10 outline-none focus:border-blue-500 resize-none"
+                      />
+                      <button 
+                        onClick={() => {
+                          setJspPreview('<div class="p-3 bg-white/5 rounded-xl border border-white/10"><h3>Welcome Admin User!</h3><p>Evaluated expression: <b>JSP Directives Active</b></p></div>');
+                          toast.success('JSP compiled successfully');
+                        }}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                      >
+                        Compile & Run JSP
+                      </button>
+                    </div>
 
-                <div className="space-y-2">
-                  <span className="text-xs font-bold text-slate-300">Live HTML Result Preview</span>
-                  <div className="w-full h-48 bg-slate-950 border border-white/5 rounded-xl p-4 text-xs font-sans flex items-center justify-center">
-                    {jspPreview ? (
-                      <div dangerouslySetInnerHTML={{ __html: jspPreview }} />
-                    ) : (
-                      <span className="text-slate-500">Hit "Compile & Preview" to run JSP engine.</span>
-                    )}
+                    <div className="space-y-2 text-left">
+                      <span className="text-xs font-bold text-slate-300">Live HTML Result Preview</span>
+                      <div className="w-full h-40 bg-slate-950 border border-white/5 rounded-xl p-4 text-xs font-sans flex items-center justify-center">
+                        {jspPreview ? (
+                          <div dangerouslySetInnerHTML={{ __html: jspPreview }} />
+                        ) : (
+                          <span className="text-slate-500 text-[11px]">Hit "Compile & Run JSP" to run JSP engine.</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              }
+              practiceQuestions={[
+                { q: "Which symbol denotes JSP expressions that print directly to the response output?", options: ["<%", "<%! ", "<%=", "<%@"], correct: "<%=", explanation: "Expressions dynamically print output values using <%= tag." }
+              ]}
+              codingExercise={{
+                instructions: "Write the import directive syntax to import java.util.List class.",
+                boilerplate: "<%@ page import=\"________\" %>",
+                solutionRegex: "java.util.List"
+              }}
+              miniProject={{
+                title: "Server-Side Dynamic User Directory",
+                description: "Build a JSP page using JSTL loops to render lists of active server session user connections."
+              }}
+              quiz={[
+                { q: "Which implicit object represents the servlet context application configuration?", options: ["request", "application", "session", "pageContext"], correct: "application", explanation: "application implicit object exposes general servlet context configurations." }
+              ]}
+            />
           )}
 
           {/* SESSION MANAGEMENT TAB */}
           {activePanel === 'session' && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">Session Management simulator</h3>
-              
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
-                <span className="text-xs font-bold text-slate-300 block">Cookie Constructor</span>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] text-slate-500 block">Cookie Name</label>
-                    <input 
-                      type="text" 
-                      value={cookieSimKey} 
-                      onChange={(e) => setCookieSimKey(e.target.value)}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white"
-                    />
+            <TheoryFirstModule
+              title="Session Management"
+              icon={ShieldAlert}
+              introduction="Session Management is a security and state-preservation mechanism that allows HTTP servers to associate sequential client requests with individual users, transcending the inherently stateless nature of HTTP."
+              theoryContent={
+                <div className="space-y-4 text-left">
+                  <p>
+                    HTTP is a stateless protocol—each request is processed independently. Session tracking allows web applications to maintain state (e.g. login credentials, shopping carts) across multiple requests.
+                  </p>
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <h5 className="font-bold text-white mb-2">Core Session Management Techniques:</h5>
+                    <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                      <li><strong>Cookies:</strong> Key-value tokens stored in client browsers, transmitted automatically in request headers.</li>
+                      <li><strong>HttpSession API:</strong> Server-side memory storage linked to client-side JSESSIONID cookie identifiers.</li>
+                      <li><strong>URL Rewriting:</strong> Appending session tokens directly to links (e.g. `;jsessionid=123`) when cookies are disabled.</li>
+                      <li><strong>Hidden Form Fields:</strong> Passing session tokens inside HTML forms.</li>
+                    </ul>
                   </div>
-                  <div>
-                    <label className="text-[10px] text-slate-500 block">Cookie Value</label>
-                    <input 
-                      type="text" 
-                      value={cookieSimVal} 
-                      onChange={(e) => setCookieSimVal(e.target.value)}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white"
-                    />
+                  <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed overflow-x-auto">
+{`// HttpSession state operations inside Servlet
+HttpSession session = req.getSession(true); // Get or create
+session.setAttribute("user", "Alice");
+String user = (String) session.getAttribute("user");`}
+                  </pre>
+                </div>
+              }
+              aiExplanation="Imagine you go to a theme park. At the entrance, they check your ID and give you a wristband (the session cookie). For the rest of the day, when you ride the rollercoasters, you don't show your ID again—you just show your wristband (the cookie). The park workers look at the wristband and know exactly who you are!"
+              useCases={[
+                { title: "User Authentication State", desc: "Keeping users logged into web profiles as they navigate secured dashboard endpoints." },
+                { title: "Distributed Shopping Carts", desc: "Caching e-commerce cart lists temporarily in server memory before checkout transactions." }
+              ]}
+              architectureDiagram={
+                <svg viewBox="0 0 400 160" className="w-full max-h-[140px]">
+                  <rect x="10" y="10" width="100" height="140" rx="8" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="2" />
+                  <text x="60" y="80" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">Client Browser</text>
+
+                  <path d="M 110 50 L 190 50" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+                  <text x="150" y="42" textAnchor="middle" fill="#3B82F6" fontSize="8">Request + Cookie</text>
+
+                  <path d="M 190 110 L 110 110" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+                  <text x="150" y="125" textAnchor="middle" fill="#10B981" fontSize="8">Set-Cookie Header</text>
+
+                  <rect x="200" y="10" width="190" height="140" rx="8" fill="#0f172a" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="295" y="30" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">Tomcat Server Application</text>
+
+                  <rect x="215" y="55" width="160" height="40" rx="6" fill="#1e1b4b" stroke="#10B981" strokeWidth="1.5" />
+                  <text x="295" y="70" textAnchor="middle" fill="#10B981" fontSize="10">HttpSession Memory</text>
+                  <text x="295" y="85" textAnchor="middle" fill="#94A3B8" fontSize="8">JSESSIONID: 4F9D7C2B</text>
+                </svg>
+              }
+              workflowDiagram={
+                <svg viewBox="0 0 500 80" className="w-full max-h-[70px]">
+                  <g transform="translate(10, 10)">
+                    <rect x="0" y="0" width="110" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="1" />
+                    <text x="55" y="24" textAnchor="middle" fill="#fff" fontSize="9">Client First Connects</text>
+                  </g>
+                  <path d="M 125 30 L 155 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(160, 10)">
+                    <rect x="0" y="0" width="120" height="40" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="1" />
+                    <text x="60" y="24" textAnchor="middle" fill="#fff" fontSize="9">Server generates HttpSession</text>
+                  </g>
+                  <path d="M 285 30 L 315 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(320, 10)">
+                    <rect x="0" y="0" width="160" height="40" rx="6" fill="#1e1b4b" stroke="#10B981" strokeWidth="1" />
+                    <text x="80" y="24" textAnchor="middle" fill="#fff" fontSize="9">Cookie JSESSIONID set in browser</text>
+                  </g>
+                </svg>
+              }
+              steps={[
+                { title: "HttpSession Initiation", desc: "First request calls req.getSession(true) to instantiate thread-safe server session state." },
+                { title: "Session ID Generation", desc: "Server allocates unique random ID string (e.g. JSESSIONID) to prevent session hijacking." },
+                { title: "Set-Cookie Transmission", desc: "Server includes JSESSIONID cookie in Set-Cookie response header sent to client browser." },
+                { title: "Subsequent Request Identification", desc: "On next queries, browser automatically attaches the cookie token, linking client to server session." }
+              ]}
+              interviewQuestions={[
+                { q: "What happens if the browser disables cookies?", a: "If cookies are disabled, HttpSession fails to track requests because the browser won't store the JSESSIONID. To resolve this, developers use URL Rewriting, appending the session ID to every local hyperlink." },
+                { q: "How do you invalidate a session?", a: "Call session.invalidate() to immediately clear the server-side memory session and delete all bound attributes." }
+              ]}
+              importantNotes={[
+                "Configure HttpOnly and Secure flags on session cookies to mitigate Cross-Site Scripting (XSS) token theft.",
+                "Define session timeout thresholds in web.xml (<session-timeout>) to prevent idle memory leakages."
+              ]}
+              visualization={
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold text-slate-300">Session Lifecycle Logger</h4>
+                  {sessionLogs.length > 0 ? (
+                    <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed overflow-x-auto">
+                      {sessionLogs.join('\n')}
+                    </pre>
+                  ) : (
+                    <span className="text-[10px] text-slate-500 font-mono block">No active cookie headers logs registered yet.</span>
+                  )}
+                </div>
+              }
+              simulator={
+                <div className="space-y-4">
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                    <span className="text-xs font-bold text-slate-300 block">Cookie Constructor Simulator</span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] text-slate-500 block">Cookie Name</label>
+                        <input 
+                          type="text" 
+                          value={cookieSimKey} 
+                          onChange={(e) => setCookieSimKey(e.target.value)}
+                          className="w-full px-3 py-1.5 bg-slate-850 border border-white/10 rounded-xl text-xs text-white outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-slate-500 block">Cookie Value</label>
+                        <input 
+                          type="text" 
+                          value={cookieSimVal} 
+                          onChange={(e) => setCookieSimVal(e.target.value)}
+                          className="w-full px-3 py-1.5 bg-slate-850 border border-white/10 rounded-xl text-xs text-white outline-none"
+                        />
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setSessionLogs([...sessionLogs, `Set-Cookie: ${cookieSimKey}=${cookieSimVal}; Path=/; HttpOnly; Secure`]);
+                        toast.success('Cookie injected successfully');
+                      }}
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                    >
+                      Inject Cookie Header
+                    </button>
                   </div>
                 </div>
-                <button 
-                  onClick={() => {
-                    setSessionLogs([...sessionLogs, `Set-Cookie: ${cookieSimKey}=${cookieSimVal}; Path=/; HttpOnly; Secure`]);
-                    toast.success('Cookie Set Successfully');
-                  }}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl cursor-pointer"
-                >
-                  Inject Cookie
-                </button>
-
-                {sessionLogs.length > 0 && (
-                  <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed">
-                    {sessionLogs.join('\n')}
-                  </pre>
-                )}
-              </div>
-            </div>
+              }
+              practiceQuestions={[
+                { q: "Which class method is invoked to invalidate HttpSession memory contexts?", options: ["session.close()", "session.invalidate()", "session.destroy()", "session.clear()"], correct: "session.invalidate()", explanation: "session.invalidate() clears session bindings immediately." }
+              ]}
+              codingExercise={{
+                instructions: "Retrieve the active HttpSession or create one if none exists.",
+                boilerplate: "HttpSession session = req.________(true);",
+                solutionRegex: "getSession"
+              }}
+              miniProject={{
+                title: "Server Session Access Auditor",
+                description: "Develop a servlet listener tracking the number of active HTTP sessions and logging session lifecycles."
+              }}
+              quiz={[
+                { q: "What identifier token does Tomcat default to for tracking browser sessions in cookies?", options: ["SESSION_ID", "JSESSIONID", "COOKIE_SESSION", "TOKENID"], correct: "JSESSIONID", explanation: "JSESSIONID is the default cookie name used by Java containers for session state tracking." }
+              ]}
+            />
           )}
 
           {/* HIBERNATE TAB */}
           {activePanel === 'hibernate' && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">Hibernate Mapping Builder</h3>
-              
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
-                <span className="text-xs font-bold text-slate-300 block">ORM Relationship configurations</span>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-[10px] text-slate-500 block">Entity Name</label>
-                    <input 
-                      type="text" 
-                      value={entityMapping.entity}
-                      onChange={(e) => setEntityMapping({...entityMapping, entity: e.target.value})}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white"
-                    />
+            <TheoryFirstModule
+              title="Hibernate Object-Relational Mapping (ORM)"
+              icon={Database}
+              introduction="Hibernate is an open-source object-relational mapping (ORM) framework for Java. It simplifies the development of Java applications to interact with the database by providing an abstraction layer over low-level JDBC SQL queries, mapping Java classes to database tables and Java data types to SQL data types."
+              theoryContent={
+                <div className="space-y-4 text-left">
+                  <p>
+                    In traditional enterprise development, object-oriented models in Java conflict with relational database models (known as the Object-Relational Impedance Mismatch). Hibernate solves this by automatically mapping entities, loading objects, managing database connections, caching data, and maintaining session states.
+                  </p>
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <h5 className="font-bold text-white mb-2">Core Hibernate Concepts & Architecture:</h5>
+                    <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                      <li><strong>SessionFactory:</strong> A thread-safe, heavy object compiled once at application startup representing a single database configuration.</li>
+                      <li><strong>Session:</strong> A lightweight, short-lived session wrapper object representing a physical connection to the database.</li>
+                      <li><strong>Transaction:</strong> Wraps physical database transaction boundaries, ensuring ACID properties.</li>
+                      <li><strong>Query / Criteria API:</strong> Allows querying database records using object-oriented JPQL (Java Persistence Query Language) or type-safe programmatic criteria.</li>
+                      <li><strong>First-Level Cache:</strong> Enabled by default, session-level cache storing active transaction objects.</li>
+                      <li><strong>Second-Level Cache:</strong> SessionFactory-level cache across sessions, configured using Ehcache or Redis.</li>
+                    </ul>
                   </div>
-                  <div>
-                    <label className="text-[10px] text-slate-500 block">Table Map Name</label>
-                    <input 
-                      type="text" 
-                      value={entityMapping.table}
-                      onChange={(e) => setEntityMapping({...entityMapping, table: e.target.value})}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white"
-                    />
+                  <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed overflow-x-auto">
+{`// Session and Transaction Management
+SessionFactory factory = new Configuration().configure().buildSessionFactory();
+Session session = factory.openSession();
+Transaction tx = null;
+try {
+    tx = session.beginTransaction();
+    Student student = new Student("John", "Doe");
+    session.save(student); // persists in database
+    tx.commit();
+} catch (Exception e) {
+    if (tx != null) tx.rollback();
+} finally {
+    session.close();
+}`}
+                  </pre>
+                </div>
+              }
+              aiExplanation="Imagine Java classes and database tables speak two different languages. Java speaks 'Objects' and the database speaks 'Rows and Columns'. Hibernate is the fluent, real-time translator sitting between them. Whenever you create a new Java Object, Hibernate automatically translates it and writes it as database rows, and vice-versa, without you writing a single line of SQL translation!"
+              useCases={[
+                { title: "Enterprise Database Portals", desc: "Mapping thousands of database rows to secure, nested domain objects dynamically." },
+                { title: "Multi-tenant E-Commerce Platforms", desc: "Leveraging Hibernate caching layers to handle heavy read traffic and transactions." }
+              ]}
+              architectureDiagram={
+                <svg viewBox="0 0 400 160" className="w-full max-h-[140px]">
+                  <rect x="10" y="10" width="380" height="30" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="2" />
+                  <text x="200" y="30" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">Java Application Layer</text>
+
+                  <path d="M 200 40 L 200 65" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <rect x="10" y="65" width="180" height="30" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="100" y="85" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="10">Session (1st Lvl Cache)</text>
+
+                  <rect x="210" y="65" width="180" height="30" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="300" y="85" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="10">SessionFactory (2nd Cache)</text>
+
+                  <path d="M 200 95 L 200 120" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <rect x="10" y="120" width="380" height="30" rx="6" fill="#0f172a" stroke="#10B981" strokeWidth="1.5" />
+                  <text x="200" y="138" textAnchor="middle" fill="#10B981" fontSize="10">Database (JDBC / SQL Layer)</text>
+                </svg>
+              }
+              workflowDiagram={
+                <svg viewBox="0 0 500 80" className="w-full max-h-[70px]">
+                  <g transform="translate(10, 10)">
+                    <rect x="0" y="0" width="90" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="1" />
+                    <text x="45" y="24" textAnchor="middle" fill="#fff" fontSize="9">1. Load Config</text>
+                  </g>
+                  <path d="M 105 30 L 135 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+                  
+                  <g transform="translate(140, 10)">
+                    <rect x="0" y="0" width="90" height="40" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="1" />
+                    <text x="45" y="24" textAnchor="middle" fill="#fff" fontSize="9">2. Build Factory</text>
+                  </g>
+                  <path d="M 235 30 L 265 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(270, 10)">
+                    <rect x="0" y="0" width="90" height="40" rx="6" fill="#1e1b4b" stroke="#10B981" strokeWidth="1" />
+                    <text x="45" y="24" textAnchor="middle" fill="#fff" fontSize="9">3. Open Session</text>
+                  </g>
+                  <path d="M 365 30 L 395 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(400, 10)">
+                    <rect x="0" y="0" width="90" height="40" rx="6" fill="#1e1b4b" stroke="#F59E0B" strokeWidth="1" />
+                    <text x="45" y="24" textAnchor="middle" fill="#fff" fontSize="9">4. Commit & Close</text>
+                  </g>
+                </svg>
+              }
+              steps={[
+                { title: "Configuration", desc: "Read hibernate.cfg.xml settings describing database connections, credentials, dialect, and mapping configurations." },
+                { title: "Compile SessionFactory", desc: "Build SessionFactory which acts as a heavy compilation metadata model for all mapped entities." },
+                { title: "Open Session", desc: "Open short-lived Session which handles database CRUD calls and acts as First-Level Cache." },
+                { title: "Begin & Commit Transactions", desc: "Use transaction.begin(), save or query entities, and transaction.commit() to run ACID storage operations." }
+              ]}
+              interviewQuestions={[
+                { q: "What is the difference between openSession() and getCurrentSession()?", a: "openSession() always opens a new Session instance that you must explicitly close. getCurrentSession() retrieves the active Session bound to the current execution thread context, which is automatically closed when the transaction completes." },
+                { q: "What are the states of a Hibernate Entity?", a: "Transient (not associated with any session or database row), Persistent (associated with active session and has a database row), and Detached (associated with a database row but session has closed)." }
+              ]}
+              importantNotes={[
+                "Always close Sessions in a finally block to prevent connection leaks, unless using Spring's automatic transaction manager.",
+                "Be cautious of the N+1 select problem; use JOIN FETCH or entity graphs to optimize relations fetch modes."
+              ]}
+              visualization={
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold text-slate-300">Hibernate ORM Entity Relationship State</h4>
+                  <div className="p-3 bg-black/45 rounded-xl text-xs space-y-1 text-slate-300 font-mono">
+                    <div>Active Entity Class: <b>{entityMapping.entity}</b></div>
+                    <div>Target Database Table: <b>{entityMapping.table}</b></div>
+                    <div>Configured Relation: <b>{relationshipType}</b></div>
                   </div>
-                  <div>
-                    <label className="text-[10px] text-slate-500 block">Relation Mode</label>
-                    <select 
-                      value={relationshipType}
-                      onChange={(e) => setRelationshipType(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-xs text-white outline-none"
-                    >
-                      <option>One-To-One</option>
-                      <option>One-To-Many</option>
-                      <option>Many-To-One</option>
-                      <option>Many-To-Many</option>
-                    </select>
+                  <div className="flex gap-2">
+                    {['One-To-One', 'One-To-Many', 'Many-To-One', 'Many-To-Many'].map(rel => (
+                      <button 
+                        key={rel}
+                        onClick={() => setRelationshipType(rel)}
+                        className={`px-2.5 py-1 text-[11px] font-bold rounded-lg cursor-pointer ${
+                          relationshipType === rel ? 'bg-purple-600 text-white' : 'bg-white/5 text-slate-400'
+                        }`}
+                      >
+                        {rel}
+                      </button>
+                    ))}
                   </div>
                 </div>
-
-                <div className="p-4 bg-black rounded-xl text-xs text-emerald-400 font-mono whitespace-pre leading-relaxed">
+              }
+              simulator={
+                <div className="space-y-4">
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                    <span className="text-xs font-bold text-slate-300 block">Hibernate Entity Class Schema Builder</span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] text-slate-500 block">Entity Class Name</label>
+                        <input 
+                          type="text" 
+                          value={entityMapping.entity}
+                          onChange={(e) => setEntityMapping({...entityMapping, entity: e.target.value})}
+                          className="w-full px-3 py-1.5 bg-slate-850 border border-white/10 rounded-xl text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-slate-500 block">Target DB Table Name</label>
+                        <input 
+                          type="text" 
+                          value={entityMapping.table}
+                          onChange={(e) => setEntityMapping({...entityMapping, table: e.target.value})}
+                          className="w-full px-3 py-1.5 bg-slate-850 border border-white/10 rounded-xl text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                    <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono whitespace-pre leading-relaxed overflow-x-auto">
 {`@Entity
 @Table(name = "${entityMapping.table}")
 public class ${entityMapping.entity} {
@@ -2585,107 +3687,1120 @@ public class ${entityMapping.entity} {
     private Long id;
 
     @${relationshipType}
-    private List<Details> details;
+    private List<DataRecord> records;
 }`}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* SPRING TAB */}
-          {activePanel === 'spring' && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">Spring Boot Starter Generator</h3>
-              
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
-                <span className="text-xs font-bold text-slate-300 block">Spring Project Starter Settings</span>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] text-slate-500 block">Group ID</label>
-                    <input 
-                      type="text" 
-                      value={starterGroup}
-                      onChange={(e) => setStarterGroup(e.target.value)}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-slate-500 block">Artifact ID</label>
-                    <input 
-                      type="text" 
-                      value={starterArtifact}
-                      onChange={(e) => setStarterArtifact(e.target.value)}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white"
-                    />
+                    </pre>
                   </div>
                 </div>
-
-                <button 
-                  onClick={() => {
-                    toast.success('Spring Boot Project Boilerplate downloaded successfully!');
-                  }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer"
-                >
-                  Download Boilerplate Starter Zip
-                </button>
-              </div>
-            </div>
+              }
+              practiceQuestions={[
+                { q: "Which annotation is used to designate a Java class as an ORM database entity?", options: ["@Table", "@Entity", "@Id", "@DatabaseMapped"], correct: "@Entity", explanation: "@Entity is the standard JPA annotation that marks a class for database ORM mapping." }
+              ]}
+              codingExercise={{
+                instructions: "Complete the annotation name to map a primary key identifier in Hibernate entities.",
+                boilerplate: "________\n@GeneratedValue(strategy = GenerationType.IDENTITY)\nprivate Long id;",
+                solutionRegex: "@Id"
+              }}
+              miniProject={{
+                title: "Entity Relational Catalog System",
+                description: "Map a Student entity to a Course entity using a One-to-Many relation mapping and run CRUD session transaction routines."
+              }}
+              quiz={[
+                { q: "What is the N+1 SELECT query issue?", options: ["Loading 1 entity requires executing N+1 distinct SQL statements", "Caching 1 entity results in N+1 connection attempts", "A primary key requires N+1 validation checks", "Database connection pool timeout default value"], correct: "Loading 1 entity requires executing N+1 distinct SQL statements", explanation: "The N+1 problem occurs when fetching a parent entity initiates N separate queries to load its child relationships sequentially." }
+              ]}
+            />
           )}
+
+          {/* SPRING CORE TAB */}
+          {activePanel === 'spring-core' && (
+            <TheoryFirstModule
+              title="Spring Core Framework & IoC"
+              icon={Layers}
+              introduction="Spring Core is the fundamental module of the Spring Framework, providing Inversion of Control (IoC) and Dependency Injection (DI) features. It decouples the creation and lifecycle management of application objects from business logic, allowing for highly modular, testable enterprise code."
+              theoryContent={
+                <div className="space-y-4 text-left">
+                  <p>
+                    In conventional Java applications, objects manage their own dependencies via direct instantiation (e.g. <code>new ServiceImpl()</code>). This tight coupling makes code rigid and difficult to unit test. The Spring Container solves this by taking control of bean instantiations, configurations, and assembler lifecycles—a pattern known as Inversion of Control (IoC).
+                  </p>
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <h5 className="font-bold text-white mb-2">Key Core Spring Concepts:</h5>
+                    <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                      <li><strong>ApplicationContext:</strong> The advanced Spring IoC Container interface that creates, configures, and manages the lifecycle of beans.</li>
+                      <li><strong>Dependency Injection (DI):</strong> The mechanism where the container injects dependent objects into a bean via Constructor Injection or Setter Injection.</li>
+                      <li><strong>Spring Beans:</strong> Objects managed by the Spring IoC container (instantiated, assembled, and managed).</li>
+                      <li><strong>Bean Scopes:</strong> Singleton (one instance per container), Prototype (new instance per request), Request, Session, and Application.</li>
+                      <li><strong>Stereotype Annotations:</strong> <code>@Component</code>, <code>@Service</code>, <code>@Repository</code>, and <code>@Controller</code>.</li>
+                    </ul>
+                  </div>
+                  <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed overflow-x-auto">
+{`@Configuration
+public class AppConfig {
+    @Bean
+    public CourseService courseService() {
+        return new CourseServiceImpl(dbConnector());
+    }
+
+    @Bean
+    public DatabaseConnector dbConnector() {
+        return new PostgreSQLConnector();
+    }
+}`}
+                  </pre>
+                </div>
+              }
+              aiExplanation="Imagine you're building a house. Instead of going to the store, buying the plumbing pipes, buying the sink, and manually assembling them inside the walls yourself (tight coupling), you hire a master builder (the Spring IoC Container). You just write down a list of what you need (Annotations/JavaConfig) and the builder automatically delivers, connects, and sets up all the components ready for you to use!"
+              useCases={[
+                { title: "Decoupled Business Logic Layer", desc: "Injecting data repository adapters into transaction services without hardcoding dependencies." },
+                { title: "Enterprise Service Assembler", desc: "Configuring singleton beans like mail services, auditing modules, and security filters globally." }
+              ]}
+              architectureDiagram={
+                <svg viewBox="0 0 400 160" className="w-full max-h-[140px]">
+                  <rect x="10" y="10" width="110" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="2" />
+                  <text x="65" y="34" textAnchor="middle" fill="#fff" fontSize="9">POJO / Java Classes</text>
+
+                  <rect x="140" y="10" width="110" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="2" />
+                  <text x="195" y="34" textAnchor="middle" fill="#fff" fontSize="9">Config (@Configuration)</text>
+
+                  <path d="M 65 50 L 195 90" fill="none" stroke="#64748B" strokeWidth="1.5" strokeDasharray="3" markerEnd="url(#arrow)" />
+                  <path d="M 195 50 L 195 90" fill="none" stroke="#64748B" strokeWidth="1.5" strokeDasharray="3" markerEnd="url(#arrow)" />
+
+                  <rect x="100" y="90" width="200" height="35" rx="6" fill="#0f172a" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="200" y="112" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="10">Spring IoC Container</text>
+
+                  <path d="M 200 125 L 200 145" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <text x="200" y="156" textAnchor="middle" fill="#10B981" fontWeight="bold" fontSize="9">Ready Managed Beans</text>
+                </svg>
+              }
+              workflowDiagram={
+                <svg viewBox="0 0 500 80" className="w-full max-h-[70px]">
+                  <g transform="translate(10, 10)">
+                    <rect x="0" y="0" width="90" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="1" />
+                    <text x="45" y="24" textAnchor="middle" fill="#fff" fontSize="9">1. Instantiate Beans</text>
+                  </g>
+                  <path d="M 105 30 L 135 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(140, 10)">
+                    <rect x="0" y="0" width="90" height="40" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="1" />
+                    <text x="45" y="24" textAnchor="middle" fill="#fff" fontSize="9">2. Inject Dependencies</text>
+                  </g>
+                  <path d="M 235 30 L 265 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(270, 10)">
+                    <rect x="0" y="0" width="90" height="40" rx="6" fill="#10B981" stroke="#10B981" strokeWidth="1" />
+                    <text x="45" y="24" textAnchor="middle" fill="#fff" fontSize="9">3. PostProcessors</text>
+                  </g>
+                  <path d="M 365 30 L 395 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(400, 10)">
+                    <rect x="0" y="0" width="90" height="40" rx="6" fill="#F59E0B" stroke="#F59E0B" strokeWidth="1" />
+                    <text x="45" y="24" textAnchor="middle" fill="#fff" fontSize="9">4. ready / destroy</text>
+                  </g>
+                </svg>
+              }
+              steps={[
+                { title: "Locate Bean Definitions", desc: "Spring parses XML config or scans project folders search-mapping @Configuration, @Component classes." },
+                { title: "Instantiate & Inject (DI)", desc: "Spring instantiates beans sequentially and injects required dependencies via constructors or field setters." },
+                { title: "Initialization Hooks", desc: "Invoke BeanPostProcessors and call Custom Init methods (@PostConstruct or InitializingBean hooks)." },
+                { title: "Destruction Registration", desc: "Register destruction callbacks (@PreDestroy or DisposableBean hooks) to gracefully free memory when context closes." }
+              ]}
+              interviewQuestions={[
+                { q: "What is Inversion of Control (IoC)?", a: "IoC is a design principle where the control of object creation, configuration, and lifecycle is transferred from the application code to an external framework or container (Spring)." },
+                { q: "Why is Constructor Injection preferred over Field Injection?", a: "Constructor Injection ensures dependencies are immutable, guarantees required fields are never null, and makes unit testing easier without needing reflection utilities." }
+              ]}
+              importantNotes={[
+                "The default scope of a Spring bean is Singleton, meaning one shared instance exists per container. Avoid writing mutable state variables inside them.",
+                "Avoid circular dependencies (Bean A needs Bean B, which needs Bean A) as it blocks context startup."
+              ]}
+              visualization={
+                <div className="space-y-3 text-left">
+                  <span className="text-xs font-bold text-slate-300 block">IoC Container Controller</span>
+                  <div className="p-3 bg-slate-950 border border-white/5 rounded-xl space-y-2 text-xs">
+                    <div className="flex justify-between items-center text-[10px] text-slate-500 font-mono">
+                      <span>ApplicationContext Status:</span>
+                      <span className="text-emerald-400 font-bold">READY</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">Beans in Context: [courseService, dbConnector, appConfig]</p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      toast.success('Spring Context Refreshed! Beans initialized.');
+                    }}
+                    className="w-full py-2 bg-blue-600/30 hover:bg-blue-600/50 text-blue-400 text-xs font-bold rounded-xl cursor-pointer"
+                  >
+                    Refresh Context (BeanFactory)
+                  </button>
+                </div>
+              }
+              simulator={
+                <div className="space-y-4 font-normal text-left">
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                    <span className="text-xs font-bold text-slate-300 block font-mono">Bean Configuration (AppConfig.java)</span>
+                    <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed text-left overflow-x-auto">
+{`@Configuration
+public class AppConfig {
+    @Bean
+    public CourseService courseService() {
+        return new CourseServiceImpl(dbConnector());
+    }
+
+    @Bean
+    public DatabaseConnector dbConnector() {
+        return new PostgreSQLConnector();
+    }
+}`}
+                    </pre>
+                  </div>
+                </div>
+              }
+              practiceQuestions={[
+                { q: "Which scope initiates a new Bean instance every single time it is requested from the container?", options: ["Singleton", "Prototype", "Request", "Session"], correct: "Prototype", explanation: "Prototype scope ensures a fresh instance is created on every container lookup." }
+              ]}
+              codingExercise={{
+                instructions: "Complete the annotation used to configure class-level dependency injection dynamically.",
+                boilerplate: "@Component\npublic class Registry {\n  ________\n  private StudentRepository repo;\n}",
+                solutionRegex: "@Autowired"
+              }}
+              miniProject={{
+                title: "Decoupled Notification Dispatcher",
+                description: "Assemble an SMS and Email notification system using constructor dependency injection configuration configurations."
+              }}
+              quiz={[
+                { q: "Which ApplicationContext interface method retrieves a configured bean from Spring container?", options: ["getBean()", "lookup()", "findBean()", "instantiate()"], correct: "getBean()", explanation: "getBean() is used to programmatically query configured beans by name or type." }
+              ]}
+            />
+          )}
+
+          {/* SPRING MVC TAB */}
+          {activePanel === 'spring-mvc' && (
+            <TheoryFirstModule
+              title="Spring MVC Routing & DispatcherServlet"
+              icon={Layers}
+              introduction="Spring MVC (Model-View-Controller) is a request-driven web framework built on the Servlet API. It uses a central front controller servlet, the DispatcherServlet, to coordinate and route HTTP requests to appropriate handlers and views."
+              theoryContent={
+                <div className="space-y-4 text-left">
+                  <p>
+                    In a classic servlet model, every path map requires registering a distinct servlet class. Spring MVC unifies this by deploying a single front controller called <code>DispatcherServlet</code>. It intercepts all incoming requests and delegates routing lookups to handler mappings, executing controller methods and serializing model returns to client views or JSON.
+                  </p>
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <h5 className="font-bold text-white mb-2">Core Spring MVC Workflow Elements:</h5>
+                    <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                      <li><strong>DispatcherServlet:</strong> Intercepts every HTTP request and controls the processing pipeline workflow.</li>
+                      <li><strong>HandlerMapping:</strong> Resolves the request URL path to find the appropriate Controller handler method.</li>
+                      <li><strong>HandlerAdapter:</strong> Executes the mapped controller method with argument resolution (e.g. binding path variables).</li>
+                      <li><strong>ViewResolver:</strong> Resolves logical view names (like "index") to actual template files (like JSP/Thymeleaf) if not using @ResponseBody.</li>
+                      <li><strong>@RestController:</strong> Combines @Controller and @ResponseBody to automatically write object returns as JSON strings.</li>
+                    </ul>
+                  </div>
+                </div>
+              }
+              aiExplanation="Think of Spring MVC like a major post office sorting center. The DispatcherServlet is the head mail sorter at the front desk. Instead of people hand-delivering letters directly to different offices, all mail goes to the front desk. The head sorter looks at the address (URL route) and immediately hands it over to the specific worker (Controller Method) trained to process that specific mail item!"
+              useCases={[
+                { title: "Enterprise REST API Gateways", desc: "Constructing JSON route controllers serving backend records to frontend clients." },
+                { title: "Server-Side Rendered Web Portals", desc: "Routing pages using MVC models to bind databases into dynamic client views." }
+              ]}
+              architectureDiagram={
+                <svg viewBox="0 0 400 160" className="w-full max-h-[140px]">
+                  <rect x="10" y="55" width="80" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="1.5" />
+                  <text x="50" y="80" textAnchor="middle" fill="#fff" fontSize="9">Client Query</text>
+
+                  <path d="M 90 75 L 125 75" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <rect x="130" y="15" width="130" height="120" rx="8" fill="#0f172a" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="195" y="32" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="10">DispatcherServlet</text>
+
+                  <rect x="140" y="50" width="110" height="25" rx="4" fill="#1e1b4b" stroke="#10B981" strokeWidth="1" />
+                  <text x="195" y="66" textAnchor="middle" fill="#10B981" fontSize="8">HandlerMapping</text>
+
+                  <rect x="140" y="85" width="110" height="25" rx="4" fill="#1e1b4b" stroke="#F59E0B" strokeWidth="1" />
+                  <text x="195" y="101" textAnchor="middle" fill="#F59E0B" fontSize="8">HandlerAdapter</text>
+
+                  <path d="M 260 75 L 305 75" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <rect x="310" y="55" width="80" height="40" rx="6" fill="#1e1b4b" stroke="#10B981" strokeWidth="1.5" />
+                  <text x="350" y="80" textAnchor="middle" fill="#fff" fontSize="9">Controller Bean</text>
+                </svg>
+              }
+              workflowDiagram={
+                <svg viewBox="0 0 500 80" className="w-full max-h-[70px]">
+                  <g transform="translate(10, 10)">
+                    <rect x="0" y="0" width="100" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="1" />
+                    <text x="50" y="24" textAnchor="middle" fill="#fff" fontSize="8">HTTP Request</text>
+                  </g>
+                  <path d="M 115 30 L 145 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(150, 10)">
+                    <rect x="0" y="0" width="100" height="40" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="1" />
+                    <text x="50" y="24" textAnchor="middle" fill="#fff" fontSize="8">Front Dispatcher</text>
+                  </g>
+                  <path d="M 255 30 L 285 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(290, 10)">
+                    <rect x="0" y="0" width="100" height="40" rx="6" fill="#1e1b4b" stroke="#10B981" strokeWidth="1" />
+                    <text x="50" y="24" textAnchor="middle" fill="#fff" fontSize="8">Execute Controller</text>
+                  </g>
+                  <path d="M 395 30 L 425 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(430, 10)">
+                    <rect x="0" y="0" width="60" height="40" rx="6" fill="#1e1b4b" stroke="#F59E0B" strokeWidth="1" />
+                    <text x="30" y="24" textAnchor="middle" fill="#fff" fontSize="8">JSON / HTML</text>
+                  </g>
+                </svg>
+              }
+              steps={[
+                { title: "Intercept Request", desc: "DispatcherServlet intercepts the query URL sent by user client browser." },
+                { title: "Resolve Handler Path", desc: "DispatcherServlet calls HandlerMapping to lookup which RestController class maps to route." },
+                { title: "Execute Controller Handler", desc: "HandlerAdapter triggers the mapped method (e.g. @GetMapping) resolving path parameters." },
+                { title: "Return Response Data", desc: "The method returns data, which is parsed to JSON using HttpMessageConverters and piped to response body." }
+              ]}
+              interviewQuestions={[
+                { q: "What is the difference between @Controller and @RestController?", a: "@Controller maps classes to traditional MVC views (HTML/JSP) resolving logical view names. @RestController is a specialized controller that implicitly appends @ResponseBody to every handler method, serializing method returns directly to HTTP JSON bodies." },
+                { q: "How do you capture path variables in Spring MVC?", a: "By using the @PathVariable annotation on method parameters, matching the dynamic path placeholders defined in request mapping annotations (e.g. @GetMapping('/courses/{id}'))." }
+              ]}
+              importantNotes={[
+                "Always declare specific HTTP verb mappings (like @GetMapping or @PostMapping) instead of generic @RequestMapping to keep routes secure.",
+                "Leverage @ControllerAdvice to intercept exceptions globally and return standardized error response bodies."
+              ]}
+              visualization={
+                <div className="space-y-3 text-left">
+                  <span className="text-xs font-bold text-slate-300 block">Spring MVC Dispatcher Request Pipeline</span>
+                  <div className="p-3 bg-slate-950 border border-white/5 rounded-xl space-y-2 text-xs font-mono">
+                    <div>Query Route: <span className="text-emerald-400 font-bold">GET /courses/101</span></div>
+                    <div>Resolved Controller: CourseController.getCourse(101)</div>
+                  </div>
+                </div>
+              }
+              simulator={
+                <div className="space-y-4 text-left">
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                    <span className="text-xs font-bold text-slate-300 block">Simulate Request Endpoint Dispatch</span>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value="/courses/101" 
+                        disabled
+                        className="flex-grow px-3 py-1.5 bg-slate-900 border border-white/10 rounded-xl text-xs text-slate-400 outline-none"
+                      />
+                      <button 
+                        onClick={() => {
+                          toast.success('DispatcherServlet routed successfully to CourseController');
+                        }}
+                        className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                      >
+                        Dispatch
+                      </button>
+                    </div>
+                    <pre className="p-3 bg-black rounded-xl text-xs font-mono text-emerald-400 min-h-[80px] overflow-x-auto">
+{`GET /courses/101 HTTP/1.1\nHost: localhost:8080\n\nResponse 200 OK\n{\n  "id": 101,\n  "title": "Spring Framework Masterclass",\n  "status": "Active"\n}`}
+                    </pre>
+                  </div>
+                </div>
+              }
+              practiceQuestions={[
+                { q: "Which annotation binds request path placeholders dynamically to handler parameters?", options: ["@RequestParam", "@PathVariable", "@RequestBody", "@ModelAttribute"], correct: "@PathVariable", explanation: "@PathVariable captures dynamic route values defined inside curly brackets." }
+              ]}
+              codingExercise={{
+                instructions: "Write the annotation that marks a class as a REST endpoint controller yielding direct serialized responses.",
+                boilerplate: "________\n@RequestMapping(\"/api\")\npublic class ApiController {}",
+                solutionRegex: "@RestController"
+              }}
+              miniProject={{
+                title: "E-Commerce REST Catalog Endpoint",
+                description: "Create a Product REST controller handling GET and POST routes, utilizing PathVariable and RequestBody bindings."
+              }}
+              quiz={[
+                { q: "Which component acts as the main front controller orchestrator in Spring MVC?", options: ["HandlerMapping", "DispatcherServlet", "ViewResolver", "ServletConfig"], correct: "DispatcherServlet", explanation: "DispatcherServlet intercepts all inbound requests, serving as the front controller pattern driver." }
+              ]}
+            />
+          )}
+
+          {/* SPRING BOOT TAB */}
+          {activePanel === 'spring-boot' && (
+            <TheoryFirstModule
+              title="Spring Boot Framework"
+              icon={Layers}
+              introduction="Spring Boot is an extension of the Spring Framework that simplifies the bootstrapping and development of new production-ready Spring applications. It eliminates complex XML/Java configurations by leveraging Auto-Configuration, Starter Dependencies, and an Embedded Web Server (Tomcat)."
+              theoryContent={
+                <div className="space-y-4 text-left">
+                  <p>
+                    Building a classic Spring application requires significant configuration (e.g. setting up transaction managers, data sources, servlet mappings, and view resolvers). Spring Boot automates this boilerplate using a 'convention-over-configuration' design model.
+                  </p>
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <h5 className="font-bold text-white mb-2">Key Spring Boot Features:</h5>
+                    <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                      <li><strong>Auto-Configuration:</strong> Automatically configures Spring beans based on the classes present in the project classpath (e.g. if Hibernate jar is present, configure a database session factory automatically).</li>
+                      <li><strong>Starter Dependencies:</strong> Grouped descriptors (like <code>spring-boot-starter-web</code>) that bundle required transitive dependencies.</li>
+                      <li><strong>Embedded Server:</strong> Bundles Tomcat, Jetty, or Undertow servers directly into the executable JAR file.</li>
+                      <li><strong>Actuator:</strong> Provides production-ready monitoring tools, health audits, metrics, and environment properties endpoints.</li>
+                    </ul>
+                  </div>
+                </div>
+              }
+              aiExplanation="Imagine Spring Framework is a professional mechanics toolbox full of complex, unassembled engine parts. Spring Boot is like buying a pre-assembled, factory-tuned sports car. The keys are in the ignition, the engine is ready to start (Embedded Tomcat), and the car automatically adjusts itself to the road (Auto-Configuration) so you can just focus on driving!"
+              useCases={[
+                { title: "Standalone Microservices", desc: "Packaging self-contained web services running as direct executable JAR files on cloud servers." },
+                { title: "Rapid MVP Prototypes", desc: "Initializing a complete web framework stack with security, databases, and controllers in minutes." }
+              ]}
+              architectureDiagram={
+                <svg viewBox="0 0 400 160" className="w-full max-h-[140px]">
+                  <rect x="10" y="10" width="380" height="30" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="2" />
+                  <text x="200" y="30" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">Your Spring Boot Application Code</text>
+
+                  <path d="M 200 40 L 200 65" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <rect x="10" y="65" width="180" height="30" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="100" y="85" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="10">Auto-Config Engine</text>
+
+                  <rect x="210" y="65" width="180" height="30" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="300" y="85" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="10">Embedded Tomcat Server</text>
+
+                  <path d="M 100 95 L 200 120" fill="none" stroke="#64748B" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                  <path d="M 300 95 L 200 120" fill="none" stroke="#64748B" strokeWidth="1.5" markerEnd="url(#arrow)" />
+
+                  <rect x="110" y="120" width="180" height="30" rx="6" fill="#0f172a" stroke="#10B981" strokeWidth="1.5" />
+                  <text x="200" y="138" textAnchor="middle" fill="#10B981" fontSize="10">Executable JAR Output</text>
+                </svg>
+              }
+              workflowDiagram={
+                <svg viewBox="0 0 500 80" className="w-full max-h-[70px]">
+                  <g transform="translate(10, 10)">
+                    <rect x="0" y="0" width="100" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="1" />
+                    <text x="50" y="24" textAnchor="middle" fill="#fff" fontSize="8">1. Init Project</text>
+                  </g>
+                  <path d="M 115 30 L 145 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(150, 10)">
+                    <rect x="0" y="0" width="100" height="40" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="1" />
+                    <text x="50" y="24" textAnchor="middle" fill="#fff" fontSize="8">2. Resolve Starters</text>
+                  </g>
+                  <path d="M 255 30 L 285 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(290, 10)">
+                    <rect x="0" y="0" width="100" height="40" rx="6" fill="#1e1b4b" stroke="#10B981" strokeWidth="1" />
+                    <text x="50" y="24" textAnchor="middle" fill="#fff" fontSize="8">3. AutoConfig Beans</text>
+                  </g>
+                  <path d="M 395 30 L 425 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(430, 10)">
+                    <rect x="0" y="0" width="60" height="40" rx="6" fill="#1e1b4b" stroke="#F59E0B" strokeWidth="1" />
+                    <text x="30" y="24" textAnchor="middle" fill="#fff" fontSize="8">4. Start Server</text>
+                  </g>
+                </svg>
+              }
+              steps={[
+                { title: "Define Metadata", desc: "Establish Maven/Gradle group, artifact coordinates and select starter modules on Spring Initializr." },
+                { title: "Scan Annotations", desc: "The @SpringBootApplication meta-annotation triggers component scanning, configuration resolution, and auto-configuration." },
+                { title: "Run Auto-Config", desc: "Conditional bean checks evaluate classpath settings and configure databases/web components dynamically." },
+                { title: "Startup Embedded Web Server", desc: "Deploy spring context, bind Tomcat listener to default port 8080, and process server requests." }
+              ]}
+              interviewQuestions={[
+                { q: "What does the @SpringBootApplication annotation do?", a: "It is a meta-annotation that bundles three core annotations: @SpringBootConfiguration (declares class configurations), @EnableAutoConfiguration (triggers classpath conditional configurations), and @ComponentScan (scans all local components)." },
+                { q: "What is Spring Boot Actuator?", a: "Actuator is a sub-module that exposes production-ready endpoints (like /actuator/health, /actuator/metrics, /actuator/env) to monitor and audit application runtime states." }
+              ]}
+              importantNotes={[
+                "Never hardcode properties inside configurations; use application.properties or application.yml files and bind with @Value annotations.",
+                "Exclude specific auto-configurations using @SpringBootApplication(exclude={DataSourceAutoConfiguration.class}) if database connections are not required."
+              ]}
+              visualization={
+                <div className="space-y-3 text-left">
+                  <span className="text-xs font-bold text-slate-300 block">Spring Boot Application Metadata Config</span>
+                  <div className="p-3 bg-slate-950 border border-white/5 rounded-xl space-y-1 text-xs font-mono">
+                    <div>Project Group: <b>{starterGroup}</b></div>
+                    <div>Project Artifact: <b>{starterArtifact}</b></div>
+                    <div>Active Starters: <b>{springDeps.join(', ')}</b></div>
+                  </div>
+                </div>
+              }
+              simulator={
+                <div className="space-y-4 text-left font-normal">
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <span className="text-xs font-bold text-slate-300 block">Project Initializr Metadata</span>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[10px] text-slate-500 block">Group</label>
+                            <input 
+                              type="text" 
+                              value={starterGroup} 
+                              onChange={(e) => setStarterGroup(e.target.value)}
+                              className="w-full px-3 py-1.5 bg-slate-850 border border-white/10 rounded-xl text-xs text-white outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-slate-500 block">Artifact</label>
+                            <input 
+                              type="text" 
+                              value={starterArtifact} 
+                              onChange={(e) => setStarterArtifact(e.target.value)}
+                              className="w-full px-3 py-1.5 bg-slate-850 border border-white/10 rounded-xl text-xs text-white outline-none"
+                            />
+                          </div>
+                        </div>
+                        
+                        <span className="text-xs font-bold text-slate-300 block pt-2">Selected Dependencies</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {springDeps.map(dep => (
+                            <span key={dep} className="px-2.5 py-1 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-lg text-xs font-semibold">
+                              {dep}
+                            </span>
+                          ))}
+                        </div>
+                        
+                        <button 
+                          onClick={() => {
+                            toast.success('Spring Boot Application compiled and auto-configured!');
+                          }}
+                          className="w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                        >
+                          🚀 Run Application Bootstrap
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        <span className="text-xs font-bold text-slate-300 block">MainApplication.java</span>
+                        <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed text-left overflow-x-auto">
+{`package ${starterGroup};
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ${starterArtifact.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')}Application {
+    public static void main(String[] args) {
+        SpringApplication.run(${starterArtifact.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')}Application.class, args);
+    }
+}`}
+                        </pre>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+              practiceQuestions={[
+                { q: "Which file coordinates application configurations globally in a Spring Boot application?", options: ["web.xml", "application.properties", "pom.xml", "spring.cfg.xml"], correct: "application.properties", explanation: "application.properties (or application.yml) hosts all environment property key-value configurations." }
+              ]}
+              codingExercise={{
+                instructions: "Write the entry point method annotation to launch a Spring Boot application.",
+                boilerplate: "________\npublic class Application {\n    public static void main(String[] args) {}\n}",
+                solutionRegex: "@SpringBootApplication"
+              }}
+              miniProject={{
+                title: "Autoconconfigured Embedded Catalog Service",
+                description: "Bootstrap a standalone microservice using Spring Initializr, packaging an embedded web server running REST endpoint resources."
+              }}
+              quiz={[
+                { q: "Which server is bundled as the default embedded container in Spring Boot starter web?", options: ["Jetty", "Wildfly", "Tomcat", "Glassfish"], correct: "Tomcat", explanation: "Tomcat is the default embedded servlet web container configured by spring-boot-starter-web." }
+              ]}
+            />
+          )}
+
 
           {/* REST API TESTER TAB */}
           {activePanel === 'rest-api' && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">Enterprise REST API Client</h3>
-              
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
-                <div className="flex gap-2">
-                  <select 
-                    value={restMethod} 
-                    onChange={(e) => setRestMethod(e.target.value)}
-                    className="px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-xs text-white outline-none"
-                  >
-                    <option>GET</option>
-                    <option>POST</option>
-                    <option>PUT</option>
-                    <option>DELETE</option>
-                  </select>
-                  
-                  <input 
-                    type="text" 
-                    value={restUrl}
-                    onChange={(e) => setRestUrl(e.target.value)}
-                    className="flex-grow px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white outline-none focus:border-blue-500"
-                  />
-                  
-                  <button onClick={runRestRequest} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer">
-                    Send
-                  </button>
+            <TheoryFirstModule
+              title="RESTful Web Services API"
+              icon={Layers}
+              introduction="REST (Representational State Transfer) is an architectural style for designing distributed web services. RESTful APIs use HTTP methods (GET, POST, PUT, DELETE) to manage resources represented in standardized data formats like JSON."
+              theoryContent={
+                <div className="space-y-4 text-left">
+                  <p>
+                    In a RESTful architecture, every endpoint URI represents a resource. HTTP verbs specify the operations: <code>GET</code> retrieves resources, <code>POST</code> creates them, <code>PUT</code> updates them, and <code>DELETE</code> removes them. Controllers return serialized resources (usually JSON) with appropriate HTTP response status codes representing success or failure.
+                  </p>
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <h5 className="font-bold text-white mb-2">Core REST Rules & Constraints:</h5>
+                    <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                      <li><strong>Statelessness:</strong> Every client request must contain all context information needed to process it; the server stores no session metadata.</li>
+                      <li><strong>Resource-Oriented:</strong> URIs should target nouns rather than verbs (e.g. <code>/api/courses</code> instead of <code>/api/getCourses</code>).</li>
+                      <li><strong>Standard Status Codes:</strong> 200 OK (Success), 201 Created (Success Post), 400 Bad Request (Client Error), 401 Unauthorized (Auth Needed), 404 Not Found, 500 Internal Error.</li>
+                    </ul>
+                  </div>
                 </div>
+              }
+              aiExplanation="Imagine a REST API is like a vending machine. The items inside are resources (like courses). The request buttons are URIs (like /courses/101). The HTTP methods are actions: GET is pressing a button to look at an item, POST is restocking a slot with a new item, and DELETE is purchasing and clearing out the slot. The vending machine always returns a status (success green light or out-of-order red light)!"
+              useCases={[
+                { title: "Distributed Web APIs", desc: "Serving database resources to React, Vue, or iOS mobile client frontend applications." },
+                { title: "Third-Party Service Integrations", desc: "Exposing public endpoints for external business platforms to query database catalog indexes." }
+              ]}
+              architectureDiagram={
+                <svg viewBox="0 0 400 160" className="w-full max-h-[140px]">
+                  <rect x="10" y="55" width="100" height="50" rx="8" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="2" />
+                  <text x="60" y="84" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="10">React Frontend</text>
 
-                {restMethod !== 'GET' && (
-                  <div>
-                    <label className="text-[10px] text-slate-500 block mb-1">Request Body (JSON)</label>
-                    <textarea 
-                      value={restBody}
-                      onChange={(e) => setRestBody(e.target.value)}
-                      className="w-full h-20 bg-slate-900 text-xs text-slate-300 font-mono p-2 rounded-xl outline-none focus:border-blue-500 resize-none"
-                    />
+                  <path d="M 110 70 L 195 70" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+                  <text x="150" y="62" textAnchor="middle" fill="#3B82F6" fontSize="8">JSON Request</text>
+
+                  <path d="M 195 90 L 110 90" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+                  <text x="150" y="105" textAnchor="middle" fill="#10B981" fontSize="8">JSON Response</text>
+
+                  <rect x="200" y="20" width="190" height="120" rx="8" fill="#0f172a" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="295" y="42" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">Spring REST Controller</text>
+
+                  <rect x="215" y="70" width="160" height="40" rx="6" fill="#1e1b4b" stroke="#10B981" strokeWidth="1.5" />
+                  <text x="295" y="94" textAnchor="middle" fill="#10B981" fontSize="9">Jackson Serializer</text>
+                </svg>
+              }
+              workflowDiagram={
+                <svg viewBox="0 0 500 80" className="w-full max-h-[70px]">
+                  <g transform="translate(10, 10)">
+                    <rect x="0" y="0" width="90" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="1" />
+                    <text x="45" y="24" textAnchor="middle" fill="#fff" fontSize="8">HTTP Request</text>
+                  </g>
+                  <path d="M 105 30 L 135 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(140, 10)">
+                    <rect x="0" y="0" width="90" height="40" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="1" />
+                    <text x="45" y="24" textAnchor="middle" fill="#fff" fontSize="8">Route Mapping</text>
+                  </g>
+                  <path d="M 235 30 L 265 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(270, 10)">
+                    <rect x="0" y="0" width="90" height="40" rx="6" fill="#10B981" stroke="#10B981" strokeWidth="1" />
+                    <text x="45" y="24" textAnchor="middle" fill="#fff" fontSize="8">Read/Write DB</text>
+                  </g>
+                  <path d="M 365 30 L 395 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(400, 10)">
+                    <rect x="0" y="0" width="90" height="40" rx="6" fill="#F59E0B" stroke="#F59E0B" strokeWidth="1" />
+                    <text x="45" y="24" textAnchor="middle" fill="#fff" fontSize="8">JSON Output</text>
+                  </g>
+                </svg>
+              }
+              steps={[
+                { title: "Define Request Paths", desc: "Configure @RestController classes and assign HTTP verb mapping annotations for resources." },
+                { title: "Parse Payload Body", desc: "Map inbound request bodies to domain objects using @RequestBody annotation and Jackson converters." },
+                { title: "Process Business Logic", desc: "Interact with databases to load entities, format lists, or perform transaction queries." },
+                { title: "Return Status Codes", desc: "Utilize ResponseEntity to assign status codes like 201 Created and write JSON payload responses." }
+              ]}
+              interviewQuestions={[
+                { q: "What is the difference between PUT and PATCH HTTP methods?", a: "PUT is used to completely replace an existing resource with a new representation. PATCH is used to apply partial modifications or field updates to a resource." },
+                { q: "What is idempotency in RESTful APIs?", a: "An HTTP method is idempotent if executing it multiple times yields the exact same server resource state (e.g. GET, PUT, and DELETE are idempotent; POST is not, as it creates duplicate resources)." }
+              ]}
+              importantNotes={[
+                "Always return appropriate HTTP status codes (like 404 for missing entities) instead of generic 200 statuses containing error messages.",
+                "Document REST APIs with Swagger/OpenAPI specifications to make integrations simple for developers."
+              ]}
+              visualization={
+                <div className="space-y-3 text-left">
+                  <span className="text-xs font-bold text-slate-300 block">REST Client Active Connection State</span>
+                  <div className="p-3 bg-slate-950 border border-white/5 rounded-xl space-y-1 text-xs font-mono">
+                    <div>Target URI: <b>{restUrl}</b></div>
+                    <div>Request Method: <b className="text-blue-400">{restMethod}</b></div>
                   </div>
-                )}
-
-                {restResBody && (
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-                      <span>Status Code: <b className={restResCode === 200 ? 'text-emerald-400' : 'text-red-400'}>{restResCode}</b></span>
-                      <span>Response Time: <b>{restResTime} ms</b></span>
+                </div>
+              }
+              simulator={
+                <div className="space-y-4 text-left font-normal">
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                    <div className="flex gap-2">
+                      <select 
+                        value={restMethod} 
+                        onChange={(e) => setRestMethod(e.target.value)}
+                        className="px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-xs text-white outline-none"
+                      >
+                        <option>GET</option>
+                        <option>POST</option>
+                        <option>PUT</option>
+                        <option>DELETE</option>
+                      </select>
+                      
+                      <input 
+                        type="text" 
+                        value={restUrl}
+                        onChange={(e) => setRestUrl(e.target.value)}
+                        className="flex-grow px-3 py-2 bg-slate-850 border border-white/10 rounded-xl text-xs text-white outline-none focus:border-blue-500"
+                      />
+                      
+                      <button onClick={runRestRequest} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer">
+                        Send
+                      </button>
                     </div>
-                    <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed overflow-x-auto">
-                      {restResBody}
-                    </pre>
+
+                    {restMethod !== 'GET' && (
+                      <div>
+                        <label className="text-[10px] text-slate-500 block mb-1">Request Body (JSON)</label>
+                        <textarea 
+                          value={restBody}
+                          onChange={(e) => setRestBody(e.target.value)}
+                          className="w-full h-20 bg-slate-900 text-xs text-slate-300 font-mono p-2 rounded-xl outline-none focus:border-blue-500 resize-none"
+                        />
+                      </div>
+                    )}
+
+                    {restResBody && (
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                          <span>Status Code: <b className={restResCode === 200 ? 'text-emerald-400' : 'text-red-400'}>{restResCode}</b></span>
+                          <span>Response Time: <b>{restResTime} ms</b></span>
+                        </div>
+                        <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed overflow-x-auto">
+                          {restResBody}
+                        </pre>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
+              }
+              practiceQuestions={[
+                { q: "Which HTTP status code represents a resource successfully created on the server?", options: ["200 OK", "201 Created", "202 Accepted", "204 No Content"], correct: "201 Created", explanation: "201 Created is the standard response status for successful POST resource creation requests." }
+              ]}
+              codingExercise={{
+                instructions: "Complete the annotation used to parse HTTP JSON request payloads into method variables.",
+                boilerplate: "@PostMapping(\"/add\")\npublic ResponseEntity<User> addUser(________ User user) {}",
+                solutionRegex: "@RequestBody"
+              }}
+              miniProject={{
+                title: "Secured User Registry REST API",
+                description: "Expose standard RESTful endpoints mapping GET, POST, and DELETE calls to manage catalog databases dynamically."
+              }}
+              quiz={[
+                { q: "What does idempotency imply for the DELETE method?", options: ["Multiple identical requests yield same resource state without secondary deletions", "It must delete a new item every time", "It can only be executed once per session", "It does not delete anything"], correct: "Multiple identical requests yield same resource state without secondary deletions", explanation: "DELETE is idempotent because executing it multiple times on the same item leaves the system state identical after the first delete." }
+              ]}
+            />
+          )}
+
+          {/* SPRING SECURITY TAB */}
+          {activePanel === 'spring-sec' && (
+            <TheoryFirstModule
+              title="Spring Security Filter Chain"
+              icon={Layers}
+              introduction="Spring Security is a powerful and highly customizable authentication and access-control framework for Java applications. It acts as a shield protecting web resources through a series of security filters that authenticate and authorize incoming requests."
+              theoryContent={
+                <div className="space-y-4 text-left">
+                  <p>
+                    Unlike simple authorization checks built directly into routes, Spring Security implements a DelegatingFilterProxy that intercepts requests before they ever reach the Spring MVC DispatcherServlet. It coordinates a Delegating SecurityFilterChain containing filters for CORS, CSRF, Session authentication, and Bearer token parsing (JWT).
+                  </p>
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <h5 className="font-bold text-white mb-2">Core Security Filter Concepts:</h5>
+                    <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                      <li><strong>SecurityFilterChain:</strong> A list of filters matched against the request URL to decide if auth, CSRF, or headers apply.</li>
+                      <li><strong>AuthenticationManager:</strong> The API that defines how Spring Security performs authentication checks.</li>
+                      <li><strong>UserDetailsService:</strong> Core interface to load user-specific security data from databases.</li>
+                      <li><strong>CORS (Cross-Origin Resource Sharing):</strong> Restricts cross-origin resource requests originating from frontend scripts.</li>
+                      <li><strong>CSRF (Cross-Site Request Forgery):</strong> Protection token verifying requests originated from the genuine frontend interface.</li>
+                    </ul>
+                  </div>
+                </div>
+              }
+              aiExplanation="Imagine Spring Security is like airport security. Before you can reach the boarding gates (DispatcherServlet / Controllers), you must walk through a single-file line of security checkpoints (Filter Chain). One officer checks your ID (Authentication), another checks your luggage contents (CORS/CSRF), and if you pass all of them, you are authorized to board the flight!"
+              useCases={[
+                { title: "OAuth2 & JWT Web Services", desc: "Securing microservice endpoints by validating signed JSON Web Tokens (JWT) in authorization headers." },
+                { title: "Role-Based Access Portals", desc: "Restricting administration routes to accounts mapped with ADMIN authorities." }
+              ]}
+              architectureDiagram={
+                <svg viewBox="0 0 400 160" className="w-full max-h-[140px]">
+                  <rect x="10" y="55" width="80" height="50" rx="8" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="2" />
+                  <text x="50" y="84" textAnchor="middle" fill="#fff" fontSize="9">Request</text>
+
+                  <path d="M 90 80 L 130 80" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <rect x="135" y="15" width="130" height="130" rx="8" fill="#0f172a" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="200" y="32" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="10">Security Filter Chain</text>
+
+                  <rect x="145" y="48" width="110" height="20" rx="4" fill="#1e1b4b" stroke="#EF4444" strokeWidth="1" />
+                  <text x="200" y="61" textAnchor="middle" fill="#EF4444" fontSize="8">Cors/CsrfFilter</text>
+
+                  <rect x="145" y="75" width="110" height="20" rx="4" fill="#1e1b4b" stroke="#F59E0B" strokeWidth="1" />
+                  <text x="200" y="88" textAnchor="middle" fill="#F59E0B" fontSize="8">JwtAuthFilter</text>
+
+                  <rect x="145" y="102" width="110" height="20" rx="4" fill="#1e1b4b" stroke="#10B981" strokeWidth="1" />
+                  <text x="200" y="115" textAnchor="middle" fill="#10B981" fontSize="8">AuthzFilter</text>
+
+                  <path d="M 265 80 L 305 80" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <rect x="310" y="55" width="80" height="50" rx="8" fill="#1e1b4b" stroke="#10B981" strokeWidth="1.5" />
+                  <text x="350" y="84" textAnchor="middle" fill="#fff" fontSize="9">Spring Controller</text>
+                </svg>
+              }
+              workflowDiagram={
+                <svg viewBox="0 0 500 80" className="w-full max-h-[70px]">
+                  <g transform="translate(10, 10)">
+                    <rect x="0" y="0" width="100" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="1" />
+                    <text x="50" y="24" textAnchor="middle" fill="#fff" fontSize="8">Request</text>
+                  </g>
+                  <path d="M 115 30 L 145 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(150, 10)">
+                    <rect x="0" y="0" width="100" height="40" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="1" />
+                    <text x="50" y="24" textAnchor="middle" fill="#fff" fontSize="8">JWT Authenticate</text>
+                  </g>
+                  <path d="M 255 30 L 285 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(290, 10)">
+                    <rect x="0" y="0" width="100" height="40" rx="6" fill="#1e1b4b" stroke="#10B981" strokeWidth="1" />
+                    <text x="50" y="24" textAnchor="middle" fill="#fff" fontSize="8">Evaluate Roles</text>
+                  </g>
+                  <path d="M 395 30 L 425 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(430, 10)">
+                    <rect x="0" y="0" width="60" height="40" rx="6" fill="#1e1b4b" stroke="#F59E0B" strokeWidth="1" />
+                    <text x="30" y="24" textAnchor="middle" fill="#fff" fontSize="8">Allowed</text>
+                  </g>
+                </svg>
+              }
+              steps={[
+                { title: "Intercept Request", desc: "DelegatingFilterProxy captures incoming query calls before hitting Tomcat Servlet Dispatcher." },
+                { title: "Authenticate Credentials", desc: "Read authorization headers (JWT / Basic) and pass credential states to AuthenticationManager." },
+                { title: "Resolve Authorities", desc: "Load active user roles (e.g. ROLE_USER, ROLE_ADMIN) and match against security routing rules." },
+                { title: "Permit or Deny Entry", desc: "Allow requests to pass through to Controller mappings, or return 401/403 HTTP header exceptions." }
+              ]}
+              interviewQuestions={[
+                { q: "What is the difference between Authentication and Authorization?", a: "Authentication is the process of verifying who a user is (identity check). Authorization is the process of verifying what access permissions and resource privileges the authenticated user holds." },
+                { q: "What is the purpose of CSRF protection?", a: "CSRF protection ensures that malicious third-party sites cannot hijack user credentials or execute state-modifying requests on behalf of an authenticated browser session." }
+              ]}
+              importantNotes={[
+                "Always disable CSRF only for stateless REST APIs using JWT tokens; session-based cookie web services must have CSRF enabled.",
+                "Never store raw plaintext user passwords in database tables; configure BCryptPasswordEncoder to hash passwords."
+              ]}
+              visualization={
+                <div className="space-y-3 text-left">
+                  <span className="text-xs font-bold text-slate-300 block">Spring Security Filter Registry</span>
+                  <div className="p-3 bg-slate-950 border border-white/5 rounded-xl space-y-1 text-xs font-mono">
+                    <div>Stateful Context Session: <b className="text-red-400">STATELESS</b></div>
+                    <div>CORS Policies: <b>Allowed Origin: *</b></div>
+                    <div>CSRF Mode: <b className="text-slate-500">Disabled</b></div>
+                  </div>
+                </div>
+              }
+              simulator={
+                <div className="space-y-4 text-left font-normal">
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                    <span className="text-xs font-bold text-slate-300 block">Interactive Authorization Endpoint Checker</span>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        defaultValue="/api/secure-dashboard" 
+                        id="secTestPath"
+                        className="flex-grow px-3 py-1.5 bg-slate-850 border border-white/10 rounded-xl text-xs text-white outline-none"
+                      />
+                      <button 
+                        onClick={() => {
+                          const path = document.getElementById('secTestPath')?.value || '';
+                          if (path.includes('public')) {
+                            toast.success('HTTP 200 OK: Allowed public route');
+                          } else {
+                            toast.error('HTTP 401 Unauthorized: Bearer Token required');
+                          }
+                        }}
+                        className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                      >
+                        Authenticate
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+              practiceQuestions={[
+                { q: "Which filter chain class interceptor defines authorization configurations programmatically?", options: ["UserDetailsService", "SecurityFilterChain", "AuthenticationProvider", "CorsConfiguration"], correct: "SecurityFilterChain", explanation: "SecurityFilterChain bean defines permitAll and authenticated rules matched against incoming URLs." }
+              ]}
+              codingExercise={{
+                instructions: "Specify the password encoder bean implementation recommended for hashing database user secrets.",
+                boilerplate: "@Bean\npublic PasswordEncoder passwordEncoder() {\n    return new ________();\n}",
+                solutionRegex: "BCryptPasswordEncoder"
+              }}
+              miniProject={{
+                title: "Secured JWT Endpoint Filter Chain",
+                description: "Implement a custom JWT Filter reading Authorization headers, parsing payload claims, and setting SecurityContextHolder authentication."
+              }}
+              quiz={[
+                { q: "What status code does Spring Security return when an unauthenticated query requests a secured route?", options: ["400 Bad Request", "401 Unauthorized", "403 Forbidden", "404 Not Found"], correct: "401 Unauthorized", explanation: "401 Unauthorized signals that credentials were not provided or failed verification checks." }
+              ]}
+            />
+          )}
+
+          {/* MAVEN & GRADLE TAB */}
+          {activePanel === 'maven-gradle' && (
+            <TheoryFirstModule
+              title="Maven & Gradle Build Automation"
+              icon={Layers}
+              introduction="Build automation tools compile source code, manage external library dependencies, execute test suites, and package Java projects into executable JAR or WAR artifacts."
+              theoryContent={
+                <div className="space-y-4 text-left">
+                  <p>
+                    Java build systems automate the lifecycle of software construction. Instead of manually downloading JAR files and compiling via <code>javac</code>, developers declare project dependencies and plugins in configuration files.
+                  </p>
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <h5 className="font-bold text-white mb-2">Key Differences:</h5>
+                    <ul className="list-disc pl-5 space-y-1 text-slate-300 text-xs">
+                      <li><strong>Maven (pom.xml):</strong> XML-based declarative configuration. Follows strict convention over configuration. Rigid build lifecycle.</li>
+                      <li><strong>Gradle (build.gradle):</strong> Groovy or Kotlin DSL (Domain Specific Language). Highly customizable scripting. Incremental builds with superior performance caching.</li>
+                    </ul>
+                  </div>
+                </div>
+              }
+              aiExplanation="Think of Maven like a pre-baked cake recipe kit where you must follow step 1, 2, and 3 exactly. Gradle is like a kitchen set with Lego blocks; you can follow a standard recipe, or easily build your own custom baking machinery!"
+              useCases={[
+                { title: "Dependency Management", desc: "Automating download, version alignment, and exclusion of external libraries from central repositories." },
+                { title: "Packaging and Deployment", desc: "Compiling source files and building clean fat-JAR files containing all runtime dependencies." }
+              ]}
+              architectureDiagram={
+                <svg viewBox="0 0 400 160" className="w-full max-h-[140px]">
+                  <rect x="10" y="10" width="100" height="140" rx="8" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="2" />
+                  <text x="60" y="80" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">Local Machine</text>
+                  <text x="60" y="100" textAnchor="middle" fill="#94A3B8" fontSize="8">pom.xml / build.gradle</text>
+
+                  <path d="M 110 50 L 190 50" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+                  <text x="150" y="42" textAnchor="middle" fill="#3B82F6" fontSize="8">1. Fetch Dependency</text>
+
+                  <path d="M 190 110 L 110 110" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+                  <text x="150" y="125" textAnchor="middle" fill="#10B981" fontSize="8">2. Cache in ~/.m2</text>
+
+                  <rect x="200" y="10" width="190" height="140" rx="8" fill="#0f172a" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="295" y="45" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">Maven Central Repo</text>
+                  <text x="295" y="70" textAnchor="middle" fill="#94A3B8" fontSize="8">Remote Libraries & Metadata</text>
+                </svg>
+              }
+              workflowDiagram={
+                <svg viewBox="0 0 500 80" className="w-full max-h-[70px]">
+                  <g transform="translate(10, 10)">
+                    <rect x="0" y="0" width="70" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="1" />
+                    <text x="35" y="24" textAnchor="middle" fill="#fff" fontSize="9">1. Clean</text>
+                  </g>
+                  <path d="M 85 30 L 105 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(110, 10)">
+                    <rect x="0" y="0" width="80" height="40" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="1" />
+                    <text x="40" y="24" textAnchor="middle" fill="#fff" fontSize="9">2. Compile</text>
+                  </g>
+                  <path d="M 195 30 L 215 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(220, 10)">
+                    <rect x="0" y="0" width="70" height="40" rx="6" fill="#1e1b4b" stroke="#10B981" strokeWidth="1" />
+                    <text x="35" y="24" textAnchor="middle" fill="#fff" fontSize="9">3. Test</text>
+                  </g>
+                  <path d="M 295 30 L 315 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(320, 10)">
+                    <rect x="0" y="0" width="80" height="40" rx="6" fill="#1e1b4b" stroke="#F59E0B" strokeWidth="1" />
+                    <text x="40" y="24" textAnchor="middle" fill="#fff" fontSize="9">4. Package</text>
+                  </g>
+                  <path d="M 405 30 L 425 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(430, 10)">
+                    <rect x="0" y="0" width="60" height="40" rx="6" fill="#1e1b4b" stroke="#EF4444" strokeWidth="1" />
+                    <text x="30" y="24" textAnchor="middle" fill="#fff" fontSize="9">5. Install</text>
+                  </g>
+                </svg>
+              }
+              steps={[
+                { title: "Clean Target", desc: "Deletes the target directory generated by previous builds to ensure fresh compilation." },
+                { title: "Compile Source", desc: "Translates Java source files (*.java) into standard bytecode class files (*.class)." },
+                { title: "Test Execution", desc: "Launches test suites (JUnit/TestNG) against compiled bytecode classes." },
+                { title: "Package Bundling", desc: "Aggregates classes and resource assets into a distributable unit (.jar/.war file)." }
+              ]}
+              interviewQuestions={[
+                { q: "What is a transitive dependency in Maven/Gradle?", a: "A transitive dependency is a dependency of a dependency. If your project depends on library A, and A depends on B, your project will automatically download and include B." },
+                { q: "How do you exclude a specific transitive dependency in Maven?", a: "You use the <exclusions> tag nested inside the target <dependency> declaration to stop conflicting versions from loading." }
+              ]}
+              importantNotes={[
+                "Always lock dependency versions in production builds (e.g. via dependencyManagement or version catalogs) to avoid unexpected builds from dynamic versions.",
+                "Utilize gradle daemon settings in CI pipeline environments to optimize task execution speeds through JVM hot-start caching."
+              ]}
+              visualization={
+                <div className="space-y-4 text-left">
+                  <h4 className="text-xs font-bold text-slate-300">Local Dependency Cache (~/.m2)</h4>
+                  <div className="p-3 bg-slate-950 rounded-xl space-y-2 border border-white/5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400 font-mono">~/.m2/repository/org/springframework/</span>
+                      <span className="text-emerald-500 font-bold">2.4 MB</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400 font-mono">~/.m2/repository/org/postgresql/postgresql/</span>
+                      <span className="text-emerald-500 font-bold">1.1 MB</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400 font-mono">~/.m2/repository/junit/junit/</span>
+                      <span className="text-emerald-500 font-bold">380 KB</span>
+                    </div>
+                  </div>
+                </div>
+              }
+              simulator={
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2 bg-white/5 p-3 rounded-xl border border-white/5 text-left">
+                      <span className="text-xs font-bold text-white block">pom.xml (Maven Configuration)</span>
+                      <pre className="p-2 bg-black rounded-lg text-[10px] text-emerald-400 font-mono leading-relaxed overflow-x-auto text-left">
+{`<project>
+  <groupId>com.eduverse</groupId>
+  <artifactId>app</artifactId>
+  <version>1.0.0</version>
+</project>`}
+                      </pre>
+                      <button 
+                        onClick={() => toast.success('mvn clean package: Compiled 12 classes. Generated app-1.0.0.jar')}
+                        className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                      >
+                        Run mvn clean package
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 bg-white/5 p-3 rounded-xl border border-white/5 text-left">
+                      <span className="text-xs font-bold text-white block">build.gradle (Gradle Configuration)</span>
+                      <pre className="p-2 bg-black rounded-lg text-[10px] text-[#8B5CF6] font-mono leading-relaxed overflow-x-auto text-left">
+{`plugins { id 'java' }
+group = 'com.eduverse'
+version = '1.0.0'`}
+                      </pre>
+                      <button 
+                        onClick={() => toast.success('gradle build: Executed 6 tasks. Build SUCCESS in 1.4s')}
+                        className="w-full py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                      >
+                        Run gradle build
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+              practiceQuestions={[
+                { q: "Which Maven lifecycle phase installs the package to the local repository?", options: ["package", "install", "deploy", "compile"], correct: "install", explanation: "The 'install' phase installs the built artifact into the local repository (~/.m2/repository)." }
+              ]}
+              codingExercise={{
+                instructions: "Write the name of the root configuration file for Maven.",
+                boilerplate: "File name: ________.xml",
+                solutionRegex: "pom"
+              }}
+              miniProject={{
+                title: "Build Automation Engine Integration",
+                description: "Create a simple Maven build file declaring spring-boot-starter-web dependency and configure the maven-compiler-plugin to target Java 17."
+              }}
+              quiz={[
+                { q: "What tool uses Groovy and Kotlin domain-specific languages for its build scripts?", options: ["Maven", "Ant", "Gradle", "Make"], correct: "Gradle", explanation: "Gradle builds are configured using Groovy or Kotlin DSL scripts." }
+              ]}
+            />
+          )}
+
+          {/* MICROSERVICES TAB */}
+          {activePanel === 'microservices' && (
+            <TheoryFirstModule
+              title="Microservices Infrastructure"
+              icon={Layers}
+              introduction="Microservices break down monolithic backend structures into fine-grained, independently deployable web services communicating over lightweight protocols."
+              theoryContent={
+                <div className="space-y-4 text-left">
+                  <p>
+                    Distributed Java services require decentralized discovery, request routing, and reliability orchestration. Spring Cloud provides declarative wrappers around industry-standard components for service registration and api routing.
+                  </p>
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <h5 className="font-bold text-white mb-2">Core Microservices Components:</h5>
+                    <ul className="list-disc pl-5 space-y-1 text-slate-300 text-xs">
+                      <li><strong>Eureka Server:</strong> A central lookup registry where service instances announce their location (IP and port) via heartbeats.</li>
+                      <li><strong>Spring Cloud Gateway:</strong> The single entry-point that routes requests, verifies authentication, and performs rate limiting.</li>
+                      <li><strong>Resilience4j / Circuit Breaker:</strong> Prevents cascading failures by opening circuits when downstream dependencies fail.</li>
+                    </ul>
+                  </div>
+                </div>
+              }
+              aiExplanation="Imagine you run a hospital. Instead of one doctor doing everything (the monolith), you have a front desk (API Gateway) routing patients to specialized departments: Pediatrics, Cardiology, or Pharmacy (Microservices). A directory board (Eureka) keeps track of which rooms the doctors are currently in!"
+              useCases={[
+                { title: "Dynamic Scale Architecture", desc: "Spinning up dozens of instances of payment processors and automatically registering them with Eureka registries." },
+                { title: "Fault Isolation boundaries", desc: "Wrapping user profile queries in circuit breakers so that profile page errors do not break catalog searches." }
+              ]}
+              architectureDiagram={
+                <svg viewBox="0 0 600 200" className="w-full max-h-[160px]">
+                  <rect x="20" y="70" width="100" height="60" rx="8" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="2" />
+                  <text x="70" y="100" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">API Gateway</text>
+                  
+                  <path d="M 120 100 L 180 60" fill="none" stroke="#64748B" strokeWidth="2" strokeDasharray="4" markerEnd="url(#arrow)" />
+                  <path d="M 120 100 L 180 140" fill="none" stroke="#64748B" strokeWidth="2" strokeDasharray="4" markerEnd="url(#arrow)" />
+                  
+                  <rect x="190" y="20" width="120" height="60" rx="8" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="250" y="50" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">Auth Service</text>
+                  <text x="250" y="68" textAnchor="middle" fill="#10B981" fontSize="9">Port: 8081 [UP]</text>
+
+                  <rect x="190" y="110" width="120" height="60" rx="8" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="2" />
+                  <text x="250" y="140" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">Course Service</text>
+                  <text x="250" y="158" textAnchor="middle" fill="#10B981" fontSize="9">Port: 8082 [UP]</text>
+
+                  <path d="M 310 50 L 370 100" fill="none" stroke="#10B981" strokeWidth="2" />
+                  <path d="M 310 140 L 370 100" fill="none" stroke="#10B981" strokeWidth="2" />
+
+                  <rect x="380" y="70" width="160" height="60" rx="8" fill="#0c4a6e" stroke="#10B981" strokeWidth="2" />
+                  <text x="460" y="100" textAnchor="middle" fill="#fff" fontWeight="bold" fontSize="11">Eureka Registry</text>
+                  <text x="460" y="118" textAnchor="middle" fill="#38BDF8" fontSize="9">Discovery active</text>
+                </svg>
+              }
+              workflowDiagram={
+                <svg viewBox="0 0 500 80" className="w-full max-h-[70px]">
+                  <g transform="translate(10, 10)">
+                    <rect x="0" y="0" width="110" height="40" rx="6" fill="#1e1b4b" stroke="#3B82F6" strokeWidth="1" />
+                    <text x="55" y="24" textAnchor="middle" fill="#fff" fontSize="9">User Request</text>
+                  </g>
+                  <path d="M 125 30 L 155 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(160, 10)">
+                    <rect x="0" y="0" width="120" height="40" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="1" />
+                    <text x="60" y="24" textAnchor="middle" fill="#fff" fontSize="9">Gateway Authentication</text>
+                  </g>
+                  <path d="M 285 30 L 315 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+
+                  <g transform="translate(320, 10)">
+                    <rect x="0" y="0" width="160" height="40" rx="6" fill="#1e1b4b" stroke="#10B981" strokeWidth="1" />
+                    <text x="80" y="24" textAnchor="middle" fill="#fff" fontSize="9">Service Registry Routing lookup</text>
+                  </g>
+                </svg>
+              }
+              steps={[
+                { title: "Service Startup Registration", desc: "Microservices start up and register their host address endpoints with the Eureka discovery registry." },
+                { title: "Client Gateway Query", desc: "External requests hit Spring Cloud Gateway, which queries Eureka to locate live service node targets." },
+                { title: "Load Balanced Call", desc: "The gateway forwards the payload using client-side load balancers like Spring Cloud LoadBalancer." }
+              ]}
+              interviewQuestions={[
+                { q: "What is the role of a Eureka Server in Microservices?", a: "Eureka acts as a service discovery directory. Instead of hardcoding static IP addresses of multiple microservices, they register their dynamic IPs with Eureka on startup." },
+                { q: "What happens when a service fails to send heartbeats?", a: "Eureka server detects the missing heartbeats and removes the failed instance from its registry to prevent routing traffic to a dead node." }
+              ]}
+              importantNotes={[
+                "Always run multiple instances of Eureka Servers in high-availability peer-to-peer replication mode to avoid a single point of failure.",
+                "Ensure circuit breakers are tuned correctly (failure rate threshold, slow call rate threshold) to prevent premature state changes."
+              ]}
+              visualization={
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold text-slate-300 text-left">Eureka Service Registry Heartbeat Monitor</h4>
+                  <div className="p-3 bg-slate-950 rounded-xl space-y-2 border border-white/5 text-left">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-300 font-semibold font-mono">AUTH-SERVICE:8081</span>
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-bold">UP (Last heartbeat: 3s ago)</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-300 font-semibold font-mono">COURSE-SERVICE:8082</span>
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-bold">UP (Last heartbeat: 1s ago)</span>
+                    </div>
+                  </div>
+                </div>
+              }
+              simulator={
+                <div className="space-y-4">
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                    <span className="text-xs font-bold text-slate-300 block text-left">Eureka Service Discoverer Simulator</span>
+                    <div className="text-left">
+                      <button 
+                        onClick={() => {
+                          toast.success('Heartbeat sync successful. Registered services: 2 [UP]');
+                        }}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                      >
+                        Sync Service Registry State
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+              practiceQuestions={[
+                { q: "Which annotation registers a boot project as a Eureka Discovery Server?", options: ["@EnableDiscoveryClient", "@EnableEurekaServer", "@EnableRegistry", "@EurekaServer"], correct: "@EnableEurekaServer", explanation: "@EnableEurekaServer configures a Spring Boot app as the service lookup server." }
+              ]}
+              codingExercise={{
+                instructions: "Enable service discovery client capabilities inside your microservice application starter.",
+                boilerplate: "@________DiscoveryClient\n@SpringBootApplication\npublic class App {}",
+                solutionRegex: "Enable"
+              }}
+              miniProject={{
+                title: "API Routing Gateway Configurator",
+                description: "Design a spring-cloud-gateway YAML configuration that routes all /api/v1/auth/** traffic to an auth-service instance dynamically."
+              }}
+              quiz={[
+                { q: "What component handles rate limiting and authentication filters at the edge of microservices?", options: ["Eureka Server", "Spring Cloud Gateway", "Config Server", "Ribbon"], correct: "Spring Cloud Gateway", explanation: "Spring Cloud Gateway provides routing, request filtering, security checks, and rate limiting." }
+              ]}
+            />
           )}
 
           {/* PROJECTS TAB */}
@@ -2954,34 +5069,58 @@ public class ${entityMapping.entity} {
             </div>
           )}
 
+          {/* CERTIFICATION TAB */}
+          {activePanel === 'certification' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">Official Certificate Center</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Upon completing the required Advanced Java course criteria, your certificate of excellence is generated automatically.
+              </p>
+              
+              <div className="p-6 bg-white/5 border border-white/10 rounded-[28px] space-y-6">
+                <div className="flex justify-between items-center border-b border-white/10 pb-4">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-violet-400" />
+                    <span className="font-bold text-slate-100">Certificate Issuer</span>
+                  </div>
+                  <span className={`text-[10px] px-2.5 py-1 rounded-full uppercase font-bold tracking-widest \${
+                    progress.completed_topics >= 5 ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' : 'bg-slate-500/10 border border-slate-500/30 text-slate-500'
+                  }`}>
+                    {progress.completed_topics >= 5 ? 'Eligible' : 'Locked'}
+                  </span>
+                </div>
+
+                {progress.completed_topics >= 5 ? (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-slate-900 border border-white/5 rounded-2xl text-center space-y-2">
+                      <span className="text-2xl">🏆</span>
+                      <h4 className="text-sm font-bold text-white">Your Certificate is Ready!</h4>
+                      <p className="text-xs text-slate-400">Click below to claim your official credentials.</p>
+                      <button 
+                        onClick={handleClaimCertificate}
+                        className="mt-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold rounded-xl transition duration-300 transform hover:scale-105"
+                      >
+                        Claim Verified Credentials
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 bg-slate-950 border border-white/5 rounded-2xl text-center space-y-3">
+                    <div className="w-12 h-12 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-slate-500 mx-auto">
+                      🔒
+                    </div>
+                    <h4 className="text-sm font-bold text-white">Certificate Locked</h4>
+                    <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                      You need to complete at least 5 syllabus modules to meet the qualification threshold. Current Progress: <b>{progress.completed_topics}/5</b>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          </div>
         </div>
-      </div>
-
-      {/* BOTTOM ACTION BAR */}
-      <div className="grid grid-cols-2 sm:grid-cols-7 gap-2 bg-white/5 border border-white/10 p-3 rounded-2xl">
-        <button onClick={() => { setActivePanel('dashboard'); toast.success('Workspace loaded'); }} className="py-2.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 text-xs font-bold rounded-xl transition cursor-pointer text-center">
-          ▶ Continue
-        </button>
-        <button onClick={() => { setActivePanel('practice'); }} className="py-2.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-bold rounded-xl transition cursor-pointer text-center">
-          ✏️ Practice Quiz
-        </button>
-        <button onClick={() => { setActivePanel('coding-lab'); }} className="py-2.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-bold rounded-xl transition cursor-pointer text-center">
-          💻 Coding Lab
-        </button>
-        <button onClick={() => { setActivePanel('analytics'); }} className="py-2.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 text-xs font-bold rounded-xl transition cursor-pointer text-center">
-          📊 View Analytics
-        </button>
-        <button onClick={() => { setActivePanel('mentor'); }} className="py-2.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-xs font-bold rounded-xl transition cursor-pointer text-center">
-          🧠 Ask AI Mentor
-        </button>
-        <button onClick={() => { setActivePanel('projects'); }} className="py-2.5 bg-teal-600/20 hover:bg-teal-600/30 text-teal-400 text-xs font-bold rounded-xl transition cursor-pointer text-center">
-          ⚡ Start Project
-        </button>
-        <button onClick={handleClaimCertificate} className="py-2.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 text-xs font-bold rounded-xl transition cursor-pointer text-center">
-          📜 View Certificate
-        </button>
-      </div>
-
+      )}
     </div>
   );
 }
