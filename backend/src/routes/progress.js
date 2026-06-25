@@ -1012,8 +1012,7 @@ router.get('/certificates', authenticate, async (req, res) => {
 
     // Get all subjects
     const subjectsRes = await db.query('SELECT id, subject_name, description FROM subjects');
-    const subjects = subjectsRes.rows;
-
+    
     // Get topics count per subject
     const topicsCountRes = await db.query(
       'SELECT subject_id, COUNT(*) as total_count FROM topics GROUP BY subject_id'
@@ -1022,6 +1021,18 @@ router.get('/certificates', authenticate, async (req, res) => {
     topicsCountRes.rows.forEach(r => {
       topicsCounts[r.subject_id] = parseInt(r.total_count);
     });
+
+    // Deduplicate subjects by name, keeping the one with most topics
+    const uniqueSubjectsMap = {};
+    subjectsRes.rows.forEach(sub => {
+      const existing = uniqueSubjectsMap[sub.subject_name];
+      const count = topicsCounts[sub.id] || 0;
+      const existingCount = existing ? (topicsCounts[existing.id] || 0) : -1;
+      if (count > existingCount) {
+        uniqueSubjectsMap[sub.subject_name] = sub;
+      }
+    });
+    const subjects = Object.values(uniqueSubjectsMap);
 
     // Get completed topics count per subject
     const completedTopicsRes = await db.query(
@@ -1181,13 +1192,25 @@ router.get('/study-report', authenticate, async (req, res) => {
 
     // Subject Performance breakdown
     const subjectsRes = await db.query('SELECT id, subject_name FROM subjects');
-    const subjects = subjectsRes.rows;
+    const subjectsRaw = subjectsRes.rows;
 
     const topicsBySubjectRes = await db.query(
       'SELECT subject_id, COUNT(*) as total_count FROM topics GROUP BY subject_id'
     );
     const topicsCounts = {};
     topicsBySubjectRes.rows.forEach(r => { topicsCounts[r.subject_id] = parseInt(r.total_count); });
+
+    // Deduplicate subjects by name, keeping the one with most topics
+    const uniqueSubjectsMap = {};
+    subjectsRaw.forEach(sub => {
+      const existing = uniqueSubjectsMap[sub.subject_name];
+      const count = topicsCounts[sub.id] || 0;
+      const existingCount = existing ? (topicsCounts[existing.id] || 0) : -1;
+      if (count > existingCount) {
+        uniqueSubjectsMap[sub.subject_name] = sub;
+      }
+    });
+    const subjects = Object.values(uniqueSubjectsMap);
 
     const completedBySubjectRes = await db.query(
       `SELECT t.subject_id, COUNT(ct.id) as completed_count 

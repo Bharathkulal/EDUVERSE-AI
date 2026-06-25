@@ -57,6 +57,24 @@ export default function Layout({ children }) {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem('theme') !== 'light';
   });
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    const days = [];
+    for (let i = 0; i < firstDay; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(year, month, i));
+    }
+    return days;
+  };
 
   const isSubPage = !TOP_LEVEL_PATHS.includes(location.pathname);
 
@@ -273,12 +291,27 @@ export default function Layout({ children }) {
 
           {/* Right part: Actions + Profile */}
           <div className="flex items-center gap-4">
+            {/* Logout Button */}
+            <button 
+              onClick={handleLogout} 
+              className="p-2 text-[var(--db-text-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-xl transition flex items-center justify-center cursor-pointer" 
+              title="Sign Out"
+            >
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+
             {/* Calendar Indicator Icon */}
-            <Link to="/settings" className="p-2 text-[var(--db-text-muted)] hover:text-[var(--db-text-accent)] hover:bg-[var(--db-btn-secondary-hover)] rounded-xl transition hidden sm:flex items-center justify-center" title="View Calendar">
+            <button 
+              onClick={() => setShowCalendarModal(true)} 
+              className="p-2 text-[var(--db-text-muted)] hover:text-[var(--db-text-accent)] hover:bg-[var(--db-btn-secondary-hover)] rounded-xl transition hidden sm:flex items-center justify-center cursor-pointer" 
+              title="View Calendar"
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-            </Link>
+            </button>
 
             {/* Mock Notifications Icon with badge */}
             <div className="relative">
@@ -367,6 +400,98 @@ export default function Layout({ children }) {
           </motion.div>
         </main>
       </div>
+
+      {/* Dynamic Study Calendar Modal */}
+      {showCalendarModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div 
+            className="relative w-full max-w-md p-6 rounded-3xl border shadow-2xl flex flex-col justify-between"
+            style={{
+              background: 'var(--db-card-bg)',
+              borderColor: 'var(--db-card-border)',
+              color: 'var(--db-text-main)'
+            }}
+          >
+            <div className="flex justify-between items-center border-b border-[var(--db-header-border)] pb-3 mb-4">
+              <h3 className="font-extrabold text-lg flex items-center gap-2 animate-pulse" style={{ color: 'var(--db-text-main)' }}>
+                📅 Study Calendar
+              </h3>
+              <button
+                onClick={() => setShowCalendarModal(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition hover:bg-[var(--db-btn-secondary-hover)] cursor-pointer"
+                style={{ color: 'var(--db-text-muted)' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Month Picker Header */}
+            <div className="flex justify-between items-center mb-4 px-2">
+              <button 
+                onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1))}
+                className="p-1.5 px-3 rounded-lg border border-[var(--db-input-border)] bg-[var(--db-input-bg)] text-xs font-bold hover:bg-[var(--db-btn-secondary-hover)] cursor-pointer"
+                style={{ color: 'var(--db-text-main)' }}
+              >
+                ◀
+              </button>
+              <span className="font-bold text-sm" style={{ color: 'var(--db-text-main)' }}>
+                {calendarDate.toLocaleString('default', { month: 'long' })} {calendarDate.getFullYear()}
+              </span>
+              <button 
+                onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1))}
+                className="p-1.5 px-3 rounded-lg border border-[var(--db-input-border)] bg-[var(--db-input-bg)] text-xs font-bold hover:bg-[var(--db-btn-secondary-hover)] cursor-pointer"
+                style={{ color: 'var(--db-text-main)' }}
+              >
+                ▶
+              </button>
+            </div>
+
+            {/* Weekday Labels */}
+            <div className="grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: 'var(--db-text-muted)' }}>
+              <span>Sun</span>
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+            </div>
+
+            {/* Days Grid */}
+            <div className="grid grid-cols-7 gap-1 text-center text-xs mb-4">
+              {getDaysInMonth(calendarDate).map((day, idx) => {
+                if (!day) return <div key={`empty-${idx}`} />;
+                
+                const isToday = day.toDateString() === new Date().toDateString();
+                const isStreakDay = [1, 2, 4].includes(day.getDay()) && day.getDate() < new Date().getDate();
+
+                return (
+                  <div 
+                    key={idx}
+                    className={`p-2 rounded-xl flex items-center justify-center font-semibold relative transition ${
+                      isToday ? 'ring-2 ring-[#2563EB] text-[#2563EB] font-black bg-[#2563EB]/5' :
+                      isStreakDay ? 'bg-[#2563EB]/10 text-[#2563EB]' :
+                      'hover:bg-[var(--db-btn-secondary-hover)]'
+                    }`}
+                    style={{ color: isToday ? '#2563EB' : 'var(--db-text-main)' }}
+                    title={isToday ? "Today: Learning session active!" : isStreakDay ? "Streak maintained!" : ""}
+                  >
+                    <span>{day.getDate()}</span>
+                    {isStreakDay && (
+                      <span className="absolute bottom-1 w-1 h-1 rounded-full bg-[#2563EB]"></span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer Info */}
+            <div className="p-3 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] rounded-2xl text-[11px] leading-relaxed text-left" style={{ color: 'var(--db-text-muted)' }}>
+              <strong>💡 Tip:</strong> Keep up your daily streak! Completed topics and quiz attempts automatically sync to your Study Calendar timeline.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
