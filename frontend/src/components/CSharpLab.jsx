@@ -3,1455 +3,1304 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Code, Layers, Database, Filter, FolderOpen, Zap,
   Play, Pause, RotateCcw, Eye, Terminal, ArrowLeft, BookOpen,
-  Monitor, Home, ArrowRight, Search
+  Monitor, Home, ArrowRight, Search, Sparkles, Flame, Trophy, Award,
+  Shield, Network, Server, Cloud, Cpu, CheckCircle, AlertTriangle, PlayCircle,
+  BrainCircuit, TrendingUp
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import './CSharpLab.css';
 
 // ═══════════════════════════════════════════════════════════
-// DATA
+// DATA & INTERACTIVE CONTENT
 // ═══════════════════════════════════════════════════════════
-const CSHARP_DATA = [
+const CSHARP_MODULES = [
   {
-    id: 'basics', title: 'Basics of C#', Icon: Code,
-    color: '#FF007F', gradient: 'linear-gradient(135deg, #FF007F, #7B2CBF)',
-    description: 'Variables, types, control flow, and methods',
-    topics: [
-      {
-        id: 'variables', title: 'Variables & Data Types', vizType: 'variables', steps: 5,
-        preview: 'Declare int, string, bool, double and understand value vs reference types.',
-        code: `// C# Data Types\nint age = 25;\nstring name = "Alice";\nbool isStudent = true;\ndouble gpa = 3.85;\n\n// Type inference with var\nvar score = 95;    // inferred: int\nvar city  = "NYC"; // inferred: string\n\n// Constants\nconst double PI = 3.14159;\n\n// String interpolation\nConsole.WriteLine(\n  $"Name: {name}, Age: {age}, GPA: {gpa}");\n// Output: Name: Alice, Age: 25, GPA: 3.85`,
-        stepLabels: ['Declare int', 'Add string', 'Add bool', 'Add double', 'Interpolate'],
-        stepDescriptions: [
-          'We start with an integer. int age = 25 stores a whole number — 4 bytes, range -2B to +2B.',
-          'string name = "Alice" stores text. Strings are reference types stored on the heap.',
-          'bool isStudent = true stores a true/false value. Only 1 bit of data needed.',
-          'double gpa = 3.85 stores a floating-point number with ~15 digits of precision.',
-          'String interpolation $"{name}" inlines variables directly into strings at runtime.',
-        ],
-      },
-      {
-        id: 'control-flow', title: 'Control Flow', vizType: 'controlflow', steps: 4,
-        preview: 'if/else, switch expressions, for, while, and foreach loops.',
-        code: `// If / Else\nint score = 87;\nif (score >= 90)      Console.WriteLine("A");\nelse if (score >= 80) Console.WriteLine("B");\nelse                  Console.WriteLine("C");\n\n// Switch expression (C# 8+)\nstring grade = score switch {\n  >= 90 => "A", >= 80 => "B",\n  >= 70 => "C", _   => "F"\n};\n\n// For loop\nfor (int i = 0; i < 5; i++)\n  Console.WriteLine($"Step {i}");\n\n// Foreach loop\nint[] nums = { 1, 2, 3, 4, 5 };\nforeach (int n in nums)\n  Console.Write(n + " ");`,
-        stepLabels: ['if/else', 'switch', 'for loop', 'foreach'],
-        stepDescriptions: [
-          'if/else checks conditions top-down. The first true branch executes; others are skipped.',
-          'Switch expressions (C# 8+) are cleaner than switch statements — they return a value.',
-          'The for loop runs while a condition holds. i++ increments the counter each iteration.',
-          'foreach iterates every element in a collection without manual index management.',
-        ],
-      },
-      {
-        id: 'methods', title: 'Methods & Parameters', vizType: 'methods', steps: 4,
-        preview: 'Define reusable methods with parameters, return types, and overloading.',
-        code: `// Basic method\nstatic int Add(int a, int b) => a + b;\n\n// Method overloading\nstatic double Add(double a, double b)\n  => a + b;\n\n// Optional parameters\nstatic string Greet(\n  string name,\n  string greeting = "Hello")\n  => $"{greeting}, {name}!";\n\n// Params array\nstatic int Sum(params int[] nums)\n  => nums.Sum();\n\n// Usage\nConsole.WriteLine(Add(3, 4));        // 7\nConsole.WriteLine(Add(1.5, 2.5));    // 4.0\nConsole.WriteLine(Greet("Bob"));     // Hello, Bob!\nConsole.WriteLine(Sum(1,2,3,4,5));   // 15`,
-        stepLabels: ['Define', 'Overload', 'Defaults', 'Call'],
-        stepDescriptions: [
-          'A method packages reusable logic. Expression-body (=>) is shorthand for single-line return.',
-          'Overloading lets you reuse the same method name with different parameter types.',
-          'Optional parameters have default values — callers can omit them for convenience.',
-          'Calling a method executes its body and returns the result to the call site.',
-        ],
-      },
-    ],
+    id: 'fundamentals',
+    label: 'C# Fundamentals',
+    desc: 'Declare variables, primitive data types, arithmetic operators, type casting, and handle system console I/O.',
+    accent: '#3B82F6',
+    type: 'Core Syntax',
+    index: 1,
+    topics: ['Variables', 'Data Types', 'Operators', 'Type Conversion', 'Input Output'],
+    theory: 'Variables act as named storage locations in memory. C# is a strongly-typed language, meaning every variable must have a declared type (like int, double, string). Value types hold data directly on the stack, while reference types store memory addresses pointing to objects allocated on the heap.',
+    aiExplanation: 'Imagine computer memory is a shelf of postboxes. Declaring a variable is like renting a box, labeling it (like "age"), and specifying what size/shape of items can go inside (integers, text). When you change the value, you are simply replacing the object inside that box!',
+    useCases: 'Storing user input settings, calculating arithmetic totals, and converting database record string attributes into working numeric types.',
+    simulatorType: 'memory',
+    quiz: {
+      q: 'Which memory segment allocates value types (like int and struct) in C#?',
+      options: ['Heap memory', 'Stack memory', 'Global register', 'Disk virtual buffer'],
+      correct: 'Stack memory',
+      explanation: 'Value types are stored directly on the stack because their size is fixed and known at compile time, leading to extremely fast access.'
+    }
   },
   {
-    id: 'oop', title: 'OOP in C#', Icon: Layers,
-    color: '#7C3AED', gradient: 'linear-gradient(135deg, #7B2CBF, #3F37C9)',
-    description: 'Classes, objects, inheritance, polymorphism & abstraction',
-    topics: [
-      {
-        id: 'class-object', title: 'Class & Object', vizType: 'classObject', steps: 4,
-        preview: 'Classes are blueprints; objects are living instances created in memory.',
-        code: `// Class = Blueprint\npublic class Student {\n  // Properties\n  public string Name { get; set; }\n  public int    Age  { get; set; }\n  public double GPA  { get; set; }\n\n  // Constructor\n  public Student(string name, int age) {\n    Name = name;\n    Age  = age;\n    GPA  = 0.0;\n  }\n\n  // Method\n  public string Introduce() =>\n    $"Hi! I'm {Name}, age {Age}";\n}\n\n// Object = Instance\nvar s1 = new Student("Alice", 20);\nvar s2 = new Student("Bob",   22);\ns1.GPA = 3.9;\nConsole.WriteLine(s1.Introduce());\n// Hi! I'm Alice, age 20`,
-        stepLabels: ['Class', 'Properties', 'Constructor', 'Instantiate'],
-        stepDescriptions: [
-          'A class defines the structure and behavior — like an architectural blueprint.',
-          'Properties (Name, Age, GPA) store per-object data. { get; set; } is auto-implemented.',
-          'The constructor runs when you use `new`, initializing the object\'s state.',
-          '`new Student("Alice", 20)` creates an object on the heap; s1 holds a reference to it.',
-        ],
-      },
-      {
-        id: 'inheritance', title: 'Inheritance', vizType: 'inheritance', steps: 5,
-        preview: 'Extend base classes and reuse code through the inheritance hierarchy.',
-        code: `// Base Class\npublic class Animal {\n  public string Name  { get; set; }\n  public int    Age   { get; set; }\n  public virtual string Sound() => "...";\n  public void Breathe() =>\n    Console.WriteLine($"{Name} breathes");\n}\n\n// Derived: Dog\npublic class Dog : Animal {\n  public override string Sound() => "Woof!";\n  public void Fetch() =>\n    Console.WriteLine($"{Name} fetches!");\n}\n\n// Derived: Cat\npublic class Cat : Animal {\n  public override string Sound() => "Meow!";\n}\n\n// Polymorphic usage\nAnimal[] animals = { new Dog{Name="Rex"},\n                     new Cat{Name="Luna"} };\nforeach (var a in animals)\n  Console.WriteLine($"{a.Name}: {a.Sound()}");`,
-        stepLabels: ['Base', 'virtual', 'Dog', 'Cat', 'Poly'],
-        stepDescriptions: [
-          'Animal is the base class — it defines shared data (Name, Age) and common behavior (Breathe).',
-          '`virtual` marks Sound() as overridable. Without it, derived classes can\'t change behavior.',
-          'Dog : Animal means Dog inherits from Animal. `override` replaces Sound() with "Woof!".',
-          'Cat also inherits Animal, providing its own Sound(). Both reuse Breathe() for free.',
-          'Treating Dog and Cat as Animal[] lets us call Sound() polymorphically — correct type, right behavior.',
-        ],
-      },
-      {
-        id: 'encapsulation', title: 'Encapsulation', vizType: 'encapsulation', steps: 4,
-        preview: 'Hide internal state and expose controlled, safe public APIs.',
-        code: `public class BankAccount {\n  // Private: hidden from outside\n  private double _balance;\n  private List<string> _history;\n\n  public BankAccount(double initial) {\n    _balance = initial;\n    _history = new List<string>();\n  }\n\n  // Public read-only property\n  public double Balance => _balance;\n\n  // Controlled deposit\n  public bool Deposit(double amount) {\n    if (amount <= 0) return false;\n    _balance += amount;\n    _history.Add($"+{amount:C}");\n    return true;\n  }\n\n  // Controlled withdrawal\n  public bool Withdraw(double amount) {\n    if (amount > _balance) return false;\n    _balance -= amount;\n    _history.Add($"-{amount:C}");\n    return true;\n  }\n}`,
-        stepLabels: ['Private', 'Property', 'Deposit', 'Withdraw'],
-        stepDescriptions: [
-          '_balance is private — nothing outside can touch it directly, preventing invalid states.',
-          'Balance is a public read-only property. External code can read but never write directly.',
-          'Deposit validates the amount before adding it — only legal operations are allowed.',
-          'Withdraw checks if funds are available before proceeding. The class protects its invariants.',
-        ],
-      },
-      {
-        id: 'polymorphism', title: 'Polymorphism', vizType: 'polymorphism', steps: 4,
-        preview: 'One interface, many implementations — shapes, strategies, and more.',
-        code: `// Interface contract\npublic interface IShape {\n  double Area();\n  double Perimeter();\n  string Describe();\n}\n\npublic class Circle : IShape {\n  private double R;\n  public Circle(double r) => R = r;\n  public double Area()      => Math.PI * R * R;\n  public double Perimeter() => 2 * Math.PI * R;\n  public string Describe()  => $"Circle r={R}";\n}\n\npublic class Rect : IShape {\n  private double W, H;\n  public Rect(double w, double h) { W=w; H=h; }\n  public double Area()      => W * H;\n  public double Perimeter() => 2 * (W + H);\n  public string Describe()  => $"Rect {W}x{H}";\n}\n\n// Polymorphism\nIShape[] shapes = { new Circle(5), new Rect(4,6) };\nforeach (var s in shapes)\n  Console.WriteLine($"{s.Describe()} A={s.Area():F1}");`,
-        stepLabels: ['Interface', 'Circle', 'Rect', 'Dispatch'],
-        stepDescriptions: [
-          'IShape defines a contract — Area(), Perimeter(), Describe(). Any implementor must provide these.',
-          'Circle implements IShape using its formula. The interface hides how it\'s calculated.',
-          'Rect uses different math but satisfies the same interface. Callers don\'t need to know which.',
-          'Storing both as IShape lets us call Area() polymorphically — the runtime picks the right version.',
-        ],
-      },
-      {
-        id: 'abstraction', title: 'Abstraction', vizType: 'abstraction', steps: 4,
-        preview: 'Define abstract classes as partial templates that force subclass implementation.',
-        code: `// Abstract class = partial blueprint\npublic abstract class Vehicle {\n  public string Brand { get; init; }\n\n  // Abstract: MUST be implemented\n  public abstract void Start();\n  public abstract int  FuelLevel();\n\n  // Concrete: shared behavior\n  public void Stop() =>\n    Console.WriteLine($"{Brand}: stopped.");\n\n  public string Status() =>\n    $"{Brand} fuel: {FuelLevel()}%";\n}\n\npublic class ElectricCar : Vehicle {\n  private int _battery = 80;\n  public override void Start() =>\n    Console.WriteLine($"{Brand}: silent EV start!");\n  public override int FuelLevel() => _battery;\n}\n\npublic class PetrolCar : Vehicle {\n  private int _tank = 60;\n  public override void Start() =>\n    Console.WriteLine($"{Brand}: vroom!");\n  public override int FuelLevel() => _tank;\n}`,
-        stepLabels: ['Abstract', 'Concrete', 'ElectricCar', 'PetrolCar'],
-        stepDescriptions: [
-          'Abstract classes cannot be instantiated directly — they\'re templates with some gaps to fill.',
-          'Stop() and Status() are concrete methods shared by all Vehicle subclasses.',
-          'ElectricCar fills the gaps: Start() and FuelLevel() — its specific implementations.',
-          'PetrolCar provides completely different Start() logic while reusing Stop() and Status().',
-        ],
-      },
-    ],
+    id: 'control-flow',
+    label: 'Control Flow',
+    desc: 'Master conditional if/else blocks, switch expressions, and iteration constructs like for, while, and foreach.',
+    accent: '#10B981',
+    type: 'Logical Branching',
+    index: 2,
+    topics: ['If Else', 'Switch', 'For Loop', 'While Loop', 'Do While', 'Foreach'],
+    theory: 'Control flow structures direct the execution path of C# code. Decision blocks evaluate boolean expressions to branch runtimes, while loops execute code blocks repeatedly while a condition remains true. C# switch expressions (C# 8+) offer a streamlined declarative syntax returning direct values.',
+    aiExplanation: 'Think of control flow like driving using a GPS map. An "if" block is a crossroads where you go left or right depending on a traffic light. A "loop" is like going around a roundabout until you find your exit number!',
+    useCases: 'Validating form submissions before processing payments, and iterating arrays to calculate statistics.',
+    simulatorType: 'loops',
+    quiz: {
+      q: 'Which loop is guaranteed to run its execution block at least once?',
+      options: ['for loop', 'while loop', 'do-while loop', 'foreach loop'],
+      correct: 'do-while loop',
+      explanation: 'A do-while loop evaluates its termination condition at the end of the block, ensuring the body executes at least once.'
+    }
   },
   {
-    id: 'data-structures', title: 'Data Structures', Icon: Database,
-    color: '#059669', gradient: 'linear-gradient(135deg, #00B4D8, #0077B6)',
-    description: 'Arrays, lists, stacks, queues, and dictionaries',
-    topics: [
-      {
-        id: 'stack', title: 'Stack', vizType: 'stack', steps: 5,
-        preview: 'LIFO — Last In, First Out. Push and Pop operations visualized.',
-        code: `var stack = new Stack<int>();\n\n// Push: add to top\nstack.Push(10); // [10]\nstack.Push(20); // [10, 20]\nstack.Push(30); // [10, 20, 30]\n\n// Peek: look at top without removing\nConsole.WriteLine(stack.Peek()); // 30\n\n// Pop: remove and return top\nConsole.WriteLine(stack.Pop()); // 30 — [10,20]\nConsole.WriteLine(stack.Pop()); // 20 — [10]\nConsole.WriteLine(stack.Pop()); // 10 — []\n\n// Real use: undo history\nvar history = new Stack<string>();\nhistory.Push("Typed 'Hello'");\nhistory.Push("Deleted 'H'");\nhistory.Push("Typed 'J'");\nConsole.WriteLine("Undo: " + history.Pop());\n// Undo: Typed 'J'`,
-        stepLabels: ['Empty', 'Push 10', 'Push 20', 'Push 30', 'Pop'],
-        stepDescriptions: [
-          'The stack starts empty. Think of it as a stack of plates — you can only access the top.',
-          'Push(10) adds 10 to the top. Stack: [10]. The pointer (TOP) now points at 10.',
-          'Push(20) — 20 sits on top of 10. Stack: [10, 20]. TOP → 20.',
-          'Push(30) — 30 is now the topmost element. Stack: [10, 20, 30]. TOP → 30.',
-          'Pop() removes and returns 30 (LIFO). Stack: [10, 20]. This is how undo operations work.',
-        ],
-      },
-      {
-        id: 'arrays', title: 'Arrays & Lists', vizType: 'arrays', steps: 4,
-        preview: 'Fixed-size arrays vs dynamic List<T> — indexed, typed collections.',
-        code: `// Fixed-size array\nint[] scores = { 85, 92, 78, 96, 88 };\nArray.Sort(scores);  // [78,85,88,92,96]\nConsole.WriteLine(scores[^1]); // 96 (last)\n\n// Dynamic List<T>\nvar names = new List<string>();\nnames.Add("Alice");\nnames.Add("Bob");\nnames.Remove("Alice");\nnames.Insert(0, "Charlie");\n\n// LINQ on list\nvar top = scores\n  .Where(s => s > 85)\n  .OrderByDescending(s => s);\n// [96, 92, 88]\n\n// 2D Array\nint[,] matrix = new int[3, 3];\nfor (int i = 0; i < 3; i++)\n  for (int j = 0; j < 3; j++)\n    matrix[i, j] = i * 3 + j + 1;`,
-        stepLabels: ['Declare', 'Sort', 'List<T>', 'LINQ'],
-        stepDescriptions: [
-          'Arrays are fixed-length. int[] scores allocates 5 contiguous memory slots on the stack.',
-          'Array.Sort() rearranges elements in-place. scores[^1] uses C# 8 index-from-end syntax.',
-          'List<T> is dynamic — it grows/shrinks. Backed by an array that doubles when capacity is exceeded.',
-          'LINQ works on any IEnumerable — where/orderby run lazily until you enumerate.',
-        ],
-      },
-      {
-        id: 'dictionary', title: 'Dictionary', vizType: 'dictionary', steps: 4,
-        preview: 'Key-value pairs with O(1) average lookup via hashing.',
-        code: `// Create dictionary\nvar grades = new Dictionary<string, int>();\n\n// Add entries\ngrades["Alice"]   = 95;\ngrades["Bob"]     = 88;\ngrades.Add("Eve", 92);\n\n// Safe lookup (no exception)\nif (grades.TryGetValue("Alice", out int score))\n  Console.WriteLine($"Alice: {score}"); // 95\n\n// Iterate\nforeach (var (key, val) in grades)\n  Console.WriteLine($"{key}: {val}");\n\n// Check & remove\nif (grades.ContainsKey("Bob"))\n  grades.Remove("Bob");\n\n// LINQ on Dictionary\nvar honor = grades\n  .Where(g => g.Value >= 90)\n  .Select(g => g.Key);\n// ["Alice", "Eve"]`,
-        stepLabels: ['Create', 'Add', 'Lookup', 'Iterate'],
-        stepDescriptions: [
-          'Dictionary<K,V> is a hash table. Each key hashes to a bucket for O(1) average lookup.',
-          'You can add via indexer (grades["Alice"] = 95) or .Add(). Duplicate keys throw an exception.',
-          'TryGetValue is safe — returns false instead of throwing if the key is missing.',
-          'Iterating yields KeyValuePair<K,V>. C# 8 deconstruction (key, val) keeps it clean.',
-        ],
-      },
-    ],
+    id: 'oop',
+    label: 'OOP Concepts',
+    desc: 'Classes, Objects, Encapsulation, inheritance structures, polymorphism methods, abstraction, and interfaces.',
+    accent: '#8B5CF6',
+    type: 'Object Orientation',
+    index: 3,
+    topics: ['Classes', 'Objects', 'Encapsulation', 'Inheritance', 'Polymorphism', 'Abstraction', 'Interfaces'],
+    theory: 'Object-Oriented Programming (OOP) models software around real-world objects. Classes act as blueprints. Encapsulation hides state behind public APIs. Inheritance promotes code reuse. Polymorphism allows dynamic runtime method dispatching.',
+    aiExplanation: 'If a cookie cutter is a class, the cookies are objects. Encapsulation is the chocolate coating hiding the dough. Inheritance is using the shape to bake cookies with new flavors. Polymorphism is taking a bite and enjoying different flavors depending on the cookie type!',
+    useCases: 'Designing enterprise business models, structuring repository access classes, and building decoupled UI rendering components.',
+    simulatorType: 'oop-concepts',
+    quiz: {
+      q: 'Which keyword is used to inheritance-extend a base class or implement an interface in C#?',
+      options: ['extends', 'implements', 'colon (:)', 'using'],
+      correct: 'colon (:)',
+      explanation: 'C# uses a single colon (:) for both extending a base class and implementing interfaces.'
+    }
   },
   {
-    id: 'linq', title: 'LINQ & Collections', Icon: Filter,
-    color: '#D97706', gradient: 'linear-gradient(135deg, #FF9F1C, #FF4000)',
-    description: 'Query any collection with SQL-like syntax',
-    topics: [
-      {
-        id: 'linq-basics', title: 'LINQ Pipeline', vizType: 'linq', steps: 5,
-        preview: 'Where, Select, OrderBy — compose a query pipeline over any IEnumerable.',
-        code: `var numbers = Enumerable.Range(1, 10).ToList();\n// [1,2,3,4,5,6,7,8,9,10]\n\n// LINQ method chain (pipeline)\nvar result = numbers\n  .Where(n  => n % 2 == 0)       // filter evens\n  .Select(n  => n * n)            // square them\n  .OrderByDescending(n => n)      // sort descending\n  .Take(3)                        // first 3\n  .ToList();                      // execute!\n\n// Result: [100, 64, 36]\n\n// Query syntax (same result)\nvar query = (from n in numbers\n             where  n % 2 == 0\n             orderby n * n descending\n             select n * n)\n            .Take(3);\n\nresult.ForEach(Console.WriteLine);`,
-        stepLabels: ['Source', 'Where', 'Select', 'OrderBy', 'Result'],
-        stepDescriptions: [
-          'Source: numbers [1..10]. LINQ operators are lazy — nothing runs until you enumerate.',
-          'Where(n % 2 == 0) filters: only even numbers pass through → [2, 4, 6, 8, 10].',
-          'Select(n => n*n) transforms each element: squares them → [4, 16, 36, 64, 100].',
-          'OrderByDescending sorts from largest to smallest → [100, 64, 36, 16, 4].',
-          'Take(3).ToList() triggers execution, materializing the result → [100, 64, 36].',
-        ],
-      },
-      {
-        id: 'linq-groupby', title: 'GroupBy & Aggregates', vizType: 'groupby', steps: 4,
-        preview: 'Aggregate with Sum, Average, Min, Max and group with GroupBy.',
-        code: `record Student(string Name, string Dept, int Score);\n\nvar students = new List<Student> {\n  new("Alice", "CS",   95),\n  new("Bob",   "CS",   82),\n  new("Eve",   "Math", 90),\n  new("Dan",   "Math", 78),\n  new("Sue",   "CS",   88),\n};\n\n// Aggregates\ndouble avg  = students.Average(s => s.Score);\nint    max  = students.Max(s => s.Score);\nint    top  = students.Count(s => s.Score >= 90);\n\n// GroupBy department\nvar byDept = students\n  .GroupBy(s => s.Dept)\n  .Select(g => new {\n    Dept    = g.Key,\n    Count   = g.Count(),\n    Average = g.Average(s => s.Score)\n  });\n\n// CS: 3 students, avg 88.3\n// Math: 2 students, avg 84.0`,
-        stepLabels: ['Data', 'Avg/Max', 'GroupBy', 'Project'],
-        stepDescriptions: [
-          'We have 5 students in two departments. Records (C# 9) are immutable data carriers.',
-          'Aggregates like Average/Max/Count compute scalar values over the whole collection.',
-          'GroupBy(s => s.Dept) partitions the list — each group has a Key and its matching items.',
-          'Select on groups projects each group into an anonymous object with computed stats.',
-        ],
-      },
-    ],
+    id: 'collections',
+    label: 'Collections & Generics',
+    desc: 'Manage type-safe lists, dictionaries, queues, stacks, hashsets, and customize generic classes.',
+    accent: '#EC4899',
+    type: 'Data Management',
+    index: 4,
+    topics: ['List', 'Dictionary', 'Queue', 'Stack', 'HashSet', 'Generics'],
+    theory: 'Collections organize and store sets of data. Generic collections (System.Collections.Generic) guarantee type safety and prevent performance penalties from runtime boxing/unboxing operations. Dictionaries offer O(1) key lookups via hashing.',
+    aiExplanation: 'Collections are like storage cabinets. A list is a row of folders where you add items at the end. A dictionary is a roll of labeled keys that open specific drawers instantly. Generics let you buy a drawer unit and specify that it should hold only shoes or only shirts!',
+    useCases: 'Caching in-memory lookup maps, maintaining sequential message queues, and defining type-safe repositories.',
+    simulatorType: 'collections-sim',
+    quiz: {
+      q: 'Which collection provides first-in, first-out (FIFO) access behaviors?',
+      options: ['List<T>', 'Stack<T>', 'Queue<T>', 'HashSet<T>'],
+      correct: 'Queue<T>',
+      explanation: 'Queue<T> processes elements in First-In-First-Out order via Enqueue and Dequeue operations.'
+    }
   },
   {
-    id: 'file-handling', title: 'File Handling', Icon: FolderOpen,
-    color: '#0891B2', gradient: 'linear-gradient(135deg, #4CC9F0, #4895EF)',
-    description: 'Read, write, and stream files with System.IO',
-    topics: [
-      {
-        id: 'file-io', title: 'File Read & Write', vizType: 'fileio', steps: 4,
-        preview: 'Use File class for quick I/O and StreamReader/Writer for large files.',
-        code: `using System.IO;\n\n// Write entire file at once\nFile.WriteAllText("notes.txt",\n  "EduVerse Notes\\nLesson 1: Variables");\n\n// Append a line\nFile.AppendAllText("notes.txt",\n  "\\nLesson 2: Loops");\n\n// Read all text\nstring content = File.ReadAllText("notes.txt");\nConsole.WriteLine(content);\n\n// Read line by line\nstring[] lines = File.ReadAllLines("notes.txt");\nforeach (string line in lines)\n  Console.WriteLine($">> {line}");\n\n// Check & delete\nif (File.Exists("notes.txt"))\n  File.Delete("notes.txt");\n\n// Async version\nawait File.WriteAllTextAsync("async.txt", "data");`,
-        stepLabels: ['Write', 'Append', 'Read', 'Delete'],
-        stepDescriptions: [
-          'File.WriteAllText creates (or overwrites) the file and writes the string in one call.',
-          'AppendAllText adds to the end without erasing existing content.',
-          'ReadAllText reads the entire file into a string. ReadAllLines splits by newline.',
-          'Always check File.Exists before deleting. Use await for async I/O on large files.',
-        ],
-      },
-      {
-        id: 'streams', title: 'Streams & StreamReader', vizType: 'streams', steps: 4,
-        preview: 'Use StreamReader/Writer for large files and efficient buffered I/O.',
-        code: `using System.IO;\n\n// StreamWriter — buffered write\nusing (var writer = new StreamWriter("log.txt")) {\n  writer.WriteLine("[INFO]  App started");\n  writer.WriteLine("[INFO]  Loading data...");\n  writer.WriteLine("[WARN]  Cache miss");\n} // auto-flushed & closed\n\n// StreamReader — buffered read\nusing (var reader = new StreamReader("log.txt")) {\n  string? line;\n  while ((line = reader.ReadLine()) != null) {\n    if (line.Contains("[WARN]"))\n      Console.ForegroundColor = ConsoleColor.Yellow;\n    Console.WriteLine(line);\n    Console.ResetColor();\n  }\n}\n\n// Large file — async streaming\nawait using var sr = new StreamReader("big.csv");\nwhile (!sr.EndOfStream) {\n  var row = await sr.ReadLineAsync();\n  ProcessRow(row);\n}`,
-        stepLabels: ['Open', 'Write', 'Read', 'Async'],
-        stepDescriptions: [
-          'StreamWriter wraps the file in a buffer. Data is written in chunks for better performance.',
-          'writer.WriteLine adds a line with a newline. The using block guarantees Dispose() is called.',
-          'StreamReader reads line-by-line — great for large files since it doesn\'t load all into memory.',
-          'Async streaming with ReadLineAsync prevents blocking the thread during heavy file I/O.',
-        ],
-      },
-    ],
+    id: 'exceptions',
+    label: 'Exception Handling',
+    desc: 'Deploy try/catch/finally code blocks, throw custom business errors, and recover applications safely.',
+    accent: '#EF4444',
+    type: 'System Reliability',
+    index: 5,
+    topics: ['Try', 'Catch', 'Finally', 'Throw', 'Custom Exceptions'],
+    theory: 'Exception handling intercepts runtime anomalies. The try block contains error-prone code. Catch blocks intercept specific Exception types top-down. The finally block is guaranteed to execute, making it ideal for cleaning up database connections or system files.',
+    aiExplanation: 'Imagine ordering pizza. The "try" is calling the shop. The "catch" is handling a scenario where they are out of pepperoni (you order cheese instead). The "finally" is paying the delivery person no matter what pizza they bring you!',
+    useCases: 'Gracefully handling network connection timeouts, database failures, and validating inputs to prevent application crashes.',
+    simulatorType: 'exceptions-sim',
+    quiz: {
+      q: 'Does a finally block execute if an exception is caught and handled inside a catch block?',
+      options: ['Only if no return statement exists', 'No, it skips on success', 'Yes, it always executes', 'Only on network systems'],
+      correct: 'Yes, it always executes',
+      explanation: 'The finally block is guaranteed to run after exiting try/catch scopes, regardless of whether exceptions were raised or caught.'
+    }
   },
   {
-    id: 'async', title: 'Async & Multithreading', Icon: Zap,
-    color: '#DB2777', gradient: 'linear-gradient(135deg, #FF4D6D, #C9184A)',
-    description: 'async/await, Tasks, and parallel programming',
-    topics: [
-      {
-        id: 'async-await', title: 'async / await', vizType: 'async', steps: 5,
-        preview: 'Write non-blocking code using async methods and awaitable Tasks.',
-        code: `using System.Net.Http;\n\n// Async method returns Task<T>\npublic async Task<string> FetchAsync(string url) {\n  using var http = new HttpClient();\n  // Thread is FREE while waiting for response\n  string data = await http.GetStringAsync(url);\n  return data;\n}\n\n// Async caller\npublic async Task RunAsync() {\n  Console.WriteLine("Starting fetch...");\n\n  // Run two fetches concurrently\n  var t1 = FetchAsync("https://api.example.com/a");\n  var t2 = FetchAsync("https://api.example.com/b");\n\n  // Await both — runs in parallel!\n  var results = await Task.WhenAll(t1, t2);\n\n  Console.WriteLine($"Got {results[0].Length} chars");\n  Console.WriteLine($"Got {results[1].Length} chars");\n}`,
-        stepLabels: ['Sync', 'await', 'Free thread', 'Resume', 'WhenAll'],
-        stepDescriptions: [
-          'Without async, GetStringAsync would block the thread — freezing the app until the response arrives.',
-          '`await` suspends the method and returns control to the caller. The thread is NOT blocked.',
-          'While waiting, the thread is free to handle other requests, UI events, or other tasks.',
-          'When the response arrives, the runtime resumes execution right after the await point.',
-          'Task.WhenAll runs multiple async tasks concurrently — total time ≈ slowest task, not sum.',
-        ],
-      },
-      {
-        id: 'parallel', title: 'Parallel & PLINQ', vizType: 'parallel', steps: 4,
-        preview: 'Use Parallel.For and PLINQ to spread CPU-bound work across cores.',
-        code: `using System.Threading;\nusing System.Threading.Tasks;\n\n// Parallel.For — CPU-bound loops\nParallel.For(0, 8, i => {\n  int threadId = Thread.CurrentThread.ManagedThreadId;\n  Console.WriteLine($"Core {threadId}: item {i}");\n});\n\n// Parallel.ForEach\nvar items = Enumerable.Range(1, 1_000_000).ToList();\nlong total = 0;\nParallel.ForEach(items,\n  () => 0L,                          // local init\n  (item, _, local) => local + item,  // body\n  local => Interlocked.Add(ref total, local));\n\n// PLINQ — parallel LINQ\nvar result = items.AsParallel()\n                  .WithDegreeOfParallelism(4)\n                  .Where(x  => x % 2 == 0)\n                  .Select(x => (long)x * x)\n                  .Sum();\n\nConsole.WriteLine($"Sum: {result}");`,
-        stepLabels: ['Sequential', 'Parallel.For', 'ForEach', 'PLINQ'],
-        stepDescriptions: [
-          'Sequential code uses one CPU core. With 8 items and 8 cores, you\'re leaving 7 cores idle.',
-          'Parallel.For splits iterations across available CPU cores automatically.',
-          'Parallel.ForEach with local state avoids lock contention — each thread accumulates locally.',
-          'PLINQ adds .AsParallel() to any LINQ query — the runtime partitions data across cores.',
-        ],
-      },
-    ],
+    id: 'file-handling',
+    label: 'File Handling',
+    desc: 'Read, write, and append disk files using File stream buffers, StreamReaders, and path classes.',
+    accent: '#06B6D4',
+    type: 'Disk Storage',
+    index: 6,
+    topics: ['File Class', 'Streams', 'Read Write Operations'],
+    theory: 'System.IO enables access to storage systems. The static File class offers rapid text helper read/write utilities. Streams operate on raw byte arrays, preventing memory bottlenecks by buffering large files in sequential blocks.',
+    aiExplanation: 'Reading a large file without streams is like trying to drink a whole swimming pool in one gulp. Using streams is like drinking water through a straw — taking small, manageable sips line-by-line!',
+    useCases: 'Logging runtime application errors, loading CSV data files into entities, and exporting analytics reports to local folders.',
+    simulatorType: 'file-sim',
+    quiz: {
+      q: 'Which block ensures file handles and StreamReaders are immediately disposed to prevent memory leaks?',
+      options: ['using statement/block', 'finally catch statement', 'File.Delete()', 'lock block'],
+      correct: 'using statement/block',
+      explanation: 'The C# using statement compiles into a try/finally block that automatically calls Dispose() on the resource, releasing file locks.'
+    }
   },
+  {
+    id: 'linq',
+    label: 'LINQ Queries',
+    desc: 'Query, transform, aggregate, and join in-memory data collections with declarative SQL-like syntax.',
+    accent: '#F59E0B',
+    type: 'Data Pipelines',
+    index: 7,
+    topics: ['Where', 'Select', 'GroupBy', 'OrderBy', 'Joins'],
+    theory: 'Language Integrated Query (LINQ) brings data querying directly into C#. Using lambda expressions, LINQ operators run lazily (deferred execution), executing only when collections are iterated (e.g. via Tolist() or foreach).',
+    aiExplanation: 'Imagine standing in front of a conveyor belt of fruits. LINQ is a series of assistants: Assistant 1 filters out bad apples (Where). Assistant 2 peels them (Select). Assistant 3 packs them in baskets (GroupBy). Nothing happens until you pick up a basket to eat (deferred execution)!',
+    useCases: 'Filtering student records based on search keywords, grouping transaction totals by category, and sorting products by price.',
+    simulatorType: 'linq-sim',
+    quiz: {
+      q: 'What is deferred execution in LINQ?',
+      options: ['Queries run immediately on declaration', 'Queries run only when the result is enumerated', 'Compiler compiles queries to C++ speed', 'Queries execute in separate threads'],
+      correct: 'Queries run only when the result is enumerated',
+      explanation: 'Deferred execution means a LINQ query is not executed when created, but rather when the query results are actually iterated.'
+    }
+  },
+  {
+    id: 'delegates',
+    label: 'Delegates & Events',
+    desc: 'Define delegates, trigger events, configure callbacks, and write clean inline lambda expressions.',
+    accent: '#8B5CF6',
+    type: 'Event-Driven Code',
+    index: 8,
+    topics: ['Delegates', 'Events', 'Lambda Expressions'],
+    theory: 'Delegates are type-safe function pointers that store references to methods with specific signatures. Events are wrappers around multicast delegates that allow classes to notify other classes when actions occur, promoting decoupled publisher-subscriber patterns.',
+    aiExplanation: 'Imagine subscribing to a magazine. The magazine company is the publisher (Event). You are the subscriber (Subscriber method). The mail carrier delivering the copy to your address is the delegate (Function pointer)!',
+    useCases: 'Handling button clicks in UI frameworks, raising telemetry events, and structuring decoupled pipeline architectures.',
+    simulatorType: 'delegates-sim',
+    quiz: {
+      q: 'Which standard delegate represents a method that takes parameters and returns a value?',
+      options: ['Action<T>', 'Func<T, TResult>', 'Predicate<T>', 'EventHandler'],
+      correct: 'Func<T, TResult>',
+      explanation: 'Func represents a delegate that returns a value. Action is used for void methods, and Predicate returns a boolean.'
+    }
+  },
+  {
+    id: 'async',
+    label: 'Async Programming',
+    desc: 'Write non-blocking asynchronous code using async/await, Task Parallel Library (TPL), and concurrency threads.',
+    accent: '#EC4899',
+    type: 'Concurrency',
+    index: 9,
+    topics: ['Async', 'Await', 'Tasks', 'Multithreading'],
+    theory: 'Asynchronous programming avoids thread starvation. The await keyword yields execution back to the caller while a task completes in the background. Once the task finishes, the runtime resumes execution on the captured thread context.',
+    aiExplanation: 'Imagine boiling pasta and making sauce. A synchronous cook boils water and stands still watching it for 10 minutes (blocking). An asynchronous cook turns on the stove (Task), starts chopping onions (Non-blocking), and returns to the pasta when the timer beeps!',
+    useCases: 'Fetching remote HTTP API payloads, writing large database transactions without locking desktops, and running image processing concurrently.',
+    simulatorType: 'async-sim',
+    quiz: {
+      q: 'What does the await keyword do when a thread encounters it during execution?',
+      options: ['It blocks the thread completely', 'It releases the thread to execute other work', 'It restarts the computer', 'It translates code to assembly'],
+      correct: 'It releases the thread to execute other work',
+      explanation: 'Await returns control to the thread pool, allowing the thread to perform other tasks while the awaited operation completes.'
+    }
+  },
+  {
+    id: 'ado-net',
+    label: 'ADO.NET Database Access',
+    desc: 'Establish database connections, build SqlCommands, prevent SQL injection, and read result streams.',
+    accent: '#3B82F6',
+    type: 'Relational Access',
+    index: 10,
+    topics: ['SqlConnection', 'SqlCommand', 'DataReader', 'DataAdapter'],
+    theory: 'ADO.NET is the fundamental database access layer in .NET. It uses SqlConnections to bind endpoints, SqlCommands to dispatch SQL queries, and SqlDataReaders to stream cursors forward-only with high efficiency.',
+    aiExplanation: 'Think of ADO.NET like a train line. SqlConnection is the rail tracks. SqlCommand is the train car carrying cargo (SQL queries). SqlDataReader is the offloading crew taking items off the train one-by-one!',
+    useCases: 'Direct database querying, migrating old systems, and processing raw tabular reports directly from SQL servers.',
+    simulatorType: 'ado-sim',
+    quiz: {
+      q: 'Which ADO.NET object provides high-speed, read-only, forward-only access to query results?',
+      options: ['SqlDataAdapter', 'DataSet', 'SqlDataReader', 'SqlConnection'],
+      correct: 'SqlDataReader',
+      explanation: 'SqlDataReader reads database streams sequentially with minimal memory overhead, making it incredibly fast.'
+    }
+  },
+  {
+    id: 'ef-core',
+    label: 'Entity Framework Core',
+    desc: 'Map database schemas using ORMs, write DbContext models, declare DbSets, and run migration scripts.',
+    accent: '#10B981',
+    type: 'Object-Relational Mapping',
+    index: 11,
+    topics: ['ORM', 'DbContext', 'DbSet', 'Relationships', 'Migrations'],
+    theory: 'EF Core is a lightweight, extensible ORM that simplifies SQL operations. Instead of writing queries, developers query DbSets using LINQ. EF Core translates LINQ nodes to optimized SQL dialect queries at runtime.',
+    aiExplanation: 'EF Core is a translator. Your C# code speaks French (Objects), and SQL database speaks Chinese (Tables). DbContext acts as the translator translating "Add Student" to "INSERT INTO Students" automatically!',
+    useCases: 'Speedy backend development, structuring persistent application data models, and automating database migrations.',
+    simulatorType: 'ef-sim',
+    quiz: {
+      q: 'Which class holds database sessions and manages entity state mappings in EF Core?',
+      options: ['DbSet', 'DbContext', 'ModelBuilder', 'MigrationBuilder'],
+      correct: 'DbContext',
+      explanation: 'DbContext represents a database session, allowing query execution and saving entities using SaveChanges().'
+    }
+  },
+  {
+    id: 'aspnet-mvc',
+    label: 'ASP.NET Core MVC',
+    desc: 'Structure web applications with MVC architectures, configure Controllers, route requests, and render views.',
+    accent: '#8B5CF6',
+    type: 'Web Framework',
+    index: 12,
+    topics: ['MVC Architecture', 'Controllers', 'Models', 'Views', 'Routing'],
+    theory: 'ASP.NET Core MVC separates concerns: Models map states, Views render UI pages, and Controllers intercept incoming route requests to fetch models and dispatch matching page views.',
+    aiExplanation: 'MVC is like a restaurant. The View is the menu you look at. The Controller is the waiter taking your order. The Model is the chef in the kitchen preparing the food (data)!',
+    useCases: 'Building enterprise portal web applications, rendering dynamic customer panels, and configuring custom middlewares.',
+    simulatorType: 'mvc-sim',
+    quiz: {
+      q: 'What is the role of a Controller in MVC architectures?',
+      options: ['Hold database connection strings', 'Handle user inputs and return action results', 'Style HTML layouts', 'Cache static assets'],
+      correct: 'Handle user inputs and return action results',
+      explanation: 'Controllers intercept incoming HTTP requests, coordinate domain data processing, and return ActionResults (like Views or JSON).'
+    }
+  },
+  {
+    id: 'web-api',
+    label: 'ASP.NET Core Web APIs',
+    desc: 'Develop RESTful APIs, configure GET/POST controllers, bind parameters, and test with Swagger UI.',
+    accent: '#06B6D4',
+    type: 'API Services',
+    index: 13,
+    topics: ['REST APIs', 'GET', 'POST', 'PUT', 'DELETE', 'Swagger'],
+    theory: 'Web APIs expose business logic over standard HTTP. Controllers use attributes like [HttpGet] and [HttpPost] to route requests and return serialized JSON payloads to client frameworks.',
+    aiExplanation: 'Think of a web API like a power outlet. Instead of generating electricity yourself, you plug in your phone cord (HTTP request) to extract power (JSON data) in a standard format!',
+    useCases: 'Powering React/Angular frontend dashboards, building backend systems for mobile applications, and structuring microservices.',
+    simulatorType: 'api-sim',
+    quiz: {
+      q: 'Which HTTP method should be used to create a new resource on the server?',
+      options: ['GET', 'POST', 'PUT', 'DELETE'],
+      correct: 'POST',
+      explanation: 'POST is designed to create new resources, while PUT is used to update existing resources, and GET retrieves them.'
+    }
+  },
+  {
+    id: 'auth',
+    label: 'Security & Auth',
+    desc: 'Implement ASP.NET Identity, sign tokens with JWT, assign roles, and enforce protected route policies.',
+    accent: '#EF4444',
+    type: 'Access Control',
+    index: 14,
+    topics: ['Identity Framework', 'JWT', 'Roles', 'Claims'],
+    theory: 'Authentication verifies user identities. Authorization checks access permissions. JSON Web Tokens (JWT) store cryptographically signed claims (e.g. user ID, role), letting clients access protected endpoints stateless-ly.',
+    aiExplanation: 'Authentication is showing your ID badge at the office door. Authorization is checking if your badge has permission to enter the server room (Role), or just the lunchroom!',
+    useCases: 'Locking down customer invoice pages, generating temporary API keys, and managing user profiles with Identity tables.',
+    simulatorType: 'auth-sim',
+    quiz: {
+      q: 'What does the signature part of a JWT protect against?',
+      options: ['Data encryption speed leaks', 'Payload tampering and editing', 'Password theft', 'SQL database injection'],
+      correct: 'Payload tampering and editing',
+      explanation: 'The JWT signature is created using a server secret. If a client tampers with the token claims, the signature verification fails.'
+    }
+  },
+  {
+    id: 'blazor',
+    label: 'Blazor UI Development',
+    desc: 'Build web user interfaces using C# instead of JavaScript, create components, and bind states.',
+    accent: '#F59E0B',
+    type: 'Frontend C#',
+    index: 15,
+    topics: ['Components', 'Routing', 'State Management'],
+    theory: 'Blazor is Microsofts frontend framework. Blazor WebAssembly runs compiled C# code directly in browser runtimes using WebAssembly (Wasm). Blazor Server runs logic on the server, dispatching UI updates over SignalR.',
+    aiExplanation: 'Blazor is like coding a website using C# instead of JavaScript! You write components with HTML markup and C# event methods combined in one file (.razor), and the browser executes it smoothly!',
+    useCases: 'C#-only full-stack developer applications, building responsive admin panels, and reducing JavaScript dependencies.',
+    simulatorType: 'blazor-sim',
+    quiz: {
+      q: 'Which Blazor mode executes C# bytecode directly in the client browser utilizing Wasm runtimes?',
+      options: ['Blazor Server', 'Blazor WebAssembly', 'Blazor Hybrid', 'Blazor Razor Pages'],
+      correct: 'Blazor WebAssembly',
+      explanation: 'Blazor WebAssembly compiles C# code to WebAssembly bytecode that runs natively inside browser sandboxes.'
+    }
+  },
+  {
+    id: 'azure',
+    label: 'Azure & Cloud Services',
+    desc: 'Deploy web apps to App Services, set up Azure SQL databases, and configure cloud file storages.',
+    accent: '#3B82F6',
+    type: 'Cloud Deployment',
+    index: 16,
+    topics: ['Azure App Services', 'Azure SQL', 'Storage', 'Deployment'],
+    theory: 'Azure is Microsofts cloud ecosystem. App Services provide scalable web hosting. Azure SQL supplies managed database runtimes, and Azure Blob Storage handles structured cloud document file buffers.',
+    aiExplanation: 'Instead of buying a server computer, setting it up in your closet, and paying for electricity, you rent virtual slots inside Microsofts massive datacenters (the Cloud) and run your C# apps there instantly!',
+    useCases: 'Scaling web backends to handle million-user peaks, hosting corporate databases safely, and deploying global microservices.',
+    simulatorType: 'azure-sim',
+    quiz: {
+      q: 'Which Azure service offers managed serverless hosting for hosting standard C# web apps?',
+      options: ['Azure SQL', 'Azure Blob Storage', 'Azure App Services', 'Azure Active Directory'],
+      correct: 'Azure App Services',
+      explanation: 'Azure App Services provides managed serverless PaaS hosting for ASP.NET Core web applications.'
+    }
+  }
 ];
 
 // ═══════════════════════════════════════════════════════════
-// VISUALIZATIONS
-// ═══════════════════════════════════════════════════════════
-
-function ClassObjectViz({ step }) {
-  const fields  = ['string Name', 'int    Age', 'double GPA'];
-  const values  = ['"Alice"', '20', '3.9'];
-  const showObj = step >= 3;
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      <defs>
-        <marker id="arr1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L8,3 L0,6 Z" fill="#2563EB"/>
-        </marker>
-      </defs>
-      {/* Blueprint label */}
-      <text x="90" y="22" textAnchor="middle" fontSize="11" fontWeight="700" fill="#64748B" fontFamily="Inter,sans-serif">CLASS (Blueprint)</text>
-      {/* Class box */}
-      <rect x="20" y="30" width="140" height={step >= 1 ? (step >= 2 ? 160 : 70) : 40} rx="10" fill="white" stroke="#2563EB" strokeWidth="2"/>
-      <rect x="20" y="30" width="140" height="36" rx="10" fill="#2563EB"/>
-      <rect x="20" y="52" width="140" height="14" rx="0" fill="#2563EB"/>
-      <text x="90" y="54" textAnchor="middle" fontSize="12" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">class Student</text>
-      {step >= 1 && fields.slice(0, Math.min(step, 3)).map((f, i) => (
-        <text key={i} x="34" y={82 + i * 24} fontSize="11" fill="#334155" fontFamily="Fira Code,monospace">
-          <tspan fill="#7C3AED">public </tspan>
-          <tspan fill="#0891B2">{f.split(' ')[0]} </tspan>
-          <tspan fill="#0F172A">{f.split(' ')[1]}</tspan>
-        </text>
-      ))}
-      {/* Arrow */}
-      {step >= 3 && (
-        <line x1="165" y1="110" x2="230" y2="110" stroke="#2563EB" strokeWidth="2" markerEnd="url(#arr1)" strokeDasharray="6,3"/>
-      )}
-      {/* new keyword */}
-      {step >= 3 && (
-        <text x="183" y="104" fontSize="10" fill="#2563EB" fontWeight="700" fontFamily="Fira Code,monospace">new</text>
-      )}
-      {/* Object box */}
-      {showObj && (
-        <>
-          <text x="340" y="22" textAnchor="middle" fontSize="11" fontWeight="700" fill="#64748B" fontFamily="Inter,sans-serif">OBJECT (Instance)</text>
-          <rect x="240" y="30" width="150" height="160" rx="10" fill="white" stroke="#10B981" strokeWidth="2"/>
-          <rect x="240" y="30" width="150" height="36" rx="10" fill="#10B981"/>
-          <rect x="240" y="52" width="150" height="14" fill="#10B981"/>
-          <text x="315" y="54" textAnchor="middle" fontSize="12" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">s1 : Student</text>
-          {fields.map((f, i) => (
-            <g key={i}>
-              <text x="254" y={82 + i * 32} fontSize="10" fill="#64748B" fontFamily="Fira Code,monospace">{f.split(' ')[1]}</text>
-              <rect x="254" y={87 + i * 32} width="118" height="18" rx="4" fill="#F0FDF4" stroke="#10B981" strokeWidth="1"/>
-              <text x="313" y={100 + i * 32} textAnchor="middle" fontSize="11" fill="#065F46" fontWeight="600" fontFamily="Fira Code,monospace">{values[i]}</text>
-            </g>
-          ))}
-        </>
-      )}
-      {/* Memory label */}
-      {step >= 3 && (
-        <text x="315" y="210" textAnchor="middle" fontSize="10" fill="#64748B" fontFamily="Inter,sans-serif">📍 Heap memory</text>
-      )}
-    </svg>
-  );
-}
-
-function InheritanceViz({ step }) {
-  const opacity = (minStep) => step >= minStep ? 1 : 0.1;
-  const trans = 'all 0.5s ease';
-  return (
-    <svg viewBox="0 0 460 310" className="viz-svg">
-      <defs>
-        <marker id="inh-arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L8,3 L0,6 Z" fill="#7C3AED"/>
-        </marker>
-      </defs>
-      {/* Animal */}
-      <g style={{opacity: 1, transition: trans}}>
-        <rect x="155" y="10" width="150" height="70" rx="10" fill="#7C3AED"/>
-        <text x="230" y="34" textAnchor="middle" fontSize="13" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">Animal</text>
-        <text x="230" y="52" textAnchor="middle" fontSize="10" fill="rgba(255,255,255,0.8)" fontFamily="Fira Code,monospace">Name, Age</text>
-        <text x="230" y="68" textAnchor="middle" fontSize="10" fill="rgba(255,255,255,0.8)" fontFamily="Fira Code,monospace">virtual Sound()</text>
-      </g>
-      {/* Lines */}
-      <line x1="180" y1="80" x2="120" y2="155" stroke="#7C3AED" strokeWidth="2" markerEnd="url(#inh-arr)" style={{opacity: opacity(2), transition: trans}}/>
-      <line x1="280" y1="80" x2="340" y2="155" stroke="#7C3AED" strokeWidth="2" markerEnd="url(#inh-arr)" style={{opacity: opacity(3), transition: trans}}/>
-      {/* Dog */}
-      <g style={{opacity: opacity(2), transition: trans}}>
-        <rect x="40" y="155" width="160" height="80" rx="10" fill="white" stroke="#7C3AED" strokeWidth="2"/>
-        <rect x="40" y="155" width="160" height="30" rx="10" fill="rgba(124,58,237,0.15)"/>
-        <rect x="40" y="172" width="160" height="13" fill="rgba(124,58,237,0.15)"/>
-        <text x="120" y="176" textAnchor="middle" fontSize="12" fontWeight="700" fill="#7C3AED" fontFamily="Fira Code,monospace">Dog : Animal</text>
-        <text x="120" y="202" textAnchor="middle" fontSize="10" fill="#334155" fontFamily="Fira Code,monospace">override Sound()</text>
-        <text x="120" y="218" textAnchor="middle" fontSize="10" fill="#059669" fontWeight="600" fontFamily="Fira Code,monospace">→ "Woof! 🐕"</text>
-        {step >= 4 && <text x="120" y="234" textAnchor="middle" fontSize="9" fill="#64748B" fontFamily="Fira Code,monospace">+ Fetch()</text>}
-      </g>
-      {/* Cat */}
-      <g style={{opacity: opacity(3), transition: trans}}>
-        <rect x="260" y="155" width="160" height="80" rx="10" fill="white" stroke="#7C3AED" strokeWidth="2"/>
-        <rect x="260" y="155" width="160" height="30" rx="10" fill="rgba(124,58,237,0.15)"/>
-        <rect x="260" y="172" width="160" height="13" fill="rgba(124,58,237,0.15)"/>
-        <text x="340" y="176" textAnchor="middle" fontSize="12" fontWeight="700" fill="#7C3AED" fontFamily="Fira Code,monospace">Cat : Animal</text>
-        <text x="340" y="202" textAnchor="middle" fontSize="10" fill="#334155" fontFamily="Fira Code,monospace">override Sound()</text>
-        <text x="340" y="218" textAnchor="middle" fontSize="10" fill="#059669" fontWeight="600" fontFamily="Fira Code,monospace">→ "Meow! 🐈"</text>
-      </g>
-      {/* Breathe shared */}
-      {step >= 4 && (
-        <g>
-          <line x1="230" y1="80" x2="230" y2="270" stroke="#E2E8F0" strokeWidth="1.5" strokeDasharray="5,4"/>
-          <rect x="140" y="270" width="180" height="30" rx="8" fill="#F0FDF4" stroke="#10B981" strokeWidth="1.5"/>
-          <text x="230" y="289" textAnchor="middle" fontSize="10" fontWeight="600" fill="#065F46" fontFamily="Inter,sans-serif">✓ Breathe() inherited by all</text>
-        </g>
-      )}
-    </svg>
-  );
-}
-
-function StackViz({ step }) {
-  const items  = [
-    { val: 10, color: '#2563EB' },
-    { val: 20, color: '#7C3AED' },
-    { val: 30, color: '#DB2777' },
-  ];
-  const visible = step === 4
-    ? items.slice(0, 2)
-    : items.slice(0, step === 0 ? 0 : step - 1 < 0 ? 0 : step - 1);
-  const showPop = step === 4;
-
-  return (
-    <svg viewBox="0 0 460 300" className="viz-svg">
-      {/* Stack frame */}
-      <rect x="170" y="30" width="120" height="220" rx="10" fill="#F8FAFC" stroke="#E2E8F0" strokeWidth="2"/>
-      <text x="230" y="22" textAnchor="middle" fontSize="11" fontWeight="700" fill="#64748B" fontFamily="Inter,sans-serif">Stack Memory</text>
-      <text x="230" y="265" textAnchor="middle" fontSize="10" fill="#94A3B8" fontFamily="Inter,sans-serif">↑ grows upward</text>
-
-      {/* Stack items */}
-      {visible.map((item, i) => {
-        const y = 195 - i * 58;
-        return (
-          <g key={item.val}>
-            <rect x="180" y={y} width="100" height="46" rx="8" fill={item.color}/>
-            <text x="230" y={y + 28} textAnchor="middle" fontSize="18" fontWeight="800" fill="white" fontFamily="Fira Code,monospace">{item.val}</text>
-          </g>
-        );
-      })}
-
-      {/* TOP pointer */}
-      {visible.length > 0 && (
-        <>
-          <text x="310" y={200 - (visible.length - 1) * 58 + 26} fontSize="11" fontWeight="700" fill="#10B981" fontFamily="Inter,sans-serif">← TOP</text>
-        </>
-      )}
-
-      {/* Pop animation */}
-      {showPop && (
-        <g>
-          <rect x="310" y="60" width="100" height="46" rx="8" fill="#DB2777" opacity="0.9"/>
-          <text x="360" y="88" textAnchor="middle" fontSize="18" fontWeight="800" fill="white" fontFamily="Fira Code,monospace">30</text>
-          <text x="360" y="120" textAnchor="middle" fontSize="11" fill="#DB2777" fontWeight="700" fontFamily="Inter,sans-serif">Pop() → 30</text>
-          <line x1="310" y1="83" x2="290" y2="83" stroke="#DB2777" strokeWidth="2" strokeDasharray="4,3"/>
-        </g>
-      )}
-
-      {/* Operation label */}
-      <rect x="30" y="60" width="120" height="36" rx="8" fill={step === 0 ? '#F1F5F9' : step < 4 ? '#EFF6FF' : '#FEF2F2'} stroke={step === 0 ? '#E2E8F0' : step < 4 ? '#BFDBFE' : '#FECACA'} strokeWidth="1.5"/>
-      <text x="90" y="82" textAnchor="middle" fontSize="12" fontWeight="700" fill={step === 0 ? '#94A3B8' : step < 4 ? '#1D4ED8' : '#DC2626'} fontFamily="Fira Code,monospace">
-        {step === 0 ? 'Empty' : step === 1 ? 'Push(10)' : step === 2 ? 'Push(20)' : step === 3 ? 'Push(30)' : 'Pop()'}
-      </text>
-    </svg>
-  );
-}
-
-function LinqViz({ step }) {
-  const source  = [1,2,3,4,5,6,7,8,9,10];
-  const evens   = [2,4,6,8,10];
-  const squared = [4,16,36,64,100];
-  const sorted  = [100,64,36,16,4];
-  const result  = [100,64,36];
-
-  const stages = [source, source, evens, squared, result];
-  const labels = ['Source [1..10]', 'Source [1..10]', 'Where(even) → 5 items', 'Select(n²) → squared', 'Take(3) → [100, 64, 36]'];
-  const colors = ['#64748B','#64748B','#2563EB','#7C3AED','#10B981'];
-  const items  = stages[step] || source;
-
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      {/* Pipeline stages */}
-      {['Where', 'Select', 'OrderBy', 'Take'].map((op, i) => {
-        const active = step >= i + 2;
-        return (
-          <g key={op}>
-            <rect x={20 + i * 110} y="10" width="100" height="30" rx="8"
-              fill={active ? colors[i+1] : '#F1F5F9'}
-              stroke={active ? colors[i+1] : '#E2E8F0'}
-              strokeWidth="1.5" opacity={active ? 1 : 0.5}/>
-            <text x={70 + i * 110} y="30" textAnchor="middle" fontSize="11" fontWeight="700"
-              fill={active ? 'white' : '#94A3B8'} fontFamily="Fira Code,monospace">.{op}()</text>
-          </g>
-        );
-      })}
-
-      {/* Label */}
-      <text x="230" y="68" textAnchor="middle" fontSize="12" fontWeight="700" fill={colors[step]} fontFamily="Inter,sans-serif">{labels[step]}</text>
-
-      {/* Items */}
-      <g>
-        {items.slice(0, 10).map((n, i) => {
-          const cols = Math.min(items.length, 5);
-          const row  = Math.floor(i / cols);
-          const col  = i % cols;
-          const cx   = 80 + col * 62;
-          const cy   = 100 + row * 62;
-          return (
-            <g key={i}>
-              <rect x={cx - 24} y={cy - 20} width="48" height="40" rx="8"
-                fill={colors[step]} opacity={step === 0 ? 0.3 : 0.85}/>
-              <text x={cx} y={cy + 5} textAnchor="middle" fontSize="13" fontWeight="800"
-                fill="white" fontFamily="Fira Code,monospace">{n}</text>
-            </g>
-          );
-        })}
-      </g>
-
-      {/* Count badge */}
-      <text x="230" y="248" textAnchor="middle" fontSize="11" fill="#64748B" fontFamily="Inter,sans-serif">
-        {items.length} element{items.length !== 1 ? 's' : ''} {step >= 4 ? '✓ Result!' : step >= 1 ? 'remaining' : 'total'}
-      </text>
-    </svg>
-  );
-}
-
-function AsyncViz({ step }) {
-  const blocks = [
-    { label: 'Console.Write\n("Starting")', color: '#2563EB', x: 30, w: 120, done: step >= 1 },
-    { label: 'await\nFetchAsync()', color: '#F59E0B', x: 30, w: 120, done: step >= 2 },
-    { label: 'Thread\nFREE →', color: '#10B981', x: 30, w: 120, done: step >= 2 },
-    { label: 'Console.Write\n(result)', color: '#2563EB', x: 30, w: 120, done: step >= 4 },
-  ];
-  const taskY  = 100;
-  const mainY  = 170;
-
-  return (
-    <svg viewBox="0 0 460 290" className="viz-svg">
-      {/* Thread labels */}
-      <text x="14" y={mainY - 10} fontSize="10" fontWeight="700" fill="#64748B" fontFamily="Inter,sans-serif">Main Thread</text>
-      <text x="14" y={taskY - 10} fontSize="10" fontWeight="700" fill="#64748B" fontFamily="Inter,sans-serif">HTTP Task</text>
-
-      {/* Timeline bars */}
-      <rect x="14" y={mainY} width="420" height="28" rx="6" fill="#F1F5F9"/>
-      <rect x="14" y={taskY} width="420" height="28" rx="6" fill="#F1F5F9"/>
-
-      {/* Step 1: Main runs */}
-      {step >= 1 && <rect x="14" y={mainY} width="80" height="28" rx="6" fill="#2563EB"/>}
-      {step >= 1 && <text x="54" y={mainY+18} textAnchor="middle" fontSize="9" fill="white" fontFamily="Fira Code,monospace">Running</text>}
-
-      {/* Step 2: await — main thread released */}
-      {step >= 2 && (
-        <>
-          <rect x="94" y={mainY} width="180" height="28" rx="6" fill="#E2E8F0"/>
-          <text x="184" y={mainY+18} textAnchor="middle" fontSize="9" fill="#94A3B8" fontFamily="Inter,sans-serif">⏸ Suspended (thread free)</text>
-          {/* HTTP task runs */}
-          <rect x="94" y={taskY} width="180" height="28" rx="6" fill="#F59E0B"/>
-          <text x="184" y={taskY+18} textAnchor="middle" fontSize="9" fill="white" fontFamily="Fira Code,monospace">Fetching data…</text>
-        </>
-      )}
-
-      {/* Step 3: HTTP done, notify */}
-      {step >= 3 && (
-        <>
-          <rect x="274" y={taskY} width="50" height="28" rx="6" fill="#10B981"/>
-          <text x="299" y={taskY+18} textAnchor="middle" fontSize="9" fill="white" fontFamily="Fira Code,monospace">Done!</text>
-          <line x1="299" y1={taskY+28} x2="299" y2={mainY} stroke="#10B981" strokeWidth="2" strokeDasharray="4,3" markerEnd="url(#async-arr)"/>
-        </>
-      )}
-
-      {/* Step 4: Main resumes */}
-      {step >= 4 && (
-        <>
-          <rect x="274" y={mainY} width="160" height="28" rx="6" fill="#2563EB"/>
-          <text x="354" y={mainY+18} textAnchor="middle" fontSize="9" fill="white" fontFamily="Fira Code,monospace">Resumed with result</text>
-        </>
-      )}
-
-      {/* WhenAll label */}
-      {step >= 4 && (
-        <rect x="14" y="220" width="420" height="36" rx="8" fill="rgba(16,185,129,0.1)" stroke="#10B981" strokeWidth="1.5"/>
-      )}
-      {step >= 4 && (
-        <text x="224" y="243" textAnchor="middle" fontSize="11" fontWeight="600" fill="#065F46" fontFamily="Inter,sans-serif">
-          Task.WhenAll → runs both concurrently ⚡
-        </text>
-      )}
-
-      {/* Labels */}
-      <text x="224" y="280" textAnchor="middle" fontSize="10" fill="#94A3B8" fontFamily="Inter,sans-serif">
-        {step === 0 ? 'No async — thread blocks during I/O'
-          : step === 1 ? 'Main thread starts executing'
-          : step === 2 ? 'await suspends — thread is freed for other work'
-          : step === 3 ? 'HTTP task completes and signals continuation'
-          : 'Thread resumes execution after await point'}
-      </text>
-
-      <defs>
-        <marker id="async-arr" markerWidth="8" markerHeight="8" refX="4" refY="3" orient="auto">
-          <path d="M0,0 L8,3 L0,6 Z" fill="#10B981"/>
-        </marker>
-      </defs>
-    </svg>
-  );
-}
-
-function GenericViz({ step, topic }) {
-  const colors = ['#2563EB','#7C3AED','#059669','#D97706','#DB2777','#0891B2'];
-  const c = colors[step % colors.length];
-  const boxes = [
-    { label: 'Step 1', x: 60, y: 80 },
-    { label: 'Step 2', x: 190, y: 80 },
-    { label: 'Step 3', x: 320, y: 80 },
-    { label: 'Result', x: 190, y: 190 },
-  ];
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      {boxes.slice(0, step + 1).map((b, i) => (
-        <g key={i}>
-          <rect x={b.x} y={b.y} width="110" height="60" rx="12" fill={i === step ? c : '#F1F5F9'} stroke={i === step ? c : '#E2E8F0'} strokeWidth="2"/>
-          <text x={b.x + 55} y={b.y + 35} textAnchor="middle" fontSize="12" fontWeight="700"
-            fill={i === step ? 'white' : '#94A3B8'} fontFamily="Inter,sans-serif">{b.label}</text>
-          {i < step && i < 2 && (
-            <line x1={b.x + 110} y1={b.y + 30} x2={boxes[i+1].x} y2={boxes[i+1].y + 30}
-              stroke="#E2E8F0" strokeWidth="2"/>
-          )}
-        </g>
-      ))}
-      <text x="230" y="260" textAnchor="middle" fontSize="11" fill="#64748B" fontFamily="Inter,sans-serif">
-        Step {step + 1} of {topic.steps}
-      </text>
-    </svg>
-  );
-}
-
-function EncapsulationViz({ step }) {
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      {/* Outer ring: public */}
-      <circle cx="230" cy="140" r="120" fill="rgba(37,99,235,0.06)" stroke={step>=0?'#2563EB':'#E2E8F0'} strokeWidth="2" strokeDasharray={step>=0?'0':'8,4'}/>
-      {/* Middle ring: protected */}
-      <circle cx="230" cy="140" r="85" fill="rgba(124,58,237,0.07)" stroke={step>=1?'#7C3AED':'#E2E8F0'} strokeWidth="2" strokeDasharray={step>=1?'0':'8,4'}/>
-      {/* Inner: private */}
-      <circle cx="230" cy="140" r="50" fill="rgba(239,68,68,0.08)" stroke={step>=1?'#EF4444':'#E2E8F0'} strokeWidth="2"/>
-
-      {/* Labels */}
-      <text x="230" y="32" textAnchor="middle" fontSize="10" fontWeight="700" fill="#2563EB" fontFamily="Inter,sans-serif">public</text>
-      <text x="230" y="66" textAnchor="middle" fontSize="10" fontWeight="700" fill="#7C3AED" fontFamily="Inter,sans-serif">protected</text>
-      <text x="230" y="130" textAnchor="middle" fontSize="10" fontWeight="700" fill="#EF4444" fontFamily="Inter,sans-serif">private</text>
-
-      {/* Center: _balance */}
-      <text x="230" y="147" textAnchor="middle" fontSize="12" fontWeight="800" fill="#0F172A" fontFamily="Fira Code,monospace">_balance</text>
-
-      {/* Public methods shown outside */}
-      {step >= 2 && (
-        <>
-          <rect x="335" y="90" width="90" height="28" rx="8" fill="#10B981"/>
-          <text x="380" y="108" textAnchor="middle" fontSize="10" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">Deposit()</text>
-          <line x1="335" y1="104" x2="280" y2="130" stroke="#10B981" strokeWidth="1.5" strokeDasharray="4,3"/>
-        </>
-      )}
-      {step >= 3 && (
-        <>
-          <rect x="335" y="130" width="90" height="28" rx="8" fill="#F59E0B"/>
-          <text x="380" y="148" textAnchor="middle" fontSize="10" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">Withdraw()</text>
-          <line x1="335" y1="144" x2="280" y2="148" stroke="#F59E0B" strokeWidth="1.5" strokeDasharray="4,3"/>
-        </>
-      )}
-      {/* Caption */}
-      <text x="230" y="272" textAnchor="middle" fontSize="10" fill="#64748B" fontFamily="Inter,sans-serif">
-        {step===0?'public boundary visible to all'
-          :step===1?'private state hidden inside class'
-          :step===2?'Deposit() validated before touching _balance'
-          :'Withdraw() checks funds — class owns invariants'}
-      </text>
-    </svg>
-  );
-}
-
-function PolymorphismViz({ step }) {
-  const shapes = [
-    { label: 'Circle r=5', area: '78.5', perim: '31.4', color: '#2563EB', shape: 'circle' },
-    { label: 'Rect 4×6',   area: '24.0', perim: '20.0', color: '#7C3AED', shape: 'rect' },
-  ];
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      {/* Interface box */}
-      <rect x="155" y="10" width="150" height="70" rx="10" fill="#0F172A"/>
-      <text x="230" y="34" textAnchor="middle" fontSize="12" fontWeight="700" fill="#60A5FA" fontFamily="Fira Code,monospace">«interface»</text>
-      <text x="230" y="52" textAnchor="middle" fontSize="12" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">IShape</text>
-      <text x="230" y="68" textAnchor="middle" fontSize="9" fill="#94A3B8" fontFamily="Fira Code,monospace">Area() · Perimeter()</text>
-
-      {/* Lines to impls */}
-      {step >= 1 && <line x1="190" y1="80" x2="120" y2="150" stroke="#2563EB" strokeWidth="2" strokeDasharray="5,4"/>}
-      {step >= 2 && <line x1="270" y1="80" x2="340" y2="150" stroke="#7C3AED" strokeWidth="2" strokeDasharray="5,4"/>}
-
-      {/* Circle */}
-      {step >= 1 && (
-        <g>
-          <rect x="40" y="150" width="160" height="80" rx="10" fill="white" stroke="#2563EB" strokeWidth="2"/>
-          <circle cx="90" cy="190" r="24" fill="rgba(37,99,235,0.15)" stroke="#2563EB" strokeWidth="2"/>
-          <text x="145" y="178" textAnchor="middle" fontSize="11" fontWeight="700" fill="#2563EB" fontFamily="Fira Code,monospace">Circle</text>
-          {step>=3&&<text x="145" y="196" textAnchor="middle" fontSize="10" fill="#334155" fontFamily="Fira Code,monospace">A={shapes[0].area}</text>}
-          {step>=3&&<text x="145" y="212" textAnchor="middle" fontSize="10" fill="#334155" fontFamily="Fira Code,monospace">P={shapes[0].perim}</text>}
-        </g>
-      )}
-      {/* Rect */}
-      {step >= 2 && (
-        <g>
-          <rect x="260" y="150" width="160" height="80" rx="10" fill="white" stroke="#7C3AED" strokeWidth="2"/>
-          <rect x="285" y="170" width="50" height="40" fill="rgba(124,58,237,0.15)" stroke="#7C3AED" strokeWidth="2"/>
-          <text x="365" y="178" textAnchor="middle" fontSize="11" fontWeight="700" fill="#7C3AED" fontFamily="Fira Code,monospace">Rect</text>
-          {step>=3&&<text x="365" y="196" textAnchor="middle" fontSize="10" fill="#334155" fontFamily="Fira Code,monospace">A={shapes[1].area}</text>}
-          {step>=3&&<text x="365" y="212" textAnchor="middle" fontSize="10" fill="#334155" fontFamily="Fira Code,monospace">P={shapes[1].perim}</text>}
-        </g>
-      )}
-      {/* Polymorphic call */}
-      {step >= 3 && (
-        <rect x="80" y="248" width="300" height="28" rx="8" fill="rgba(16,185,129,0.1)" stroke="#10B981" strokeWidth="1.5"/>
-      )}
-      {step >= 3 && (
-        <text x="230" y="267" textAnchor="middle" fontSize="10" fontWeight="600" fill="#065F46" fontFamily="Fira Code,monospace">
-          shapes.ForEach(s =&gt; s.Area()) ✓
-        </text>
-      )}
-    </svg>
-  );
-}
-
-function AbstractionViz({ step }) {
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      {/* Abstract Vehicle */}
-      <rect x="130" y="10" width="200" height="90" rx="10" fill="white" stroke="#0891B2" strokeWidth="2" strokeDasharray={step<1?'8,4':'0'}/>
-      <rect x="130" y="10" width="200" height="34" rx="10" fill="#0891B2"/>
-      <rect x="130" y="32" width="200" height="12" fill="#0891B2"/>
-      <text x="230" y="32" textAnchor="middle" fontSize="11" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">abstract Vehicle</text>
-      <text x="230" y="60" textAnchor="middle" fontSize="10" fill="#0891B2" fontFamily="Fira Code,monospace">abstract Start()</text>
-      <text x="230" y="76" textAnchor="middle" fontSize="10" fill="#334155" fontFamily="Fira Code,monospace">concrete Stop() ✓</text>
-      <text x="230" y="92" textAnchor="middle" fontSize="10" fill="#334155" fontFamily="Fira Code,monospace">concrete Status() ✓</text>
-
-      {/* Lines */}
-      {step>=2&&<line x1="190" y1="100" x2="100" y2="170" stroke="#0891B2" strokeWidth="2"/>}
-      {step>=3&&<line x1="270" y1="100" x2="360" y2="170" stroke="#0891B2" strokeWidth="2"/>}
-
-      {/* ElectricCar */}
-      {step>=2&&(
-        <g>
-          <rect x="20" y="170" width="160" height="80" rx="10" fill="white" stroke="#10B981" strokeWidth="2"/>
-          <rect x="20" y="170" width="160" height="30" rx="10" fill="rgba(16,185,129,0.15)"/>
-          <rect x="20" y="188" width="160" height="12" fill="rgba(16,185,129,0.15)"/>
-          <text x="100" y="189" textAnchor="middle" fontSize="11" fontWeight="700" fill="#059669" fontFamily="Fira Code,monospace">ElectricCar</text>
-          <text x="100" y="214" textAnchor="middle" fontSize="10" fill="#334155" fontFamily="Fira Code,monospace">Start(): silent EV</text>
-          <text x="100" y="232" textAnchor="middle" fontSize="10" fill="#64748B" fontFamily="Fira Code,monospace">FuelLevel(): 80%</text>
-        </g>
-      )}
-      {/* PetrolCar */}
-      {step>=3&&(
-        <g>
-          <rect x="280" y="170" width="160" height="80" rx="10" fill="white" stroke="#F59E0B" strokeWidth="2"/>
-          <rect x="280" y="170" width="160" height="30" rx="10" fill="rgba(245,158,11,0.15)"/>
-          <rect x="280" y="188" width="160" height="12" fill="rgba(245,158,11,0.15)"/>
-          <text x="360" y="189" textAnchor="middle" fontSize="11" fontWeight="700" fill="#D97706" fontFamily="Fira Code,monospace">PetrolCar</text>
-          <text x="360" y="214" textAnchor="middle" fontSize="10" fill="#334155" fontFamily="Fira Code,monospace">Start(): vroom!</text>
-          <text x="360" y="232" textAnchor="middle" fontSize="10" fill="#64748B" fontFamily="Fira Code,monospace">FuelLevel(): 60%</text>
-        </g>
-      )}
-      <text x="230" y="270" textAnchor="middle" fontSize="10" fill="#64748B" fontFamily="Inter,sans-serif">
-        {step===0?'Abstract class — cannot be new\'d directly'
-          :step===1?'Concrete methods are shared; abstract methods must be overridden'
-          :step===2?'ElectricCar fills the abstract gap with its own Start()'
-          :'PetrolCar provides different Start() — same contract, different behavior'}
-      </text>
-    </svg>
-  );
-}
-
-function VariablesViz({ step }) {
-  const vars = [
-    { name: 'age', type: 'int', value: '25', color: '#2563EB', bytes: '4 bytes' },
-    { name: 'name', type: 'string', value: '"Alice"', color: '#7C3AED', bytes: 'heap ref' },
-    { name: 'isStudent', type: 'bool', value: 'true', color: '#059669', bytes: '1 bit' },
-    { name: 'gpa', type: 'double', value: '3.85', color: '#D97706', bytes: '8 bytes' },
-  ];
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      <text x="230" y="22" textAnchor="middle" fontSize="11" fontWeight="700" fill="#64748B" fontFamily="Inter,sans-serif">Memory — Variable Boxes</text>
-      {vars.slice(0, step === 0 ? 0 : step - 1).map((v, i) => (
-        <g key={i}>
-          <rect x={20 + i * 108} y="40" width="100" height="140" rx="10" fill="white" stroke={v.color} strokeWidth="2"/>
-          <rect x={20 + i * 108} y="40" width="100" height="32" rx="10" fill={v.color}/>
-          <rect x={20 + i * 108} y="60" width="100" height="12" rx="0" fill={v.color}/>
-          <text x={70 + i * 108} y="62" textAnchor="middle" fontSize="10" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">{v.type}</text>
-          <text x={70 + i * 108} y="92" textAnchor="middle" fontSize="13" fontWeight="800" fill={v.color} fontFamily="Fira Code,monospace">{v.value}</text>
-          <text x={70 + i * 108} y="114" textAnchor="middle" fontSize="10" fill="#64748B" fontFamily="Inter,sans-serif">{v.name}</text>
-          <rect x={30 + i * 108} y="126" width="80" height="20" rx="5" fill={`${v.color}15`}/>
-          <text x={70 + i * 108} y="140" textAnchor="middle" fontSize="9" fill={v.color} fontWeight="600" fontFamily="Inter,sans-serif">{v.bytes}</text>
-        </g>
-      ))}
-      {step >= 5 && (
-        <g>
-          <rect x="20" y="200" width="420" height="32" rx="8" fill="rgba(37,99,235,0.08)" stroke="#2563EB" strokeWidth="1"/>
-          <text x="230" y="221" textAnchor="middle" fontSize="11" fontWeight="600" fill="#1D4ED8" fontFamily="Fira Code,monospace">$"Name: {'{'}name{'}'}, Age: {'{'}age{'}'}" → interpolated ✓</text>
-        </g>
-      )}
-      {step === 0 && (
-        <text x="230" y="150" textAnchor="middle" fontSize="13" fill="#94A3B8" fontFamily="Inter,sans-serif">Press ▶ to start adding variables</text>
-      )}
-    </svg>
-  );
-}
-
-function FileIOViz({ step }) {
-  const ops = [
-    { icon: '📝', label: 'WriteAllText()', sub: 'Creates / overwrites file', color: '#2563EB' },
-    { icon: '➕', label: 'AppendAllText()', sub: 'Adds to end of file', color: '#7C3AED' },
-    { icon: '📖', label: 'ReadAllText()', sub: 'Reads entire file', color: '#059669' },
-    { icon: '🗑', label: 'Delete()', sub: 'Removes file from disk', color: '#EF4444' },
-  ];
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      {/* File icon */}
-      <rect x="185" y="30" width="90" height="110" rx="8" fill="white" stroke={step>=1?'#2563EB':'#E2E8F0'} strokeWidth="2"/>
-      <polygon points="255,30 275,50 255,50" fill={step>=1?'#2563EB':'#E2E8F0'}/>
-      <text x="230" y="80" textAnchor="middle" fontSize="10" fill="#64748B" fontFamily="Fira Code,monospace">notes.txt</text>
-      {step>=1&&<text x="230" y="98" textAnchor="middle" fontSize="9" fill="#334155" fontFamily="Fira Code,monospace">EduVerse Notes</text>}
-      {step>=1&&<text x="230" y="113" textAnchor="middle" fontSize="9" fill="#334155" fontFamily="Fira Code,monospace">Lesson 1: Variables</text>}
-      {step>=2&&<text x="230" y="128" textAnchor="middle" fontSize="9" fill="#7C3AED" fontFamily="Fira Code,monospace">Lesson 2: Loops</text>}
-
-      {/* Operations */}
-      {ops.slice(0, step).map((op, i) => (
-        <g key={i}>
-          <rect x={20+i*108} y="165" width="100" height="70" rx="10" fill="white" stroke={op.color} strokeWidth="1.5"/>
-          <text x={70+i*108} y="188" textAnchor="middle" fontSize="18">{op.icon}</text>
-          <text x={70+i*108} y="208" textAnchor="middle" fontSize="9" fontWeight="700" fill={op.color} fontFamily="Fira Code,monospace">{op.label}</text>
-          <text x={70+i*108} y="224" textAnchor="middle" fontSize="8.5" fill="#64748B" fontFamily="Inter,sans-serif">{op.sub}</text>
-        </g>
-      ))}
-      {step===0&&<text x="230" y="200" textAnchor="middle" fontSize="13" fill="#94A3B8" fontFamily="Inter,sans-serif">Press ▶ to start</text>}
-    </svg>
-  );
-}
-
-function DictionaryViz({ step }) {
-  const entries = [
-    { key: '"Alice"', val: '95', hash: '0x2A4F', color: '#2563EB' },
-    { key: '"Bob"',   val: '88', hash: '0x1B3E', color: '#7C3AED' },
-    { key: '"Eve"',   val: '92', hash: '0x3C5A', color: '#059669' },
-  ];
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      <text x="230" y="22" textAnchor="middle" fontSize="11" fontWeight="700" fill="#64748B" fontFamily="Inter,sans-serif">Hash Table — Dictionary&lt;string, int&gt;</text>
-      {/* Buckets */}
-      {[0,1,2,3].map(i=>(
-        <g key={i}>
-          <rect x="200" y={35+i*50} width="60" height="38" rx="6" fill="#F8FAFC" stroke="#E2E8F0" strokeWidth="1.5"/>
-          <text x="230" y={59+i*50} textAnchor="middle" fontSize="10" fill="#94A3B8" fontFamily="Fira Code,monospace">Bucket {i}</text>
-        </g>
-      ))}
-      {/* Entries */}
-      {entries.slice(0, step).map((e,i)=>(
-        <g key={i}>
-          <rect x="20" y={35+i*75} width="150" height="50" rx="8" fill="white" stroke={e.color} strokeWidth="1.5"/>
-          <text x="95" y={56+i*75} textAnchor="middle" fontSize="11" fontWeight="700" fill={e.color} fontFamily="Fira Code,monospace">{e.key}</text>
-          <text x="95" y={74+i*75} textAnchor="middle" fontSize="9" fill="#64748B" fontFamily="Inter,sans-serif">hash → {e.hash}</text>
-          <line x1="170" y1={60+i*75} x2="200" y2={60+i*75} stroke={e.color} strokeWidth="1.5" strokeDasharray="4,3"/>
-          <rect x="260" y={35+i*75} width="170" height="50" rx="8" fill={`${e.color}15`} stroke={e.color} strokeWidth="1"/>
-          <text x="345" y={56+i*75} textAnchor="middle" fontSize="11" fontWeight="700" fill={e.color} fontFamily="Fira Code,monospace">Value: {e.val}</text>
-          <text x="345" y={74+i*75} textAnchor="middle" fontSize="9" fill="#64748B" fontFamily="Inter,sans-serif">O(1) lookup ✓</text>
-        </g>
-      ))}
-      {step>=4&&<text x="230" y="265" textAnchor="middle" fontSize="10" fill="#10B981" fontWeight="600" fontFamily="Inter,sans-serif">TryGetValue: safe lookup — no exceptions ✓</text>}
-    </svg>
-  );
-}
-
-function ControlFlowViz({ step }) {
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      {/* if/else */}
-      {step>=0&&<>
-        <rect x="180" y="20" width="100" height="36" rx="8" fill="#2563EB"/>
-        <text x="230" y="43" textAnchor="middle" fontSize="11" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">score=87</text>
-        <line x1="230" y1="56" x2="230" y2="76" stroke="#2563EB" strokeWidth="2"/>
-        <polygon points="230,76 220,56 240,56" fill="#2563EB"/>
-        <rect x="155" y="76" width="150" height="36" rx="8" fill="white" stroke="#2563EB" strokeWidth="2"/>
-        <text x="230" y="99" textAnchor="middle" fontSize="11" fontWeight="600" fill="#2563EB" fontFamily="Fira Code,monospace">if score ≥ 90?</text>
-      </>}
-      {step>=0&&<>
-        <line x1="155" y1="94" x2="80" y2="94" stroke="#EF4444" strokeWidth="2"/>
-        <rect x="20" y="76" width="60" height="36" rx="8" fill="#EF4444"/>
-        <text x="50" y="99" textAnchor="middle" fontSize="10" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">No→B</text>
-        <line x1="305" y1="94" x2="360" y2="94" stroke="#10B981" strokeWidth="2"/>
-        <rect x="360" y="76" width="60" height="36" rx="8" fill="#10B981"/>
-        <text x="390" y="99" textAnchor="middle" fontSize="10" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">Yes→A</text>
-      </>}
-      {step>=1&&<>
-        <rect x="130" y="136" width="200" height="36" rx="8" fill="#7C3AED"/>
-        <text x="230" y="159" textAnchor="middle" fontSize="11" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">switch expression</text>
-        <text x="230" y="192" textAnchor="middle" fontSize="10" fill="#64748B" fontFamily="Fira Code,monospace">87 → grade = "B" ✓</text>
-      </>}
-      {step>=2&&<>
-        <rect x="20" y="210" width="200" height="36" rx="8" fill="#059669"/>
-        <text x="120" y="233" textAnchor="middle" fontSize="11" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">for i=0; i&lt;5; i++</text>
-      </>}
-      {step>=3&&<>
-        <rect x="240" y="210" width="200" height="36" rx="8" fill="#D97706"/>
-        <text x="340" y="233" textAnchor="middle" fontSize="11" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">foreach n in nums</text>
-      </>}
-    </svg>
-  );
-}
-
-function MethodsViz({ step }) {
-  const methods = [
-    { sig: 'Add(int, int)', returns: '7', color: '#2563EB' },
-    { sig: 'Add(double, double)', returns: '4.0', color: '#7C3AED' },
-    { sig: 'Greet("Bob")', returns: '"Hello, Bob!"', color: '#059669' },
-    { sig: 'Sum(1,2,3,4,5)', returns: '15', color: '#D97706' },
-  ];
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      <text x="230" y="22" textAnchor="middle" fontSize="11" fontWeight="700" fill="#64748B" fontFamily="Inter,sans-serif">Method Call Stack</text>
-      {methods.slice(0, step).map((m,i)=>(
-        <g key={i}>
-          <rect x="40" y={36+i*56} width="200" height="44" rx="8" fill="white" stroke={m.color} strokeWidth="1.5"/>
-          <text x="140" y={55+i*56} textAnchor="middle" fontSize="11" fontWeight="700" fill={m.color} fontFamily="Fira Code,monospace">{m.sig}</text>
-          <text x="140" y={73+i*56} textAnchor="middle" fontSize="9" fill="#64748B" fontFamily="Inter,sans-serif">Returns: {m.returns}</text>
-          <line x1="240" y1={58+i*56} x2="270" y2={58+i*56} stroke={m.color} strokeWidth="1.5" markerEnd={`url(#m-arr-${i})`}/>
-          <defs><marker id={`m-arr-${i}`} markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill={m.color}/></marker></defs>
-          <rect x="270" y={40+i*56} width="100" height="36" rx="8" fill={`${m.color}15`} stroke={m.color} strokeWidth="1"/>
-          <text x="320" y={63+i*56} textAnchor="middle" fontSize="14" fontWeight="800" fill={m.color} fontFamily="Fira Code,monospace">{m.returns}</text>
-        </g>
-      ))}
-      {step===0&&<text x="230" y="150" textAnchor="middle" fontSize="13" fill="#94A3B8" fontFamily="Inter,sans-serif">Press ▶ to call methods</text>}
-    </svg>
-  );
-}
-
-function ArraysViz({ step }) {
-  const arr = [78,85,88,92,96];
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      <text x="230" y="22" textAnchor="middle" fontSize="11" fontWeight="700" fill="#64748B" fontFamily="Inter,sans-serif">int[] scores — Contiguous Memory</text>
-      {arr.map((v,i)=>{
-        const sorted = step>=1;
-        const val = sorted ? arr[i] : [85,92,78,96,88][i];
-        return (
-          <g key={i}>
-            <rect x={30+i*80} y="36" width="72" height="60" rx="8" fill={step>=2&&i===4?'#10B981':'white'} stroke={step>=2&&i===4?'#10B981':'#2563EB'} strokeWidth="2"/>
-            <text x={66+i*80} y="62" textAnchor="middle" fontSize="16" fontWeight="800" fill={step>=2&&i===4?'white':'#0F172A'} fontFamily="Fira Code,monospace">{val}</text>
-            <text x={66+i*80} y="86" textAnchor="middle" fontSize="10" fill="#94A3B8" fontFamily="Fira Code,monospace">[{i}]</text>
-          </g>
-        );
-      })}
-      {step>=2&&<text x="350" y="68" textAnchor="start" fontSize="12" fill="#10B981" fontWeight="700" fontFamily="Fira Code,monospace">← [^1]</text>}
-      {step>=1&&<text x="230" y="120" textAnchor="middle" fontSize="10" fill="#2563EB" fontWeight="600" fontFamily="Inter,sans-serif">Array.Sort() → ascending order</text>}
-      {step>=3&&(
-        <g>
-          <rect x="40" y="138" width="380" height="50" rx="8" fill="rgba(124,58,237,0.08)" stroke="#7C3AED" strokeWidth="1.5"/>
-          <text x="230" y="158" textAnchor="middle" fontSize="11" fontWeight="700" fill="#7C3AED" fontFamily="Fira Code,monospace">List&lt;string&gt; — dynamic, grows as needed</text>
-          <text x="230" y="177" textAnchor="middle" fontSize="10" fill="#64748B" fontFamily="Inter,sans-serif">Add · Remove · Insert · Count</text>
-        </g>
-      )}
-      {step>=4&&(
-        <rect x="40" y="200" width="380" height="40" rx="8" fill="rgba(37,99,235,0.08)" stroke="#2563EB" strokeWidth="1"/>
-      )}
-      {step>=4&&<text x="230" y="225" textAnchor="middle" fontSize="11" fontWeight="600" fill="#1D4ED8" fontFamily="Fira Code,monospace">.Where(s=&gt;s&gt;85).OrderByDescending()...</text>}
-    </svg>
-  );
-}
-
-function GroupByViz({ step }) {
-  const depts = [
-    { name:'CS',   students:['Alice 95','Bob 82','Sue 88'], avg:'88.3', color:'#2563EB' },
-    { name:'Math', students:['Eve 90','Dan 78'],           avg:'84.0', color:'#7C3AED' },
-  ];
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      <text x="230" y="22" textAnchor="middle" fontSize="11" fontWeight="700" fill="#64748B" fontFamily="Inter,sans-serif">GroupBy(s =&gt; s.Dept)</text>
-      {step>=1&&depts.map((d,di)=>(
-        <g key={di}>
-          <rect x={20+di*230} y="36" width="210" height={30+d.students.length*26} rx="10" fill="white" stroke={d.color} strokeWidth="2"/>
-          <rect x={20+di*230} y="36" width="210" height="30" rx="10" fill={d.color}/>
-          <rect x={20+di*230} y="54" width="210" height="12" fill={d.color}/>
-          <text x={125+di*230} y="56" textAnchor="middle" fontSize="12" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">{d.name} Dept</text>
-          {d.students.map((s,si)=>(
-            <text key={si} x={125+di*230} y={78+si*26} textAnchor="middle" fontSize="11" fill="#334155" fontFamily="Fira Code,monospace">{s}</text>
-          ))}
-          {step>=2&&(
-            <g>
-              <rect x={30+di*230} y={36+30+d.students.length*26-4} width="190" height="28" rx="6" fill={`${d.color}15`}/>
-              <text x={125+di*230} y={36+30+d.students.length*26+14} textAnchor="middle" fontSize="11" fontWeight="700" fill={d.color} fontFamily="Fira Code,monospace">Avg: {d.avg}</text>
-            </g>
-          )}
-        </g>
-      ))}
-      {step>=3&&(
-        <g>
-          <rect x="60" y="230" width="340" height="36" rx="8" fill="rgba(16,185,129,0.1)" stroke="#10B981" strokeWidth="1.5"/>
-          <text x="230" y="253" textAnchor="middle" fontSize="11" fontWeight="600" fill="#065F46" fontFamily="Fira Code,monospace">Count=5, Max=95, Avg(all)=86.6</text>
-        </g>
-      )}
-      {step===0&&<text x="230" y="150" textAnchor="middle" fontSize="13" fill="#94A3B8" fontFamily="Inter,sans-serif">Press ▶ to group students</text>}
-    </svg>
-  );
-}
-
-function StreamsViz({ step }) {
-  const lines = ['[INFO]  App started', '[INFO]  Loading data...', '[WARN]  Cache miss'];
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      <text x="230" y="22" textAnchor="middle" fontSize="11" fontWeight="700" fill="#64748B" fontFamily="Inter,sans-serif">Buffered Stream I/O</text>
-      {/* StreamWriter */}
-      {step>=1&&<rect x="20" y="36" width="120" height="36" rx="8" fill="#2563EB"/>}
-      {step>=1&&<text x="80" y="59" textAnchor="middle" fontSize="10" fontWeight="700" fill="white" fontFamily="Fira Code,monospace">StreamWriter</text>}
-      {/* Buffer */}
-      {step>=1&&<rect x="160" y="36" width="130" height="36" rx="8" fill="white" stroke="#7C3AED" strokeWidth="2"/>}
-      {step>=1&&<text x="225" y="59" textAnchor="middle" fontSize="10" fontWeight="700" fill="#7C3AED" fontFamily="Fira Code,monospace">Buffer (4KB)</text>}
-      {step>=1&&<line x1="140" y1="54" x2="160" y2="54" stroke="#2563EB" strokeWidth="2"/>}
-      {/* Disk */}
-      {step>=1&&<rect x="310" y="36" width="100" height="36" rx="8" fill="#F1F5F9" stroke="#E2E8F0" strokeWidth="2"/>}
-      {step>=1&&<text x="360" y="59" textAnchor="middle" fontSize="10" fontWeight="700" fill="#64748B" fontFamily="Fira Code,monospace">💾 log.txt</text>}
-      {step>=2&&<line x1="290" y1="54" x2="310" y2="54" stroke="#7C3AED" strokeWidth="2" strokeDasharray="4,3"/>}
-      {/* Lines in file */}
-      {step>=2&&lines.map((l,i)=>(
-        <g key={i}>
-          <rect x="20" y={100+i*42} width="420" height="32" rx="6" fill={l.includes('WARN')?'rgba(245,158,11,0.1)':'rgba(37,99,235,0.06)'} stroke={l.includes('WARN')?'#F59E0B':'#BFDBFE'} strokeWidth="1"/>
-          <text x="36" y={121+i*42} fontSize="11" fontFamily="Fira Code,monospace" fill={l.includes('WARN')?'#92400E':'#1D4ED8'}>{l}</text>
-        </g>
-      ))}
-      {step>=3&&<rect x="60" y="240" width="340" height="30" rx="8" fill="rgba(16,185,129,0.1)" stroke="#10B981" strokeWidth="1.5"/>}
-      {step>=3&&<text x="230" y="260" textAnchor="middle" fontSize="11" fontWeight="600" fill="#065F46" fontFamily="Fira Code,monospace">await ReadLineAsync() — non-blocking ✓</text>}
-    </svg>
-  );
-}
-
-function ParallelViz({ step }) {
-  const threads = [0,1,2,3];
-  return (
-    <svg viewBox="0 0 460 280" className="viz-svg">
-      <text x="230" y="22" textAnchor="middle" fontSize="11" fontWeight="700" fill="#64748B" fontFamily="Inter,sans-serif">Parallel Execution — 4 Threads</text>
-      {/* Sequential */}
-      {step>=0&&(
-        <g>
-          <text x="14" y="52" fontSize="10" fontWeight="700" fill="#EF4444" fontFamily="Inter,sans-serif">Sequential (slow):</text>
-          <rect x="14" y="58" width={step>=1?60:380} height="20" rx="4" fill="#EF4444" opacity="0.7"/>
-          <text x="204" y="73" textAnchor="middle" fontSize="9" fill="white" fontFamily="Inter,sans-serif">Single thread</text>
-        </g>
-      )}
-      {/* Parallel */}
-      {step>=1&&threads.map(i=>(
-        <g key={i}>
-          <text x="14" y={102+i*38} fontSize="9" fontWeight="600" fill="#64748B" fontFamily="Inter,sans-serif">T{i+1}</text>
-          <rect x="34" y={88+i*38} width={step>=2?200:0} height="22" rx="4" fill="#2563EB" opacity={0.7+i*0.07}/>
-          {step>=2&&<text x="134" y={104+i*38} textAnchor="middle" fontSize="9" fill="white" fontFamily="Inter,sans-serif">Processing chunk {i+1}</text>}
-        </g>
-      ))}
-      {step>=1&&<text x="14" y="88" fontSize="10" fontWeight="700" fill="#2563EB" fontFamily="Inter,sans-serif">Parallel (fast):</text>}
-      {step>=3&&(
-        <g>
-          <rect x="14" y="245" width="430" height="28" rx="8" fill="rgba(16,185,129,0.1)" stroke="#10B981" strokeWidth="1.5"/>
-          <text x="229" y="264" textAnchor="middle" fontSize="11" fontWeight="600" fill="#065F46" fontFamily="Fira Code,monospace">.AsParallel().Where().Select() — PLINQ ✓</text>
-        </g>
-      )}
-    </svg>
-  );
-}
-
-// ─── Viz Router ─────────────────────────────────────────────
-function VizComponent({ vizType, step, topic }) {
-  const props = { step, topic };
-  const map = {
-    classObject:   ClassObjectViz,
-    inheritance:   InheritanceViz,
-    stack:         StackViz,
-    linq:          LinqViz,
-    async:         AsyncViz,
-    encapsulation: EncapsulationViz,
-    polymorphism:  PolymorphismViz,
-    abstraction:   AbstractionViz,
-    variables:     VariablesViz,
-    fileio:        FileIOViz,
-    dictionary:    DictionaryViz,
-    controlflow:   ControlFlowViz,
-    methods:       MethodsViz,
-    arrays:        ArraysViz,
-    groupby:       GroupByViz,
-    streams:       StreamsViz,
-    parallel:      ParallelViz,
-  };
-  const Comp = map[vizType];
-  return Comp ? <Comp {...props} /> : <GenericViz {...props} />;
-}
-
-// ═══════════════════════════════════════════════════════════
-// MAIN COMPONENT
+// MAIN INTERACTIVE C# LAB
 // ═══════════════════════════════════════════════════════════
 export default function CSharpLab() {
-  const [level,    setLevel]    = useState('categories');
-  const [category, setCategory] = useState(null);
-  const [topic,    setTopic]    = useState(null);
-  const [mode,     setMode]     = useState('learn');
-  const [step,     setStep]     = useState(0);
-  const [playing,  setPlaying]  = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activePanel, setActivePanel] = useState('dashboard');
+  const [searchTerm, setSearchTerm] = useState('');
   const [xp, setXp] = useState(() => Number(localStorage.getItem('csharp_xp') || 0));
-  const [completedTopics, setCompletedTopics] = useState(() => {
-    const saved = localStorage.getItem('csharp_completed_topics');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [completedCount, setCompletedCount] = useState(() => Number(localStorage.getItem('csharp_completed') || 2));
+  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const [quizScores, setQuizScores] = useState({});
+  const [compilerCode, setCompilerCode] = useState(`using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine("Hello, EduVerse C#!");\n    }\n}`);
+  const [compilerOutput, setCompilerOutput] = useState('Click "Run Code" to compile C# compiler...');
+  const [aiReviewOutput, setAiReviewOutput] = useState('');
 
-  // Calculate stats
-  const totalXP = xp;
-  const streak = 3; // Mocked
-  const totalCompleted = completedTopics.length;
+  // Simulator Variable States
+  const [fundamentalsVal, setFundamentalsVal] = useState('20');
+  const [loopStep, setLoopStep] = useState(0);
+  const [oopClassName, setOopClassName] = useState('Student');
+  const [collectionsItems, setCollectionsItems] = useState(['10', '20']);
+  const [collectionsAction, setCollectionsAction] = useState('stack');
+  const [exceptionState, setExceptionState] = useState('Normal');
+  const [virtualFiles, setVirtualFiles] = useState({ 'log.txt': 'App started.' });
+  const [activeFile, setActiveFile] = useState('log.txt');
+  const [linqFilter, setLinqFilter] = useState('All');
+  const [delegatesLogs, setDelegatesLogs] = useState([]);
+  const [asyncTasks, setAsyncTasks] = useState([
+    { id: 1, name: 'Fetch Data', status: 'Idle', progress: 0 },
+    { id: 2, name: 'Process DB', status: 'Idle', progress: 0 }
+  ]);
+  const [adoStatus, setAdoStatus] = useState('Closed');
+  const [efEntities, setEfEntities] = useState([{ name: 'Student', table: 'students' }]);
+  const [mvcStep, setMvcStep] = useState('Request');
+  const [apiMethod, setApiMethod] = useState('GET');
+  const [apiLogs, setApiLogs] = useState([]);
+  const [jwtToken, setJwtToken] = useState('');
+  const [blazorState, setBlazorState] = useState('Idle');
+  const [azureStatus, setAzureStatus] = useState('Healthy');
 
-  // Auto-play with progress logging
-  useEffect(() => {
-    let timer = null;
-    if (playing && topic) {
-      timer = setInterval(() => {
-        setStep((currentStep) => {
-          if (currentStep < topic.steps - 1) {
-            return currentStep + 1;
-          } else {
-            setPlaying(false);
-            // Award XP on complete topic
-            if (!completedTopics.includes(topic.id)) {
-              const newCompleted = [...completedTopics, topic.id];
-              setCompletedTopics(newCompleted);
-              localStorage.setItem('csharp_completed_topics', JSON.stringify(newCompleted));
-              const newXP = xp + 100;
-              setXp(newXP);
-              localStorage.setItem('csharp_xp', newXP.toString());
-            }
-            return currentStep;
-          }
-        });
-      }, 2000);
-    }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [playing, topic, completedTopics, xp]);
-
-  const openCategory = useCallback((cat) => {
-    setCategory(cat);
-    setLevel('topics');
-  }, []);
-
-  const openTopic = useCallback((t) => {
-    setTopic(t);
-    setStep(0);
-    setPlaying(false);
-    setMode('learn');
-    setLevel('concept');
-  }, []);
-
-  const goHome = () => { setLevel('categories'); setCategory(null); setTopic(null); };
-  const goTopics = () => { setLevel('topics'); setTopic(null); };
-
-  // Compute circular progress
-  const getCategoryProgress = (cat) => {
-    if (!cat.topics || cat.topics.length === 0) return 0;
-    const completedInCat = cat.topics.filter(t => completedTopics.includes(t.id)).length;
-    return Math.round((completedInCat / cat.topics.length) * 100);
+  // Local storage trackers
+  const updateXP = (amount) => {
+    const nextXp = xp + amount;
+    setXp(nextXp);
+    localStorage.setItem('csharp_xp', nextXp.toString());
   };
 
-  const sliderProgress = topic ? (step / (topic.steps - 1)) * 100 : 0;
+  const handleMarkComplete = (index) => {
+    if (completedCount < index) {
+      setCompletedCount(index);
+      localStorage.setItem('csharp_completed', index.toString());
+      updateXP(150);
+      toast.success(`Module Completed! +150 XP`);
+    } else {
+      toast.success('Module reviewed.');
+    }
+  };
 
-  const pageVariants = {
-    initial: { opacity: 0, y: 16 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.35 } },
-    exit:    { opacity: 0, y: -10, transition: { duration: 0.2 } },
+  const handleCompilerRun = () => {
+    setCompilerOutput('Compiling App.cs utilizing Roslyn compiler...\nLinking references...\n\n[STDOUT]\nHello, EduVerse C#!\n\nProcess finished with exit code 0.');
+    updateXP(50);
+  };
+
+  const handleCompilerAi = (mode) => {
+    if (mode === 'debug') {
+      setAiReviewOutput('AI Debugger: No syntax compilation errors detected. The Roslyn compiler confirms a valid Main entry point.');
+    } else if (mode === 'review') {
+      setAiReviewOutput('AI Review: 10/10. The code adheres to .NET 8 Top-Level statement guidelines and utilizes clean static methods.');
+    } else {
+      setAiReviewOutput('AI Optimization: Replacing Console output stream with a StringBuilder can optimize high-throughput CLI benchmarks.');
+    }
+    updateXP(30);
   };
 
   return (
-    <div className="csharp-lab">
-
-      {/* ─── BREADCRUMB ─── */}
-      {level !== 'categories' && (
-        <div className="cs-breadcrumb">
-          <button className="cs-breadcrumb-btn" onClick={goHome}>
-            <Home size={14}/> C# Lab
-          </button>
-          {level === 'topics' && (
-            <><span className="cs-breadcrumb-sep">›</span>
-            <span className="cs-breadcrumb-current">{category?.title}</span></>
-          )}
-          {level === 'concept' && (
-            <>
-              <span className="cs-breadcrumb-sep">›</span>
-              <button className="cs-breadcrumb-btn" onClick={goTopics}>{category?.title}</button>
-              <span className="cs-breadcrumb-sep">›</span>
-              <span className="cs-breadcrumb-current">{topic?.title}</span>
-            </>
-          )}
-        </div>
-      )}
-
-      <AnimatePresence mode="wait">
-
-        {/* ══════════════════════════════════════════════
-            LEVEL 1: CATEGORIES
-            ══════════════════════════════════════════════ */}
-        {/* ══════════════════════════════════════════════
-            LEVEL 1: CATEGORIES
-            ══════════════════════════════════════════════ */}
-        {level === 'categories' && (
-          <motion.div key="categories" {...pageVariants}>
-            
-            {/* Top Stats bar */}
-            <div className="db-stats-banner">
-              <div className="db-stat-card">
-                <div className="db-stat-icon-wrapper" style={{ background: 'rgba(37, 99, 235, 0.1)', color: 'var(--db-primary)' }}>✨</div>
-                <div className="db-stat-info">
-                  <span className="db-stat-value">{totalXP}</span>
-                  <span className="db-stat-label">Total XP</span>
-                </div>
+    <div className="csharp-lab max-w-[1440px] mx-auto p-4 sm:p-8 space-y-6 font-sans text-left min-h-screen">
+      {activePanel === 'dashboard' ? (
+        <div className="space-y-6">
+          
+          {/* HEADER BAR */}
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-4 border-b border-white/10">
+            <div>
+              <h1 className="text-3xl font-extrabold text-white">C# Developer Track</h1>
+              <p className="text-xs text-slate-400 mt-1">Microsoft .NET Core Enterprise Systems & Cloud Architectures</p>
+            </div>
+            {completedCount >= 12 && (
+              <div className="p-2 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/20 rounded-xl flex items-center gap-2">
+                <span className="text-[10px] text-slate-300">Syllabus complete! Claim Certificate</span>
+                <button 
+                  onClick={() => {
+                    toast.success('Certificate verified and issued!');
+                    setActivePanel('certification');
+                  }}
+                  className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] font-bold rounded-lg cursor-pointer"
+                >
+                  Claim Certificate
+                </button>
               </div>
-              <div className="db-stat-card">
-                <div className="db-stat-icon-wrapper" style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--db-warning)' }}>🔥</div>
-                <div className="db-stat-info">
-                  <span className="db-stat-value">{streak} Days</span>
-                  <span className="db-stat-label">Streak</span>
-                </div>
+            )}
+          </div>
+
+          {/* OVERVIEW STATS CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-white/[0.02] border border-white/10 p-5 rounded-3xl backdrop-blur-md flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                <Sparkles size={20} />
               </div>
-              <div className="db-stat-card">
-                <div className="db-stat-icon-wrapper" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--db-success)' }}>🏆</div>
-                <div className="db-stat-info">
-                  <span className="db-stat-value">{totalCompleted}</span>
-                  <span className="db-stat-label">Modules Completed</span>
-                </div>
+              <div>
+                <strong className="text-2xl font-black text-white">{xp} XP</strong>
+                <span className="text-[10px] text-slate-500 block uppercase font-bold mt-0.5">Total XP Earned</span>
               </div>
             </div>
 
-            <div className="db-header">
-              <div className="db-title-area">
-                <h1>⌨ C# Interactive Laboratory</h1>
-                <p>Choose a module to begin. Visualize concepts, run code, and simulate execution step-by-step.</p>
+            <div className="bg-white/[0.02] border border-white/10 p-5 rounded-3xl backdrop-blur-md flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-400 flex items-center justify-center">
+                <Flame size={20} fill="currentColor" />
               </div>
-              <div className="db-search-bar">
-                <Search size={16} className="db-search-icon" />
-                <input
-                  type="text"
-                  placeholder="Search C# modules..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+              <div>
+                <strong className="text-2xl font-black text-white">3 Days</strong>
+                <span className="text-[10px] text-slate-500 block uppercase font-bold mt-0.5">Learning Streak</span>
               </div>
             </div>
 
-            <div className="db-grid">
-              {CSHARP_DATA.filter(cat => 
-                cat.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                cat.description.toLowerCase().includes(searchQuery.toLowerCase())
-              ).map((cat, idx) => {
-                const progress = getCategoryProgress(cat);
-                const radius = 16;
-                const circumference = 2 * Math.PI * radius;
-                const strokeDashoffset = circumference - (progress / 100) * circumference;
+            <div className="bg-white/[0.02] border border-white/10 p-5 rounded-3xl backdrop-blur-md flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                <Trophy size={20} />
+              </div>
+              <div>
+                <strong className="text-2xl font-black text-white">{completedCount} / 16</strong>
+                <span className="text-[10px] text-slate-500 block uppercase font-bold mt-0.5">Modules Done</span>
+              </div>
+            </div>
 
+            <div className="bg-white/[0.02] border border-white/10 p-5 rounded-3xl backdrop-blur-md flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-pink-500/10 text-pink-400 flex items-center justify-center">
+                <Award size={20} />
+              </div>
+              <div>
+                <strong className="text-2xl font-black text-white">{Math.round((completedCount / 16) * 100)}%</strong>
+                <span className="text-[10px] text-slate-500 block uppercase font-bold mt-0.5">Course Progress</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ROADMAP ACTION BUTTONS */}
+          <div className="flex flex-wrap items-center gap-3">
+            <button 
+              onClick={() => {
+                const nextMod = CSHARP_MODULES.find(m => m.index === completedCount + 1) || CSHARP_MODULES[0];
+                setActivePanel(nextMod.id);
+                toast.success(`Resuming module: ${nextMod.label}`);
+              }}
+              className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-blue-500/10"
+            >
+              ▶ Continue Learning
+            </button>
+            <button 
+              onClick={() => {
+                toast.success('Visual roadmap loaded at the bottom of the page.');
+              }}
+              className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-bold transition flex items-center gap-1.5"
+            >
+              📚 View Roadmap
+            </button>
+            <button 
+              onClick={() => setActivePanel('mentor')}
+              className="px-4 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition flex items-center gap-1.5"
+            >
+              🧠 Ask AI Mentor
+            </button>
+          </div>
+
+          {/* SEARCH AND DESCRIPTIONS CONTROL */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 border-t border-white/5">
+            <p className="text-xs text-slate-400 leading-relaxed text-left">
+              Choose a module to begin. Visualize concepts, run code, and simulate execution step-by-step.
+            </p>
+            <div className="relative min-w-[280px]">
+              <input 
+                type="text" 
+                placeholder="Search C# modules..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2.5 bg-slate-900/60 border border-white/10 rounded-2xl text-xs text-white placeholder-slate-500 outline-none focus:border-purple-500 transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* CURRICULUM GRID */}
+          <div>
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest text-left mb-4">Course Curriculum Modules</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {CSHARP_MODULES.filter(m => 
+                m.label.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                m.desc.toLowerCase().includes(searchTerm.toLowerCase())
+              ).map((mod) => {
+                const percent = completedCount >= mod.index ? 100 : (completedCount + 1 === mod.index ? 33 : 0);
+                const status = completedCount >= mod.index ? 'COMPLETED' : (completedCount + 1 === mod.index ? 'ACTIVE' : 'LOCKED');
+                const badgeClass = status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : (status === 'ACTIVE' ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20' : 'bg-slate-500/10 text-slate-500 border border-slate-500/20');
+                
                 return (
-                  <motion.div
-                    key={cat.id}
-                    className={`db-card-el ${cat.locked ? 'opacity-70' : ''}`}
-                    style={{ '--card-gradient': cat.gradient, '--card-color': cat.color }}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0, transition: { delay: idx * 0.07 } }}
-                    whileTap={cat.locked ? {} : { scale: 0.98 }}
+                  <div 
+                    key={mod.id}
+                    onClick={() => setActivePanel(mod.id)}
+                    className="bg-white/5 border border-white/10 rounded-[28px] hover:bg-white/10 transition-all duration-300 p-6 flex flex-col justify-between cursor-pointer text-left hover:scale-[1.01] hover:border-white/20 group relative overflow-hidden"
                   >
-                    <div className="db-card-top">
-                      <div className="db-card-icon">
-                        <cat.Icon size={24} />
+                    <div className="flex justify-between items-center w-full mb-6">
+                      <div 
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                        style={{ background: `${mod.accent}12`, color: mod.accent }}
+                      >
+                        <Code size={20} />
                       </div>
-                      
-                      {!cat.locked && (
-                        <div className="db-progress-ring-container">
-                          <svg width="36" height="36">
-                            <circle className="db-progress-ring-bg" cx="18" cy="18" r={radius} />
-                            <circle
-                              className="db-progress-ring-circle"
-                              cx="18"
-                              cy="18"
-                              r={radius}
-                              strokeDasharray={`${circumference} ${circumference}`}
-                              strokeDashoffset={strokeDashoffset}
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-8 h-8 flex items-center justify-center">
+                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <circle className="text-white/10" strokeWidth="3" stroke="currentColor" fill="transparent" r="16" cx="18" cy="18" />
+                            <circle 
+                              style={{ stroke: mod.accent }}
+                              strokeWidth="3" 
+                              strokeDasharray="100" 
+                              strokeDashoffset={100 - percent} 
+                              strokeLinecap="round" 
+                              stroke="currentColor" 
+                              fill="transparent" 
+                              r="16" 
+                              cx="18" 
+                              cy="18" 
                             />
                           </svg>
-                          <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '8px', fontWeight: 'bold', color: '#FFFFFF' }}>
-                            {progress}%
-                          </span>
+                          <span className="absolute text-[8px] font-black text-slate-300">{percent}%</span>
                         </div>
-                      )}
-
-                      {cat.locked && <span className="db-card-badge advanced">Locked</span>}
-                      {!cat.locked && <span className="db-card-badge beginner">Active</span>}
-                    </div>
-
-                    <h3 className="db-card-title">{cat.title}</h3>
-                    <p className="db-card-desc">{cat.description}</p>
-                    
-                    <div className="db-card-footer">
-                      <div className="db-card-meta">
-                        <span className="db-meta-item">⏱ {cat.topics.length * 5} min</span>
-                        <span className="db-meta-item">💎 {cat.topics.length * 100} XP</span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${badgeClass}`}>
+                          {status}
+                        </span>
                       </div>
-                      <button
-                        className="db-card-btn"
-                        onClick={() => openCategory(cat)}
-                        disabled={cat.locked}
-                      >
-                        <ArrowRight size={20} strokeWidth={2.5} />
-                      </button>
                     </div>
-                  </motion.div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors">
+                        {mod.label}
+                      </h3>
+                      <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                        {mod.desc}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-6 pt-3 border-t border-white/5 text-[10px] text-slate-500 font-bold uppercase">
+                      <span>{mod.type}</span>
+                      <span className="text-slate-300 group-hover:text-purple-400 transition-colors">Launch Module →</span>
+                    </div>
+                  </div>
                 );
               })}
             </div>
-          </motion.div>
-        )}
+          </div>
 
-        {/* ══════════════════════════════════════════════
-            LEVEL 2: TOPICS
-            ══════════════════════════════════════════════ */}
-        {level === 'topics' && category && (
-          <motion.div key="topics" {...pageVariants}>
-            <div className="cs-topics-header">
-              <div className="cs-topics-icon" style={{ background: category.gradient }}>
-                <category.Icon size={26} strokeWidth={2} color="white" />
-              </div>
-              <div>
-                <h2 className="cs-topics-title">{category.title}</h2>
-                <p className="cs-topics-desc">{category.description}</p>
-              </div>
-            </div>
-            <div className="cs-topic-grid">
-              {category.topics.map((t, idx) => (
-                <motion.div
-                  key={t.id}
-                  className="cs-topic-card"
-                  style={{ '--card-color': category.color }}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0, transition: { delay: idx * 0.08 } }}
-                >
-                  <div className="cs-topic-num">Topic {idx + 1}</div>
-                  <h3 className="cs-topic-title">{t.title}</h3>
-                  <p className="cs-topic-preview">{t.preview}</p>
-                  <div className="cs-topic-actions">
-                    <button className="cs-btn-viz primary" onClick={() => openTopic(t)}>
-                      <Eye size={14} /> Visualize
-                    </button>
-                    <button className="cs-btn-viz outline" onClick={() => openTopic(t)}>
-                      <Terminal size={14} /> Practice Code
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* ══════════════════════════════════════════════
-            LEVEL 3: CONCEPT VIEW
-            ══════════════════════════════════════════════ */}
-        {level === 'concept' && topic && (
-          <motion.div key="concept" {...pageVariants}>
-
-            {/* Mode Bar */}
-            <div className="cs-mode-bar">
-              <span className="cs-mode-topic-name">{topic.title}</span>
-              <div className="cs-mode-right">
-                <span className="cs-mode-label">Mode:</span>
-                <div className="cs-mode-toggle">
-                  <button
-                    className={`cs-mode-btn ${mode === 'learn' ? 'active' : ''}`}
-                    onClick={() => setMode('learn')}
+          {/* FEATURED TOOLS GRID */}
+          <div>
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest text-left mb-4 mt-8">Interactive Coding Tools & Labs</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { id: 'coding-lab', label: 'JVM / Roslyn Coding Lab', desc: 'Online dynamic Roslyn compiler workspace sandbox with AI analysis, reviews, and optimizer diagnostics.', icon: PlayCircle, accent: '#38BDF8', tag: 'Compiler Console' },
+                { id: 'practice', label: 'Evaluation Practice Hub', desc: 'Study multiple-choice questions, debugging errors, mock tests, and top interview questions.', icon: Sparkles, accent: '#EC4899', tag: 'Quiz Area' },
+                { id: 'projects', label: 'Enterprise Portfolios Projects', desc: 'Start or review SMS registries, Banking backends, Hospital schedulers, and E-commerce channels.', icon: FolderOpen, accent: '#A855F7', tag: 'Project Center' },
+                { id: 'mentor', label: 'Generative AI Mentor Coach', desc: 'Ask custom AI mentor engines for simple ELI10 summaries, personalized study guides, and notes.', icon: BrainCircuit, accent: '#F59E0B', tag: 'AI Assistant' },
+                { id: 'analytics', label: 'Study Analytics Dashboard', desc: 'Track study durations, weekly metrics, accuracy rates, and domain mastery values.', icon: TrendingUp, accent: '#10B981', tag: 'Progress Reports' },
+                { id: 'certification', label: 'Professional Certificate Center', desc: 'Claim and export secure PDF graduation credentials once criteria thresholds are met.', icon: Award, accent: '#EF4444', tag: 'Credentials' }
+              ].map((tool) => {
+                const ToolIcon = tool.icon || Code;
+                return (
+                  <div 
+                    key={tool.id}
+                    onClick={() => setActivePanel(tool.id)}
+                    className="bg-white/5 border border-white/10 rounded-[28px] hover:bg-white/10 transition-all duration-300 p-6 flex flex-col justify-between cursor-pointer text-left hover:scale-[1.01] hover:border-white/20 group relative overflow-hidden"
                   >
-                    <BookOpen size={14} /> Learn
-                  </button>
-                  <button
-                    className={`cs-mode-btn ${mode === 'simulate' ? 'active' : ''}`}
-                    onClick={() => { setMode('simulate'); setStep(0); setPlaying(false); }}
-                  >
-                    <Monitor size={14} /> Simulate
-                  </button>
-                </div>
-              </div>
-            </div>
+                    <div className="flex justify-between items-center w-full mb-6">
+                      <div 
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                        style={{ background: `${tool.accent}12`, color: tool.accent }}
+                      >
+                        <ToolIcon size={20} />
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                        {tool.tag}
+                      </span>
+                    </div>
 
-            {/* Split Pane: Code | Visualization */}
-            <div className="cs-split-pane">
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors">
+                        {tool.label}
+                      </h3>
+                      <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                        {tool.desc}
+                      </p>
+                    </div>
 
-              {/* Code Panel */}
-              <div className="cs-code-panel">
-                <div className="cs-code-topbar">
-                  <div className="cs-code-dots">
-                    <span/><span/><span/>
+                    <div className="flex items-center justify-between mt-6 pt-3 border-t border-white/5 text-[10px] text-slate-500 font-bold uppercase">
+                      <span>Interactive Tool</span>
+                      <span className="text-slate-300 group-hover:text-purple-400 transition-colors">Launch Tool →</span>
+                    </div>
                   </div>
-                  <span className="cs-code-filename">Program.cs</span>
-                  <span className="cs-code-lang">C#</span>
-                </div>
-                <pre className="cs-code-body">{topic.code}</pre>
-              </div>
-
-              {/* Visualization Panel */}
-              <div className="cs-viz-panel">
-                <div className="cs-viz-topbar">
-                  <span className="cs-viz-title">
-                    <span className="cs-viz-live-dot" style={{ display:'inline-block', width:8, height:8, borderRadius:'50%', background:'#10B981', animation:'pulse-live 1.5s infinite' }}/>
-                    Live Visualization
-                  </span>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 12px', background: 'rgba(37,99,235,0.08)', color: 'var(--cs-primary)', borderRadius: 20 }}>
-                    Step {step + 1} / {topic.steps}
-                  </span>
-                </div>
-                <div className="cs-viz-canvas">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={step}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 1.02 }}
-                      transition={{ duration: 0.3 }}
-                      style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
-                    >
-                      <VizComponent vizType={topic.vizType} step={step} topic={topic} />
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-              </div>
+                );
+              })}
             </div>
-
-            {/* Timeline Controls */}
-            <div className="cs-timeline">
-              <div className="cs-timeline-label">⏱ Execution Timeline</div>
-              <div className="cs-timeline-controls">
-                <button className="cs-tl-btn" title="Reset" onClick={() => { setStep(0); setPlaying(false); }}>
-                  <RotateCcw size={15}/>
-                </button>
-                <button className="cs-tl-btn play-btn" title={playing ? 'Pause' : 'Play'} onClick={() => {
-                  if (step >= topic.steps - 1) setStep(0);
-                  setPlaying(p => !p);
-                }}>
-                  {playing ? <Pause size={15}/> : <Play size={15}/>}
-                </button>
-                <div className="cs-tl-slider-wrap">
-                  <input
-                    type="range"
-                    className="cs-tl-slider"
-                    min={0} max={topic.steps - 1}
-                    value={step}
-                    style={{ '--progress': `${sliderProgress}%` }}
-                    onChange={e => { setStep(Number(e.target.value)); setPlaying(false); }}
-                  />
-                  <div className="cs-tl-steps">
-                    {topic.stepLabels?.map((label, i) => (
-                      <span key={i} className={`cs-tl-step-label ${i === step ? 'active' : ''}`}>{label}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Step Description */}
-            {topic.stepDescriptions?.[step] && (
-              <motion.div
-                key={`desc-${step}`}
-                className="cs-step-info"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                style={{ marginTop: 16 }}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* WORKSPACE HEADER */}
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-white/10 pb-4">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setActivePanel('dashboard')}
+                className="flex items-center gap-1.5 px-3 py-2 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer"
               >
-                <h4>
-                  <span className="cs-step-num-badge">{step + 1}</span>
-                  {topic.stepLabels?.[step]}
-                </h4>
-                <p>{topic.stepDescriptions[step]}</p>
-              </motion.div>
+                ← Back to Dashboard
+              </button>
+              <div className="text-left">
+                <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider">C# Visual Learning Ecosystem</span>
+                <h2 className="text-xl font-extrabold text-white mt-0.5">Workspace Lab</h2>
+              </div>
+            </div>
+          </div>
+
+          {/* WORKSPACE CONTENT */}
+          <div className="w-full">
+            {CSHARP_MODULES.map((mod) => {
+              if (activePanel !== mod.id) return null;
+              const hasAnswered = selectedAnswers[mod.id] !== undefined;
+              const isCorrect = selectedAnswers[mod.id] === mod.quiz.correct;
+
+              return (
+                <div key={mod.id} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                  
+                  {/* Left Column: Theory & Evaluation (60% width) */}
+                  <div className="lg:col-span-7 space-y-6">
+                    {/* Introduction & Theory */}
+                    <div className="p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4">
+                      <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-full text-xs font-bold">
+                        {mod.type}
+                      </span>
+                      <h3 className="text-2xl font-black text-white">{mod.label}</h3>
+                      <p className="text-sm text-slate-300 leading-relaxed text-left">{mod.theory}</p>
+                      
+                      <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-left">
+                        <span className="text-xs font-bold text-purple-400 block">💡 AI ELI10 ("Explain Like I'm 10") Summary</span>
+                        <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">{mod.aiExplanation}</p>
+                      </div>
+
+                      <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-left">
+                        <span className="text-xs font-bold text-emerald-400 block">🌍 Real-World Industry Application</span>
+                        <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">{mod.useCases}</p>
+                      </div>
+                    </div>
+
+                    {/* Interactive Quiz & Practice questions */}
+                    <div className="p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block text-left">Evaluation Corner</span>
+                      <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl text-left space-y-3">
+                        <span className="text-xs font-bold text-white block">Topic Assessment: {mod.quiz.q}</span>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {mod.quiz.options.map((opt) => {
+                            const isSelected = selectedAnswers[mod.id] === opt;
+                            return (
+                              <button
+                                key={opt}
+                                disabled={hasAnswered}
+                                onClick={() => {
+                                  setSelectedAnswers({ ...selectedAnswers, [mod.id]: opt });
+                                  if (opt === mod.quiz.correct) {
+                                    setQuizScores({ ...quizScores, [mod.id]: 100 });
+                                    updateXP(100);
+                                    toast.success('Correct! +100 XP');
+                                  } else {
+                                    setQuizScores({ ...quizScores, [mod.id]: 0 });
+                                    toast.error('Incorrect. Review theory.');
+                                  }
+                                }}
+                                className={`w-full text-left p-3.5 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+                                  isSelected 
+                                    ? (opt === mod.quiz.correct ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-red-500/10 border-red-500 text-red-400')
+                                    : 'bg-white/5 border-white/5 text-slate-300 hover:bg-white/10'
+                                }`}
+                              >
+                                {opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {hasAnswered && (
+                          <div className="mt-3 p-3 bg-white/5 rounded-xl text-[11px] text-slate-400 leading-relaxed">
+                            <strong className="text-slate-300 block mb-1">
+                              {isCorrect ? '✓ Correct Answer' : '✗ Incorrect'}
+                            </strong>
+                            {mod.quiz.explanation}
+                          </div>
+                        )}
+                      </div>
+
+                      <button 
+                        onClick={() => handleMarkComplete(mod.index)}
+                        className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-2xl cursor-pointer transition"
+                      >
+                        Mark Module Complete
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Visual Simulator / Animation Workspace (40% width) */}
+                  <div className="lg:col-span-5 space-y-6">
+                    <div className="p-6 bg-slate-900 border border-white/10 rounded-3xl space-y-4">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block text-left">Interactive Simulator & Animation</span>
+                      
+                      {/* Visual Component Render */}
+                      <div className="w-full bg-slate-950 border border-white/5 rounded-2xl p-4 min-h-[220px] flex items-center justify-center overflow-hidden">
+                        {mod.simulatorType === 'memory' && (
+                          <div className="space-y-4 w-full">
+                            <h5 className="text-xs font-bold text-slate-400">Stack Memory Allocation</h5>
+                            <div className="flex gap-4 items-center justify-center">
+                              <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl text-center w-28">
+                                <span className="text-[10px] text-slate-500 block">Identifier</span>
+                                <strong className="text-xs text-white">age</strong>
+                              </div>
+                              <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl text-center w-28">
+                                <span className="text-[10px] text-slate-500 block">Value</span>
+                                <strong className="text-xs text-white">{fundamentalsVal}</strong>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] text-slate-500 block">Modify Value (int age)</label>
+                              <input 
+                                type="number" 
+                                value={fundamentalsVal}
+                                onChange={(e) => setFundamentalsVal(e.target.value)}
+                                className="w-full px-3 py-1.5 bg-slate-850 border border-white/10 rounded-xl text-xs text-white outline-none"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'loops' && (
+                          <div className="space-y-4 w-full">
+                            <h5 className="text-xs font-bold text-slate-400">Loop Iteration Simulator</h5>
+                            <div className="flex gap-2 justify-center">
+                              {[0, 1, 2, 3, 4].map((step) => (
+                                <div 
+                                  key={step}
+                                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold transition ${
+                                    loopStep === step ? 'bg-emerald-600 text-white' : 'bg-white/5 text-slate-500'
+                                  }`}
+                                >
+                                  i={step}
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => setLoopStep((loopStep + 1) % 5)}
+                                className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                              >
+                                Step Next Iteration
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'oop-concepts' && (
+                          <div className="space-y-4 w-full">
+                            <h5 className="text-xs font-bold text-slate-400">Blueprint Object Instance Creator</h5>
+                            <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl text-center">
+                              <span className="text-[10px] text-slate-500 block">class Blueprint</span>
+                              <strong className="text-xs text-white">{oopClassName}</strong>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] text-slate-500 block">Change Class Name</label>
+                              <input 
+                                type="text" 
+                                value={oopClassName}
+                                onChange={(e) => setOopClassName(e.target.value)}
+                                className="w-full px-3 py-1.5 bg-slate-850 border border-white/10 rounded-xl text-xs text-white outline-none"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'collections-sim' && (
+                          <div className="space-y-4 w-full">
+                            <h5 className="text-xs font-bold text-slate-400">Collection Data Structure ({collectionsAction})</h5>
+                            <div className="flex gap-2 justify-center py-2">
+                              {collectionsItems.map((item, i) => (
+                                <div key={i} className="px-3 py-1.5 bg-pink-500/10 border border-pink-500/30 text-pink-400 rounded-xl text-xs font-bold">
+                                  {item}
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => setCollectionsItems([...collectionsItems, Math.floor(Math.random() * 90 + 10).toString()])}
+                                className="w-full py-1.5 bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                              >
+                                Push / Add
+                              </button>
+                              <button 
+                                onClick={() => setCollectionsItems(collectionsItems.slice(0, -1))}
+                                className="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg cursor-pointer"
+                              >
+                                Pop / Remove
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'exceptions-sim' && (
+                          <div className="space-y-4 w-full">
+                            <h5 className="text-xs font-bold text-slate-400">Program Flow Catch Recovery</h5>
+                            <div className={`p-4 rounded-xl text-center font-bold text-xs ${
+                              exceptionState === 'Normal' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                            }`}>
+                              System State: {exceptionState}
+                            </div>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => setExceptionState(exceptionState === 'Normal' ? 'Exception Caught!' : 'Normal')}
+                                className="w-full py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                              >
+                                Toggle Exception State
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'file-sim' && (
+                          <div className="space-y-4 w-full">
+                            <h5 className="text-xs font-bold text-slate-400">Virtual File System Explorer</h5>
+                            <div className="p-3 bg-slate-900 border border-white/5 rounded-xl text-left space-y-1">
+                              {Object.entries(virtualFiles).map(([name, data]) => (
+                                <div 
+                                  key={name} 
+                                  onClick={() => setActiveFile(name)}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition ${
+                                    activeFile === name ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30' : 'text-slate-400'
+                                  }`}
+                                >
+                                  📄 {name}
+                                </div>
+                              ))}
+                            </div>
+                            <button 
+                              onClick={() => {
+                                const newName = `notes_${Object.keys(virtualFiles).length + 1}.txt`;
+                                setVirtualFiles({ ...virtualFiles, [newName]: 'New text file stream.' });
+                                setActiveFile(newName);
+                                toast.success('File created successfully.');
+                              }}
+                              className="w-full py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                            >
+                              Create new file stream
+                            </button>
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'linq-sim' && (
+                          <div className="space-y-4 w-full">
+                            <h5 className="text-xs font-bold text-slate-400">LINQ Query Pipeline</h5>
+                            <div className="p-3 bg-slate-900 border border-white/5 rounded-xl text-xs space-y-1">
+                              <div><strong>Source:</strong> [10, 25, 45, 60, 80, 95]</div>
+                              <div><strong>Query:</strong> numbers.Where(n =&gt; n &gt; 50)</div>
+                              <div><strong>Result:</strong> [60, 80, 95]</div>
+                            </div>
+                            <button 
+                              onClick={() => toast.success('LINQ filter evaluated.')}
+                              className="w-full py-1.5 bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                            >
+                              Run LINQ Filter
+                            </button>
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'delegates-sim' && (
+                          <div className="space-y-4 w-full">
+                            <h5 className="text-xs font-bold text-slate-400">Button Click Delegate Callback</h5>
+                            <div className="p-3 bg-slate-900 border border-white/5 rounded-xl text-left max-h-24 overflow-y-auto font-mono text-[9px] text-purple-400 space-y-1">
+                              {delegatesLogs.length > 0 ? delegatesLogs.map((log, i) => (
+                                <div key={i}>{log}</div>
+                              )) : <div>Click below to trigger callback...</div>}
+                            </div>
+                            <button 
+                              onClick={() => {
+                                setDelegatesLogs([...delegatesLogs, `Delegate invoked on ${new Date().toLocaleTimeString()}`]);
+                                toast.success('Delegate invoked');
+                              }}
+                              className="w-full py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                            >
+                              Trigger Delegate
+                            </button>
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'async-sim' && (
+                          <div className="space-y-4 w-full">
+                            <h5 className="text-xs font-bold text-slate-400">Task Timeline</h5>
+                            <div className="p-3 bg-slate-900 border border-white/5 rounded-xl space-y-2 text-left">
+                              {asyncTasks.map(t => (
+                                <div key={t.id} className="text-xs">
+                                  <div className="flex justify-between font-bold text-[10px]">
+                                    <span>{t.name}</span>
+                                    <span className="text-pink-400">{t.status}</span>
+                                  </div>
+                                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                                    <div className="h-full bg-pink-500 transition-all duration-500" style={{ width: `${t.progress}%` }} />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <button 
+                              onClick={() => {
+                                setAsyncTasks([
+                                  { id: 1, name: 'Fetch Data', status: 'Completed', progress: 100 },
+                                  { id: 2, name: 'Process DB', status: 'Completed', progress: 100 }
+                                ]);
+                                toast.success('All tasks completed asynchronously!');
+                              }}
+                              className="w-full py-1.5 bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                            >
+                              Execute async Tasks
+                            </button>
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'ado-sim' && (
+                          <div className="space-y-4 w-full text-left">
+                            <h5 className="text-xs font-bold text-slate-400">SqlConnection Manager</h5>
+                            <div className="flex justify-between items-center text-xs">
+                              <span>Connection state:</span>
+                              <strong className={adoStatus === 'Open' ? 'text-emerald-400' : 'text-slate-400'}>{adoStatus}</strong>
+                            </div>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => {
+                                  setAdoStatus('Open');
+                                  toast.success('SqlConnection opened successfully.');
+                                }}
+                                className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                              >
+                                conn.Open()
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  setAdoStatus('Closed');
+                                  toast.success('SqlConnection closed.');
+                                }}
+                                className="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg cursor-pointer"
+                              >
+                                conn.Close()
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'ef-sim' && (
+                          <div className="space-y-4 w-full">
+                            <h5 className="text-xs font-bold text-slate-400">DbContext DbSet Mapper</h5>
+                            <div className="p-3 bg-slate-900 border border-white/5 rounded-xl text-left space-y-1">
+                              {efEntities.map((ent, i) => (
+                                <div key={i} className="text-xs flex justify-between font-mono text-emerald-400">
+                                  <span>public DbSet&lt;{ent.name}&gt; {ent.name}s</span>
+                                  <span>→ table: {ent.table}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <button 
+                              onClick={() => {
+                                setEfEntities([...efEntities, { name: 'Course', table: 'courses' }]);
+                                toast.success('DbContext model schema migrated.');
+                              }}
+                              className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                            >
+                              Add DbSet Map
+                            </button>
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'mvc-sim' && (
+                          <div className="space-y-4 w-full text-left">
+                            <h5 className="text-xs font-bold text-slate-400">Request Lifecycle Visualizer</h5>
+                            <div className="p-3 bg-slate-900 border border-white/5 rounded-xl text-xs text-center font-bold text-purple-400">
+                              Active Stage: {mvcStep}
+                            </div>
+                            <div className="flex gap-2">
+                              {['Request', 'Controller', 'Model', 'View'].map(s => (
+                                <button 
+                                  key={s}
+                                  onClick={() => setMvcStep(s)}
+                                  className={`flex-1 py-1 text-[10px] font-bold rounded ${
+                                    mvcStep === s ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-400'
+                                  }`}
+                                >
+                                  {s}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'api-sim' && (
+                          <div className="space-y-4 w-full text-left">
+                            <h5 className="text-xs font-bold text-slate-400">Swagger API Client</h5>
+                            <div className="flex gap-2">
+                              <select 
+                                value={apiMethod} 
+                                onChange={(e) => setApiMethod(e.target.value)}
+                                className="px-2 py-1 bg-slate-850 border border-white/10 rounded-lg text-xs text-white outline-none"
+                              >
+                                <option>GET</option>
+                                <option>POST</option>
+                                <option>DELETE</option>
+                              </select>
+                              <input 
+                                type="text" 
+                                placeholder="/api/v1/courses" 
+                                className="flex-grow px-3 py-1 bg-slate-850 border border-white/10 rounded-lg text-xs text-white outline-none"
+                              />
+                            </div>
+                            <button 
+                              onClick={() => {
+                                setApiLogs([...apiLogs, `[${apiMethod}] ${new Date().toLocaleTimeString()} -> Status 200 OK`]);
+                                toast.success('API request finished');
+                              }}
+                              className="w-full py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                            >
+                              Send API Request
+                            </button>
+                            <div className="p-2 bg-slate-900 rounded-lg font-mono text-[9px] text-cyan-400 max-h-16 overflow-y-auto">
+                              {apiLogs.map((l, i) => <div key={i}>{l}</div>)}
+                            </div>
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'auth-sim' && (
+                          <div className="space-y-4 w-full text-left">
+                            <h5 className="text-xs font-bold text-slate-400">JWT Payload Token Generator</h5>
+                            <button 
+                              onClick={() => {
+                                setJwtToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjM0NSIsInJvbGUiOiJBZG1pbiJ9');
+                                toast.success('JWT Token Generated successfully!');
+                              }}
+                              className="w-full py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                            >
+                              Generate JWT Token
+                            </button>
+                            {jwtToken && (
+                              <pre className="p-2 bg-slate-900 rounded-lg font-mono text-[9px] text-red-400 whitespace-pre-wrap break-all">
+                                {jwtToken}
+                              </pre>
+                            )}
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'blazor-sim' && (
+                          <div className="space-y-4 w-full text-left">
+                            <h5 className="text-xs font-bold text-slate-400">Blazor Component Lifecycle</h5>
+                            <div className="p-3 bg-slate-900 border border-white/5 rounded-xl text-center text-xs font-bold text-yellow-400">
+                              Active Lifecycle Stage: {blazorState}
+                            </div>
+                            <div className="flex gap-2">
+                              {['OnInitialized', 'OnParametersSet', 'OnAfterRender'].map(st => (
+                                <button 
+                                  key={st}
+                                  onClick={() => {
+                                    setBlazorState(st);
+                                    toast.success(`${st} fired.`);
+                                  }}
+                                  className="flex-grow py-1 bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-slate-300 rounded"
+                                >
+                                  {st}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {mod.simulatorType === 'azure-sim' && (
+                          <div className="space-y-4 w-full text-left">
+                            <h5 className="text-xs font-bold text-slate-400">Azure WebApp Infrastructure Status</h5>
+                            <div className="flex justify-between items-center text-xs">
+                              <span>Service health status:</span>
+                              <strong className="text-emerald-400">{azureStatus}</strong>
+                            </div>
+                            <button 
+                              onClick={() => {
+                                setAzureStatus('Syncing nodes...');
+                                setTimeout(() => {
+                                  setAzureStatus('Healthy');
+                                  toast.success('Azure SQL and App Services status synced successfully!');
+                                }, 1000);
+                              }}
+                              className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                            >
+                              Sync Azure Topology
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* SPECIAL TOOLS WORKSPACES */}
+            {activePanel === 'coding-lab' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start text-left">
+                <div className="lg:col-span-7 space-y-4">
+                  <div className="p-5 bg-white/5 border border-white/10 rounded-[28px] space-y-3">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Online Roslyn C# Compiler</span>
+                    <textarea 
+                      value={compilerCode}
+                      onChange={(e) => setCompilerCode(e.target.value)}
+                      rows={10}
+                      className="w-full p-4 bg-slate-950 border border-white/10 rounded-2xl text-xs font-mono text-emerald-400 outline-none focus:border-blue-500"
+                    />
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={handleCompilerRun}
+                        className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                      >
+                        Run Code
+                      </button>
+                      <button 
+                        onClick={() => handleCompilerAi('debug')}
+                        className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl cursor-pointer"
+                      >
+                        AI Debugger
+                      </button>
+                      <button 
+                        onClick={() => handleCompilerAi('review')}
+                        className="px-4 py-2.5 bg-slate-850 hover:bg-slate-800 text-slate-300 text-xs font-bold rounded-xl cursor-pointer"
+                      >
+                        AI Review
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-5 space-y-4">
+                  <div className="p-5 bg-slate-900 border border-white/10 rounded-[28px] space-y-3">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Compiler Outputs</span>
+                    <pre className="p-4 bg-slate-950 border border-white/5 rounded-2xl text-xs font-mono text-slate-300 whitespace-pre-wrap">
+                      {compilerOutput}
+                    </pre>
+                    {aiReviewOutput && (
+                      <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-2xl">
+                        <span className="text-xs font-bold text-purple-400 block">AI Analysis Result</span>
+                        <p className="text-xs text-slate-300 mt-1">{aiReviewOutput}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             )}
 
-          </motion.div>
-        )}
+            {activePanel === 'practice' && (
+              <div className="p-6 bg-white/5 border border-white/10 rounded-[28px] text-left space-y-4 max-w-2xl mx-auto">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Practice Hub Challenges</span>
+                <p className="text-xs text-slate-400">Master C# logic through quiz bank challenges and mock questions.</p>
+                <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl space-y-2">
+                  <strong className="text-sm text-white block">Q1: How do you register transient service dependencies in ASP.NET Core?</strong>
+                  <p className="text-xs text-slate-400">A: builder.Services.AddTransient&lt;IService, Service&gt;();</p>
+                  <button 
+                    onClick={() => {
+                      updateXP(20);
+                      toast.success('Challenge completed successfully! +20 XP');
+                    }}
+                    className="mt-2 px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg"
+                  >
+                    Submit Practice Answer
+                  </button>
+                </div>
+              </div>
+            )}
 
-      </AnimatePresence>
+            {activePanel === 'projects' && (
+              <div className="p-6 bg-white/5 border border-white/10 rounded-[28px] text-left space-y-4 max-w-2xl mx-auto">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Enterprise Portfolio Projects</span>
+                <p className="text-xs text-slate-400 font-medium">Develop corporate portals to enhance your resume strengths.</p>
+                <div className="space-y-3">
+                  {['Student Registry System', 'Banking Service API', 'Hospital Management Portal', 'E-Commerce Wasm Platform'].map((proj, idx) => (
+                    <div key={idx} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex justify-between items-center">
+                      <div>
+                        <strong className="text-sm font-bold text-white block">{proj}</strong>
+                        <span className="text-[10px] text-slate-400 mt-1">Difficulty: Intermediate • .NET 8 SDK</span>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          updateXP(100);
+                          toast.success(`Project initialized: ${proj}!`);
+                        }}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                      >
+                        Start Project
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activePanel === 'mentor' && (
+              <div className="p-6 bg-white/5 border border-white/10 rounded-[28px] text-left space-y-4 max-w-2xl mx-auto">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">AI Mentor Guidance</span>
+                <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl space-y-3">
+                  <span className="text-xs font-bold text-purple-400 block">Personalized Study Planner</span>
+                  <p className="text-xs text-slate-300">"Your consistency scores are optimal. Prioritize completing Exception Handling and LINQ Queries to meet the intermediate certificate criteria."</p>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => {
+                      updateXP(20);
+                      toast.success('Study notes compiled and copied to clipboard.');
+                    }}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl"
+                  >
+                    Generate AI Study Notes
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activePanel === 'analytics' && (
+              <div className="p-6 bg-white/5 border border-white/10 rounded-[28px] text-left space-y-4 max-w-2xl mx-auto">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Learning Analytics</span>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-white/5 border border-white/5 rounded-xl text-center">
+                    <span className="text-[10px] text-slate-500 block">Weekly Study Hours</span>
+                    <strong className="text-xl text-white block mt-1">4.2 Hours</strong>
+                  </div>
+                  <div className="p-4 bg-white/5 border border-white/5 rounded-xl text-center">
+                    <span className="text-[10px] text-slate-500 block">Coding Accuracy</span>
+                    <strong className="text-xl text-white block mt-1">94%</strong>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activePanel === 'achievements' && (
+              <div className="p-6 bg-white/5 border border-white/10 rounded-[28px] text-left space-y-4 max-w-2xl mx-auto">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Unlocked Badges</span>
+                <div className="grid grid-cols-2 gap-3">
+                  {['C# Beginner', 'OOP Explorer', 'LINQ Master', 'ASP.NET Developer', 'Azure Explorer', 'C# Expert'].map((b, i) => (
+                    <div key={i} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex justify-between items-center">
+                      <strong className="text-xs text-white">{b}</strong>
+                      <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 text-[9px] font-bold rounded">Unlocked</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activePanel === 'certification' && (
+              <div className="p-6 bg-white/5 border border-white/10 rounded-[28px] text-left space-y-4 max-w-2xl mx-auto">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Official Certificate Center</span>
+                <div className="p-6 bg-slate-900 border border-white/5 rounded-2xl text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-slate-950 border border-white/10 flex items-center justify-center text-slate-500 mx-auto text-xl">
+                    🏆
+                  </div>
+                  <h4 className="text-sm font-bold text-white">Advanced C# Developer Credentials</h4>
+                  <p className="text-xs text-slate-400 max-w-md mx-auto">
+                    Upon completing the syllabus modules, your credential is issued securely.
+                  </p>
+                  <button 
+                    onClick={() => toast.success('Certificate download initialized...')}
+                    className="px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold rounded-xl cursor-pointer"
+                  >
+                    Download Certificate PDF
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

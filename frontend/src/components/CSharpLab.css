@@ -15,8 +15,8 @@
   --cs-success:    #10B981;
   --cs-warning:    #F59E0B;
   --cs-danger:     #EF4444;
-  --cs-bg:         #F0F4FF;
-  --cs-card:       #FFFFFF;
+  --cs-bg:         #F8FAFC;
+  --cs-card:       rgba(255, 255, 255, 0.75);
   --cs-border:     #E2E8F0;
   --cs-text:       #0F172A;
   --cs-muted:      #64748B;
@@ -28,6 +28,19 @@
 
   font-family: 'Inter', system-ui, sans-serif;
   color: var(--cs-text);
+  background: transparent;
+}
+
+/* Dark theme variables support matching Layout */
+[data-theme="dark"] .csharp-lab {
+  --cs-bg:         #0B0F19;
+  --cs-card:       rgba(17, 24, 39, 0.8);
+  --cs-border:     rgba(255, 255, 255, 0.08);
+  --cs-text:       #F3F4F6;
+  --cs-muted:      #9CA3AF;
+  --cs-code-bg:    #0B0F19;
+  --cs-shadow:     0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  --cs-shadow-lg:  0 20px 40px -15px rgba(0, 0, 0, 0.7);
 }
 
 /* ─── Breadcrumb ─── */
