@@ -415,6 +415,218 @@ const db = require('./config/db');
       INSERT INTO permissions (name) VALUES ('Create'), ('Read'), ('Update'), ('Delete') ON CONFLICT (name) DO NOTHING;
     `);
 
+    // Create Advanced Java Tables
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS advanced_java_modules (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        subtitle VARCHAR(555),
+        duration VARCHAR(100),
+        xp INTEGER DEFAULT 100,
+        difficulty VARCHAR(50) DEFAULT 'Intermediate',
+        order_index INTEGER DEFAULT 0
+      );
+
+      CREATE TABLE IF NOT EXISTS advanced_java_topics (
+        id SERIAL PRIMARY KEY,
+        module_id INTEGER REFERENCES advanced_java_modules(id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        content TEXT,
+        order_index INTEGER DEFAULT 0
+      );
+
+      CREATE TABLE IF NOT EXISTS advanced_java_quizzes (
+        id SERIAL PRIMARY KEY,
+        topic_id INTEGER REFERENCES advanced_java_topics(id) ON DELETE CASCADE,
+        question TEXT NOT NULL,
+        options JSONB NOT NULL,
+        correct_answer VARCHAR(50) NOT NULL,
+        explanation TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS advanced_java_progress (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+        completed_topics INTEGER DEFAULT 0,
+        study_hours NUMERIC DEFAULT 0.0,
+        current_level INTEGER DEFAULT 1,
+        learning_streak INTEGER DEFAULT 0,
+        topics_completed INTEGER DEFAULT 0,
+        projects_completed INTEGER DEFAULT 0,
+        quiz_accuracy NUMERIC DEFAULT 0.0,
+        practice_score NUMERIC DEFAULT 0.0,
+        certificate_status VARCHAR(50) DEFAULT 'Locked'
+      );
+
+      CREATE TABLE IF NOT EXISTS advanced_java_practice (
+        id SERIAL PRIMARY KEY,
+        type VARCHAR(100) NOT NULL,
+        question TEXT NOT NULL,
+        options JSONB,
+        correct_answer TEXT NOT NULL,
+        explanation TEXT,
+        difficulty VARCHAR(50) DEFAULT 'medium'
+      );
+
+      CREATE TABLE IF NOT EXISTS advanced_java_projects (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        difficulty VARCHAR(50) DEFAULT 'medium',
+        code_boilerplate TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS advanced_java_submissions (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        project_id INTEGER REFERENCES advanced_java_projects(id) ON DELETE CASCADE,
+        status VARCHAR(50) DEFAULT 'In Progress',
+        code_quality VARCHAR(100) DEFAULT 'Not Reviewed',
+        progress INTEGER DEFAULT 0,
+        submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS advanced_java_analytics (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        date DATE NOT NULL,
+        learning_time INTEGER DEFAULT 0,
+        progress_val INTEGER DEFAULT 0,
+        topic_mastery INTEGER DEFAULT 0,
+        quiz_perf INTEGER DEFAULT 0,
+        coding_perf INTEGER DEFAULT 0,
+        project_perf INTEGER DEFAULT 0,
+        UNIQUE(student_id, date)
+      );
+
+      CREATE TABLE IF NOT EXISTS advanced_java_certificates (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+        certificate_id VARCHAR(100) UNIQUE NOT NULL,
+        issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS advanced_java_achievements (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        xp_reward INTEGER DEFAULT 100,
+        unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(student_id, title)
+      );
+
+      CREATE TABLE IF NOT EXISTS advanced_java_ai_recommendations (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+        recommendations TEXT,
+        strength_areas TEXT,
+        weak_areas TEXT,
+        suggestions TEXT,
+        next_best_action TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Seed modules if empty
+    const checkMods = await db.query('SELECT 1 FROM advanced_java_modules LIMIT 1');
+    if (checkMods.rows.length === 0) {
+      console.log('Seeding Advanced Java Modules...');
+      
+      // Modules list
+      const mods = [
+        { title: 'JDBC Module', subtitle: 'Java Database Connectivity & Operations', duration: '6 hours', xp: 150, difficulty: 'Intermediate', order_index: 1 },
+        { title: 'Servlets Module', subtitle: 'Web Request Processing & Lifecycles', duration: '8 hours', xp: 200, difficulty: 'Intermediate', order_index: 2 },
+        { title: 'JSP Module', subtitle: 'JavaServer Pages & Custom Tags', duration: '5 hours', xp: 150, difficulty: 'Intermediate', order_index: 3 },
+        { title: 'Session Management Module', subtitle: 'Cookies, Sessions & Security Cookies', duration: '4 hours', xp: 120, difficulty: 'Intermediate', order_index: 4 },
+        { title: 'Hibernate ORM Module', subtitle: 'Object Relational Mapping & Entity Graphs', duration: '8 hours', xp: 250, difficulty: 'Advanced', order_index: 5 },
+        { title: 'Spring Framework Module', subtitle: 'IoC, DI, Spring Boot & Microservices', duration: '12 hours', xp: 350, difficulty: 'Advanced', order_index: 6 },
+        { title: 'REST API Module', subtitle: 'RESTful Web Services & Spring MVC REST controllers', duration: '5 hours', xp: 180, difficulty: 'Advanced', order_index: 7 }
+      ];
+
+      for (const m of mods) {
+        const modRes = await db.query(`
+          INSERT INTO advanced_java_modules (title, subtitle, duration, xp, difficulty, order_index)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING id
+        `, [m.title, m.subtitle, m.duration, m.xp, m.difficulty, m.order_index]);
+        const moduleId = modRes.rows[0].id;
+
+        // Add dummy topics
+        let topics = [];
+        if (m.title.startsWith('JDBC')) {
+          topics = [
+            { title: 'JDBC Drivers & Connection Configurations', content: 'DriverManager connects java app directly to database pools.', order_index: 1 },
+            { title: 'PreparedStatement & Query Executions', content: 'PreparedStatement compiles query templates to prevent SQL injections.', order_index: 2 },
+            { title: 'CRUD & Transaction Commits', content: 'Managing rollbacks and transaction isolation properties.', order_index: 3 }
+          ];
+        } else if (m.title.startsWith('Servlets')) {
+          topics = [
+            { title: 'Servlet Request Handler lifecycles', content: 'Handling init(), service() and destroy() callbacks.', order_index: 1 },
+            { title: 'GET vs POST Http Method handlers', content: 'Parsing requests and returning responses dynamically.', order_index: 2 }
+          ];
+        } else if (m.title.startsWith('JSP')) {
+          topics = [
+            { title: 'JSP Scriptlets, Expressions & Declarations', content: 'Embedding server-side java directly in html scripts.', order_index: 1 },
+            { title: 'JSTL Core Tags & Custom Attributes', content: 'Using JSTL loops and scopes cleanly without java expressions.', order_index: 2 }
+          ];
+        } else {
+          topics = [
+            { title: `${m.title} Core Theory`, content: `Fundamentals of ${m.subtitle}.`, order_index: 1 },
+            { title: `${m.title} Operations Setup`, content: `Step-by-step configurations for ${m.title}.`, order_index: 2 }
+          ];
+        }
+
+        for (const t of topics) {
+          const tRes = await db.query(`
+            INSERT INTO advanced_java_topics (module_id, title, content, order_index)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id
+          `, [moduleId, t.title, t.content, t.order_index]);
+          const topicId = tRes.rows[0].id;
+
+          // Add a quiz question
+          await db.query(`
+            INSERT INTO advanced_java_quizzes (topic_id, question, options, correct_answer, explanation)
+            VALUES ($1, $2, $3, $4, $5)
+          `, [
+            topicId,
+            `Which statement holds true for ${t.title}?`,
+            JSON.stringify(['Option A is accurate', 'Option B is best', 'Both Option A and B', 'None of the above']),
+            'Both Option A and B',
+            `Explanation about ${t.title} internal parameters.`
+          ]);
+        }
+      }
+
+      // Seed Projects
+      const projects = [
+        { title: 'Student Management System', description: 'Enterprise backend managing student records, course lists, grade rosters, and credentials.', difficulty: 'Medium', code_boilerplate: 'public class StudentRegistry {\n  // Code boilerplate\n}' },
+        { title: 'Employee Management System', description: 'Real-time database payroll, security logs, access tokens, and salary reviews.', difficulty: 'Medium', code_boilerplate: 'public class EmployeeRegistry {\n  // Code boilerplate\n}' },
+        { title: 'Hospital Management System', description: 'Doctors scheduling queues, patient appointments database, and medicine rosters.', difficulty: 'Hard', code_boilerplate: 'public class HospitalRegistry {\n  // Code boilerplate\n}' },
+        { title: 'Banking System', description: 'Atomic balance transfers, withdrawal checks, ledger audits, and savings interests.', difficulty: 'Hard', code_boilerplate: 'public class BankRegistry {\n  // Code boilerplate\n}' },
+        { title: 'E-Commerce Backend', description: 'Cart orders database, payments gateway, products catalog lists, and reviews.', difficulty: 'Hard', code_boilerplate: 'public class ECommerceRegistry {\n  // Code boilerplate\n}' }
+      ];
+      for (const p of projects) {
+        await db.query(`
+          INSERT INTO advanced_java_projects (title, description, difficulty, code_boilerplate)
+          VALUES ($1, $2, $3, $4)
+        `, [p.title, p.description, p.difficulty, p.code_boilerplate]);
+      }
+
+      // Seed Practice Questions
+      const questions = [
+        { type: 'mcq', question: 'Which class is responsible for establishing connections in JDBC?', options: JSON.stringify(['DriverManager', 'ConnectionProvider', 'StatementExecutor', 'ResultSetCursor']), correct_answer: 'DriverManager', explanation: 'DriverManager manages database driver list and initiates Connection sessions.', difficulty: 'easy' },
+        { type: 'coding', question: 'Write a basic PreparedStatement statement to query users where ID matches dynamic binding parameter.', options: null, correct_answer: 'SELECT * FROM users WHERE id = ?', explanation: 'Use the question mark ? wildcard variable to bind values safely.', difficulty: 'medium' },
+        { type: 'debug', question: 'Identify the issue: ClassNotFoundException raised during JDBC connection step.', options: JSON.stringify(['Missing DB driver jar in classpath', 'Wrong database endpoint URL', 'SQL dialect mismatch', 'Closed connection pool']), correct_answer: 'Missing DB driver jar in classpath', explanation: 'Class.forName requires driver package classes loaded in classpath dependencies.', difficulty: 'easy' }
+      ];
+      for (const q of questions) {
+        await db.query(`
+          INSERT INTO advanced_java_practice (type, question, options, correct_answer, explanation, difficulty)
+          VALUES ($1, $2, $3, $4, $5, $6)
+        `, [q.type, q.question, q.options, q.correct_answer, q.explanation, q.difficulty]);
+      }
+    }
+
     console.log('Database migrations completed successfully.');
   } catch (err) {
     console.error('Error running migrations:', err);
@@ -426,6 +638,7 @@ const subjectRoutes = require('./routes/subjects');
 const quizRoutes = require('./routes/quizzes');
 const codingRoutes = require('./routes/coding');
 const progressRoutes = require('./routes/progress');
+const advancedJavaRoutes = require('./routes/advanced_java');
 const predictionRoutes = require('./routes/predictions');
 const adminRoutes = require('./routes/admin');
 const mlRoutes = require('./routes/ml');
@@ -593,6 +806,7 @@ app.use('/api/subjects', subjectRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/coding', codingRoutes);
 app.use('/api/progress', progressRoutes);
+app.use('/api/advanced-java', advancedJavaRoutes);
 app.use('/api/predictions', predictionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ml', mlRoutes);

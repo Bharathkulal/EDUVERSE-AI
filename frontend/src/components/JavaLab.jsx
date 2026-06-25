@@ -7,6 +7,7 @@ import {
   BrainCircuit, ShieldAlert, Sparkles, Star, Trophy
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api from '../api/axios';
 import './JavaLab.css';
 
 const SUB_TOPICS = [
@@ -301,6 +302,18 @@ const JAVA_MODULES = [
     icon: TrendingUp,
     progress: 0,
     features: ['Topic Completion', 'XP Earned', 'Accuracy', 'Study Streak']
+  },
+  {
+    id: 99,
+    title: 'Advanced Java',
+    description: 'Master enterprise backend architectures: JDBC database connectivity, Java Servlets lifecycle routines, JSP views, ORM Hibernate structures, Spring Framework dependency injection, and REST API controllers.',
+    difficulty: 'Advanced',
+    duration: '45 hours',
+    xp: 1500,
+    accent: '#8B5CF6',
+    icon: Trophy,
+    progress: 40,
+    topics: []
   }
 ];
 
@@ -684,7 +697,9 @@ export default function JavaLab() {
           </motion.div>
         ) : (
           /* MODULE DETAIL VIEW */
-          selectedModule.id === 1 ? (
+          selectedModule.id === 99 ? (
+            <AdvancedJavaLMS selectedModule={selectedModule} setSelectedModule={setSelectedModule} />
+          ) : selectedModule.id === 1 ? (
             <motion.div
               key="guided-intro"
               initial={{ opacity: 0, x: 20 }}
@@ -852,9 +867,9 @@ export default function JavaLab() {
                         <span className="text-[10px] uppercase font-bold text-slate-400 block mb-3 tracking-widest">COMPILE & RUNTIME PIPELINE FLOW</span>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-[10px] font-mono">
                           <span className="p-1.5 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded">.java source</span>
-                          <span className="text-slate-500">──(javac compiler)──></span>
+                          <span className="text-slate-500">──(javac compiler)──&gt;</span>
                           <span className="p-1.5 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded">.class bytecode</span>
-                          <span className="text-slate-500">──(JVM interpreter)──></span>
+                          <span className="text-slate-500">──(JVM interpreter)──&gt;</span>
                           <span className="p-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded">output execution</span>
                         </div>
                       </div>
@@ -1942,6 +1957,1031 @@ public class InputDemo {
         )}
       </AnimatePresence>
       
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// ADVANCED JAVA LEARNING MANAGEMENT SYSTEM (LMS) VIEW
+// ═══════════════════════════════════════════════════════════
+function AdvancedJavaLMS({ selectedModule, setSelectedModule }) {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [modulesList, setModulesList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activePanel, setActivePanel] = useState('dashboard');
+
+  // Interactive Playgrounds State
+  const [jdbcUrl, setJdbcUrl] = useState('jdbc:postgresql://localhost:5432/eduverse');
+  const [jdbcStatus, setJdbcStatus] = useState('');
+  const [crudSimRecords, setCrudSimRecords] = useState([
+    { id: 1, name: 'Alice Student', course: 'Java Fundamentals' },
+    { id: 2, name: 'Bob Engineer', course: 'Spring Boot APIs' }
+  ]);
+  const [newRecordName, setNewRecordName] = useState('');
+  const [preparedSql, setPreparedSql] = useState('SELECT * FROM students WHERE id = ?');
+  const [preparedVal, setPreparedVal] = useState('1');
+  const [prepResult, setPrepResult] = useState('');
+  const [transactionLog, setTransactionLog] = useState([]);
+  const [connectionPool, setConnectionPool] = useState({ active: 2, idle: 8, total: 10 });
+  const [sqlErrorQuery, setSqlErrorQuery] = useState('SELET * FROM users WHERE id = 1');
+  const [aiSqlHint, setAiSqlHint] = useState('');
+
+  // Servlet State
+  const [servletMethod, setServletMethod] = useState('GET');
+  const [servletOutput, setServletOutput] = useState('');
+  const [sessionVal, setSessionVal] = useState('');
+  const [reqDispatcherDest, setReqDispatcherDest] = useState('/dashboard');
+
+  // JSP State
+  const [jspCode, setJspCode] = useState('<%@ page language="java" %>\n<html>\n<body>\n  <h2>Welcome <%= request.getParameter("name") %></h2>\n</body>\n</html>');
+  const [jspPreview, setJspPreview] = useState('');
+
+  // Session State
+  const [cookieSimKey, setCookieSimKey] = useState('JSESSIONID');
+  const [cookieSimVal, setCookieSimVal] = useState('4F9D7C2B1A');
+  const [sessionUser, setSessionUser] = useState('');
+  const [sessionLogs, setSessionLogs] = useState([]);
+
+  // Hibernate State
+  const [entityMapping, setEntityMapping] = useState({ entity: 'Student', table: 'students', idType: 'Long' });
+  const [relationshipType, setRelationshipType] = useState('One-To-Many');
+  
+  // Spring State
+  const [starterGroup, setStarterGroup] = useState('com.eduverse');
+  const [starterArtifact, setStarterArtifact] = useState('advanced-java-demo');
+  const [springDeps, setSpringDeps] = useState(['web', 'jpa', 'postgresql']);
+
+  // REST API Client State
+  const [restMethod, setRestMethod] = useState('GET');
+  const [restUrl, setRestUrl] = useState('/api/advanced-java/dashboard');
+  const [restBody, setRestBody] = useState('{\n  "name": "Jane"\n}');
+  const [restResCode, setRestResCode] = useState(200);
+  const [restResBody, setRestResBody] = useState('');
+  const [restResTime, setRestResTime] = useState(0);
+
+  // Projects State
+  const [projectsList, setProjectsList] = useState([]);
+  const [activeProject, setActiveProject] = useState(null);
+  const [projectCode, setProjectCode] = useState('public class StudentRegistry {\n  // Implement SMS code\n}');
+
+  // Practice State
+  const [practiceList, setPracticeList] = useState([]);
+  const [practiceIdx, setPracticeIdx] = useState(0);
+  const [practiceAnswers, setPracticeAnswers] = useState({});
+  const [practiceFeedback, setPracticeFeedback] = useState({});
+
+  // Coding Lab State
+  const [sandboxCode, setSandboxCode] = useState('public class AdvancedSandbox {\n  public static void main(String[] args) {\n    System.out.println("Executing JVM sandbox...");\n  }\n}');
+  const [sandboxConsole, setSandboxConsole] = useState('');
+  const [aiSandboxAnalysis, setAiSandboxAnalysis] = useState('');
+
+  // AI Mentor State
+  const [weakAreas, setWeakAreas] = useState('Hibernate mapping optimization, Spring MVC routing parameters');
+  const [interviewOutput, setInterviewOutput] = useState('');
+
+  // Load backend data
+  const loadDashboard = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/api/advanced-java/dashboard');
+      setDashboardData(res.data);
+      const mods = await api.get('/api/advanced-java/modules');
+      setModulesList(mods.data);
+      const projs = await api.get('/api/advanced-java/projects');
+      setProjectsList(projs.data);
+      const prac = await api.get('/api/advanced-java/practice');
+      setPracticeList(prac.data);
+    } catch (e) {
+      toast.error('Failed to load dashboard records.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  const handleMarkTopicComplete = async (topicId, complete) => {
+    try {
+      const res = await api.post('/api/advanced-java/topic/complete', { topicId, complete });
+      toast.success(complete ? 'Topic marked complete! (+50 XP)' : 'Topic completion reverted.');
+      loadDashboard();
+    } catch (e) {
+      toast.error('Failed to toggle completion.');
+    }
+  };
+
+  const handleSaveNotes = async (topicId, notes) => {
+    try {
+      await api.post('/api/advanced-java/topic/notes', { topicId, notes });
+      toast.success('Study notes synced to your cloud account.');
+    } catch (e) {
+      toast.error('Failed to save notes.');
+    }
+  };
+
+  const handleClaimCertificate = async () => {
+    try {
+      const res = await api.post('/api/advanced-java/certificate/claim');
+      toast.success('Congratulations! Your Certificate is issued.');
+      loadDashboard();
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Verification threshold not met yet.');
+    }
+  };
+
+  const handleProjectSubmit = async (projectId) => {
+    try {
+      const res = await api.post('/api/advanced-java/project/submit', { projectId, code: projectCode });
+      toast.success('Project submitted for AI review! (+200 XP)');
+      loadDashboard();
+    } catch (e) {
+      toast.error('Project submission failed.');
+    }
+  };
+
+  const handlePracticeSubmit = async (questionId, ans) => {
+    try {
+      const res = await api.post('/api/advanced-java/practice/submit', { questionId, answer: ans });
+      setPracticeFeedback({ ...practiceFeedback, [questionId]: res.data });
+      if (res.data.isCorrect) {
+        toast.success('Correct answer! (+20 XP)');
+      } else {
+        toast.error('Incorrect. Review explanation.');
+      }
+      loadDashboard();
+    } catch (e) {
+      toast.error('Submit failed.');
+    }
+  };
+
+  const testJdbcConnection = () => {
+    setJdbcStatus('Testing database credentials...');
+    setTimeout(() => {
+      if (jdbcUrl.includes('eduverse')) {
+        setJdbcStatus('✓ JDBC Connection Successful. PostgreSQL Database verified.');
+        toast.success('Connection Active');
+      } else {
+        setJdbcStatus('✗ Connection Failed: Database schema not found.');
+        toast.error('JDBC Dialect Mismatch');
+      }
+    }, 1200);
+  };
+
+  const runRestRequest = () => {
+    setRestResTime(Math.floor(Math.random() * 200) + 40);
+    if (restUrl.includes('dashboard')) {
+      setRestResCode(200);
+      setRestResBody(JSON.stringify({ status: 'success', data: dashboardData }, null, 2));
+    } else {
+      setRestResCode(404);
+      setRestResBody('{\n  "message": "Resource endpoint not found."\n}');
+    }
+    toast.success('API Response Received');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-96 text-white text-sm font-bold gap-2">
+        <RefreshCw className="animate-spin text-blue-500" /> Retrieving Database Records...
+      </div>
+    );
+  }
+
+  const progress = dashboardData?.progress || {};
+
+  return (
+    <div className="java-learning-path max-w-[1440px] mx-auto p-4 sm:p-8 space-y-6 text-slate-100 font-sans text-left">
+      
+      {/* HEADER BAR */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-white/10 pb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setSelectedModule(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition text-slate-400 hover:text-white cursor-pointer">
+              <Compass className="transform rotate-180" size={16} />
+            </button>
+            <h1 className="text-3xl font-extrabold text-white">Advanced Java</h1>
+          </div>
+          <p className="text-xs text-slate-400 mt-1">Enterprise Backend Development & Java Web Technologies</p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4 bg-white/5 border border-white/10 px-5 py-3 rounded-2xl">
+          <div className="text-center">
+            <span className="text-[10px] text-slate-400 block uppercase font-bold">XP Earned</span>
+            <strong className="text-sm font-black text-blue-400">{progress.current_level * 1000 + 450} XP</strong>
+          </div>
+          <div className="w-px h-8 bg-white/10" />
+          <div className="text-center">
+            <span className="text-[10px] text-slate-400 block uppercase font-bold">Level</span>
+            <strong className="text-sm font-black text-purple-400">Lv.{progress.current_level}</strong>
+          </div>
+          <div className="w-px h-8 bg-white/10" />
+          <div className="text-center">
+            <span className="text-[10px] text-slate-400 block uppercase font-bold">Streak</span>
+            <strong className="text-sm font-black text-orange-400 flex items-center gap-1">
+              {progress.learning_streak} Days <Flame size={12} fill="orange" />
+            </strong>
+          </div>
+        </div>
+      </div>
+
+      {/* TOP DASHBOARD OVERVIEW */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="bg-white/[0.02] border border-white/10 p-5 rounded-3xl backdrop-blur-md flex items-center gap-4">
+          <div className="relative w-20 h-20 flex-shrink-0 flex items-center justify-center">
+            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+              <circle className="text-slate-800" strokeWidth="6" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" />
+              <circle className="text-purple-500" strokeWidth="8" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * (progress.completed_topics * 10)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" />
+            </svg>
+            <strong className="absolute text-sm font-black">{Math.round((progress.completed_topics / 7) * 100)}%</strong>
+          </div>
+          <div>
+            <h4 className="text-xs font-bold text-slate-400">Course Completion</h4>
+            <span className="text-[10px] text-slate-500 block mt-1">Syllabus Progress</span>
+            <div className="text-sm font-bold text-white mt-1">{progress.completed_topics} / 7 Modules Completed</div>
+          </div>
+        </div>
+
+        <div className="bg-white/[0.02] border border-white/10 p-5 rounded-3xl backdrop-blur-md">
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Today's Daily Goal</h4>
+          <strong className="text-sm text-white block mt-2">Complete {dashboardData?.nextTopic?.title || 'JDBC Operations'}</strong>
+          <span className="text-[10px] text-emerald-400 block mt-1.5 font-bold">Reward: +100 XP Points</span>
+        </div>
+
+        <div className="bg-white/[0.02] border border-white/10 p-5 rounded-3xl backdrop-blur-md">
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">AI Placement Readiness</h4>
+          <div className="flex items-center gap-2 mt-2">
+            <strong className="text-2xl font-black text-blue-400">92%</strong>
+            <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/30 rounded text-[9px] text-blue-400 font-bold uppercase">Ready</span>
+          </div>
+          <span className="text-[10px] text-slate-500 block mt-1">Consistency health score is highly optimal.</span>
+        </div>
+
+        <div className="bg-white/[0.02] border border-white/10 p-5 rounded-3xl backdrop-blur-md">
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Next Recommended Module</h4>
+          <strong className="text-sm text-white block mt-2">{dashboardData?.nextTopic?.module_title || 'JDBC Module'}</strong>
+          <span className="text-[10px] text-slate-500 block mt-1">Est. Completion: July 5, 2026</span>
+        </div>
+      </div>
+
+      {/* CORE WORKSPACE PANELS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* SIDEBAR TABS */}
+        <div className="lg:col-span-3 bg-white/[0.02] border border-white/10 p-4 rounded-3xl backdrop-blur-md space-y-1">
+          <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-2 mb-3">LMS Syllabus</h5>
+          {[
+            { id: 'dashboard', label: 'Overview Dashboard', icon: Compass },
+            { id: 'jdbc', label: 'JDBC Module', icon: Database },
+            { id: 'servlets', label: 'Servlets Web Module', icon: Layers },
+            { id: 'jsp', label: 'JSP Pages', icon: FileText },
+            { id: 'session', label: 'Session Management', icon: ShieldAlert },
+            { id: 'hibernate', label: 'Hibernate ORM', icon: RefreshCw },
+            { id: 'spring', label: 'Spring Boot Framework', icon: Zap },
+            { id: 'rest-api', label: 'REST API Tester', icon: Terminal },
+            { id: 'projects', label: 'Enterprise Projects', icon: Code },
+            { id: 'practice', label: 'Practice Quiz Hub', icon: Sparkles },
+            { id: 'coding-lab', label: 'Online Compiler', icon: PlayCircle },
+            { id: 'mentor', label: 'AI Mentor System', icon: BrainCircuit },
+            { id: 'analytics', label: 'Analytics Panel', icon: TrendingUp },
+            { id: 'achievements', label: 'Achievements List', icon: Trophy }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const active = activePanel === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActivePanel(tab.id)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition border cursor-pointer ${
+                  active 
+                    ? 'bg-purple-600/10 border-purple-500 text-purple-400 font-bold' 
+                    : 'border-transparent text-slate-400 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <Icon size={14} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* WORKSPACE DETAIL PANEL */}
+        <div className="lg:col-span-9 bg-white/[0.02] border border-white/10 p-6 rounded-3xl backdrop-blur-md space-y-6">
+          
+          {/* DASHBOARD TAB */}
+          {activePanel === 'dashboard' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">Course Overview</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Welcome to Advanced Java Workspace. This module bridges core object-oriented structures with enterprise backend development, preparing you to deploy high-throughput database systems and REST APIs.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                  <span className="text-xs font-bold text-blue-400">💡 AI Study Recommendation</span>
+                  <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                    {dashboardData?.aiRecommendations?.recommendations}
+                  </p>
+                  <span className="text-[10px] text-slate-500 block mt-2 font-mono">Next Recommended Action: {dashboardData?.aiRecommendations?.next_best_action}</span>
+                </div>
+
+                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                  <span className="text-xs font-bold text-purple-400">🎯 Learning Strengths</span>
+                  <ul className="text-xs text-slate-300 space-y-1 mt-2 list-disc pl-4">
+                    <li>DriverManager and JDBC configurations</li>
+                    <li>REST API methods routing</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Achievements banner */}
+              <div className="p-4 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/20 rounded-2xl flex items-center justify-between">
+                <div>
+                  <strong className="text-xs text-white block">Ready to unlock certification?</strong>
+                  <span className="text-[10px] text-slate-400">Ensure all 5 modules are complete and code submissions are reviewed.</span>
+                </div>
+                <button 
+                  onClick={handleClaimCertificate}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl cursor-pointer transition"
+                >
+                  Claim Certificate
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* JDBC PLAYGROUND TAB */}
+          {activePanel === 'jdbc' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">JDBC Interactive Playground</h3>
+              
+              {/* Connection Form */}
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                <span className="text-xs font-bold text-slate-300 block">Database Connection Parameters</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-slate-500 block">JDBC URL</label>
+                    <input 
+                      type="text" 
+                      value={jdbcUrl} 
+                      onChange={(e) => setJdbcUrl(e.target.value)}
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 block">Driver Class</label>
+                    <input 
+                      type="text" 
+                      value="org.postgresql.Driver" 
+                      disabled
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-slate-500 outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={testJdbcConnection} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer transition">
+                    Test Connection
+                  </button>
+                </div>
+                {jdbcStatus && (
+                  <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed">
+                    {jdbcStatus}
+                  </pre>
+                )}
+              </div>
+
+              {/* CRUD SIMULATOR */}
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                <span className="text-xs font-bold text-slate-300 block">CRUD Simulator Table</span>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/10 text-slate-400">
+                        <th className="pb-2">ID</th>
+                        <th className="pb-2">Student Name</th>
+                        <th className="pb-2">Course</th>
+                        <th className="pb-2">Operations</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {crudSimRecords.map((rec) => (
+                        <tr key={rec.id}>
+                          <td className="py-2 font-mono text-blue-400">{rec.id}</td>
+                          <td className="py-2">{rec.name}</td>
+                          <td className="py-2 font-mono">{rec.course}</td>
+                          <td className="py-2">
+                            <button 
+                              onClick={() => {
+                                setCrudSimRecords(crudSimRecords.filter(r => r.id !== rec.id));
+                                toast.success('Record Deleted');
+                              }}
+                              className="text-red-400 hover:text-red-300 text-[10px] font-bold cursor-pointer"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex gap-2 items-center">
+                  <input 
+                    type="text" 
+                    placeholder="New Student Name"
+                    value={newRecordName}
+                    onChange={(e) => setNewRecordName(e.target.value)}
+                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs text-white outline-none focus:border-blue-500"
+                  />
+                  <button 
+                    onClick={() => {
+                      if (!newRecordName) return;
+                      setCrudSimRecords([...crudSimRecords, { id: crudSimRecords.length + 1, name: newRecordName, course: 'JDBC Syllabus' }]);
+                      setNewRecordName('');
+                      toast.success('Record Inserted');
+                    }}
+                    className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                  >
+                    Insert Record
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SERVLETS TAB */}
+          {activePanel === 'servlets' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">Java Web Servlet Sandbox</h3>
+              
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                <span className="text-xs font-bold text-slate-300 block">HTTP GET / POST Request Engine</span>
+                <div className="flex gap-2">
+                  {['GET', 'POST'].map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setServletMethod(m)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        servletMethod === m ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-400'
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+
+                <button 
+                  onClick={() => {
+                    setServletOutput(`HTTP/1.1 200 OK\nContent-Type: text/html\nDate: Jun 2026\n\n<h3>Servlet Executed Successfully</h3>\n<p>Response method: ${servletMethod}</p>`);
+                    toast.success('Servlet Response Received');
+                  }}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                >
+                  Fire Request
+                </button>
+
+                {servletOutput && (
+                  <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed">
+                    {servletOutput}
+                  </pre>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* JSP TAB */}
+          {activePanel === 'jsp' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">JSP Live Playground</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-slate-300">JSP Source Code</span>
+                  <textarea 
+                    value={jspCode}
+                    onChange={(e) => setJspCode(e.target.value)}
+                    className="w-full h-48 bg-slate-900 text-slate-300 font-mono text-xs p-3 rounded-xl border border-white/10 outline-none focus:border-blue-500 resize-none"
+                  />
+                  <button 
+                    onClick={() => {
+                      setJspPreview('<div class="p-3 bg-white/5 rounded-xl border border-white/10"><h3>Welcome Admin User!</h3><p>Evaluated expression: <b>JSP Directives Active</b></p></div>');
+                      toast.success('JSP Compiled');
+                    }}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                  >
+                    Compile & Preview
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-slate-300">Live HTML Result Preview</span>
+                  <div className="w-full h-48 bg-slate-950 border border-white/5 rounded-xl p-4 text-xs font-sans flex items-center justify-center">
+                    {jspPreview ? (
+                      <div dangerouslySetInnerHTML={{ __html: jspPreview }} />
+                    ) : (
+                      <span className="text-slate-500">Hit "Compile & Preview" to run JSP engine.</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SESSION MANAGEMENT TAB */}
+          {activePanel === 'session' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">Session Management simulator</h3>
+              
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                <span className="text-xs font-bold text-slate-300 block">Cookie Constructor</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-slate-500 block">Cookie Name</label>
+                    <input 
+                      type="text" 
+                      value={cookieSimKey} 
+                      onChange={(e) => setCookieSimKey(e.target.value)}
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 block">Cookie Value</label>
+                    <input 
+                      type="text" 
+                      value={cookieSimVal} 
+                      onChange={(e) => setCookieSimVal(e.target.value)}
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white"
+                    />
+                  </div>
+                </div>
+                <button 
+                  onClick={() => {
+                    setSessionLogs([...sessionLogs, `Set-Cookie: ${cookieSimKey}=${cookieSimVal}; Path=/; HttpOnly; Secure`]);
+                    toast.success('Cookie Set Successfully');
+                  }}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                >
+                  Inject Cookie
+                </button>
+
+                {sessionLogs.length > 0 && (
+                  <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed">
+                    {sessionLogs.join('\n')}
+                  </pre>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* HIBERNATE TAB */}
+          {activePanel === 'hibernate' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">Hibernate Mapping Builder</h3>
+              
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                <span className="text-xs font-bold text-slate-300 block">ORM Relationship configurations</span>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[10px] text-slate-500 block">Entity Name</label>
+                    <input 
+                      type="text" 
+                      value={entityMapping.entity}
+                      onChange={(e) => setEntityMapping({...entityMapping, entity: e.target.value})}
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 block">Table Map Name</label>
+                    <input 
+                      type="text" 
+                      value={entityMapping.table}
+                      onChange={(e) => setEntityMapping({...entityMapping, table: e.target.value})}
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 block">Relation Mode</label>
+                    <select 
+                      value={relationshipType}
+                      onChange={(e) => setRelationshipType(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-xs text-white outline-none"
+                    >
+                      <option>One-To-One</option>
+                      <option>One-To-Many</option>
+                      <option>Many-To-One</option>
+                      <option>Many-To-Many</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-black rounded-xl text-xs text-emerald-400 font-mono whitespace-pre leading-relaxed">
+{`@Entity
+@Table(name = "${entityMapping.table}")
+public class ${entityMapping.entity} {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @${relationshipType}
+    private List<Details> details;
+}`}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SPRING TAB */}
+          {activePanel === 'spring' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">Spring Boot Starter Generator</h3>
+              
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                <span className="text-xs font-bold text-slate-300 block">Spring Project Starter Settings</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-slate-500 block">Group ID</label>
+                    <input 
+                      type="text" 
+                      value={starterGroup}
+                      onChange={(e) => setStarterGroup(e.target.value)}
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 block">Artifact ID</label>
+                    <input 
+                      type="text" 
+                      value={starterArtifact}
+                      onChange={(e) => setStarterArtifact(e.target.value)}
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => {
+                    toast.success('Spring Boot Project Boilerplate downloaded successfully!');
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                >
+                  Download Boilerplate Starter Zip
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* REST API TESTER TAB */}
+          {activePanel === 'rest-api' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">Enterprise REST API Client</h3>
+              
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                <div className="flex gap-2">
+                  <select 
+                    value={restMethod} 
+                    onChange={(e) => setRestMethod(e.target.value)}
+                    className="px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-xs text-white outline-none"
+                  >
+                    <option>GET</option>
+                    <option>POST</option>
+                    <option>PUT</option>
+                    <option>DELETE</option>
+                  </select>
+                  
+                  <input 
+                    type="text" 
+                    value={restUrl}
+                    onChange={(e) => setRestUrl(e.target.value)}
+                    className="flex-grow px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white outline-none focus:border-blue-500"
+                  />
+                  
+                  <button onClick={runRestRequest} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer">
+                    Send
+                  </button>
+                </div>
+
+                {restMethod !== 'GET' && (
+                  <div>
+                    <label className="text-[10px] text-slate-500 block mb-1">Request Body (JSON)</label>
+                    <textarea 
+                      value={restBody}
+                      onChange={(e) => setRestBody(e.target.value)}
+                      className="w-full h-20 bg-slate-900 text-xs text-slate-300 font-mono p-2 rounded-xl outline-none focus:border-blue-500 resize-none"
+                    />
+                  </div>
+                )}
+
+                {restResBody && (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                      <span>Status Code: <b className={restResCode === 200 ? 'text-emerald-400' : 'text-red-400'}>{restResCode}</b></span>
+                      <span>Response Time: <b>{restResTime} ms</b></span>
+                    </div>
+                    <pre className="p-3 bg-black rounded-xl text-xs text-emerald-400 font-mono leading-relaxed overflow-x-auto">
+                      {restResBody}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* PROJECTS TAB */}
+          {activePanel === 'projects' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">Enterprise Java Web Projects</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {projectsList.map((p) => (
+                  <div key={p.id} className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                    <div className="flex justify-between items-start">
+                      <strong className="text-sm font-bold text-white">{p.title}</strong>
+                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                        p.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-500' :
+                        p.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-500' : 'bg-red-500/10 text-red-500'
+                      }`}>
+                        {p.difficulty}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed">{p.description}</p>
+                    
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                      <span>Submission Status: <b>{p.status || 'Not Submitted'}</b></span>
+                      <span>Quality: <b>{p.code_quality || 'N/A'}</b></span>
+                    </div>
+
+                    <button 
+                      onClick={() => {
+                        setActiveProject(p);
+                        setProjectCode(p.code_boilerplate || 'public class Main {}');
+                      }}
+                      className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                    >
+                      Load Project Editor
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {activeProject && (
+                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3 mt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-slate-300">Active Editor: {activeProject.title}</span>
+                    <button 
+                      onClick={() => handleProjectSubmit(activeProject.id)}
+                      className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                    >
+                      Submit for AI Review
+                    </button>
+                  </div>
+                  <textarea 
+                    value={projectCode}
+                    onChange={(e) => setProjectCode(e.target.value)}
+                    className="w-full h-64 bg-slate-900 text-slate-300 font-mono text-xs p-3 rounded-xl border border-white/10 outline-none focus:border-blue-500"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* PRACTICE QUIZ TAB */}
+          {activePanel === 'practice' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">Topic Wise Questions & Timing</h3>
+              
+              {practiceList.map((pr) => {
+                const feedback = practiceFeedback[pr.id];
+                return (
+                  <div key={pr.id} className="p-5 bg-white/5 border border-white/10 rounded-3xl space-y-4">
+                    <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                      <span>Format: <b>{pr.type.toUpperCase()}</b></span>
+                      <span>Difficulty: <b>{pr.difficulty.toUpperCase()}</b></span>
+                    </div>
+                    <p className="text-sm font-bold text-slate-200">{pr.question}</p>
+
+                    {pr.options ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        {pr.options.map((opt) => (
+                          <button
+                            key={opt}
+                            onClick={() => handlePracticeSubmit(pr.id, opt)}
+                            className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-left text-xs cursor-pointer"
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <input 
+                          type="text" 
+                          placeholder="Type answer code"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handlePracticeSubmit(pr.id, e.target.value);
+                          }}
+                          className="w-full px-3 py-2 bg-slate-900 border border-white/10 rounded-xl text-xs outline-none focus:border-blue-500 text-emerald-400 font-mono"
+                        />
+                      </div>
+                    )}
+
+                    {feedback && (
+                      <div className="p-3 bg-white/5 rounded-xl border border-white/10 text-xs">
+                        <span className={`font-bold block ${feedback.isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {feedback.isCorrect ? '✓ Correct Answer' : '✗ Incorrect'}
+                        </span>
+                        <p className="text-slate-400 mt-1">{feedback.explanation}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* CODING LAB TAB */}
+          {activePanel === 'coding-lab' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">Online Java Sandbox Compiler</h3>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-3">
+                  <div className="bg-slate-900 rounded-t-xl px-4 py-2 border-b border-white/5 text-xs text-slate-500 font-mono flex justify-between items-center">
+                    <span>Main.java</span>
+                    <button 
+                      onClick={() => {
+                        setSandboxConsole('Compiling sandbox...\nLoading classpath modules...\nExecuting JVM bytecode...\n\nExecuting JVM sandbox...\nProcess finished with exit code 0.');
+                        toast.success('Code Compiled Successfully');
+                      }}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold cursor-pointer"
+                    >
+                      Compile & Run
+                    </button>
+                  </div>
+                  <textarea 
+                    value={sandboxCode}
+                    onChange={(e) => setSandboxCode(e.target.value)}
+                    className="w-full h-80 bg-slate-900 text-slate-300 font-mono text-xs p-3 rounded-b-xl border border-white/10 outline-none focus:border-blue-500 resize-none"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="bg-black/50 border border-white/10 p-4 rounded-2xl h-44 flex flex-col justify-between">
+                    <span className="text-[10px] text-slate-500 block uppercase font-mono">Console Output</span>
+                    <pre className="text-xs text-emerald-400 font-mono overflow-auto flex-grow mt-2">
+                      {sandboxConsole || 'Click "Compile & Run" to execute code.'}
+                    </pre>
+                  </div>
+
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-2">
+                    <span className="text-xs font-bold text-purple-400 block">AI Sandbox Analysis</span>
+                    <button 
+                      onClick={() => {
+                        setAiSandboxAnalysis('Optimization Hint: Replace runtime output buffer with BufferedWriter to improve micro-benchmark latencies.');
+                      }}
+                      className="w-full py-1.5 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-xl text-xs font-bold cursor-pointer"
+                    >
+                      Request AI Review
+                    </button>
+                    {aiSandboxAnalysis && (
+                      <p className="text-[11px] text-slate-400 leading-normal">{aiSandboxAnalysis}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AI MENTOR TAB */}
+          {activePanel === 'mentor' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">AI Learning Coach System</h3>
+              
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                <span className="text-xs font-bold text-slate-300 block">Weak Areas Assessment</span>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Based on quiz results and compiler errors, here is the current improvement track:
+                </p>
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl font-bold">
+                  {weakAreas}
+                </div>
+
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => {
+                      setInterviewOutput('AI Question: Explain the dirty read anomaly in JDBC transaction isolation levels, and how to prevent it.');
+                      toast.success('Mock Interview Question Generated');
+                    }}
+                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+                  >
+                    Generate Mock Interview
+                  </button>
+                </div>
+
+                {interviewOutput && (
+                  <pre className="p-3 bg-black rounded-xl text-xs text-slate-300 font-mono leading-relaxed whitespace-pre-wrap">
+                    {interviewOutput}
+                  </pre>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ANALYTICS TAB */}
+          {activePanel === 'analytics' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">Learning Performance Analytics</h3>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { label: 'Weekly Study Time', value: '4.5 Hours' },
+                  { label: 'Quiz Accuracy', value: '85%' },
+                  { label: 'Completed Topics', value: '2' },
+                  { label: 'Projects Done', value: '0' }
+                ].map((item, idx) => (
+                  <div key={idx} className="p-4 bg-white/5 border border-white/10 rounded-2xl text-center">
+                    <span className="text-[10px] text-slate-500 uppercase block font-bold">{item.label}</span>
+                    <strong className="text-xl font-black text-white mt-1 block">{item.value}</strong>
+                  </div>
+                ))}
+              </div>
+
+              {/* Heatmap Grid */}
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                <span className="text-xs font-bold text-slate-300 block">Study consistency heatmap (Past 7 Days)</span>
+                <div className="grid grid-cols-7 gap-2">
+                  {dashboardData?.analytics?.map((day) => (
+                    <div key={day.date} className="p-3 bg-blue-500/20 border border-blue-500/30 rounded-xl text-center">
+                      <span className="text-[9px] text-slate-400 block">{day.date.split('-').slice(1).join('/')}</span>
+                      <strong className="text-xs text-white block mt-1">{day.learning_time}m</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ACHIEVEMENTS TAB */}
+          {activePanel === 'achievements' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">Auto Unlocked Achievements</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { title: 'JDBC Beginner', xp: 100, desc: 'Establish database connections with DriverManager.', unlocked: true },
+                  { title: 'Servlet Explorer', xp: 150, desc: 'Setup custom web request handlings.', unlocked: true },
+                  { title: 'JSP Specialist', xp: 150, desc: 'Implement directives and Expressions.', unlocked: false },
+                  { title: 'Hibernate Master', xp: 200, desc: 'Map Java objects to relational columns.', unlocked: false },
+                  { title: 'Spring Architect', xp: 300, desc: 'Setup DI beans and auto configurations.', unlocked: false }
+                ].map((item) => (
+                  <div key={item.title} className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
+                    item.unlocked ? 'bg-white/5 border-purple-500/30' : 'bg-white/[0.01] border-white/5 opacity-50'
+                  }`}>
+                    <div>
+                      <strong className="text-sm font-bold text-white block">{item.title}</strong>
+                      <span className="text-xs text-slate-400 block mt-1">{item.desc}</span>
+                      <span className="text-[10px] text-slate-500 block mt-1 font-mono">XP Reward: +{item.xp} XP</span>
+                    </div>
+                    {item.unlocked && (
+                      <span className="px-2 py-1 bg-purple-500/10 border border-purple-500/30 rounded text-[10px] text-purple-400 font-bold uppercase">
+                        Unlocked
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+
+      {/* BOTTOM ACTION BAR */}
+      <div className="grid grid-cols-2 sm:grid-cols-7 gap-2 bg-white/5 border border-white/10 p-3 rounded-2xl">
+        <button onClick={() => { setActivePanel('dashboard'); toast.success('Workspace loaded'); }} className="py-2.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 text-xs font-bold rounded-xl transition cursor-pointer text-center">
+          ▶ Continue
+        </button>
+        <button onClick={() => { setActivePanel('practice'); }} className="py-2.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-bold rounded-xl transition cursor-pointer text-center">
+          ✏️ Practice Quiz
+        </button>
+        <button onClick={() => { setActivePanel('coding-lab'); }} className="py-2.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-bold rounded-xl transition cursor-pointer text-center">
+          💻 Coding Lab
+        </button>
+        <button onClick={() => { setActivePanel('analytics'); }} className="py-2.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 text-xs font-bold rounded-xl transition cursor-pointer text-center">
+          📊 View Analytics
+        </button>
+        <button onClick={() => { setActivePanel('mentor'); }} className="py-2.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-xs font-bold rounded-xl transition cursor-pointer text-center">
+          🧠 Ask AI Mentor
+        </button>
+        <button onClick={() => { setActivePanel('projects'); }} className="py-2.5 bg-teal-600/20 hover:bg-teal-600/30 text-teal-400 text-xs font-bold rounded-xl transition cursor-pointer text-center">
+          ⚡ Start Project
+        </button>
+        <button onClick={handleClaimCertificate} className="py-2.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 text-xs font-bold rounded-xl transition cursor-pointer text-center">
+          📜 View Certificate
+        </button>
+      </div>
+
     </div>
   );
 }
