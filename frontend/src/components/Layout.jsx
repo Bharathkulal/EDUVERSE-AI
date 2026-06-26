@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { useSessionTracker } from '../utils/sessionTracker';
 import '../pages/DashboardTheme.css';
 
@@ -50,13 +51,11 @@ const TOP_LEVEL_PATHS = [
 
 export default function Layout({ children }) {
   const { user, logout, isAdmin } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
   useSessionTracker(user);
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('theme') !== 'light';
-  });
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [calendarDate, setCalendarDate] = useState(new Date());
 
@@ -94,22 +93,9 @@ export default function Layout({ children }) {
 
 
 
-  // Apply theme class to html element for global access
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode]);
-
   const handleLogout = () => {
     logout();
     navigate('/login');
-  };
-
-  const toggleTheme = () => {
-    setIsDarkMode((prev) => {
-      const nextTheme = !prev;
-      localStorage.setItem('theme', nextTheme ? 'dark' : 'light');
-      return nextTheme;
-    });
   };
 
   const getInitials = (name) => {
