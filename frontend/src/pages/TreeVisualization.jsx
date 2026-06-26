@@ -6,6 +6,9 @@ import {
   Plus, Minus, Search, Trash2, Code2, Cpu, Database, Info, GitMerge,
   ToggleLeft, ToggleRight, Layers
 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import ThemeToggleButton from '../components/ThemeToggleButton';
+import './DashboardTheme.css';
 
 // ─── BST / Binary Tree / AVL Engine ──────────────────────────────
 class TreeNode {
@@ -282,6 +285,7 @@ function cloneTree(node) {
 // ─── MAIN COMPONENT ──────────────────────────────────────────────
 export default function TreeVisualization() {
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
   const canvasRef = useRef(null);
   const [canvasSize, setCanvasSize] = useState({ w: 600, h: 400 });
 
@@ -676,20 +680,23 @@ export default function TreeVisualization() {
   };
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-[#F8FAFC] flex flex-col font-sans">
+    <div className={`h-screen w-full overflow-hidden flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'}`}>
 
       {/* HEADER BREADCRUMB */}
-      <header className="h-16 shrink-0 bg-white border-b border-slate-200 flex items-center px-8 shadow-sm relative z-10">
-        <button onClick={() => navigate(-1)} className="mr-4 p-2 hover:bg-slate-100 rounded-full transition">
-          <ArrowLeft className="w-5 h-5 text-slate-600" />
+      <header className="h-16 shrink-0 flex items-center justify-between px-8 shadow-sm relative z-10" style={{ background: 'var(--db-card-bg)', borderBottom: '1px solid var(--db-header-border)' }}>
+        <div className="flex items-center">
+        <button onClick={() => navigate(-1)} className="mr-4 p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-full transition">
+          <ArrowLeft className="w-5 h-5" style={{ color: 'var(--db-text-main)' }} />
         </button>
-        <div className="flex items-center text-sm font-medium text-slate-500 gap-2">
+        <div className="flex items-center text-sm font-medium gap-2" style={{ color: 'var(--db-text-muted)' }}>
           <span>Home</span> <ChevronRight className="w-4 h-4" />
           <span>Subjects</span> <ChevronRight className="w-4 h-4" />
           <span>DSA</span> <ChevronRight className="w-4 h-4" />
-          <span className="text-blue-600 font-bold">Trees</span> <ChevronRight className="w-4 h-4 text-slate-400" />
-          <span className="text-slate-800">Visual Lab</span>
+          <span className="text-blue-500 font-bold">Trees</span> <ChevronRight className="w-4 h-4" />
+          <span style={{ color: 'var(--db-text-main)' }}>Visual Lab</span>
         </div>
+        </div>
+        <ThemeToggleButton />
       </header>
 
       {/* MAIN 3-PANEL LAYOUT */}

@@ -5,9 +5,13 @@ import {
   ArrowLeft, Play, Pause, SkipForward, SkipBack, RotateCcw, 
   ChevronRight, Cpu, Code2, Database, Zap, Settings, Info
 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import ThemeToggleButton from '../components/ThemeToggleButton';
+import './DashboardTheme.css';
 
 export default function LinkedListVisualization() {
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
   const [listType, setListType] = useState('singly'); // singly, doubly, circular
   const [operation, setOperation] = useState('insertPosition');
   const [inputValue, setInputValue] = useState('10');
@@ -276,20 +280,23 @@ export default function LinkedListVisualization() {
   };
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-[#F8FAFC] flex flex-col font-sans">
+    <div className={`h-screen w-full overflow-hidden flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'}`}>
       
       {/* HEADER BREADCRUMB - 64px */}
-      <header className="h-16 shrink-0 bg-white border-b border-slate-200 flex items-center px-8 shadow-sm relative z-10">
-        <button onClick={() => navigate(-1)} className="mr-4 p-2 hover:bg-slate-100 rounded-full transition">
-          <ArrowLeft className="w-5 h-5 text-slate-600" />
+      <header className="h-16 shrink-0 flex items-center justify-between px-8 shadow-sm relative z-10" style={{ background: 'var(--db-card-bg)', borderBottom: '1px solid var(--db-header-border)' }}>
+        <div className="flex items-center">
+        <button onClick={() => navigate(-1)} className="mr-4 p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-full transition">
+          <ArrowLeft className="w-5 h-5" style={{ color: 'var(--db-text-main)' }} />
         </button>
-        <div className="flex items-center text-sm font-medium text-slate-500 gap-2">
+        <div className="flex items-center text-sm font-medium gap-2" style={{ color: 'var(--db-text-muted)' }}>
           <span>Home</span> <ChevronRight className="w-4 h-4" />
           <span>Subjects</span> <ChevronRight className="w-4 h-4" />
           <span>DSA</span> <ChevronRight className="w-4 h-4" />
-          <span className="text-blue-600 font-bold">Linked List</span> <ChevronRight className="w-4 h-4 text-slate-400" />
-          <span className="text-slate-800">Operations</span>
+          <span className="text-blue-500 font-bold">Linked List</span> <ChevronRight className="w-4 h-4" />
+          <span style={{ color: 'var(--db-text-main)' }}>Operations</span>
         </div>
+        </div>
+        <ThemeToggleButton />
       </header>
 
       {/* CORE WORKSPACE - 3-PANEL LAYOUT */}
