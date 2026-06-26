@@ -325,6 +325,19 @@ const CSHARP_MODULES = [
 // ═══════════════════════════════════════════════════════════
 export default function CSharpLab() {
   const [activePanel, setActivePanel] = useState('dashboard');
+  
+  useEffect(() => {
+    const handleBack = (e) => {
+      if (e.defaultPrevented) return;
+      if (activePanel !== 'dashboard') {
+        e.preventDefault();
+        setActivePanel('dashboard');
+      }
+    };
+    window.addEventListener('eduverse-back', handleBack);
+    return () => window.removeEventListener('eduverse-back', handleBack);
+  }, [activePanel]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [xp, setXp] = useState(() => Number(localStorage.getItem('csharp_xp') || 0));
   const [completedCount, setCompletedCount] = useState(() => Number(localStorage.getItem('csharp_completed') || 2));
@@ -3559,7 +3572,7 @@ export function CSharpControlFlowDetail({ setSelectedModule, completedCount, han
                     <div className="col-span-2 p-6 cs-fun-dark-card flex flex-col items-center justify-center space-y-4 border rounded-2xl min-h-[220px]">
                       <div className="text-center space-y-1">
                         <div className="px-4 py-2 bg-indigo-950 border border-indigo-500/30 rounded-xl font-bold text-xs text-white">
-                          Condition 1: Age >= 18?
+                          {"Condition 1: Age >= 18?"}
                         </div>
                         <span className="text-xs text-slate-500 block">Current Age: {treeAge} (Result: {treeAge >= 18 ? "Yes" : "No"})</span>
                       </div>

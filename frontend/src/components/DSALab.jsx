@@ -1312,6 +1312,22 @@ function VizComponent({ vizType, step }) {
 // ═══════════════════════════════════════════════════════════
 export default function DSALab() {
   const [level, setLevel] = useState('categories'); // 'categories', 'topics', 'concept'
+  
+  useEffect(() => {
+    const handleBack = (e) => {
+      if (e.defaultPrevented) return;
+      if (level === 'concept') {
+        e.preventDefault();
+        setLevel('topics');
+      } else if (level === 'topics') {
+        e.preventDefault();
+        setLevel('categories');
+      }
+    };
+    window.addEventListener('eduverse-back', handleBack);
+    return () => window.removeEventListener('eduverse-back', handleBack);
+  }, [level]);
+
   const [category, setCategory] = useState(null);
   const [topic, setTopic] = useState(null);
   const [step, setStep] = useState(0);

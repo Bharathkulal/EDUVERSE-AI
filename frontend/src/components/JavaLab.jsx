@@ -330,6 +330,18 @@ export default function JavaLab({ subjectName }) {
     }
   }, [subjectName]);
 
+  useEffect(() => {
+    const handleBack = (e) => {
+      if (e.defaultPrevented) return;
+      if (selectedModule !== null && selectedModule.id !== 99) {
+        e.preventDefault();
+        setSelectedModule(null);
+      }
+    };
+    window.addEventListener('eduverse-back', handleBack);
+    return () => window.removeEventListener('eduverse-back', handleBack);
+  }, [selectedModule]);
+
   const [activeTab, setActiveTab] = useState('learn'); // 'learn', 'visualize', 'code', 'practice', 'quiz', 'notes'
   const [selectedTopicIdx, setSelectedTopicIdx] = useState(0);
   const [userCode, setUserCode] = useState(`public class Main {\n  public static void main(String[] args) {\n    System.out.println("Hello, EduVerse!");\n  }\n}`);
@@ -2353,6 +2365,18 @@ function AdvancedJavaLMS({ selectedModule, setSelectedModule, subjectName }) {
   const [activePanel, setActivePanel] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
 
+  useEffect(() => {
+    const handleBack = (e) => {
+      if (e.defaultPrevented) return;
+      if (activePanel !== 'dashboard') {
+        e.preventDefault();
+        setActivePanel('dashboard');
+      }
+    };
+    window.addEventListener('eduverse-back', handleBack);
+    return () => window.removeEventListener('eduverse-back', handleBack);
+  }, [activePanel]);
+
   // Interactive Playgrounds State
   const [jdbcUrl, setJdbcUrl] = useState('jdbc:postgresql://localhost:5432/eduverse');
   const [jdbcStatus, setJdbcStatus] = useState('');
@@ -2847,6 +2871,7 @@ function AdvancedJavaLMS({ selectedModule, setSelectedModule, subjectName }) {
               </div>
             </div>
           )}
+          {activePanel === 'jdbc' && (
             <TheoryFirstModule
               title="Java Database Connectivity (JDBC)"
               icon={Database}
@@ -3283,7 +3308,7 @@ public class HelloServlet extends HttpServlet {
 
                   <g transform="translate(170, 10)">
                     <rect x="0" y="0" width="120" height="40" rx="6" fill="#1e1b4b" stroke="#8B5CF6" strokeWidth="1" />
-                    <text x="60" y="24" textAnchor="middle" fill="#fff" fontSize="9">JSP -> Servlet Translation</text>
+                    <text x="60" y="24" textAnchor="middle" fill="#fff" fontSize="9">{"JSP -> Servlet Translation"}</text>
                   </g>
                   <path d="M 295 30 L 325 30" fill="none" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
 

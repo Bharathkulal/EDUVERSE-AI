@@ -235,7 +235,13 @@ export default function Layout({ children }) {
             {/* Smart Back Button — shown only on sub-pages */}
             {isSubPage && (
               <button
-                onClick={() => navigate(-1)}
+                onClick={() => {
+                  const backEvent = new CustomEvent('eduverse-back', { cancelable: true });
+                  const handled = !window.dispatchEvent(backEvent);
+                  if (!handled) {
+                    navigate(-1);
+                  }
+                }}
                 aria-label="Go back"
                 style={{
                   display: 'flex',
