@@ -655,6 +655,22 @@ export default function CSharpLab() {
                 updateXP={updateXP}
                 xp={xp}
               />
+            ) : activePanel === 'control-flow' ? (
+              <CSharpControlFlowDetail 
+                setSelectedModule={setActivePanel} 
+                completedCount={completedCount}
+                handleMarkComplete={handleMarkComplete}
+                updateXP={updateXP}
+                xp={xp}
+              />
+            ) : activePanel === 'oop' ? (
+              <CSharpOOPDetail 
+                setSelectedModule={setActivePanel} 
+                completedCount={completedCount}
+                handleMarkComplete={handleMarkComplete}
+                updateXP={updateXP}
+                xp={xp}
+              />
             ) : CSHARP_MODULES.filter(m => m.id === activePanel).map((mod) => {
               const hasAnswered = selectedAnswers[mod.id] !== undefined;
               const isCorrect = selectedAnswers[mod.id] === mod.quiz.correct;
@@ -2938,3 +2954,3082 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
     </div>
   );
 }
+
+// ═══════════════════════════════════════════════════════════
+// C# CONTROL FLOW COMPLETE INTERACTIVE DIGITAL CLASSROOM
+// ═══════════════════════════════════════════════════════════
+export function CSharpControlFlowDetail({ setSelectedModule, completedCount, handleMarkComplete, updateXP, xp }) {
+  const [activeTab, setActiveTab] = useState('theory');
+  
+  // Analytics Telemetry States
+  const [completedTopics, setCompletedTopics] = useState(() => {
+    const saved = localStorage.getItem('cs_flow_completed');
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [labCompilesCount, setLabCompilesCount] = useState(() => {
+    return parseInt(localStorage.getItem('cs_flow_compiles') || '0', 10);
+  });
+  
+  // Code Lab States
+  const presets = {
+    traffic: {
+      name: "Traffic Signal (Decision)",
+      code: `using System;\n\nclass Program {\n    static void Main() {\n        string signal = "Yellow";\n        \n        if (signal == "Red") {\n            Console.WriteLine("STOP immediately!");\n        } else if (signal == "Yellow") {\n            Console.WriteLine("Caution: Slow down, preparing to stop.");\n        } else {\n            Console.WriteLine("GO: Safe to proceed.");\n        }\n    }\n}`
+    },
+    loops: {
+      name: "For Loop Iteration",
+      code: `using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine("Loop start:");\n        for (int i = 1; i <= 3; i++) {\n            Console.WriteLine($"Running loop step {i}");\n        }\n        Console.WriteLine("Loop completed.");\n    }\n}`
+    },
+    patternMatch: {
+      name: "C# Modern Pattern Matching",
+      code: `using System;\n\nclass Program {\n    static void Main() {\n        object data = 45;\n        \n        string message = data switch {\n            int age when age >= 18 => "Eligible Adult age",\n            int age => "Minor age category",\n            string text => $"Text input size: {text.Length}",\n            _ => "Unknown type payload"\n        };\n        \n        Console.WriteLine("Result: " + message);\n    }\n}`
+    }
+  };
+  
+  const [code, setCode] = useState(presets.traffic.code);
+  const [consoleOutput, setConsoleOutput] = useState([]);
+  const [isCompiling, setIsCompiling] = useState(false);
+  const [copilotMessage, setCopilotMessage] = useState('');
+  const [copilotType, setCopilotType] = useState('info');
+
+  // Interactive Decision Tree simulator
+  const [treeAge, setTreeAge] = useState(17);
+  const [treeLicense, setTreeLicense] = useState(false);
+  
+  // Interactive Loop Iteration counter simulation
+  const [loopStep, setLoopStep] = useState(0);
+  const loopMaxSteps = 4;
+  const loopIterations = [
+    { step: 0, i: "Uninitialized", condition: "Pending", stdout: "Loop start:", stack: "i = ?" },
+    { step: 1, i: "1", condition: "1 <= 3 (True)", stdout: "Running loop step 1", stack: "i = 1" },
+    { step: 2, i: "2", condition: "2 <= 3 (True)", stdout: "Running loop step 2", stack: "i = 2" },
+    { step: 3, i: "3", condition: "3 <= 3 (True)", stdout: "Running loop step 3", stack: "i = 3" },
+    { step: 4, i: "4", condition: "4 <= 3 (False)", stdout: "Loop completed.", stack: "i = 4 (Exited)" }
+  ];
+
+  // Code Explainer Line Highlight State
+  const [explainerLine, setExplainerLine] = useState(null);
+  const explainerLines = [
+    { text: "if (userAge >= 18) {", desc: "If condition checks the boolean evaluation result. If true, program branches into block." },
+    { text: "    hasAccess = true;", desc: "Statement inside the if block. Executes only if age is 18 or older." },
+    { text: "} else {", desc: "Else block captures all fallback execution paths where the condition evaluates to false." },
+    { text: "    hasAccess = false;", desc: "Executes if userAge is less than 18. Prevents unauthorized entry." },
+    { text: "}", desc: "Closes the conditional structure. Sequential flow execution resumes below." }
+  ];
+  
+  // Interactive Practice States
+  const [selectedQuizOption, setSelectedQuizOption] = useState(null);
+  const [quizAnswerChecked, setQuizAnswerChecked] = useState(false);
+  const [droppedSlots, setDroppedSlots] = useState({ 0: null, 1: null });
+  const [matchingSuccess, setMatchingSuccess] = useState(null);
+
+  // Exam Writing Practice States
+  const [examAnswer, setExamAnswer] = useState('');
+  const [examTimer, setExamTimer] = useState(300); // 5 minutes
+  const [timerActive, setTimerActive] = useState(false);
+  const [examGrading, setExamGrading] = useState(false);
+  const [examResult, setExamResult] = useState(null);
+
+  // Interview & Viva Telemetry
+  const [activeInterviewIndex, setActiveInterviewIndex] = useState(0);
+  const [interviewQuestions] = useState([
+    { q: "What is the difference between if-else and switch statements?", a: "if-else evaluates ranges, logical criteria, and multiple distinct variables. switch evaluates equality matches against a single expression. switch statements are often pre-compiled into jump tables, making them much faster for multiple constant choices." },
+    { q: "Explain the difference between break, continue, and return statements.", a: "break terminates the immediate enclosing loop or switch block. continue skips the remaining statements in the current iteration and jumps to the next cycle. return immediately exits the entire method block and optionally returns a value." },
+    { q: "What is yield return in C#?", a: "yield return is a jump statement that provides custom stateful iterator updates. It returns elements one by one dynamically without creating a collection in memory, supporting custom lazy-loaded enumerators." }
+  ]);
+  const [showInterviewAnswer, setShowInterviewAnswer] = useState(false);
+  const [isRecordingViva, setIsRecordingViva] = useState(false);
+  const [vivaResponse, setVivaResponse] = useState('');
+
+  // Study Notes and Cheat Sheet
+  const [notesList, setNotesList] = useState(() => {
+    const saved = localStorage.getItem('cs_flow_notes');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, color: '#fef08a', text: 'Important: Switch statements compile to jump tables (fast O(1) performance).' },
+      { id: 2, color: '#bbf7d0', text: 'Off-by-one errors are common in loops. Verify index start and end bounds.' }
+    ];
+  });
+  const [newNoteText, setNewNoteText] = useState('');
+  const [noteColor, setNoteColor] = useState('#fef08a');
+  const [cheatFilter, setCheatFilter] = useState('');
+
+  // Save notes helper
+  const saveNotes = (updated) => {
+    setNotesList(updated);
+    localStorage.setItem('cs_flow_notes', JSON.stringify(updated));
+  };
+
+  // Exam timer logic
+  useEffect(() => {
+    let interval = null;
+    if (timerActive && examTimer > 0) {
+      interval = setInterval(() => {
+        setExamTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (examTimer === 0) {
+      setTimerActive(false);
+      toast.error("Time is up! Exam auto-submitted.");
+      handleSubmitExam();
+    }
+    return () => clearInterval(interval);
+  }, [timerActive, examTimer]);
+
+  // Save completed state to localstorage helper
+  const markTopicComplete = (topicName, rewardXP) => {
+    if (completedTopics[topicName]) {
+      toast.success("Topic already completed! Keep exploring.");
+      return;
+    }
+    const updated = { ...completedTopics, [topicName]: true };
+    setCompletedTopics(updated);
+    localStorage.setItem('cs_flow_completed', JSON.stringify(updated));
+    updateXP(rewardXP);
+    toast.success(`+${rewardXP} XP Earned for mastering ${topicName}!`);
+  };
+
+  // Compile runner simulation
+  const handleExecuteCode = () => {
+    setIsCompiling(true);
+    setConsoleOutput(["[Compiler] Resolving C# Assembly symbols...", "[Compiler] Translating intermediate IL tables...", "[CLR] Starting execution runtime pipeline..."]);
+    
+    setTimeout(() => {
+      let output = [];
+      if (code.includes("Yellow")) {
+        output = [
+          "Caution: Slow down, preparing to stop.",
+          "",
+          "Process completed with exit code 0."
+        ];
+      } else if (code.includes("for (int i = 1")) {
+        output = [
+          "Loop start:",
+          "Running loop step 1",
+          "Running loop step 2",
+          "Running loop step 3",
+          "Loop completed.",
+          "",
+          "Process completed with exit code 0."
+        ];
+      } else if (code.includes("age when age")) {
+        output = [
+          "Result: Eligible Adult age",
+          "",
+          "Process completed with exit code 0."
+        ];
+      } else {
+        output = [
+          "[Output] Code executed successfully.",
+          "Check compiler presets for custom logic."
+        ];
+      }
+      setConsoleOutput(output);
+      setIsCompiling(false);
+      
+      const newCompileCount = labCompilesCount + 1;
+      setLabCompilesCount(newCompileCount);
+      localStorage.setItem('cs_flow_compiles', newCompileCount.toString());
+      
+      if (newCompileCount === 1) {
+        updateXP(50);
+        toast.success("+50 XP: First C# Control Flow program execution!");
+      }
+    }, 1200);
+  };
+
+  const handleCopilotAction = (actionType) => {
+    setCopilotType('info');
+    if (actionType === 'explain') {
+      setCopilotMessage("This snippet uses control structures to modify execution logic path. if/else provides branching checks, switch maps constant keys, and loops repeat code blocks.");
+    } else if (actionType === 'debug') {
+      if (code.includes("=") && !code.includes("==") && code.includes("if (")) {
+        setCopilotType('debug');
+        setCopilotMessage("Common mistake: Assignment operator (=) used inside boolean check instead of equivalence comparator (==). Fix to compile.");
+      } else {
+        setCopilotType('success');
+        setCopilotMessage("Code verified. Logical flow scopes are safe. Loop boundaries are clean.");
+      }
+    } else if (actionType === 'optimize') {
+      setCopilotMessage("Optimization: Switch keys are faster than nested if/else ladders. If comparing constant literals, refactor to switch.");
+    }
+  };
+
+  // Drag and Drop Matcher logic
+  const handleVerifyMatching = () => {
+    if (droppedSlots[0] === 'if' && droppedSlots[1] === 'else') {
+      setMatchingSuccess(true);
+      markTopicComplete('Control Flow Matcher', 100);
+    } else {
+      setMatchingSuccess(false);
+      toast.error("Incorrect flow syntax order. Try again!");
+    }
+  };
+
+  // Exam Practice Grading Simulator
+  const handleSubmitExam = () => {
+    if (!examAnswer.trim()) {
+      toast.error("Please enter an answer before submitting.");
+      return;
+    }
+    setExamGrading(true);
+    setTimerActive(false);
+    
+    setTimeout(() => {
+      const charCount = examAnswer.length;
+      let score = 5;
+      let feedback = [];
+      
+      if (examAnswer.toLowerCase().includes("jump tables") || examAnswer.toLowerCase().includes("switch")) {
+        score += 2;
+        feedback.push("Excellent mention of compilation to jump tables inside switch constructs.");
+      } else {
+        feedback.push("Mention compilation mechanisms like jump tables to secure higher marks.");
+      }
+      
+      if (examAnswer.toLowerCase().includes("off-by-one") || examAnswer.toLowerCase().includes("infinite")) {
+        score += 2;
+        feedback.push("Good highlight of common mistakes like off-by-one errors and infinite iterations.");
+      } else {
+        feedback.push("Include common mistakes like infinite loops for complete answer context.");
+      }
+      
+      if (charCount > 250) score += 1;
+      score = Math.min(score, 10);
+      
+      setExamResult({
+        score,
+        grade: score >= 9 ? 'A+' : score >= 7 ? 'A' : score >= 5 ? 'B' : 'F',
+        feedback,
+        corrections: charCount < 100 ? ["Expand code definitions with C# example fragments."] : []
+      });
+      setExamGrading(false);
+      markTopicComplete('10-Mark Exam Mode', 150);
+    }, 2000);
+  };
+
+  // Mock Viva Voice Telemetry Simulation
+  const handleStartVivaRecording = () => {
+    setIsRecordingViva(true);
+    toast.success("Recording mock speech telemetry...");
+    
+    setTimeout(() => {
+      setIsRecordingViva(false);
+      setVivaResponse("Control flow structures alter sequential execution. Decision-making blocks check boolean conditions, whereas iterations execute blocks multiple times while a condition remains true.");
+      markTopicComplete('Viva Voice Prep', 80);
+      toast.success("Voice transcribed! Analytics updated below.");
+    }, 3000);
+  };
+
+  // Notebook handlers
+  const handleAddNote = () => {
+    if (!newNoteText.trim()) return;
+    const newNote = {
+      id: Date.now(),
+      color: noteColor,
+      text: newNoteText
+    };
+    const updated = [...notesList, newNote];
+    saveNotes(updated);
+    setNewNoteText('');
+    toast.success("Sticky note pinned!");
+  };
+
+  const handleDeleteNote = (id) => {
+    const updated = notesList.filter(n => n.id !== id);
+    saveNotes(updated);
+    toast.success("Note removed.");
+  };
+
+  const topicsToComplete = [
+    'Theory Concepts', 
+    'Decision Flow Map', 
+    'Roslyn Code Execution', 
+    'Control Flow Matcher', 
+    '10-Mark Exam Mode', 
+    'Viva Voice Prep'
+  ];
+  
+  const completedList = Object.keys(completedTopics).filter(k => completedTopics[k]);
+  const progressPercent = Math.round((completedList.length / topicsToComplete.length) * 100);
+
+  return (
+    <div className="space-y-6">
+      
+      {/* ──────────────── PREMIUM HERO SECTION ──────────────── */}
+      <div className="relative overflow-hidden p-6 sm:p-8 cs-fun-dark-card border border-white/10 rounded-[32px] text-left">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-blue-500/10 rounded-full blur-[60px] pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-xl">
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] uppercase font-bold tracking-widest rounded-full">
+                Beginner Track
+              </span>
+              <span className="px-3 py-1 bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] uppercase font-bold tracking-widest rounded-full flex items-center gap-1">
+                <Flame size={10} className="text-orange-400" /> +380 XP Total
+              </span>
+            </div>
+            
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              C# Control Flow
+            </h1>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              Master decisions, conditionals, switches, loops, iteration structures, pattern matching operators, and jump sequences (break, continue, return, goto, yield return).
+            </p>
+            
+            <div className="flex items-center gap-4 pt-2">
+              <button 
+                onClick={() => {
+                  markTopicComplete('Theory Concepts', 50);
+                  setActiveTab('visuals');
+                }}
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg hover:shadow-blue-500/20 cursor-pointer flex items-center gap-1.5"
+              >
+                <Zap size={14} /> Start Flow Visualizer
+              </button>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400">Time Est: </span>
+                <span className="text-xs text-white font-bold">3.0 Hours</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Gamified Meter Card */}
+          <div className="bg-slate-950/40 backdrop-blur-xl border border-white/10 p-5 rounded-2xl w-full md:w-80 space-y-4">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400 font-medium">Track Completion</span>
+              <span className="text-blue-400 font-extrabold">{progressPercent}%</span>
+            </div>
+            
+            {/* Progress bar */}
+            <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-white/5">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-purple-600 h-full rounded-full transition-all duration-500"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-center pt-1">
+              <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                <span className="text-[10px] text-slate-500 block">Mastery Score</span>
+                <strong className="text-sm text-white">{completedList.length}/{topicsToComplete.length}</strong>
+              </div>
+              <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                <span className="text-[10px] text-slate-500 block">Total XP Gained</span>
+                <strong className="text-sm text-purple-400 font-extrabold">+{completedList.length * 50} XP</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ──────────────── 12 TABS INTERACTIVE NAVIGATION MENU ──────────────── */}
+      <div className="flex items-center overflow-x-auto pb-2 border-b border-white/10 gap-1.5 scrollbar-thin scrollbar-thumb-white/10">
+        {[
+          { id: 'theory', label: 'Theory & Logic', icon: BookOpen },
+          { id: 'visuals', label: 'Visuals & Analogy', icon: Layers },
+          { id: 'codelab', label: 'Roslyn Code Lab', icon: Code },
+          { id: 'explainer', label: 'Code Explainer', icon: Eye },
+          { id: 'practice', label: 'Practice & Quizzes', icon: CheckCircle },
+          { id: 'exam', label: 'Exam Mode (10M)', icon: Award },
+          { id: 'pyqs', label: 'PYQs (University)', icon: FileText },
+          { id: 'interview', label: 'Interview Prep', icon: HelpCircle },
+          { id: 'viva', label: 'Viva Voice Simulation', icon: Volume2 },
+          { id: 'notes', label: 'Study Sticky Notes', icon: Edit3 },
+          { id: 'cheatsheet', label: 'Quick Cheat Sheet', icon: Clipboard },
+          { id: 'analytics', label: 'Telemetry Analytics', icon: TrendingUp }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition cursor-pointer ${
+                isActive 
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' 
+                  : 'bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Icon size={13} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ──────────────── TAB WORKSPACE CONTAINERS ──────────────── */}
+      <div className="min-h-[450px]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+            className="w-full"
+          >
+            
+            {/* 1. THEORY TAB */}
+            {activeTab === 'theory' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Detailed Description */}
+                  <div className="cs-fun-card space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">Academic Theory Overview</span>
+                      <button 
+                        onClick={() => markTopicComplete('Theory Concepts', 50)}
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                          completedTopics['Theory Concepts'] ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'
+                        }`}
+                      >
+                        {completedTopics['Theory Concepts'] ? '✓ Mastered' : 'Mark Topic Mastered'}
+                      </button>
+                    </div>
+                    <h2 className="text-xl font-bold text-white">How Program Flow Works</h2>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      By default, a C# program executes statements **sequentially** from top to bottom. **Control Flow** mechanisms alter this behavior using decisions (branching) and loops (iteration).
+                    </p>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      Conditionals like `if-else` and `switch` evaluate boolean expressions to branch code paths, while loops repeat executable blocks. Modern C# features pattern matching switch blocks to verify type patterns alongside constant keys.
+                    </p>
+
+                    <div className="border-t border-white/5 pt-4">
+                      <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-2">ELI10 / Beginner Analogy</h4>
+                      <div className="cs-fun-inner-card">
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                          <strong>Traffic Signal Example:</strong> Control flow is like a traffic signal logic checker. The driver approaches the signal (sequential program). If the light is Red, they STOP (decision branch 1). Else if the light is Yellow, they slow down (decision branch 2). Otherwise, they GO (fallback branch).
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Advantages & Disadvantages Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-5 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl">
+                      <strong className="text-xs text-emerald-400 uppercase tracking-wider block mb-2">Branching Logic Pros</strong>
+                      <ul className="text-xs text-slate-300 space-y-2 list-disc pl-4 leading-relaxed">
+                        <li>Allows dynamic user decisions and state validations.</li>
+                        <li>Switch tables provide high-efficiency assembly routes.</li>
+                        <li>Avoids duplicating duplicate code blocks using iteration statements.</li>
+                      </ul>
+                    </div>
+                    <div className="p-5 bg-rose-500/5 border border-rose-500/20 rounded-2xl">
+                      <strong className="text-xs text-rose-400 uppercase tracking-wider block mb-2">Common Pitfalls</strong>
+                      <ul className="text-xs text-slate-300 space-y-2 list-disc pl-4 leading-relaxed">
+                        <li>Off-by-one errors lead to out of bounds exception crashes.</li>
+                        <li>Missing loop updates trigger infinite loops locking application CPU cores.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Technical Sidepanel */}
+                <div className="space-y-6">
+                  <div className="cs-fun-card space-y-4">
+                    <strong className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Quick Control Types</strong>
+                    
+                    <div className="space-y-3">
+                      <div className="cs-fun-inner-card flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Decisions</span>
+                        <span className="text-xs font-bold text-white">if, else, switch</span>
+                      </div>
+                      <div className="cs-fun-inner-card flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Iterations</span>
+                        <span className="text-xs font-bold text-emerald-400">for, while, foreach</span>
+                      </div>
+                      <div className="cs-fun-inner-card flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Jump logic</span>
+                        <span className="text-xs font-bold text-white">break, continue, return</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="cs-fun-card text-center space-y-3">
+                    <span className="text-2xl block">💡</span>
+                    <h4 className="text-sm font-bold text-white">Switch Compiler Advantage</h4>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      For large numbers of constant targets, C# compiles switches into highly optimized branch tables rather than processing top-to-bottom sequential steps.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 2. VISUALS & ANALOGY TAB */}
+            {activeTab === 'visuals' && (
+              <div className="space-y-6 text-left">
+                
+                {/* Decision Tree Simulator */}
+                <div className="cs-fun-card space-y-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Interactive Decision Tree Explorer</h3>
+                      <p className="text-xs text-slate-400 mt-1">Tap the values to alter conditional states and watch how branching trees direct execution paths.</p>
+                    </div>
+                    <button 
+                      onClick={() => markTopicComplete('Decision Flow Map', 80)}
+                      className="px-3 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/30 text-xs rounded-lg font-bold"
+                    >
+                      Unlock flow badge
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Controls */}
+                    <div className="space-y-4 cs-fun-inner-card">
+                      <strong className="text-xs text-white block uppercase font-bold">Change Input variables:</strong>
+                      
+                      <div className="space-y-3 text-xs">
+                        <div>
+                          <label className="block text-slate-400 mb-1">User Age: {treeAge}</label>
+                          <input 
+                            type="range" 
+                            min="10" 
+                            max="30" 
+                            value={treeAge} 
+                            onChange={(e) => setTreeAge(parseInt(e.target.value))}
+                            className="w-full accent-blue-500"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2">
+                          <span className="text-slate-400">Holds Valid Driver License?</span>
+                          <input 
+                            type="checkbox" 
+                            checked={treeLicense}
+                            onChange={(e) => setTreeLicense(e.target.checked)}
+                            className="w-4 h-4 rounded accent-purple-600"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Visual tree nodes */}
+                    <div className="col-span-2 p-6 cs-fun-dark-card flex flex-col items-center justify-center space-y-4 border rounded-2xl min-h-[220px]">
+                      <div className="text-center space-y-1">
+                        <div className="px-4 py-2 bg-indigo-950 border border-indigo-500/30 rounded-xl font-bold text-xs text-white">
+                          Condition 1: Age >= 18?
+                        </div>
+                        <span className="text-xs text-slate-500 block">Current Age: {treeAge} (Result: {treeAge >= 18 ? "Yes" : "No"})</span>
+                      </div>
+
+                      {/* Branching display */}
+                      {treeAge >= 18 ? (
+                        <div className="flex flex-col items-center space-y-3 animate-fadeIn">
+                          <span className="text-slate-500 text-xs font-bold">↓ Yes Branch</span>
+                          <div className="px-4 py-2 bg-purple-950 border border-purple-500/30 rounded-xl font-bold text-xs text-white">
+                            Condition 2: Has Driver License?
+                          </div>
+                          <span className="text-xs text-slate-500 block">Result: {treeLicense ? "Yes" : "No"}</span>
+                          
+                          <div className="flex gap-2 pt-1">
+                            <span className={`px-3 py-1 rounded text-[10px] font-bold ${treeLicense ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
+                              {treeLicense ? "AUTHORIZED DRIVER" : "UNAUTHORIZED LICENSE MISSING"}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center space-y-1 animate-fadeIn">
+                          <span className="text-slate-500 text-xs font-bold">↓ No Branch</span>
+                          <span className="px-3 py-1 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded text-[10px] font-bold">
+                            REJECTED: UNDERAGE FOR LICENSE
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Iteration Counter Stepper */}
+                <div className="cs-fun-card space-y-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Iteration counter Loop Debugger Analogy</h3>
+                    <p className="text-xs text-slate-400 mt-1">Walk step-by-step through a C# standard for-loop to trace memory stack frame and print output shifts.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                    
+                    {/* Controls */}
+                    <div className="md:col-span-4 space-y-4 cs-fun-inner-card text-xs">
+                      <strong className="text-xs text-white block uppercase font-bold">Loop execution steps:</strong>
+                      <div className="flex justify-between items-center bg-slate-950/40 p-3 rounded-xl border border-white/5 font-mono text-[11px] text-white">
+                        <span>Step index:</span>
+                        <span>{loopStep + 1} of {loopMaxSteps + 1}</span>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button 
+                          disabled={loopStep === 0}
+                          onClick={() => setLoopStep(prev => prev - 1)}
+                          className="flex-1 py-2 bg-slate-900 border border-white/10 hover:bg-slate-800 disabled:opacity-50 text-white rounded-lg font-bold text-xs"
+                        >
+                          ← Prev step
+                        </button>
+                        <button 
+                          disabled={loopStep === loopMaxSteps}
+                          onClick={() => setLoopStep(prev => prev + 1)}
+                          className="flex-1 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg font-bold text-xs"
+                        >
+                          Next step →
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Debug visual panels */}
+                    <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      
+                      {/* Code highlighter box */}
+                      <div className="p-4 cs-fun-dark-card border rounded-xl flex flex-col justify-between text-[11px] font-mono">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Execution Pointer:</span>
+                        <div className="space-y-1.5 pt-3">
+                          <div className={loopStep === 0 ? 'text-purple-400 font-bold bg-white/5 p-1 rounded' : 'text-slate-400'}>{"for (int i = 1;"}</div>
+                          <div className={(loopStep > 0 && loopStep < 4) ? 'text-blue-400 font-bold bg-white/5 p-1 rounded' : 'text-slate-400'}>{"i <= 3;"}</div>
+                          <div className={(loopStep > 0 && loopStep < 4) ? 'text-emerald-400 font-bold bg-white/5 p-1 rounded' : 'text-slate-400'}>{"Console.WriteLine(...);"}</div>
+                          <div className={loopStep === 4 ? 'text-red-400 font-bold bg-white/5 p-1 rounded' : 'text-slate-400'}>{"i++)"}</div>
+                        </div>
+                      </div>
+
+                      {/* Memory values stack */}
+                      <div className="p-4 cs-fun-dark-card border rounded-xl space-y-3">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Stack Variable:</span>
+                        
+                        <div className="space-y-2 pt-2 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">Loop check:</span>
+                            <span className="font-mono text-purple-400 font-bold">{loopIterations[loopStep].condition}</span>
+                          </div>
+                          <div className="flex justify-between border-t border-white/5 pt-2">
+                            <span className="text-slate-400">Memory Frame:</span>
+                            <span className="font-mono text-emerald-400 font-bold">{loopIterations[loopStep].stack}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Simulated Print Terminal output */}
+                      <div className="p-4 cs-fun-dark-card border rounded-xl flex flex-col justify-between">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Stdout print:</span>
+                        
+                        <div className="font-mono text-[10px] text-emerald-300 space-y-1 pt-3 min-h-[60px]">
+                          {loopIterations.slice(0, loopStep + 1).map((item, idx) => (
+                            <div key={idx}>{item.stdout}</div>
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* 3. CODE LAB TAB */}
+            {activeTab === 'codelab' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-left">
+                {/* Editor container */}
+                <div className="lg:col-span-8 space-y-4">
+                  <div className="p-4 cs-fun-card flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-400">Roslyn Compiler Control Flow Editor</span>
+                    
+                    <div className="flex items-center gap-2">
+                      <select 
+                        onChange={(e) => setCode(presets[e.target.value].code)}
+                        className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-300 text-xs font-semibold rounded-lg px-2 py-1 focus:outline-none"
+                      >
+                        <option value="traffic">If/Else Signal Template</option>
+                        <option value="loops">For Loop Step Template</option>
+                        <option value="patternMatch">Pattern switch Template</option>
+                      </select>
+
+                      <button 
+                        onClick={() => {
+                          setCode(presets.traffic.code);
+                          setConsoleOutput([]);
+                        }}
+                        className="p-1 hover:bg-white/5 rounded text-slate-400 hover:text-white"
+                        title="Reset code editor"
+                      >
+                        <RotateCcw size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <textarea
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      className="w-full h-80 p-4 font-mono text-xs cs-fun-dark-card text-emerald-400 border border-white/10 rounded-2xl focus:outline-none focus:border-blue-500/50 resize-none leading-relaxed"
+                    />
+                    
+                    <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                      <button
+                        onClick={() => handleCopilotAction('explain')}
+                        className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 rounded border border-white/5 cursor-pointer"
+                      >
+                        💡 AI Explain
+                      </button>
+                      <button
+                        onClick={() => handleCopilotAction('debug')}
+                        className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 rounded border border-white/5 cursor-pointer"
+                      >
+                        🔧 AI Debug
+                      </button>
+                      <button
+                        onClick={() => handleCopilotAction('optimize')}
+                        className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 rounded border border-white/5 cursor-pointer"
+                      >
+                        ⚡ AI Optimize
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Executes */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-slate-500">Ctrl+Enter to compile and run</span>
+                    
+                    <button
+                      onClick={handleExecuteCode}
+                      disabled={isCompiling}
+                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/10"
+                    >
+                      {isCompiling ? (
+                        <>
+                          <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Running...
+                        </>
+                      ) : (
+                        <>
+                          <Play size={13} />
+                          Execute flow
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Output & AI Copilot info */}
+                <div className="lg:col-span-4 space-y-6">
+                  {/* Console Log screen */}
+                  <div className="p-5 cs-fun-dark-card border border-white/10 rounded-2xl space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                        <Terminal size={11} /> C# Console output
+                      </span>
+                      <button 
+                        onClick={() => setConsoleOutput([])}
+                        className="text-[9px] text-slate-500 hover:text-white uppercase"
+                      >
+                        Clear log
+                      </button>
+                    </div>
+
+                    <div className="font-mono text-[11px] text-slate-300 space-y-1 min-h-[140px] max-h-[160px] overflow-y-auto">
+                      {consoleOutput.length === 0 ? (
+                        <div className="text-slate-600 text-center pt-8">Click "Execute flow" to trace outcomes.</div>
+                      ) : (
+                        consoleOutput.map((line, idx) => (
+                          <div 
+                            key={idx} 
+                            className={
+                              line.startsWith('[Compiler]') ? 'text-indigo-400' :
+                              line.startsWith('[CLR]') ? 'text-purple-400' :
+                              line.startsWith('[Output]') ? 'text-slate-400 font-bold' :
+                              'text-emerald-400'
+                            }
+                          >
+                            {line}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* AI Copilot Panel */}
+                  <div className="p-5 cs-fun-card border border-indigo-500/20 rounded-2xl space-y-3">
+                    <span className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
+                      <BrainCircuit size={14} /> AI Copilot Helper
+                    </span>
+
+                    {copilotMessage ? (
+                      <div className={`p-3 rounded-xl text-xs leading-relaxed border ${
+                        copilotType === 'debug' ? 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300' :
+                        copilotType === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300' :
+                        'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-300'
+                      }`}>
+                        {copilotMessage}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-500 leading-relaxed">
+                        Use the Copilot assistant buttons inside the editor for fast, real-time code explanations, syntax checks, and optimizations.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 4. CODE EXPLAINER TAB */}
+            {activeTab === 'explainer' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                {/* Program code lines to click */}
+                <div className="lg:col-span-2 p-6 cs-fun-dark-card border border-white/10 rounded-3xl space-y-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Line-by-Line Branch Explainer</h3>
+                    <p className="text-xs text-slate-400 mt-1">Select any line of the C# code sample below to reveal its exact purpose, runtime allocation, and compiler characteristics.</p>
+                  </div>
+
+                  <div className="font-mono text-xs space-y-1 cs-fun-dark-card p-4 border border-white/5 overflow-x-auto select-none">
+                    {explainerLines.map((line, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => setExplainerLine(idx)}
+                        className={`p-2 rounded-lg cursor-pointer transition-all flex gap-3 items-center ${
+                          explainerLine === idx 
+                            ? 'bg-blue-600/30 border border-blue-500/50 text-white' 
+                            : 'hover:bg-white/5 border border-transparent text-slate-400 hover:text-slate-300'
+                        }`}
+                      >
+                        <span className="w-5 text-slate-600 text-right">{idx + 1}</span>
+                        <pre className="font-mono m-0 flex-1 whitespace-pre-wrap">{line.text || " "}</pre>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Explanation text card */}
+                <div className="p-6 cs-fun-card space-y-4 flex flex-col justify-center min-h-[300px]">
+                  {explainerLine === null ? (
+                    <div className="text-center space-y-2">
+                      <span className="text-2xl">👉</span>
+                      <strong className="text-xs text-slate-400 block font-bold">Select a code line on the left to begin exploration.</strong>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 animate-fadeIn">
+                      <div className="flex items-center gap-1.5">
+                        <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] font-bold rounded">
+                          Line {explainerLine + 1}
+                        </span>
+                        <span className="text-xs text-slate-500 font-bold uppercase">C# Architecture Analysis</span>
+                      </div>
+                      
+                      <h4 className="text-sm font-bold font-mono cs-fun-inner-card p-2.5 rounded border">
+                        {explainerLines[explainerLine].text || "[Empty Space]"}
+                      </h4>
+                      
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        {explainerLines[explainerLine].desc}
+                      </p>
+
+                      <div className="border-t border-white/5 pt-3">
+                        <button
+                          onClick={() => {
+                            markTopicComplete('Roslyn Code Execution', 50);
+                            setExplainerLine(null);
+                          }}
+                          className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold rounded-lg transition"
+                        >
+                          I understand this line!
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 5. PRACTICE & QUIZ TAB */}
+            {activeTab === 'practice' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-left">
+                {/* Topic Assessment Multiple Choice */}
+                <div className="lg:col-span-7 p-6 cs-fun-card space-y-4">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Multiple Choice Checkpoint</span>
+                  <h3 className="text-base font-bold text-white">Which loop is guaranteed to execute its body at least once?</h3>
+                  
+                  <div className="space-y-2">
+                    {[
+                      { text: "while loop", correct: false },
+                      { text: "for loop", correct: false },
+                      { text: "do-while loop", correct: true },
+                      { text: "foreach loop", correct: false }
+                    ].map((opt, idx) => {
+                      const isSelected = selectedQuizOption === idx;
+                      return (
+                        <button
+                          key={idx}
+                          disabled={quizAnswerChecked}
+                          onClick={() => setSelectedQuizOption(idx)}
+                          className={`w-full text-left p-3.5 rounded-xl border text-xs transition ${
+                            quizAnswerChecked
+                              ? opt.correct 
+                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-bold'
+                                : isSelected 
+                                  ? 'bg-rose-500/20 border-rose-500 text-rose-300'
+                                  : 'bg-white/5 border-transparent text-slate-500'
+                              : isSelected
+                                ? 'bg-blue-600/30 border-blue-500 text-white font-bold'
+                                : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5 hover:border-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {opt.text}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {!quizAnswerChecked ? (
+                    <button
+                      onClick={() => {
+                        if (selectedQuizOption === null) {
+                          toast.error("Please select an answer.");
+                          return;
+                        }
+                        setQuizAnswerChecked(true);
+                        if (selectedQuizOption === 2) {
+                          updateXP(40);
+                          toast.success("+40 XP: Correct Answer!");
+                        } else {
+                          toast.error("Incorrect. Let's study the answer.");
+                        }
+                      }}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                    >
+                      Submit Evaluation Answer
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <p className="text-xs text-slate-400">
+                        {selectedQuizOption === 2 
+                          ? "Correct! The do-while loop evaluates its termination statement at the bottom, guaranteeing at least one execution."
+                          : "Remember, while and for loops check their conditions at the entry top, meaning they can execute 0 times."
+                        }
+                      </p>
+                      <button
+                        onClick={() => {
+                          setSelectedQuizOption(null);
+                          setQuizAnswerChecked(false);
+                        }}
+                        className="px-3 py-1.5 bg-white/5 text-slate-300 text-[10px] font-bold rounded hover:bg-white/10"
+                      >
+                        Retry Quiz
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Drag and Drop Syntax Matcher */}
+                <div className="lg:col-span-5 p-6 cs-fun-card space-y-4">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Branch syntax matcher</span>
+                  <h3 className="text-xs text-slate-300 leading-relaxed">
+                    Place structural tokens to form a valid conditional branch.
+                  </h3>
+
+                  {/* Variable equations to place tokens in */}
+                  <div className="space-y-3 pt-2 text-xs font-mono">
+                    <div className="flex items-center gap-2 p-3 cs-fun-inner-card">
+                      <button
+                        onClick={() => setDroppedSlots({ ...droppedSlots, 0: null })}
+                        className="w-20 h-7 rounded border border-dashed border-white/20 flex items-center justify-center text-[10px] bg-slate-900 text-purple-400 font-bold"
+                      >
+                        {droppedSlots[0] || "[Slot 1]"}
+                      </button>
+                      <span className="text-slate-400">{"(x > 5) {"}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 p-3 cs-fun-inner-card">
+                      <span className="text-slate-400">{"} "}</span>
+                      <button
+                        onClick={() => setDroppedSlots({ ...droppedSlots, 1: null })}
+                        className="w-20 h-7 rounded border border-dashed border-white/20 flex items-center justify-center text-[10px] bg-slate-900 text-blue-400 font-bold"
+                      >
+                        {droppedSlots[1] || "[Slot 2]"}
+                      </button>
+                      <span className="text-slate-400">{" {"}</span>
+                    </div>
+                  </div>
+
+                  {/* Items bin */}
+                  <div className="flex gap-2 flex-wrap pt-2">
+                    {['if', 'else', 'while', 'switch'].map((item) => (
+                      <button
+                        key={item}
+                        onClick={() => {
+                          if (droppedSlots[0] === null) {
+                            setDroppedSlots({ ...droppedSlots, 0: item });
+                          } else if (droppedSlots[1] === null) {
+                            setDroppedSlots({ ...droppedSlots, 1: item });
+                          } else {
+                            toast.error("Slots are full! Click a slot to empty it.");
+                          }
+                        }}
+                        className="px-3 py-1 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-white rounded text-[11px] font-mono border border-slate-200 dark:border-white/5"
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2">
+                    <button
+                      onClick={() => setDroppedSlots({ 0: null, 1: null })}
+                      className="text-[10px] text-slate-500 hover:text-white uppercase font-bold"
+                    >
+                      Clear slots
+                    </button>
+
+                    <button
+                      onClick={handleVerifyMatching}
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold rounded-xl cursor-pointer"
+                    >
+                      Verify matching
+                    </button>
+                  </div>
+
+                  {matchingSuccess !== null && (
+                    <div className={`p-3 rounded-xl text-center text-xs font-bold ${
+                      matchingSuccess ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                    }`}>
+                      {matchingSuccess ? "🎉 Matching Success! +100 XP!" : "❌ Error: Invalid block sequence structure."}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 6. EXAM WRITING MODE TAB */}
+            {activeTab === 'exam' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-left">
+                {/* Writing board */}
+                <div className="lg:col-span-7 p-6 cs-fun-card space-y-4">
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <div>
+                      <span className="text-xs font-bold text-purple-400 uppercase tracking-wider block">University Semester Exam Module</span>
+                      <h3 className="text-sm font-bold text-white mt-1">Q: Compare if-else vs switch statement compiling advantages in C#. (10 Marks)</h3>
+                    </div>
+                    
+                    {/* Timer */}
+                    <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-white/5">
+                      <Clock size={12} className="text-red-400 animate-pulse" />
+                      <span className="text-xs font-mono text-white font-bold">
+                        {Math.floor(examTimer / 60)}:{(examTimer % 60).toString().padStart(2, '0')}
+                      </span>
+                      <button
+                        onClick={() => setTimerActive(!timerActive)}
+                        className="p-0.5 hover:bg-white/5 rounded"
+                      >
+                        {timerActive ? <Pause size={10} /> : <Play size={10} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea
+                    value={examAnswer}
+                    onChange={(e) => setExamAnswer(e.target.value)}
+                    placeholder="Enter your university level description answer here (compare execution methods, jump table compilation, case matches, logical ranges, etc.)...."
+                    className="w-full h-64 p-4 text-xs bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white focus:outline-none focus:border-purple-500/50 resize-none leading-relaxed"
+                  />
+
+                  <div className="flex justify-between items-center">
+                    <button
+                      onClick={() => setExamTimer(300)}
+                      className="text-[10px] text-slate-500 hover:text-white uppercase font-bold"
+                    >
+                      Reset Timer
+                    </button>
+
+                    <button
+                      onClick={handleSubmitExam}
+                      disabled={examGrading}
+                      className="px-5 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {examGrading ? (
+                        <>
+                          <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          AI Grading...
+                        </>
+                      ) : (
+                        "Submit Answer for AI Grading"
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Score panel / AI Evaluator */}
+                <div className="lg:col-span-5 space-y-6">
+                  {examResult === null ? (
+                    <div className="p-6 cs-fun-card h-full flex flex-col justify-center text-center space-y-3 min-h-[300px]">
+                      <span className="text-3xl">📋</span>
+                      <h4 className="text-sm font-bold text-white">AI Examiner waiting for submission...</h4>
+                      <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
+                        Submit your text explanation. The AI system evaluates key terms, syntax depth, and references to verify concepts correctness.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-6 cs-fun-card space-y-4 animate-fadeIn">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-400">Scorecard Metrics</span>
+                        <span className="px-2.5 py-1 bg-purple-500/10 text-purple-400 text-xs font-black rounded-lg border border-purple-500/20">
+                          Grade {examResult.grade}
+                        </span>
+                      </div>
+
+                      <div className="text-center py-2">
+                        <strong className="text-4xl font-extrabold text-white">{examResult.score}</strong>
+                        <span className="text-slate-500 text-xs font-semibold"> / 10 Marks</span>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">AI Evaluator Feedback:</span>
+                        {examResult.feedback.map((fb, idx) => (
+                          <div key={idx} className="flex gap-2 text-xs text-slate-300 leading-relaxed">
+                            <span className="text-emerald-400">✓</span>
+                            <span>{fb}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Side-by-side comparison */}
+                      <div className="border-t border-white/5 pt-4">
+                        <strong className="text-xs font-bold text-white block mb-1.5">Model Answer Reference:</strong>
+                        <div className="p-3 bg-white/5 rounded-xl text-[10px] text-slate-400 leading-relaxed font-mono max-h-36 overflow-y-auto">
+                          <strong>if-else:</strong> Evaluates variable conditions sequentially. Best for logical expressions (e.g. x &gt; y).<br/><br/>
+                          <strong>switch:</strong> Performs direct value tests. Compiles to O(1) complexity jump tables when matches are dense integers.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 7. PREVIOUS YEAR QUESTIONS (PYQs) TAB */}
+            {activeTab === 'pyqs' && (
+              <div className="p-6 cs-fun-card text-left space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-white">Previous Year University Questions</h3>
+                  <p className="text-xs text-slate-400 mt-1">Examine authentic board and term exam questions covering structural C# concepts.</p>
+                </div>
+
+                <div className="space-y-4">
+                  {[
+                    { marks: "2 Marks", q: "Why is a goto statement discouraged in structured languages like C#?", a: "A goto statement creates unconstrained jumps (spaghetti code), making application logic flow extremely hard to read, maintain, and compile optimize." },
+                    { marks: "5 Marks", q: "Compare break and continue statements with code examples.", a: "break terminates loop execution completely and jumps to sequential instructions below. continue skips the remaining statements in the loop body, transferring execution directly to the next loop boundary condition checks." },
+                    { marks: "10 Marks", q: "Write an essay detail explaining C# switch statements including Pattern Matching features introduced in C# 7/8.", a: "Introduces standard switch cases. C# 7/8 modern syntax allows type pattern checks: case int val when val &gt; 100. Leverages type matching patterns and when checks on general objects payload dynamically." }
+                  ].map((pyq, idx) => (
+                    <div key={idx} className="p-4 cs-fun-inner-card space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] font-bold rounded">
+                          {pyq.marks}
+                        </span>
+                        <span className="text-xs font-bold text-white">{pyq.q}</span>
+                      </div>
+                      <p className="text-xs text-slate-400 pl-4 border-l border-white/10 leading-relaxed">
+                        <strong className="text-slate-300 text-[10px] block uppercase font-bold mb-1">Standard Solution Model:</strong>
+                        {pyq.a}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 8. INTERVIEW PREP TAB */}
+            {activeTab === 'interview' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                <div className="lg:col-span-2 p-6 cs-fun-card space-y-4">
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">C# Interview Prep Cards</span>
+                    <span className="text-xs text-slate-400 font-bold">
+                      Question {activeInterviewIndex + 1} of {interviewQuestions.length}
+                    </span>
+                  </div>
+
+                  {/* Active Question Panel */}
+                  <div className="p-6 cs-fun-dark-card rounded-2xl border border-white/5 min-h-[160px] flex flex-col justify-center">
+                    <h3 className="text-base font-bold text-white text-center">
+                      {interviewQuestions[activeInterviewIndex].q}
+                    </h3>
+                  </div>
+
+                  {/* Reveal Answers */}
+                  {showInterviewAnswer && (
+                    <div className="p-4 bg-blue-950/20 border border-blue-500/20 rounded-2xl text-xs text-slate-300 leading-relaxed animate-fadeIn">
+                      <strong className="text-blue-400 block mb-1 uppercase font-bold text-[10px]">AI Reference Answer:</strong>
+                      {interviewQuestions[activeInterviewIndex].a}
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center pt-2">
+                    <button
+                      onClick={() => setShowInterviewAnswer(!showInterviewAnswer)}
+                      className="px-4 py-2 bg-white/5 hover:bg-white/10 text-xs font-bold rounded-xl text-slate-300 cursor-pointer"
+                    >
+                      {showInterviewAnswer ? "Hide Answer" : "Reveal Answer"}
+                    </button>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setShowInterviewAnswer(false);
+                          setActiveInterviewIndex((prev) => (prev > 0 ? prev - 1 : interviewQuestions.length - 1));
+                        }}
+                        className="px-3 py-1.5 bg-slate-900 border border-white/10 text-xs font-bold rounded-lg text-white"
+                      >
+                        Prev
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowInterviewAnswer(false);
+                          setActiveInterviewIndex((prev) => (prev < interviewQuestions.length - 1 ? prev + 1 : 0));
+                        }}
+                        className="px-3 py-1.5 bg-slate-900 border border-white/10 text-xs font-bold rounded-lg text-white"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Box */}
+                <div className="p-6 cs-fun-card flex flex-col justify-center space-y-3">
+                  <span className="text-3xl text-center">💼</span>
+                  <h4 className="text-sm font-bold text-white text-center">Interviewer Focus Tips</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed text-left">
+                    Expect scenario questions asking to refactor complex nested `if-else` blocks into clean switch statements or ternary operations.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* 9. VIVA QUESTIONS TAB */}
+            {activeTab === 'viva' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                <div className="lg:col-span-2 p-6 cs-fun-card space-y-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white font-black">Viva Oral Q&A Simulator</h3>
+                    <p className="text-xs text-slate-400 mt-1">Answer the viva question below aloud to simulate oral examination conditions.</p>
+                  </div>
+
+                  {/* Active Question */}
+                  <div className="p-4 cs-fun-dark-card rounded-xl border border-white/5">
+                    <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider block">Examiner Oral Question:</span>
+                    <strong className="text-sm text-white block mt-1.5">"Why does the compiler complain if a break statement is omitted in a switch case containing instructions in C#?"</strong>
+                  </div>
+
+                  {/* Waveform graphic animation */}
+                  {isRecordingViva && (
+                    <div className="py-6 flex items-center justify-center gap-1.5">
+                      {[1, 2, 3, 4, 5, 4, 3, 2, 1, 2, 3, 4, 5, 4, 3, 2, 1].map((h, i) => (
+                        <span 
+                          key={i} 
+                          className="w-1 bg-purple-500 rounded-full animate-pulse"
+                          style={{ height: `${h * 4}px`, animationDelay: `${i * 0.05}s` }}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Voice capture trigger */}
+                  <div className="flex justify-center">
+                    <button
+                      onClick={handleStartVivaRecording}
+                      disabled={isRecordingViva}
+                      className={`px-6 py-3 rounded-full text-xs font-bold flex items-center gap-2 cursor-pointer transition ${
+                        isRecordingViva ? 'bg-red-600 text-white' : 'bg-purple-600 hover:bg-purple-500 text-white'
+                      }`}
+                    >
+                      <Volume2 size={14} className={isRecordingViva ? 'animate-bounce' : ''} />
+                      {isRecordingViva ? 'Speaking...' : 'Start Mock Speech Recording'}
+                    </button>
+                  </div>
+
+                  {vivaResponse && (
+                    <div className="p-4 cs-fun-inner-card text-xs space-y-2 animate-fadeIn">
+                      <span className="text-[10px] font-bold text-slate-400 block uppercase">Transcribed Voice:</span>
+                      <p className="text-slate-300 italic">"{vivaResponse}"</p>
+                      
+                      <div className="border-t border-white/5 pt-2 flex items-center justify-between text-[10px]">
+                        <span className="text-emerald-400 font-bold">Concept coverage: 92% Match</span>
+                        <span className="text-slate-500">Structured Response</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Telemetry metrics */}
+                <div className="p-6 cs-fun-card space-y-4">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Voice telemetry metrics</span>
+                  
+                  <div className="space-y-3 text-xs">
+                    <div className="p-3 cs-fun-inner-card flex justify-between">
+                      <span className="text-slate-400">Speech Clarity</span>
+                      <strong className="text-white">Exceptional (95%)</strong>
+                    </div>
+                    <div className="p-3 cs-fun-inner-card flex justify-between">
+                      <span className="text-slate-400">Logical Depth</span>
+                      <strong className="text-emerald-400">92/100 Marks</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 10. STUDY STICKY NOTES TAB */}
+            {activeTab === 'notes' && (
+              <div className="space-y-6 text-left">
+                <div className="p-6 cs-fun-card space-y-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Study Notes Notebook</h3>
+                    <p className="text-xs text-slate-400 mt-1">Keep temporary summaries, syntax snippets, and study warnings. Syncs instantly to browser storage.</p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                      type="text"
+                      value={newNoteText}
+                      onChange={(e) => setNewNoteText(e.target.value)}
+                      placeholder="Type a new revision note card details..."
+                      className="flex-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-blue-500/50"
+                    />
+
+                    <div className="flex items-center gap-2">
+                      {['#fef08a', '#bfdbfe', '#bbf7d0', '#fbcfe8'].map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => setNoteColor(c)}
+                          className="w-6 h-6 rounded-full border border-white/10"
+                          style={{ 
+                            backgroundColor: c, 
+                            transform: noteColor === c ? 'scale(1.2)' : 'none',
+                            outline: noteColor === c ? '2px solid white' : 'none'
+                          }}
+                        />
+                      ))}
+
+                      <button
+                        onClick={handleAddNote}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Save size={12} /> Pin Note
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sticky notes list grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {notesList.map((note) => (
+                    <div 
+                      key={note.id} 
+                      className="p-5 rounded-2xl shadow-lg flex flex-col justify-between min-h-[140px] text-slate-900 relative"
+                      style={{ backgroundColor: note.color }}
+                    >
+                      <p className="text-xs font-medium leading-relaxed">
+                        {note.text}
+                      </p>
+                      
+                      <div className="flex justify-between items-center pt-3 border-t border-black/5 mt-3">
+                        <span className="text-[9px] opacity-60">Personal study pin</span>
+                        <button
+                          onClick={() => handleDeleteNote(note.id)}
+                          className="p-1 hover:bg-black/10 rounded text-slate-700 hover:text-red-700 transition"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 11. QUICK CHEAT SHEET TAB */}
+            {activeTab === 'cheatsheet' && (
+              <div className="p-6 cs-fun-card text-left space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Branching & Iteration Syntax Cheat Sheet</h3>
+                    <p className="text-xs text-slate-400 mt-1">Quick syntax summaries for control statements and logical operators.</p>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search keywords (e.g. for, loop)..."
+                    value={cheatFilter}
+                    onChange={(e) => setCheatFilter(e.target.value)}
+                    className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-blue-500/50 w-full sm:w-64"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Syntax reference */}
+                  <div className="space-y-3">
+                    <span className="text-xs font-bold text-blue-400 uppercase tracking-widest block">Structural Syntax</span>
+                    <div className="overflow-x-auto rounded-xl border border-white/15">
+                      <table className="w-full text-xs text-slate-300">
+                        <thead className="bg-slate-950 text-white font-bold border-b border-white/15">
+                          <tr>
+                            <th className="p-2.5 text-left">Statement</th>
+                            <th className="p-2.5 text-left">C# Syntax Example</th>
+                            <th className="p-2.5 text-left">Key Property</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                          {[
+                            { name: "if / else", example: "if (x > y) { } else { }", prop: "Branching choice" },
+                            { name: "for loop", example: "for (int i=0; i<5; i++)", prop: "Index iterate" },
+                            { name: "while loop", example: "while (condition) { }", prop: "Conditional loop" },
+                            { name: "switch", example: "switch(x) { case 1: break; }", prop: "Constant match" }
+                          ].filter(row => 
+                            row.name.toLowerCase().includes(cheatFilter.toLowerCase()) ||
+                            row.prop.toLowerCase().includes(cheatFilter.toLowerCase())
+                          ).map((row, idx) => (
+                            <tr key={idx} className="hover:bg-white/[0.02]">
+                              <td className="p-2.5 font-bold text-white">{row.name}</td>
+                              <td className="p-2.5 font-mono text-[10px] text-purple-300">{row.example}</td>
+                              <td className="p-2.5 text-slate-400">{row.prop}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Jump statements syntax table */}
+                  <div className="space-y-3">
+                    <span className="text-xs font-bold text-purple-400 uppercase tracking-widest block">Jump Statements</span>
+                    <div className="overflow-x-auto rounded-xl border border-white/15">
+                      <table className="w-full text-xs text-slate-300">
+                        <thead className="bg-slate-950 text-white font-bold border-b border-white/15">
+                          <tr>
+                            <th className="p-2.5 text-left">Jump Statement</th>
+                            <th className="p-2.5 text-left">Usage Syntax</th>
+                            <th className="p-2.5 text-left">Safety</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                          {[
+                            { name: "break", example: "break;", prop: "Terminates enclosing loop/switch" },
+                            { name: "continue", example: "continue;", prop: "Skips to next loop check" },
+                            { name: "return", example: "return value;", prop: "Immediately exits current method" },
+                            { name: "goto", example: "goto label;", prop: "Discouraged: causes unstructured jumps" }
+                          ].filter(row => 
+                            row.name.toLowerCase().includes(cheatFilter.toLowerCase())
+                          ).map((row, idx) => (
+                            <tr key={idx} className="hover:bg-white/[0.02]">
+                              <td className="p-2.5 font-bold text-white">{row.name}</td>
+                              <td className="p-2.5 font-mono text-[10px] text-purple-300">{row.example}</td>
+                              <td className="p-2.5 text-slate-400">{row.prop}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 12. TELEMETRY ANALYTICS TAB */}
+            {activeTab === 'analytics' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
+                <div className="p-5 cs-fun-card">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">Compiler Runs</span>
+                  <strong className="text-3xl text-white block mt-2">{labCompilesCount} Runs</strong>
+                  <p className="text-[11px] text-slate-400 mt-1">Total Roslyn execution cycles tracked in active session.</p>
+                </div>
+
+                <div className="p-5 cs-fun-card">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">Topics Mastered</span>
+                  <strong className="text-3xl text-blue-400 block mt-2">{completedList.length} / {topicsToComplete.length}</strong>
+                  <p className="text-[11px] text-slate-400 mt-1">Percentage completion: {progressPercent}% of syllabus metrics.</p>
+                </div>
+
+                <div className="p-5 cs-fun-card">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">Evaluation Accuracy</span>
+                  <strong className="text-3xl text-purple-400 block mt-2">
+                    {matchingSuccess === true ? "100%" : matchingSuccess === false ? "0%" : "Not Tested"}
+                  </strong>
+                  <p className="text-[11px] text-slate-400 mt-1">Verification score matching conditions drag-and-drop slots.</p>
+                </div>
+
+                <div className="p-5 cs-fun-card">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">University Grade</span>
+                  <strong className="text-3xl text-emerald-400 block mt-2">
+                    {examResult ? `${examResult.score}/10 (${examResult.grade})` : "Not Attempted"}
+                  </strong>
+                  <p className="text-[11px] text-slate-400 mt-1">Estimated exam grading outcome by the JIT evaluation system.</p>
+                </div>
+              </div>
+            )}
+
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Exit control */}
+      <div className="flex justify-between items-center pt-4 border-t border-white/10">
+        <button
+          onClick={() => setSelectedModule('dashboard')}
+          className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer"
+        >
+          ← Exit Control Flow Panel
+        </button>
+
+        <button
+          onClick={() => {
+            if (progressPercent === 100) {
+              handleMarkComplete('control-flow');
+              toast.success("Congratulations! You have completed the C# Control Flow Module!");
+            } else {
+              toast.error(`Please complete all activities first. Current progress: ${progressPercent}%`);
+            }
+          }}
+          className="px-5 py-2 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white text-xs font-bold rounded-xl cursor-pointer"
+        >
+          {completedCount > 1 ? "Track Completed ✓" : "Claim Control Flow Completion Badge"}
+        </button>
+      </div>
+
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// C# OBJECT-ORIENTED PROGRAMMING (OOP) INTERACTIVE DIGITAL CLASSROOM
+// ═══════════════════════════════════════════════════════════
+export function CSharpOOPDetail({ setSelectedModule, completedCount, handleMarkComplete, updateXP, xp }) {
+  const [activeTab, setActiveTab] = useState('theory');
+  
+  // Analytics Telemetry States
+  const [completedTopics, setCompletedTopics] = useState(() => {
+    const saved = localStorage.getItem('cs_oop_completed');
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [labCompilesCount, setLabCompilesCount] = useState(() => {
+    return parseInt(localStorage.getItem('cs_oop_compiles') || '0', 10);
+  });
+  
+  // Code Lab Presets
+  const presets = {
+    classObj: {
+      name: "Class & Object Declaration",
+      code: `using System;\n\nclass House {\n    public string Color;\n    // Constructor\n    public House(string color) {\n        Color = color;\n    }\n    public void ShowDetails() {\n        Console.WriteLine($"This house has a beautiful {Color} color.");\n    }\n}\n\nclass Program {\n    static void Main() {\n        House myHouse = new House("Royal Blue");\n        myHouse.ShowDetails();\n    }\n}`
+    },
+    polymorphism: {
+      name: "Polymorphism (Overrides)",
+      code: `using System;\n\nclass Vehicle {\n    public virtual void StartEngine() {\n        Console.WriteLine("Vehicle engine is starting...");\n    }\n}\n\nclass Car : Vehicle {\n    public override void StartEngine() {\n        Console.WriteLine("Car engine roars to life silently (Electric)!");\n    }\n}\n\nclass Program {\n    static void Main() {\n        Vehicle v = new Car(); // Polymorphic call\n        v.StartEngine();\n    }\n}`
+    },
+    interfaces: {
+      name: "Interfaces (Universal Charger)",
+      code: `using System;\n\ninterface ICharger {\n    void ChargeDevice();\n}\n\nclass PhoneCharger : ICharger {\n    public void ChargeDevice() {\n        Console.WriteLine("Charging device with high-speed USB-C charging protocol.");\n    }\n}\n\nclass Program {\n    static void Main() {\n        ICharger charger = new PhoneCharger();\n        charger.ChargeDevice();\n    }\n}`
+    }
+  };
+  
+  const [code, setCode] = useState(presets.classObj.code);
+  const [consoleOutput, setConsoleOutput] = useState([]);
+  const [isCompiling, setIsCompiling] = useState(false);
+  const [copilotMessage, setCopilotMessage] = useState('');
+  const [copilotType, setCopilotType] = useState('info');
+
+  // Interactive Visual Diagram States
+  const [visualStep, setVisualStep] = useState(0);
+  const [simBalance, setSimBalance] = useState(1000);
+  const [simInputAmount, setSimInputAmount] = useState('200');
+  
+  // Stack and Heap memory model tracing step-by-step
+  const memorySteps = [
+    { step: 0, stack: "Args = null", heap: "Empty", desc: "Before initialization: No object resides on the heap. Stack frames are clean." },
+    { step: 1, stack: "myHouse = 0x5FF1", heap: "0x5FF1: House { Color: 'Royal Blue' }", desc: "Object instantiated on the Heap with memory address 0x5FF1. Pointer variable resides on the Stack." },
+    { step: 2, stack: "myHouse = 0x5FF1", heap: "0x5FF1: House { Color: 'Royal Blue' }", desc: "Method ShowDetails() is pushed onto the stack frame. Read reference color from heap address 0x5FF1." }
+  ];
+
+  // Code Explainer Line Highlight State
+  const [explainerLine, setExplainerLine] = useState(null);
+  const explainerLines = [
+    { text: "House myHouse = new House(\"Royal Blue\");", desc: "Declares a reference variable 'myHouse' on the stack, allocates space for a new House object on the heap, executes its constructor, and binds the reference address." },
+    { text: "public class House {", desc: "Defines the object blueprint, containing variables (fields) and functions (methods) representing state and behavior." },
+    { text: "    public string Color; // Field", desc: "Field that stores the internal state value. In a production app, we would encapsulate this using a Property with getter/setter methods." },
+    { text: "    public House(string color) {", desc: "Constructor method called immediately upon object creation. Initializes member fields with values." },
+    { text: "        Color = color;", desc: "Binds the passed parameter to the object instance's color attribute." }
+  ];
+  
+  // Interactive Practice States
+  const [selectedQuizOption, setSelectedQuizOption] = useState(null);
+  const [quizAnswerChecked, setQuizAnswerChecked] = useState(false);
+  const [droppedSlots, setDroppedSlots] = useState({ 0: null, 1: null });
+  const [matchingSuccess, setMatchingSuccess] = useState(null);
+
+  // Exam Writing Practice States
+  const [examAnswer, setExamAnswer] = useState('');
+  const [examTimer, setExamTimer] = useState(300); // 5 minutes
+  const [timerActive, setTimerActive] = useState(false);
+  const [examGrading, setExamGrading] = useState(false);
+  const [examResult, setExamResult] = useState(null);
+
+  // Interview & Viva Telemetry
+  const [activeInterviewIndex, setActiveInterviewIndex] = useState(0);
+  const [interviewQuestions] = useState([
+    { q: "What is the difference between Abstract Class and Interface in C#?", a: "Abstract classes can contain default implementations, fields, and constructors. Interfaces only describe contracts (though modern C# allows default interface methods), do not maintain instance fields, and support multiple inheritance since a C# class can implement multiple interfaces but only inherit from one base class." },
+    { q: "Explain the four pillars of OOP.", a: "1. Encapsulation (hiding state using access modifiers and properties). 2. Abstraction (exposing only essential interfaces, hiding implementation details). 3. Inheritance (subclasses extending parent classes for reuse). 4. Polymorphism (providing multiple behaviors through virtual/override methods)." },
+    { q: "What is the difference between Method Overloading and Method Overriding?", a: "Overloading happens at compile-time (same method name, different signatures). Overriding happens at runtime (re-defining base virtual method in a derived class using override keyword)." }
+  ]);
+  const [showInterviewAnswer, setShowInterviewAnswer] = useState(false);
+  const [isRecordingViva, setIsRecordingViva] = useState(false);
+  const [vivaResponse, setVivaResponse] = useState('');
+
+  // Study Notes and Cheat Sheet
+  const [notesList, setNotesList] = useState(() => {
+    const saved = localStorage.getItem('cs_oop_notes');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, color: '#fef08a', text: 'Tip: Prefer composition over inheritance to avoid tight coupling in class structures.' },
+      { id: 2, color: '#bbf7d0', text: 'Interfaces should be highly segregated according to SOLID guidelines.' }
+    ];
+  });
+  const [newNoteText, setNewNoteText] = useState('');
+  const [noteColor, setNoteColor] = useState('#fef08a');
+  const [cheatFilter, setCheatFilter] = useState('');
+
+  // Save notes helper
+  const saveNotes = (updated) => {
+    setNotesList(updated);
+    localStorage.setItem('cs_oop_notes', JSON.stringify(updated));
+  };
+
+  // Exam timer logic
+  useEffect(() => {
+    let interval = null;
+    if (timerActive && examTimer > 0) {
+      interval = setInterval(() => {
+        setExamTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (examTimer === 0) {
+      setTimerActive(false);
+      toast.error("Time is up! Exam auto-submitted.");
+      handleSubmitExam();
+    }
+    return () => clearInterval(interval);
+  }, [timerActive, examTimer]);
+
+  // Save completed state to localstorage helper
+  const markTopicComplete = (topicName, rewardXP) => {
+    if (completedTopics[topicName]) {
+      toast.success("Topic already completed! Keep exploring.");
+      return;
+    }
+    const updated = { ...completedTopics, [topicName]: true };
+    setCompletedTopics(updated);
+    localStorage.setItem('cs_oop_completed', JSON.stringify(updated));
+    updateXP(rewardXP);
+    toast.success(`+${rewardXP} XP Earned for mastering ${topicName}!`);
+  };
+
+  // Compile runner simulation
+  const handleExecuteCode = () => {
+    setIsCompiling(true);
+    setConsoleOutput(["[Compiler] Instantiating Roslyn C# compiler environment...", "[Compiler] Resolving references and class namespaces...", "[CLR] Creating heap instances..."]);
+    
+    setTimeout(() => {
+      let output = [];
+      if (code.includes("House")) {
+        output = [
+          "This house has a beautiful Royal Blue color.",
+          "",
+          "Process completed with exit code 0."
+        ];
+      } else if (code.includes("override")) {
+        output = [
+          "Car engine roars to life silently (Electric)!",
+          "",
+          "Process completed with exit code 0."
+        ];
+      } else if (code.includes("Universal Charger")) {
+        output = [
+          "Charging device with high-speed USB-C charging protocol.",
+          "",
+          "Process completed with exit code 0."
+        ];
+      } else {
+        output = [
+          "[Output] OOP application built successfully.",
+          "Check OOP presets to inspect class instantiations."
+        ];
+      }
+      setConsoleOutput(output);
+      setIsCompiling(false);
+      
+      const newCompileCount = labCompilesCount + 1;
+      setLabCompilesCount(newCompileCount);
+      localStorage.setItem('cs_oop_compiles', newCompileCount.toString());
+      
+      if (newCompileCount === 1) {
+        updateXP(50);
+        toast.success("+50 XP: First C# OOP program execution!");
+      }
+    }, 1200);
+  };
+
+  const handleCopilotAction = (actionType) => {
+    setCopilotType('info');
+    if (actionType === 'explain') {
+      setCopilotMessage("This class acts as a blueprint. Using the 'new' keyword creates a structural object on the heap, returns its memory reference, and triggers its constructor.");
+    } else if (actionType === 'debug') {
+      if (code.includes("class PhoneCharger : ICharger") && !code.includes("public void ChargeDevice")) {
+        setCopilotType('debug');
+        setCopilotMessage("Error: PhoneCharger implements interface ICharger but does not implement required interface method 'ChargeDevice'.");
+      } else {
+        setCopilotType('success');
+        setCopilotMessage("UML structural compliance verified. Encapsulation levels look correct.");
+      }
+    } else if (actionType === 'optimize') {
+      setCopilotMessage("Optimization: Expose properties (get; set;) rather than raw public fields. This preserves encapsulation.");
+    }
+  };
+
+  // Drag and Drop Matcher logic
+  const handleVerifyMatching = () => {
+    if (droppedSlots[0] === 'override' && droppedSlots[1] === 'virtual') {
+      setMatchingSuccess(true);
+      markTopicComplete('OOP Syntax Matcher', 100);
+    } else {
+      setMatchingSuccess(false);
+      toast.error("Incorrect syntax keywords. derived class overrides a virtual base method.");
+    }
+  };
+
+  // Exam Practice Grading Simulator
+  const handleSubmitExam = () => {
+    if (!examAnswer.trim()) {
+      toast.error("Please enter an answer before submitting.");
+      return;
+    }
+    setExamGrading(true);
+    setTimerActive(false);
+    
+    setTimeout(() => {
+      const charCount = examAnswer.length;
+      let score = 5;
+      let feedback = [];
+      
+      if (examAnswer.toLowerCase().includes("contract") || examAnswer.toLowerCase().includes("multiple inheritance")) {
+        score += 2;
+        feedback.push("Good mention of interface contracts and solving multiple inheritance constraints.");
+      } else {
+        feedback.push("Discuss multiple inheritance behaviors to earn higher marks.");
+      }
+      
+      if (examAnswer.toLowerCase().includes("default implementation") || examAnswer.toLowerCase().includes("constructor")) {
+        score += 2;
+        feedback.push("Excellent highlighting of abstract class constructor capabilities and state preservation.");
+      } else {
+        feedback.push("Include constructor characteristics of abstract classes for full marks.");
+      }
+      
+      if (charCount > 250) score += 1;
+      score = Math.min(score, 10);
+      
+      setExamResult({
+        score,
+        grade: score >= 9 ? 'A+' : score >= 7 ? 'A' : score >= 5 ? 'B' : 'F',
+        feedback,
+        corrections: charCount < 100 ? ["Add code examples of concrete class implementation."] : []
+      });
+      setExamGrading(false);
+      markTopicComplete('10-Mark Exam Mode', 150);
+    }, 2000);
+  };
+
+  // Mock Viva Voice Telemetry Simulation
+  const handleStartVivaRecording = () => {
+    setIsRecordingViva(true);
+    toast.success("Recording mock voice signals...");
+    
+    setTimeout(() => {
+      setIsRecordingViva(false);
+      setVivaResponse("Encapsulation is the process of binding data variables and methods together into a single unit, usually a Class, and shielding access to inner states using private access modifiers and public properties.");
+      markTopicComplete('Viva Voice Prep', 80);
+      toast.success("Voice transcribed! Audio feedback analytics updated below.");
+    }, 3000);
+  };
+
+  // Notebook handlers
+  const handleAddNote = () => {
+    if (!newNoteText.trim()) return;
+    const newNote = {
+      id: Date.now(),
+      color: noteColor,
+      text: newNoteText
+    };
+    const updated = [...notesList, newNote];
+    saveNotes(updated);
+    setNewNoteText('');
+    toast.success("Sticky note pinned!");
+  };
+
+  const handleDeleteNote = (id) => {
+    const updated = notesList.filter(n => n.id !== id);
+    saveNotes(updated);
+    toast.success("Note removed.");
+  };
+
+  const topicsToComplete = [
+    'Theory Concepts', 
+    'Memory Architecture Model', 
+    'Roslyn Code Execution', 
+    'OOP Syntax Matcher', 
+    '10-Mark Exam Mode', 
+    'Viva Voice Prep'
+  ];
+  
+  const completedList = Object.keys(completedTopics).filter(k => completedTopics[k]);
+  const progressPercent = Math.round((completedList.length / topicsToComplete.length) * 100);
+
+  return (
+    <div className="space-y-6">
+      
+      {/* ──────────────── PREMIUM HERO SECTION ──────────────── */}
+      <div className="relative overflow-hidden p-6 sm:p-8 cs-fun-dark-card border border-white/10 rounded-[32px] text-left">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-blue-500/10 rounded-full blur-[60px] pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-xl">
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] uppercase font-bold tracking-widest rounded-full">
+                Intermediate Track
+              </span>
+              <span className="px-3 py-1 bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] uppercase font-bold tracking-widest rounded-full flex items-center gap-1">
+                <Flame size={10} className="text-orange-400" /> +380 XP Total
+              </span>
+            </div>
+            
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              C# OOP Concepts
+            </h1>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              Build scalable and reusable applications using objects and classes. Master classes, encapsulation, inheritance polymorphism, abstractions, and SOLID design patterns.
+            </p>
+            
+            <div className="flex items-center gap-4 pt-2">
+              <button 
+                onClick={() => {
+                  markTopicComplete('Theory Concepts', 50);
+                  setActiveTab('visuals');
+                }}
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg hover:shadow-blue-500/20 cursor-pointer flex items-center gap-1.5"
+              >
+                <Zap size={14} /> Start UML Visualizer
+              </button>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400">Time Est: </span>
+                <span className="text-xs text-white font-bold">4.5 Hours</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Gamified Meter Card */}
+          <div className="bg-slate-950/40 backdrop-blur-xl border border-white/10 p-5 rounded-2xl w-full md:w-80 space-y-4">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400 font-medium">Track Completion</span>
+              <span className="text-blue-400 font-extrabold">{progressPercent}%</span>
+            </div>
+            
+            {/* Progress bar */}
+            <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-white/5">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-purple-600 h-full rounded-full transition-all duration-500"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-center pt-1">
+              <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                <span className="text-[10px] text-slate-500 block">Mastery Score</span>
+                <strong className="text-sm text-white">{completedList.length}/{topicsToComplete.length}</strong>
+              </div>
+              <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                <span className="text-[10px] text-slate-500 block">Total XP Gained</span>
+                <strong className="text-sm text-purple-400 font-extrabold">+{completedList.length * 50} XP</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ──────────────── 12 TABS INTERACTIVE NAVIGATION MENU ──────────────── */}
+      <div className="flex items-center overflow-x-auto pb-2 border-b border-white/10 gap-1.5 scrollbar-thin scrollbar-thumb-white/10">
+        {[
+          { id: 'theory', label: 'Theory & Logic', icon: BookOpen },
+          { id: 'visuals', label: 'Visuals & Analogy', icon: Layers },
+          { id: 'codelab', label: 'Roslyn Code Lab', icon: Code },
+          { id: 'explainer', label: 'Code Explainer', icon: Eye },
+          { id: 'practice', label: 'Practice & Quizzes', icon: CheckCircle },
+          { id: 'exam', label: 'Exam Mode (10M)', icon: Award },
+          { id: 'pyqs', label: 'PYQs (University)', icon: FileText },
+          { id: 'interview', label: 'Interview Prep', icon: HelpCircle },
+          { id: 'viva', label: 'Viva Voice Simulation', icon: Volume2 },
+          { id: 'notes', label: 'Study Sticky Notes', icon: Edit3 },
+          { id: 'cheatsheet', label: 'Quick Cheat Sheet', icon: Clipboard },
+          { id: 'analytics', label: 'Telemetry Analytics', icon: TrendingUp }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition cursor-pointer ${
+                isActive 
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' 
+                  : 'bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Icon size={13} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ──────────────── TAB WORKSPACE CONTAINERS ──────────────── */}
+      <div className="min-h-[450px]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+            className="w-full"
+          >
+            
+            {/* 1. THEORY TAB */}
+            {activeTab === 'theory' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Detailed Description */}
+                  <div className="cs-fun-card space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">Academic Theory Overview</span>
+                      <button 
+                        onClick={() => markTopicComplete('Theory Concepts', 50)}
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                          completedTopics['Theory Concepts'] ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'
+                        }`}
+                      >
+                        {completedTopics['Theory Concepts'] ? '✓ Mastered' : 'Mark Topic Mastered'}
+                      </button>
+                    </div>
+                    <h2 className="text-xl font-bold text-white">Understand Object-Oriented Programming (OOP)</h2>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      Object-Oriented Programming is a software paradigm centered around **Objects**—instances containing data properties (fields/properties) and function codes (methods).
+                    </p>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      C# is a fully object-oriented language. Everything must reside within a class. OOP simplifies complex code management through four core tenants: **Encapsulation** (shielding state), **Abstraction** (contract structures), **Inheritance** (reusability hierarchies), and **Polymorphism** (dynamic behavior overrides).
+                    </p>
+
+                    <div className="border-t border-white/5 pt-4">
+                      <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-2">Real-Life Analogy</h4>
+                      <div className="cs-fun-inner-card">
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                          <strong>House Blueprint vs Built House:</strong> A Class is like a blueprint drawn on paper. It holds details but you cannot live in it. An Object is the actual house built from that blueprint. The constructor is the foundation work. Encapsulation is the outer wall hiding inner wire pipes (internal fields).
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Advantages & Disadvantages Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-5 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl">
+                      <strong className="text-xs text-emerald-400 uppercase tracking-wider block mb-2">OOP Design Pros</strong>
+                      <ul className="text-xs text-slate-300 space-y-2 list-disc pl-4 leading-relaxed">
+                        <li>Encapsulation prevents global variables from corrupting system states.</li>
+                        <li>Polymorphism helps swap implementation algorithms without rewriting callers.</li>
+                        <li>Promotes modular, dry (Don't Repeat Yourself) components.</li>
+                      </ul>
+                    </div>
+                    <div className="p-5 bg-rose-500/5 border border-rose-500/20 rounded-2xl">
+                      <strong className="text-xs text-rose-400 uppercase tracking-wider block mb-2">Common Criticisms</strong>
+                      <ul className="text-xs text-slate-300 space-y-2 list-disc pl-4 leading-relaxed">
+                        <li>Slight performance overhead due to virtual tables lookup (Polymorphism).</li>
+                        <li>Over-engineered nesting hierarchies lead to tight class coupling.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Technical Sidepanel */}
+                <div className="space-y-6">
+                  <div className="cs-fun-card space-y-4">
+                    <strong className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Core Pillars</strong>
+                    
+                    <div className="space-y-3">
+                      <div className="cs-fun-inner-card flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Encapsulation</span>
+                        <span className="text-xs font-bold text-white">Access Modifiers & Properties</span>
+                      </div>
+                      <div className="cs-fun-inner-card flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Abstraction</span>
+                        <span className="text-xs font-bold text-emerald-400">Abstract classes & Interfaces</span>
+                      </div>
+                      <div className="cs-fun-inner-card flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Polymorphism</span>
+                        <span className="text-xs font-bold text-white">virtual / override overrides</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="cs-fun-card text-center space-y-3">
+                    <span className="text-2xl block">💡</span>
+                    <h4 className="text-sm font-bold text-white">Garbage Collection (GC)</h4>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      Unlike C/C++, C# uses an automatic garbage collector. It periodically runs in the CLR to free heap objects that have lost all reference pointers.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 2. VISUALS & ANALOGY TAB */}
+            {activeTab === 'visuals' && (
+              <div className="space-y-6 text-left">
+                
+                {/* UML Object Instantiation Stepper */}
+                <div className="cs-fun-card space-y-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Step-by-Step Memory Reference Tracing</h3>
+                      <p className="text-xs text-slate-400 mt-1">Simulate instantiating a House class, trace stack reference assignment, and track heap structures.</p>
+                    </div>
+                    <button 
+                      onClick={() => markTopicComplete('Memory Architecture Model', 80)}
+                      className="px-3 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/30 text-xs rounded-lg font-bold"
+                    >
+                      Unlock memory badge
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                    
+                    {/* Controls */}
+                    <div className="md:col-span-4 space-y-4 cs-fun-inner-card text-xs">
+                      <strong className="text-xs text-white block uppercase font-bold">Memory Instantiation steps:</strong>
+                      <div className="flex justify-between items-center bg-slate-950/40 p-3 rounded-xl border border-white/5 font-mono text-[11px] text-white">
+                        <span>Current Frame:</span>
+                        <span>Step {visualStep + 1} of 3</span>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button 
+                          disabled={visualStep === 0}
+                          onClick={() => setVisualStep(prev => prev - 1)}
+                          className="flex-1 py-2 bg-slate-900 border border-white/10 hover:bg-slate-800 disabled:opacity-50 text-white rounded-lg font-bold text-xs"
+                        >
+                          ← Prev State
+                        </button>
+                        <button 
+                          disabled={visualStep === 2}
+                          onClick={() => setVisualStep(prev => prev + 1)}
+                          className="flex-1 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg font-bold text-xs"
+                        >
+                          Next State →
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Stack vs Heap visualizer */}
+                    <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      
+                      {/* Code Execution Marker */}
+                      <div className="p-4 cs-fun-dark-card border rounded-xl flex flex-col justify-between text-[11px] font-mono">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Execution Line:</span>
+                        <div className="space-y-1.5 pt-3">
+                          <div className={visualStep === 0 ? 'text-purple-400 font-bold bg-white/5 p-1 rounded' : 'text-slate-500'}>{"House myHouse;"}</div>
+                          <div className={visualStep === 1 ? 'text-blue-400 font-bold bg-white/5 p-1 rounded' : 'text-slate-500'}>{"myHouse = new House(\"Royal Blue\");"}</div>
+                          <div className={visualStep === 2 ? 'text-emerald-400 font-bold bg-white/5 p-1 rounded' : 'text-slate-500'}>{"myHouse.ShowDetails();"}</div>
+                        </div>
+                      </div>
+
+                      {/* Stack Segment */}
+                      <div className="p-4 cs-fun-dark-card border rounded-xl space-y-2">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Stack Variable:</span>
+                        <div className="font-mono text-xs text-purple-300 pt-2">
+                          <strong className="text-[10px] text-slate-500 block uppercase">Reference registers:</strong>
+                          {memorySteps[visualStep].stack}
+                        </div>
+                      </div>
+
+                      {/* Heap Segment */}
+                      <div className="p-4 cs-fun-dark-card border rounded-xl space-y-2">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Heap Memory:</span>
+                        <div className="font-mono text-[10px] text-emerald-300 pt-2">
+                          <strong className="text-[10px] text-slate-500 block uppercase">Allocated instances:</strong>
+                          {memorySteps[visualStep].heap}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  <div className="p-4 cs-fun-inner-card text-xs text-slate-400 leading-relaxed border-t border-white/5">
+                    <strong>Technical explanation: </strong> {memorySteps[visualStep].desc}
+                  </div>
+                </div>
+
+                {/* Bank Account Object Simulation */}
+                <div className="cs-fun-card space-y-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Interactive Encapsulation Simulator</h3>
+                    <p className="text-xs text-slate-400 mt-1">Interact with a BankAccount class instance. Deposit/Withdraw funds using encapsulated methods, preventing direct variable corruption.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="p-5 cs-fun-inner-card space-y-4">
+                      <strong className="text-xs text-white block uppercase">Invoke Encapsulated Methods</strong>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-[10px] text-slate-400 mb-1">Transaction Value ($)</label>
+                          <input 
+                            type="number"
+                            value={simInputAmount}
+                            onChange={(e) => setSimInputAmount(e.target.value)}
+                            className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-blue-500"
+                          />
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              const amt = parseFloat(simInputAmount);
+                              if (isNaN(amt) || amt <= 0) {
+                                toast.error("Enter a valid deposit amount.");
+                                return;
+                              }
+                              setSimBalance(prev => prev + amt);
+                              toast.success(`Deposited $${amt} via public Deposit() method.`);
+                            }}
+                            className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold"
+                          >
+                            Deposit()
+                          </button>
+                          <button
+                            onClick={() => {
+                              const amt = parseFloat(simInputAmount);
+                              if (isNaN(amt) || amt <= 0) {
+                                toast.error("Enter a valid withdrawal amount.");
+                                return;
+                              }
+                              if (amt > simBalance) {
+                                toast.error("Declined: Insufficient balance state.");
+                                return;
+                              }
+                              setSimBalance(prev => prev - amt);
+                              toast.success(`Withdrew $${amt} via public Withdraw() method.`);
+                            }}
+                            className="flex-1 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded text-xs font-bold"
+                          >
+                            Withdraw()
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-span-2 p-5 cs-fun-dark-card border rounded-2xl flex flex-col justify-between">
+                      <strong className="text-xs text-slate-500 block uppercase">Object Instance Schema in Memory</strong>
+                      
+                      <div className="font-mono text-xs space-y-2 py-4">
+                        <div><span className="text-purple-400">class</span> <span className="text-white">BankAccount</span> {"{"}</div>
+                        <div className="pl-4 text-slate-500">{"// Private fields - Shielded from direct writes!"}</div>
+                        <div className="pl-4"><span className="text-blue-400">private double</span> _balance = <span className="text-emerald-400 font-bold">${simBalance.toFixed(2)}</span>;</div>
+                        <br/>
+                        <div className="pl-4 text-slate-500">{"// Public property - Exposes read-only access"}</div>
+                        <div className="pl-4"><span className="text-blue-400">public double</span> Balance {"=>"} _balance;</div>
+                        <div>{"}"}</div>
+                      </div>
+
+                      <span className="text-[10px] text-slate-500">Encapsulation allows public actions (Deposit/Withdraw) while keeping the raw balance variable private to protect data integrity.</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* 3. CODE LAB TAB */}
+            {activeTab === 'codelab' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-left">
+                {/* Editor container */}
+                <div className="lg:col-span-8 space-y-4">
+                  <div className="p-4 cs-fun-card flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-400">Roslyn Compiler OOP Playground</span>
+                    
+                    <div className="flex items-center gap-2">
+                      <select 
+                        onChange={(e) => setCode(presets[e.target.value].code)}
+                        className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-300 text-xs font-semibold rounded-lg px-2 py-1 focus:outline-none"
+                      >
+                        <option value="classObj">Class & Object Declaration</option>
+                        <option value="polymorphism">Polymorphism (Overrides)</option>
+                        <option value="interfaces">Interfaces (Universal Charger)</option>
+                      </select>
+
+                      <button 
+                        onClick={() => {
+                          setCode(presets.classObj.code);
+                          setConsoleOutput([]);
+                        }}
+                        className="p-1 hover:bg-white/5 rounded text-slate-400 hover:text-white"
+                        title="Reset code editor"
+                      >
+                        <RotateCcw size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <textarea
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      className="w-full h-80 p-4 font-mono text-xs cs-fun-dark-card text-emerald-400 border border-white/10 rounded-2xl focus:outline-none focus:border-blue-500/50 resize-none leading-relaxed"
+                    />
+                    
+                    <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                      <button
+                        onClick={() => handleCopilotAction('explain')}
+                        className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 rounded border border-white/5 cursor-pointer"
+                      >
+                        💡 AI Explain
+                      </button>
+                      <button
+                        onClick={() => handleCopilotAction('debug')}
+                        className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 rounded border border-white/5 cursor-pointer"
+                      >
+                        🔧 AI Debug
+                      </button>
+                      <button
+                        onClick={() => handleCopilotAction('optimize')}
+                        className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 rounded border border-white/5 cursor-pointer"
+                      >
+                        ⚡ AI Optimize
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Executes */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-slate-500">Ctrl+Enter to compile and run</span>
+                    
+                    <button
+                      onClick={handleExecuteCode}
+                      disabled={isCompiling}
+                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/10"
+                    >
+                      {isCompiling ? (
+                        <>
+                          <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Running...
+                        </>
+                      ) : (
+                        <>
+                          <Play size={13} />
+                          Execute Blueprint
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Output & AI Copilot info */}
+                <div className="lg:col-span-4 space-y-6">
+                  {/* Console Log screen */}
+                  <div className="p-5 cs-fun-dark-card border border-white/10 rounded-2xl space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                        <Terminal size={11} /> C# Console output
+                      </span>
+                      <button 
+                        onClick={() => setConsoleOutput([])}
+                        className="text-[9px] text-slate-500 hover:text-white uppercase"
+                      >
+                        Clear log
+                      </button>
+                    </div>
+
+                    <div className="font-mono text-[11px] text-slate-300 space-y-1 min-h-[140px] max-h-[160px] overflow-y-auto">
+                      {consoleOutput.length === 0 ? (
+                        <div className="text-slate-600 text-center pt-8">Click "Execute Blueprint" to trace instantiations.</div>
+                      ) : (
+                        consoleOutput.map((line, idx) => (
+                          <div 
+                            key={idx} 
+                            className={
+                              line.startsWith('[Compiler]') ? 'text-indigo-400' :
+                              line.startsWith('[CLR]') ? 'text-purple-400' :
+                              line.startsWith('[Output]') ? 'text-slate-400 font-bold' :
+                              'text-emerald-400'
+                            }
+                          >
+                            {line}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* AI Copilot Panel */}
+                  <div className="p-5 cs-fun-card border border-indigo-500/20 rounded-2xl space-y-3">
+                    <span className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
+                      <BrainCircuit size={14} /> AI Copilot Helper
+                    </span>
+
+                    {copilotMessage ? (
+                      <div className={`p-3 rounded-xl text-xs leading-relaxed border ${
+                        copilotType === 'debug' ? 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300' :
+                        copilotType === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300' :
+                        'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-300'
+                      }`}>
+                        {copilotMessage}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-500 leading-relaxed">
+                        Use the Copilot assistant buttons inside the editor for fast, real-time code explanations, syntax checks, and optimizations.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 4. CODE EXPLAINER TAB */}
+            {activeTab === 'explainer' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                {/* Program code lines to click */}
+                <div className="lg:col-span-2 p-6 cs-fun-dark-card border border-white/10 rounded-3xl space-y-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Line-by-Line Object Allocation</h3>
+                    <p className="text-xs text-slate-400 mt-1">Select any line of the C# blueprint definition below to trace execution path, memory allocations, and constructors.</p>
+                  </div>
+
+                  <div className="font-mono text-xs space-y-1 cs-fun-dark-card p-4 border border-white/5 overflow-x-auto select-none">
+                    {explainerLines.map((line, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => setExplainerLine(idx)}
+                        className={`p-2 rounded-lg cursor-pointer transition-all flex gap-3 items-center ${
+                          explainerLine === idx 
+                            ? 'bg-blue-600/30 border border-blue-500/50 text-white' 
+                            : 'hover:bg-white/5 border border-transparent text-slate-400 hover:text-slate-300'
+                        }`}
+                      >
+                        <span className="w-5 text-slate-600 text-right">{idx + 1}</span>
+                        <pre className="font-mono m-0 flex-1 whitespace-pre-wrap">{line.text || " "}</pre>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Explanation text card */}
+                <div className="p-6 cs-fun-card space-y-4 flex flex-col justify-center min-h-[300px]">
+                  {explainerLine === null ? (
+                    <div className="text-center space-y-2">
+                      <span className="text-2xl">👉</span>
+                      <strong className="text-xs text-slate-400 block font-bold">Select a code line on the left to begin memory analysis.</strong>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 animate-fadeIn">
+                      <div className="flex items-center gap-1.5">
+                        <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] font-bold rounded">
+                          Line {explainerLine + 1}
+                        </span>
+                        <span className="text-xs text-slate-500 font-bold uppercase">C# OOP Memory Analysis</span>
+                      </div>
+                      
+                      <h4 className="text-sm font-bold font-mono cs-fun-inner-card p-2.5 rounded border">
+                        {explainerLines[explainerLine].text || "[Empty Space]"}
+                      </h4>
+                      
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        {explainerLines[explainerLine].desc}
+                      </p>
+
+                      <div className="border-t border-white/5 pt-3">
+                        <button
+                          onClick={() => {
+                            markTopicComplete('Roslyn Code Execution', 50);
+                            setExplainerLine(null);
+                          }}
+                          className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold rounded-lg transition"
+                        >
+                          I understand this line!
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 5. PRACTICE & QUIZ TAB */}
+            {activeTab === 'practice' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-left">
+                {/* Topic Assessment Multiple Choice */}
+                <div className="lg:col-span-7 p-6 cs-fun-card space-y-4">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Multiple Choice Checkpoint</span>
+                  <h3 className="text-base font-bold text-white">Which access modifier limits member access exclusively to the defining class and its subclasses?</h3>
+                  
+                  <div className="space-y-2">
+                    {[
+                      { text: "private", correct: false },
+                      { text: "protected", correct: true },
+                      { text: "internal", correct: false },
+                      { text: "public", correct: false }
+                    ].map((opt, idx) => {
+                      const isSelected = selectedQuizOption === idx;
+                      return (
+                        <button
+                          key={idx}
+                          disabled={quizAnswerChecked}
+                          onClick={() => setSelectedQuizOption(idx)}
+                          className={`w-full text-left p-3.5 rounded-xl border text-xs transition ${
+                            quizAnswerChecked
+                              ? opt.correct 
+                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-bold'
+                                : isSelected 
+                                  ? 'bg-rose-500/20 border-rose-500 text-rose-300'
+                                  : 'bg-white/5 border-transparent text-slate-500'
+                              : isSelected
+                                ? 'bg-blue-600/30 border-blue-500 text-white font-bold'
+                                : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5 hover:border-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {opt.text}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {!quizAnswerChecked ? (
+                    <button
+                      onClick={() => {
+                        if (selectedQuizOption === null) {
+                          toast.error("Please select an answer.");
+                          return;
+                        }
+                        setQuizAnswerChecked(true);
+                        if (selectedQuizOption === 1) {
+                          updateXP(40);
+                          toast.success("+40 XP: Correct Answer!");
+                        } else {
+                          toast.error("Incorrect. Let's study the answer.");
+                        }
+                      }}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                    >
+                      Submit Evaluation Answer
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <p className="text-xs text-slate-400">
+                        {selectedQuizOption === 1 
+                          ? "Correct! The 'protected' keyword makes a member accessible within its class and by derived class instances."
+                          : "Remember, 'private' blocks derived classes completely, and 'internal' limits access to files in the same assembly."
+                        }
+                      </p>
+                      <button
+                        onClick={() => {
+                          setSelectedQuizOption(null);
+                          setQuizAnswerChecked(false);
+                        }}
+                        className="px-3 py-1.5 bg-white/5 text-slate-300 text-[10px] font-bold rounded hover:bg-white/10"
+                      >
+                        Retry Quiz
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Drag and Drop Syntax Matcher */}
+                <div className="lg:col-span-5 p-6 cs-fun-card space-y-4">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">UML syntax matcher</span>
+                  <h3 className="text-xs text-slate-300 leading-relaxed">
+                    Assemble keywords to implement runtime polymorphic overrides.
+                  </h3>
+
+                  {/* Variable equations to place tokens in */}
+                  <div className="space-y-3 pt-2 text-xs font-mono">
+                    <div className="flex items-center gap-2 p-3 cs-fun-inner-card">
+                      <span className="text-slate-400">class Child : Parent {"{"}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 p-3 cs-fun-inner-card">
+                      <span className="text-slate-400">public</span>
+                      <button
+                        onClick={() => setDroppedSlots({ ...droppedSlots, 0: null })}
+                        className="w-20 h-7 rounded border border-dashed border-white/20 flex items-center justify-center text-[10px] bg-slate-900 text-purple-400 font-bold"
+                      >
+                        {droppedSlots[0] || "[Slot 1]"}
+                      </button>
+                      <span className="text-slate-400">void GetInfo() {"{"} ... {"}"}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 p-3 cs-fun-inner-card">
+                      <span className="text-slate-400">{"// Base method was: public"}</span>
+                      <button
+                        onClick={() => setDroppedSlots({ ...droppedSlots, 1: null })}
+                        className="w-20 h-7 rounded border border-dashed border-white/20 flex items-center justify-center text-[10px] bg-slate-900 text-blue-400 font-bold"
+                      >
+                        {droppedSlots[1] || "[Slot 2]"}
+                      </button>
+                      <span className="text-slate-400">void GetInfo()</span>
+                    </div>
+                  </div>
+
+                  {/* Items bin */}
+                  <div className="flex gap-2 flex-wrap pt-2">
+                    {['override', 'virtual', 'abstract', 'sealed'].map((item) => (
+                      <button
+                        key={item}
+                        onClick={() => {
+                          if (droppedSlots[0] === null) {
+                            setDroppedSlots({ ...droppedSlots, 0: item });
+                          } else if (droppedSlots[1] === null) {
+                            setDroppedSlots({ ...droppedSlots, 1: item });
+                          } else {
+                            toast.error("Slots are full! Click a slot to empty it.");
+                          }
+                        }}
+                        className="px-3 py-1 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-white rounded text-[11px] font-mono border border-slate-200 dark:border-white/5"
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2">
+                    <button
+                      onClick={() => setDroppedSlots({ 0: null, 1: null })}
+                      className="text-[10px] text-slate-500 hover:text-white uppercase font-bold"
+                    >
+                      Clear slots
+                    </button>
+
+                    <button
+                      onClick={handleVerifyMatching}
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold rounded-xl cursor-pointer"
+                    >
+                      Verify matching
+                    </button>
+                  </div>
+
+                  {matchingSuccess !== null && (
+                    <div className={`p-3 rounded-xl text-center text-xs font-bold ${
+                      matchingSuccess ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                    }`}>
+                      {matchingSuccess ? "🎉 Matching Success! +100 XP!" : "❌ Error: A derived override matches a virtual base method."}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 6. EXAM WRITING MODE TAB */}
+            {activeTab === 'exam' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-left">
+                {/* Writing board */}
+                <div className="lg:col-span-7 p-6 cs-fun-card space-y-4">
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <div>
+                      <span className="text-xs font-bold text-purple-400 uppercase tracking-wider block">University Semester Exam Module</span>
+                      <h3 className="text-sm font-bold text-white mt-1">Q: Contrast Abstract Classes vs Interfaces in C#. Detail the architectural use-cases. (10 Marks)</h3>
+                    </div>
+                    
+                    {/* Timer */}
+                    <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-white/5">
+                      <Clock size={12} className="text-red-400 animate-pulse" />
+                      <span className="text-xs font-mono text-white font-bold">
+                        {Math.floor(examTimer / 60)}:{(examTimer % 60).toString().padStart(2, '0')}
+                      </span>
+                      <button
+                        onClick={() => setTimerActive(!timerActive)}
+                        className="p-0.5 hover:bg-white/5 rounded"
+                      >
+                        {timerActive ? <Pause size={10} /> : <Play size={10} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea
+                    value={examAnswer}
+                    onChange={(e) => setExamAnswer(e.target.value)}
+                    placeholder="Enter your university level description answer here (explain interface contracts, abstract default members, inheritance constraints, constructors, multiple implementations, etc.)...."
+                    className="w-full h-64 p-4 text-xs bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white focus:outline-none focus:border-purple-500/50 resize-none leading-relaxed"
+                  />
+
+                  <div className="flex justify-between items-center">
+                    <button
+                      onClick={() => setExamTimer(300)}
+                      className="text-[10px] text-slate-500 hover:text-white uppercase font-bold"
+                    >
+                      Reset Timer
+                    </button>
+
+                    <button
+                      onClick={handleSubmitExam}
+                      disabled={examGrading}
+                      className="px-5 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {examGrading ? (
+                        <>
+                          <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          AI Grading...
+                        </>
+                      ) : (
+                        "Submit Answer for AI Grading"
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Score panel / AI Evaluator */}
+                <div className="lg:col-span-5 space-y-6">
+                  {examResult === null ? (
+                    <div className="p-6 cs-fun-card h-full flex flex-col justify-center text-center space-y-3 min-h-[300px]">
+                      <span className="text-3xl">📋</span>
+                      <h4 className="text-sm font-bold text-white">AI Examiner waiting for submission...</h4>
+                      <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
+                        Submit your text explanation. The AI system evaluates key terms, syntax depth, and references to verify concepts correctness.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-6 cs-fun-card space-y-4 animate-fadeIn">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-400">Scorecard Metrics</span>
+                        <span className="px-2.5 py-1 bg-purple-500/10 text-purple-400 text-xs font-black rounded-lg border border-purple-500/20">
+                          Grade {examResult.grade}
+                        </span>
+                      </div>
+
+                      <div className="text-center py-2">
+                        <strong className="text-4xl font-extrabold text-white">{examResult.score}</strong>
+                        <span className="text-slate-500 text-xs font-semibold"> / 10 Marks</span>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">AI Evaluator Feedback:</span>
+                        {examResult.feedback.map((fb, idx) => (
+                          <div key={idx} className="flex gap-2 text-xs text-slate-300 leading-relaxed">
+                            <span className="text-emerald-400">✓</span>
+                            <span>{fb}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Side-by-side comparison */}
+                      <div className="border-t border-white/5 pt-4">
+                        <strong className="text-xs font-bold text-white block mb-1.5">Model Answer Reference:</strong>
+                        <div className="p-3 bg-white/5 rounded-xl text-[10px] text-slate-400 leading-relaxed font-mono max-h-36 overflow-y-auto">
+                          <strong>Abstract Class:</strong> Can contain constructors and state fields. Limits derived classes to single inheritance.<br/><br/>
+                          <strong>Interface:</strong> Strict behavior contract. Supports multiple implementation chains, serving as a universal connector API.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 7. PREVIOUS YEAR QUESTIONS (PYQs) TAB */}
+            {activeTab === 'pyqs' && (
+              <div className="p-6 cs-fun-card text-left space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-white">Previous Year University Questions</h3>
+                  <p className="text-xs text-slate-400 mt-1">Examine authentic board and term exam questions covering C# OOP class architectures.</p>
+                </div>
+
+                <div className="space-y-4">
+                  {[
+                    { marks: "2 Marks", q: "Define a constructor in C# and its main purpose.", a: "A constructor is a special member method of a class carrying the exact class name. It executes automatically during object instantiation (via the new keyword) to allocate and initialize heap field values." },
+                    { marks: "5 Marks", q: "Distinguish between Encapsulation and Abstraction.", a: "Encapsulation wraps state fields and logic methods into a single class entity, hiding variable data access via modifiers. Abstraction exposes high-level behaviors while concealing implementation details behind abstract classes or interfaces." },
+                    { marks: "10 Marks", q: "Explain Polymorphism in C#. Differentiate static polymorphism from dynamic polymorphism with code models.", a: "Static polymorphism resolves method signatures at compile time via method overloading. Dynamic polymorphism resolves classes at runtime using virtual base methods overridden in derived subclasses using override keywords." }
+                  ].map((pyq, idx) => (
+                    <div key={idx} className="p-4 cs-fun-inner-card space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] font-bold rounded">
+                          {pyq.marks}
+                        </span>
+                        <span className="text-xs font-bold text-white">{pyq.q}</span>
+                      </div>
+                      <p className="text-xs text-slate-400 pl-4 border-l border-white/10 leading-relaxed">
+                        <strong className="text-slate-300 text-[10px] block uppercase font-bold mb-1">Standard Solution Model:</strong>
+                        {pyq.a}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 8. INTERVIEW PREP TAB */}
+            {activeTab === 'interview' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                <div className="lg:col-span-2 p-6 cs-fun-card space-y-4">
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">C# Interview Prep Cards</span>
+                    <span className="text-xs text-slate-400 font-bold">
+                      Question {activeInterviewIndex + 1} of {interviewQuestions.length}
+                    </span>
+                  </div>
+
+                  {/* Active Question Panel */}
+                  <div className="p-6 cs-fun-dark-card rounded-2xl border border-white/5 min-h-[160px] flex flex-col justify-center">
+                    <h3 className="text-base font-bold text-white text-center">
+                      {interviewQuestions[activeInterviewIndex].q}
+                    </h3>
+                  </div>
+
+                  {/* Reveal Answers */}
+                  {showInterviewAnswer && (
+                    <div className="p-4 bg-blue-950/20 border border-blue-500/20 rounded-2xl text-xs text-slate-300 leading-relaxed animate-fadeIn">
+                      <strong className="text-blue-400 block mb-1 uppercase font-bold text-[10px]">AI Reference Answer:</strong>
+                      {interviewQuestions[activeInterviewIndex].a}
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center pt-2">
+                    <button
+                      onClick={() => setShowInterviewAnswer(!showInterviewAnswer)}
+                      className="px-4 py-2 bg-white/5 hover:bg-white/10 text-xs font-bold rounded-xl text-slate-300 cursor-pointer"
+                    >
+                      {showInterviewAnswer ? "Hide Answer" : "Reveal Answer"}
+                    </button>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setShowInterviewAnswer(false);
+                          setActiveInterviewIndex((prev) => (prev > 0 ? prev - 1 : interviewQuestions.length - 1));
+                        }}
+                        className="px-3 py-1.5 bg-slate-900 border border-white/10 text-xs font-bold rounded-lg text-white"
+                      >
+                        Prev
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowInterviewAnswer(false);
+                          setActiveInterviewIndex((prev) => (prev < interviewQuestions.length - 1 ? prev + 1 : 0));
+                        }}
+                        className="px-3 py-1.5 bg-slate-900 border border-white/10 text-xs font-bold rounded-lg text-white"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Box */}
+                <div className="p-6 cs-fun-card flex flex-col justify-center space-y-3">
+                  <span className="text-3xl text-center">💼</span>
+                  <h4 className="text-sm font-bold text-white text-center">Interviewer Focus Tips</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed text-left">
+                    Expect intermediate scenario-based coding assignments asking you to implement the Open-Closed Principle (OCP) or Liskov Substitution Principle (LSP) using interfaces.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* 9. VIVA QUESTIONS TAB */}
+            {activeTab === 'viva' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                <div className="lg:col-span-2 p-6 cs-fun-card space-y-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white font-black">Viva Oral Q&A Simulator</h3>
+                    <p className="text-xs text-slate-400 mt-1">Answer the viva question below aloud to simulate oral examination conditions.</p>
+                  </div>
+
+                  {/* Active Question */}
+                  <div className="p-4 cs-fun-dark-card rounded-xl border border-white/5">
+                    <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider block">Examiner Oral Question:</span>
+                    <strong className="text-sm text-white block mt-1.5">"Why does C# disallow multiple inheritance for classes, and how do Interfaces solve this architectural limitation?"</strong>
+                  </div>
+
+                  {/* Waveform graphic animation */}
+                  {isRecordingViva && (
+                    <div className="py-6 flex items-center justify-center gap-1.5">
+                      {[1, 2, 3, 4, 5, 4, 3, 2, 1, 2, 3, 4, 5, 4, 3, 2, 1].map((h, i) => (
+                        <span 
+                          key={i} 
+                          className="w-1 bg-purple-500 rounded-full animate-pulse"
+                          style={{ height: `${h * 4}px`, animationDelay: `${i * 0.05}s` }}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Voice capture trigger */}
+                  <div className="flex justify-center">
+                    <button
+                      onClick={handleStartVivaRecording}
+                      disabled={isRecordingViva}
+                      className={`px-6 py-3 rounded-full text-xs font-bold flex items-center gap-2 cursor-pointer transition ${
+                        isRecordingViva ? 'bg-red-600 text-white' : 'bg-purple-600 hover:bg-purple-500 text-white'
+                      }`}
+                    >
+                      <Volume2 size={14} className={isRecordingViva ? 'animate-bounce' : ''} />
+                      {isRecordingViva ? 'Speaking...' : 'Start Mock Speech Recording'}
+                    </button>
+                  </div>
+
+                  {vivaResponse && (
+                    <div className="p-4 cs-fun-inner-card text-xs space-y-2 animate-fadeIn">
+                      <span className="text-[10px] font-bold text-slate-400 block uppercase">Transcribed Voice:</span>
+                      <p className="text-slate-300 italic">"{vivaResponse}"</p>
+                      
+                      <div className="border-t border-white/5 pt-2 flex items-center justify-between text-[10px]">
+                        <span className="text-emerald-400 font-bold">Concept coverage: 95% Match</span>
+                        <span className="text-slate-500">Structured Response</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Telemetry metrics */}
+                <div className="p-6 cs-fun-card space-y-4">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Voice telemetry metrics</span>
+                  
+                  <div className="space-y-3 text-xs">
+                    <div className="p-3 cs-fun-inner-card flex justify-between">
+                      <span className="text-slate-400">Speech Clarity</span>
+                      <strong className="text-white">Exceptional (97%)</strong>
+                    </div>
+                    <div className="p-3 cs-fun-inner-card flex justify-between">
+                      <span className="text-slate-400">Logical Depth</span>
+                      <strong className="text-emerald-400">95/100 Marks</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 10. STUDY STICKY NOTES TAB */}
+            {activeTab === 'notes' && (
+              <div className="space-y-6 text-left">
+                <div className="p-6 cs-fun-card space-y-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Study Notes Notebook</h3>
+                    <p className="text-xs text-slate-400 mt-1">Keep temporary summaries, syntax snippets, and study warnings. Syncs instantly to browser storage.</p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                      type="text"
+                      value={newNoteText}
+                      onChange={(e) => setNewNoteText(e.target.value)}
+                      placeholder="Type a new revision note card details..."
+                      className="flex-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-blue-500/50"
+                    />
+
+                    <div className="flex items-center gap-2">
+                      {['#fef08a', '#bfdbfe', '#bbf7d0', '#fbcfe8'].map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => setNoteColor(c)}
+                          className="w-6 h-6 rounded-full border border-white/10"
+                          style={{ 
+                            backgroundColor: c, 
+                            transform: noteColor === c ? 'scale(1.2)' : 'none',
+                            outline: noteColor === c ? '2px solid white' : 'none'
+                          }}
+                        />
+                      ))}
+
+                      <button
+                        onClick={handleAddNote}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Save size={12} /> Pin Note
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sticky notes list grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {notesList.map((note) => (
+                    <div 
+                      key={note.id} 
+                      className="p-5 rounded-2xl shadow-lg flex flex-col justify-between min-h-[140px] text-slate-900 relative"
+                      style={{ backgroundColor: note.color }}
+                    >
+                      <p className="text-xs font-medium leading-relaxed">
+                        {note.text}
+                      </p>
+                      
+                      <div className="flex justify-between items-center pt-3 border-t border-black/5 mt-3">
+                        <span className="text-[9px] opacity-60">Personal study pin</span>
+                        <button
+                          onClick={() => handleDeleteNote(note.id)}
+                          className="p-1 hover:bg-black/10 rounded text-slate-700 hover:text-red-700 transition"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 11. QUICK CHEAT SHEET TAB */}
+            {activeTab === 'cheatsheet' && (
+              <div className="p-6 cs-fun-card text-left space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">UML & OOP Syntax Cheat Sheet</h3>
+                    <p className="text-xs text-slate-400 mt-1">Quick syntax summaries for constructors, modifiers, and access guidelines.</p>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search keywords (e.g. interface, static)..."
+                    value={cheatFilter}
+                    onChange={(e) => setCheatFilter(e.target.value)}
+                    className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-blue-500/50 w-full sm:w-64"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Syntax reference */}
+                  <div className="space-y-3">
+                    <span className="text-xs font-bold text-blue-400 uppercase tracking-widest block">Core OOP Syntax</span>
+                    <div className="overflow-x-auto rounded-xl border border-white/15">
+                      <table className="w-full text-xs text-slate-300">
+                        <thead className="bg-slate-950 text-white font-bold border-b border-white/15">
+                          <tr>
+                            <th className="p-2.5 text-left">Concept</th>
+                            <th className="p-2.5 text-left">C# Syntax Example</th>
+                            <th className="p-2.5 text-left">Key Property</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                          {[
+                            { name: "Class Decl", example: "class Dog : Animal { }", prop: "Inherits Animal" },
+                            { name: "Constructor", example: "public Dog(string name) : base(name) { }", prop: "Triggers parent constructor" },
+                            { name: "Property", example: "public string Name { get; set; }", prop: "Auto properties" },
+                            { name: "Interface", example: "interface IUniversal { void Connect(); }", prop: "Describe contract" }
+                          ].filter(row => 
+                            row.name.toLowerCase().includes(cheatFilter.toLowerCase()) ||
+                            row.prop.toLowerCase().includes(cheatFilter.toLowerCase())
+                          ).map((row, idx) => (
+                            <tr key={idx} className="hover:bg-white/[0.02]">
+                              <td className="p-2.5 font-bold text-white">{row.name}</td>
+                              <td className="p-2.5 font-mono text-[10px] text-purple-300">{row.example}</td>
+                              <td className="p-2.5 text-slate-400">{row.prop}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Access Modifier syntax table */}
+                  <div className="space-y-3">
+                    <span className="text-xs font-bold text-purple-400 uppercase tracking-widest block">Access Modifiers</span>
+                    <div className="overflow-x-auto rounded-xl border border-white/15">
+                      <table className="w-full text-xs text-slate-300">
+                        <thead className="bg-slate-950 text-white font-bold border-b border-white/15">
+                          <tr>
+                            <th className="p-2.5 text-left">Modifier</th>
+                            <th className="p-2.5 text-left">Usage Range</th>
+                            <th className="p-2.5 text-left">Safety Level</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                          {[
+                            { name: "public", example: "Accessible everywhere", prop: "No restriction" },
+                            { name: "private", example: "Defining class only", prop: "Maximum privacy" },
+                            { name: "protected", example: "Class and subclass derived chains", prop: "Encapsulation safe" },
+                            { name: "internal", example: "Same assembly compilation output", prop: "Project restricted" }
+                          ].filter(row => 
+                            row.name.toLowerCase().includes(cheatFilter.toLowerCase())
+                          ).map((row, idx) => (
+                            <tr key={idx} className="hover:bg-white/[0.02]">
+                              <td className="p-2.5 font-bold text-white">{row.name}</td>
+                              <td className="p-2.5 font-mono text-[10px] text-purple-300">{row.example}</td>
+                              <td className="p-2.5 text-slate-400">{row.prop}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 12. TELEMETRY ANALYTICS TAB */}
+            {activeTab === 'analytics' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
+                <div className="p-5 cs-fun-card">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">Compiler Runs</span>
+                  <strong className="text-3xl text-white block mt-2">{labCompilesCount} Runs</strong>
+                  <p className="text-[11px] text-slate-400 mt-1">Total Roslyn execution cycles tracked in active session.</p>
+                </div>
+
+                <div className="p-5 cs-fun-card">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">Topics Mastered</span>
+                  <strong className="text-3xl text-blue-400 block mt-2">{completedList.length} / {topicsToComplete.length}</strong>
+                  <p className="text-[11px] text-slate-400 mt-1">Percentage completion: {progressPercent}% of syllabus metrics.</p>
+                </div>
+
+                <div className="p-5 cs-fun-card">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">Evaluation Accuracy</span>
+                  <strong className="text-3xl text-purple-400 block mt-2">
+                    {matchingSuccess === true ? "100%" : matchingSuccess === false ? "0%" : "Not Tested"}
+                  </strong>
+                  <p className="text-[11px] text-slate-400 mt-1">Verification score matching conditions drag-and-drop slots.</p>
+                </div>
+
+                <div className="p-5 cs-fun-card">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">University Grade</span>
+                  <strong className="text-3xl text-emerald-400 block mt-2">
+                    {examResult ? `${examResult.score}/10 (${examResult.grade})` : "Not Attempted"}
+                  </strong>
+                  <p className="text-[11px] text-slate-400 mt-1">Estimated exam grading outcome by the JIT evaluation system.</p>
+                </div>
+              </div>
+            )}
+
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Exit control */}
+      <div className="flex justify-between items-center pt-4 border-t border-white/10">
+        <button
+          onClick={() => setSelectedModule('dashboard')}
+          className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer"
+        >
+          ← Exit OOP Panel
+        </button>
+
+        <button
+          onClick={() => {
+            if (progressPercent === 100) {
+              handleMarkComplete('oop');
+              toast.success("Congratulations! You have completed the C# OOP Module!");
+            } else {
+              toast.error(`Please complete all activities first. Current progress: ${progressPercent}%`);
+            }
+          }}
+          className="px-5 py-2 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white text-xs font-bold rounded-xl cursor-pointer"
+        >
+          {completedCount > 2 ? "Track Completed ✓" : "Claim OOP Completion Badge"}
+        </button>
+      </div>
+
+    </div>
+  );
+}
+
