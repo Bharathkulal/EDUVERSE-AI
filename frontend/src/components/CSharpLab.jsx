@@ -1669,7 +1669,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
     <div className="space-y-6">
       
       {/* ──────────────── PREMIUM HERO SECTION ──────────────── */}
-      <div className="relative overflow-hidden p-6 sm:p-8 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 border border-white/10 rounded-[32px] text-left">
+      <div className="relative overflow-hidden p-6 sm:p-8 cs-fun-dark-card border border-white/10 rounded-[32px] text-left">
         <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-[80px] pointer-events-none" />
         <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-blue-500/10 rounded-full blur-[60px] pointer-events-none" />
         
@@ -1763,7 +1763,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
               className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition cursor-pointer ${
                 isActive 
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' 
-                  : 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white'
+                  : 'bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Icon size={13} />
@@ -1790,7 +1790,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
                 <div className="lg:col-span-2 space-y-6">
                   {/* Detailed Description */}
-                  <div className="p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4">
+                  <div className="cs-fun-card space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">Academic Theory Overview</span>
                       <button 
@@ -1812,7 +1812,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
 
                     <div className="border-t border-white/5 pt-4">
                       <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-2">ELI10: Explain Like I'm 10</h4>
-                      <div className="p-4 bg-slate-950/40 rounded-2xl border border-white/5">
+                      <div className="cs-fun-inner-card">
                         <p className="text-xs text-slate-400 leading-relaxed">
                           Imagine you write a recipe in English (C# code). Instead of giving it directly to a baker, you translate it to a secret global drawing code (Intermediate Language). When a baker in France wants to bake it, they translate the drawing into French instructions instantly just before baking (JIT compilation)!
                         </p>
@@ -1842,26 +1842,26 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
 
                 {/* Technical Sidepanel */}
                 <div className="space-y-6">
-                  <div className="p-6 bg-slate-950/40 border border-white/10 rounded-3xl space-y-4">
+                  <div className="cs-fun-card space-y-4">
                     <strong className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Quick Reference parameters</strong>
                     
                     <div className="space-y-3">
-                      <div className="p-3 bg-white/5 border border-white/5 rounded-xl flex justify-between items-center">
+                      <div className="cs-fun-inner-card flex justify-between items-center">
                         <span className="text-xs text-slate-400">Garbage Collector</span>
                         <span className="text-xs font-bold text-white">Automatic</span>
                       </div>
-                      <div className="p-3 bg-white/5 border border-white/5 rounded-xl flex justify-between items-center">
+                      <div className="cs-fun-inner-card flex justify-between items-center">
                         <span className="text-xs text-slate-400">Memory Protection</span>
                         <span className="text-xs font-bold text-emerald-400">Type-Safe</span>
                       </div>
-                      <div className="p-3 bg-white/5 border border-white/5 rounded-xl flex justify-between items-center">
+                      <div className="cs-fun-inner-card flex justify-between items-center">
                         <span className="text-xs text-slate-400">Standard Compiler</span>
                         <span className="text-xs font-bold text-white">Roslyn (.NET CLI)</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-6 bg-indigo-950/40 border border-indigo-500/20 rounded-3xl text-center space-y-3">
+                  <div className="cs-fun-card text-center space-y-3">
                     <span className="text-2xl block">💡</span>
                     <h4 className="text-sm font-bold text-white">JIT Modes</h4>
                     <p className="text-xs text-slate-400 leading-relaxed">
@@ -1875,7 +1875,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
             {/* 2. VISUALS & ANALOGY TAB */}
             {activeTab === 'visuals' && (
               <div className="space-y-6 text-left">
-                <div className="p-6 bg-white/5 border border-white/10 rounded-3xl space-y-6">
+                <div className="cs-fun-card space-y-6">
                   <div>
                     <h3 className="text-lg font-bold text-white">Interactive JIT & CLR Execution Pipeline</h3>
                     <p className="text-xs text-slate-400 mt-1">Click the stages to trace how your code goes from a text document to machine instructions executed on the CPU.</p>
@@ -1895,7 +1895,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                         className={`p-4 rounded-2xl border text-left transition-all ${
                           clrStep === step.id 
                             ? 'bg-blue-600 border-blue-400 shadow-md shadow-blue-500/20 text-white' 
-                            : 'bg-white/5 border-white/5 hover:border-white/20 text-slate-300'
+                            : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/20 text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         <strong className="text-xs block mb-1">{step.label}</strong>
@@ -1907,7 +1907,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                   </div>
 
                   {/* Flow chart visualization canvas */}
-                  <div className="p-6 bg-slate-950/60 rounded-2xl border border-white/5 flex items-center justify-center min-h-[160px]">
+                  <div className="p-6 cs-fun-dark-card rounded-2xl border border-white/5 flex items-center justify-center min-h-[160px]">
                     {clrStep === 'source' && (
                       <div className="text-center space-y-2 max-w-sm">
                         <strong className="text-xs font-bold text-white block">C# Editor</strong>
@@ -1946,7 +1946,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                 </div>
 
                 {/* Stack vs Heap interactive simulator */}
-                <div className="p-6 bg-white/5 border border-white/10 rounded-3xl space-y-6">
+                <div className="cs-fun-card space-y-6">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="text-lg font-bold text-white">Stack vs Heap Memory Model Allocation</h3>
@@ -1971,7 +1971,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                             className={`w-full text-left p-3 rounded-xl border text-xs transition ${
                               memoryStep === idx 
                                 ? 'bg-purple-600 border-purple-400 text-white font-bold' 
-                                : 'bg-white/5 border-white/5 hover:bg-white/10 text-slate-400'
+                                : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5 hover:border-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400'
                             }`}
                           >
                             {step.title}
@@ -1979,14 +1979,14 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                         ))}
                       </div>
 
-                      <div className="p-4 bg-slate-950/40 rounded-2xl border border-white/5 text-xs text-slate-400 leading-relaxed">
+                      <div className="cs-fun-inner-card text-xs text-slate-400 leading-relaxed">
                         <strong className="text-white block mb-1">Step Details:</strong>
                         {memorySteps[memoryStep].desc}
                       </div>
                     </div>
 
                     {/* Stack segment representation */}
-                    <div className="p-5 bg-slate-950/40 border border-white/10 rounded-2xl text-center space-y-3">
+                    <div className="p-5 cs-fun-dark-card text-center space-y-3">
                       <span className="text-xs font-bold text-white uppercase tracking-widest block border-b border-white/10 pb-1.5">
                         Call Stack Memory (Fast, LIFO)
                       </span>
@@ -2006,7 +2006,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                     </div>
 
                     {/* Heap segment representation */}
-                    <div className="p-5 bg-slate-950/40 border border-white/10 rounded-2xl text-center space-y-3">
+                    <div className="p-5 cs-fun-dark-card text-center space-y-3">
                       <span className="text-xs font-bold text-white uppercase tracking-widest block border-b border-white/10 pb-1.5">
                         Dynamic Heap Memory (Objects, GC)
                       </span>
@@ -2034,13 +2034,13 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-left">
                 {/* Code editor pane */}
                 <div className="lg:col-span-8 space-y-4">
-                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
+                  <div className="p-4 cs-fun-card flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-400">Roslyn Compiler Lab Editor</span>
                     
                     <div className="flex items-center gap-2">
                       <select 
                         onChange={(e) => setCode(presets[e.target.value].code)}
-                        className="bg-slate-900 border border-white/10 text-xs font-semibold rounded-lg px-2 py-1 text-slate-300 focus:outline-none"
+                        className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-300 text-xs font-semibold rounded-lg px-2 py-1 focus:outline-none"
                       >
                         <option value="hello">Hello World Template</option>
                         <option value="variables">Stack vs Heap Example</option>
@@ -2064,7 +2064,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                     <textarea
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
-                      className="w-full h-80 p-4 font-mono text-xs bg-slate-950 text-emerald-400 border border-white/10 rounded-2xl focus:outline-none focus:border-blue-500/50 resize-none leading-relaxed"
+                      className="w-full h-80 p-4 font-mono text-xs cs-fun-dark-card text-emerald-400 border border-white/10 rounded-2xl focus:outline-none focus:border-blue-500/50 resize-none leading-relaxed"
                     />
                     
                     <div className="absolute bottom-4 right-4 flex items-center gap-2">
@@ -2116,7 +2116,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                 {/* Output Console and Copilot Helper */}
                 <div className="lg:col-span-4 space-y-6">
                   {/* Console Log screen */}
-                  <div className="p-5 bg-slate-950 border border-white/10 rounded-2xl space-y-3">
+                  <div className="p-5 cs-fun-dark-card border border-white/10 rounded-2xl space-y-3">
                     <div className="flex items-center justify-between border-b border-white/10 pb-2">
                       <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
                         <Terminal size={11} /> C# Console output
@@ -2151,16 +2151,16 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                   </div>
 
                   {/* AI Copilot Panel */}
-                  <div className="p-5 bg-indigo-950/20 border border-indigo-500/20 rounded-2xl space-y-3">
+                  <div className="p-5 cs-fun-card border border-indigo-500/20 rounded-2xl space-y-3">
                     <span className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
                       <BrainCircuit size={14} /> AI Copilot Helper
                     </span>
 
                     {copilotMessage ? (
                       <div className={`p-3 rounded-xl text-xs leading-relaxed border ${
-                        copilotType === 'debug' ? 'bg-rose-500/10 border-rose-500/30 text-rose-300' :
-                        copilotType === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' :
-                        'bg-slate-900 border-white/5 text-slate-300'
+                        copilotType === 'debug' ? 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300' :
+                        copilotType === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300' :
+                        'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-300'
                       }`}>
                         {copilotMessage}
                       </div>
@@ -2178,13 +2178,13 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
             {activeTab === 'explainer' && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
                 {/* Program code lines to click */}
-                <div className="lg:col-span-2 p-6 bg-slate-950 border border-white/10 rounded-3xl space-y-4">
+                <div className="lg:col-span-2 p-6 cs-fun-dark-card border border-white/10 rounded-3xl space-y-4">
                   <div>
                     <h3 className="text-lg font-bold text-white">Line-by-Line Code Explainer</h3>
                     <p className="text-xs text-slate-400 mt-1">Select any line of the C# code sample below to reveal its exact purpose, runtime allocation, and compiler characteristics.</p>
                   </div>
 
-                  <div className="font-mono text-xs space-y-1 bg-slate-900/60 p-4 rounded-xl border border-white/5 overflow-x-auto select-none">
+                  <div className="font-mono text-xs space-y-1 cs-fun-dark-card p-4 border border-white/5 overflow-x-auto select-none">
                     {explainerLines.map((line, idx) => (
                       <div
                         key={idx}
@@ -2203,7 +2203,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                 </div>
 
                 {/* Explanation text card */}
-                <div className="p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4 flex flex-col justify-center min-h-[300px]">
+                <div className="p-6 cs-fun-card space-y-4 flex flex-col justify-center min-h-[300px]">
                   {explainerLine === null ? (
                     <div className="text-center space-y-2">
                       <span className="text-2xl">👉</span>
@@ -2218,7 +2218,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                         <span className="text-xs text-slate-500 font-bold uppercase">C# Architecture Analysis</span>
                       </div>
                       
-                      <h4 className="text-sm font-bold text-white font-mono bg-slate-950 p-2.5 rounded border border-white/5">
+                      <h4 className="text-sm font-bold font-mono cs-fun-inner-card p-2.5 rounded border">
                         {explainerLines[explainerLine].text || "[Empty Space]"}
                       </h4>
                       
@@ -2247,7 +2247,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
             {activeTab === 'practice' && (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-left">
                 {/* Topic Assessment Multiple Choice */}
-                <div className="lg:col-span-7 p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4">
+                <div className="lg:col-span-7 p-6 cs-fun-card space-y-4">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Multiple Choice Checkpoint</span>
                   <h3 className="text-base font-bold text-white">Which of the following is true regarding "Implicit Casting" in C#?</h3>
                   
@@ -2273,7 +2273,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                                   : 'bg-white/5 border-transparent text-slate-500'
                               : isSelected
                                 ? 'bg-blue-600/30 border-blue-500 text-white font-bold'
-                                : 'bg-white/5 border-white/5 hover:bg-white/10 text-slate-300'
+                                : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5 hover:border-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300'
                           }`}
                         >
                           {opt.text}
@@ -2323,7 +2323,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                 </div>
 
                 {/* Drag and Drop Syntax Matcher */}
-                <div className="lg:col-span-5 p-6 bg-slate-950/40 border border-white/10 rounded-3xl space-y-4">
+                <div className="lg:col-span-5 p-6 cs-fun-card space-y-4">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Type Matcher Puzzle</span>
                   <h3 className="text-xs text-slate-300 leading-relaxed">
                     Tap the appropriate C# types in the items bin to fill the empty variable slots correctly.
@@ -2331,7 +2331,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
 
                   {/* Variable equations to place tokens in */}
                   <div className="space-y-3 pt-2 text-xs">
-                    <div className="flex items-center gap-2 p-3 bg-white/5 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-2 p-3 cs-fun-inner-card">
                       <button
                         onClick={() => setDroppedSlots({ ...droppedSlots, 0: null })}
                         className="w-20 h-7 rounded border border-dashed border-white/20 flex items-center justify-center text-[10px] bg-slate-900 text-purple-400 font-bold"
@@ -2341,7 +2341,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                       <span className="text-slate-400">salary = 45000.50;</span>
                     </div>
 
-                    <div className="flex items-center gap-2 p-3 bg-white/5 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-2 p-3 cs-fun-inner-card">
                       <button
                         onClick={() => setDroppedSlots({ ...droppedSlots, 1: null })}
                         className="w-20 h-7 rounded border border-dashed border-white/20 flex items-center justify-center text-[10px] bg-slate-900 text-blue-400 font-bold"
@@ -2351,7 +2351,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                       <span className="text-slate-400">age = (int)salary;</span>
                     </div>
 
-                    <div className="flex items-center gap-2 p-3 bg-white/5 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-2 p-3 cs-fun-inner-card">
                       <button
                         onClick={() => setDroppedSlots({ ...droppedSlots, 2: null })}
                         className="w-20 h-7 rounded border border-dashed border-white/20 flex items-center justify-center text-[10px] bg-slate-900 text-emerald-400 font-bold"
@@ -2379,7 +2379,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                             toast.error("Slots are full! Click a slot to empty it.");
                           }
                         }}
-                        className="px-3 py-1 bg-white/5 hover:bg-white/10 text-white rounded text-[11px] font-mono border border-white/5"
+                        className="px-3 py-1 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-white rounded text-[11px] font-mono border border-slate-200 dark:border-white/5"
                       >
                         {item}
                       </button>
@@ -2417,7 +2417,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
             {activeTab === 'exam' && (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-left">
                 {/* Writing board */}
-                <div className="lg:col-span-7 p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4">
+                <div className="lg:col-span-7 p-6 cs-fun-card space-y-4">
                   <div className="flex justify-between items-center border-b border-white/5 pb-2">
                     <div>
                       <span className="text-xs font-bold text-purple-400 uppercase tracking-wider block">University Semester Exam Module</span>
@@ -2443,7 +2443,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                     value={examAnswer}
                     onChange={(e) => setExamAnswer(e.target.value)}
                     placeholder="Enter your university level description answer here (explain value types, reference allocation structures, JIT stack frames pointer mapping, garbage collectors, etc.)..."
-                    className="w-full h-64 p-4 text-xs bg-slate-900/60 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-purple-500/50 resize-none leading-relaxed"
+                    className="w-full h-64 p-4 text-xs bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white focus:outline-none focus:border-purple-500/50 resize-none leading-relaxed"
                   />
 
                   <div className="flex justify-between items-center">
@@ -2474,7 +2474,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                 {/* Score panel / AI Evaluator */}
                 <div className="lg:col-span-5 space-y-6">
                   {examResult === null ? (
-                    <div className="p-6 bg-slate-950 border border-white/10 rounded-3xl h-full flex flex-col justify-center text-center space-y-3 min-h-[300px]">
+                    <div className="p-6 cs-fun-card h-full flex flex-col justify-center text-center space-y-3 min-h-[300px]">
                       <span className="text-3xl">📋</span>
                       <h4 className="text-sm font-bold text-white">AI Examiner waiting for submission...</h4>
                       <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
@@ -2482,7 +2482,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                       </p>
                     </div>
                   ) : (
-                    <div className="p-6 bg-slate-950 border border-white/10 rounded-3xl space-y-4 animate-fadeIn">
+                    <div className="p-6 cs-fun-card space-y-4 animate-fadeIn">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-slate-400">Scorecard Metrics</span>
                         <span className="px-2.5 py-1 bg-purple-500/10 text-purple-400 text-xs font-black rounded-lg border border-purple-500/20">
@@ -2530,7 +2530,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
 
             {/* 7. PREVIOUS YEAR QUESTIONS (PYQs) TAB */}
             {activeTab === 'pyqs' && (
-              <div className="p-6 bg-white/5 border border-white/10 rounded-3xl text-left space-y-6">
+              <div className="p-6 cs-fun-card text-left space-y-6">
                 <div>
                   <h3 className="text-lg font-bold text-white">Previous Year University Questions</h3>
                   <p className="text-xs text-slate-400 mt-1">Examine authentic board and term exam questions covering structural C# concepts.</p>
@@ -2542,7 +2542,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                     { marks: "5 Marks", q: "Differentiate between value types and reference types in C# with syntax examples.", a: "Value types store data directly in stack variables (e.g. int age = 22). Reference types allocate the pointer on the stack, while creating objects on the heap (e.g. int[] nums = new int[5]). Value type copy creates duplicate value; reference type copy duplicates pointer." },
                     { marks: "10 Marks", q: "Describe the architecture of Common Language Runtime (CLR) and detail its core execution pipeline components.", a: "CLR runtime controls application executions. 1. Code compile (C# to CIL assemblies). 2. Loading assembly class loader. 3. Code verification checks. 4. JIT compilation to machine code. 5. Threading, security, and Garbage Collection execution control." }
                   ].map((pyq, idx) => (
-                    <div key={idx} className="p-4 bg-slate-950/40 rounded-2xl border border-white/5 space-y-2">
+                    <div key={idx} className="p-4 cs-fun-inner-card space-y-2">
                       <div className="flex items-center gap-2">
                         <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] font-bold rounded">
                           {pyq.marks}
@@ -2562,7 +2562,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
             {/* 8. INTERVIEW PREP TAB */}
             {activeTab === 'interview' && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
-                <div className="lg:col-span-2 p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4">
+                <div className="lg:col-span-2 p-6 cs-fun-card space-y-4">
                   <div className="flex justify-between items-center border-b border-white/5 pb-2">
                     <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">C# Interview Prep Cards</span>
                     <span className="text-xs text-slate-400 font-bold">
@@ -2571,7 +2571,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                   </div>
 
                   {/* Active Question Panel */}
-                  <div className="p-6 bg-slate-950 rounded-2xl border border-white/5 min-h-[160px] flex flex-col justify-center">
+                  <div className="p-6 cs-fun-dark-card rounded-2xl border border-white/5 min-h-[160px] flex flex-col justify-center">
                     <h3 className="text-base font-bold text-white text-center">
                       {interviewQuestions[activeInterviewIndex].q}
                     </h3>
@@ -2617,7 +2617,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                 </div>
 
                 {/* Info Box */}
-                <div className="p-6 bg-slate-950 border border-white/10 rounded-3xl flex flex-col justify-center space-y-3">
+                <div className="p-6 cs-fun-card flex flex-col justify-center space-y-3">
                   <span className="text-3xl text-center">💼</span>
                   <h4 className="text-sm font-bold text-white text-center">HR & Technical Round Tips</h4>
                   <p className="text-xs text-slate-500 leading-relaxed text-left">
@@ -2630,14 +2630,14 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
             {/* 9. VIVA QUESTIONS TAB */}
             {activeTab === 'viva' && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
-                <div className="lg:col-span-2 p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4">
+                <div className="lg:col-span-2 p-6 cs-fun-card space-y-4">
                   <div>
                     <h3 className="text-lg font-bold text-white font-black">Viva Oral Q&A Simulation</h3>
                     <p className="text-xs text-slate-400 mt-1">Practice explaining C# architecture verbally. Click record and answer the question aloud.</p>
                   </div>
 
                   {/* Active Question */}
-                  <div className="p-4 bg-slate-950 rounded-xl border border-white/5">
+                  <div className="p-4 cs-fun-dark-card rounded-xl border border-white/5">
                     <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider block">Examiner Oral Question:</span>
                     <strong className="text-sm text-white block mt-1.5">"Trace how a C# program gets compiled and executed by the JIT compiler inside CLR."</strong>
                   </div>
@@ -2670,7 +2670,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                   </div>
 
                   {vivaResponse && (
-                    <div className="p-4 bg-slate-900 border border-white/5 rounded-2xl text-xs space-y-2 animate-fadeIn">
+                    <div className="p-4 cs-fun-inner-card text-xs space-y-2 animate-fadeIn">
                       <span className="text-[10px] font-bold text-slate-400 block uppercase">Transcribed voice:</span>
                       <p className="text-slate-300 italic">"{vivaResponse}"</p>
                       
@@ -2683,7 +2683,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                 </div>
 
                 {/* Telemetry telemetry parameters */}
-                <div className="p-6 bg-slate-950 border border-white/10 rounded-3xl space-y-4">
+                <div className="p-6 cs-fun-card space-y-4">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Voice telemetry metrics</span>
                   
                   <div className="space-y-3 text-xs">
@@ -2707,7 +2707,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
             {/* 10. STUDY STICKY NOTES TAB */}
             {activeTab === 'notes' && (
               <div className="space-y-6 text-left">
-                <div className="p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4">
+                <div className="p-6 cs-fun-card space-y-4">
                   <div>
                     <h3 className="text-lg font-bold text-white">Study Notes Notebook</h3>
                     <p className="text-xs text-slate-400 mt-1">Keep temporary summaries, syntax snippets, and study warnings. Syncs instantly to browser storage.</p>
@@ -2719,7 +2719,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                       value={newNoteText}
                       onChange={(e) => setNewNoteText(e.target.value)}
                       placeholder="Type a new revision note card details..."
-                      className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-blue-500/50"
+                      className="flex-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-blue-500/50"
                     />
 
                     <div className="flex items-center gap-2">
@@ -2780,7 +2780,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
 
             {/* 11. QUICK CHEAT SHEET TAB */}
             {activeTab === 'cheatsheet' && (
-              <div className="p-6 bg-white/5 border border-white/10 rounded-3xl text-left space-y-6">
+              <div className="p-6 cs-fun-card text-left space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                   <div>
                     <h3 className="text-lg font-bold text-white">Syntax & Operations Cheat Sheet</h3>
@@ -2791,7 +2791,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                     placeholder="Search keywords (e.g. cast, int)..."
                     value={cheatFilter}
                     onChange={(e) => setCheatFilter(e.target.value)}
-                    className="bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-blue-500/50 w-full sm:w-64"
+                    className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-blue-500/50 w-full sm:w-64"
                   />
                 </div>
 
@@ -2874,21 +2874,21 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
             {activeTab === 'analytics' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
                 {/* Compile counts */}
-                <div className="p-5 bg-white/5 border border-white/10 rounded-2xl">
+                <div className="p-5 cs-fun-card">
                   <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">Compiler executions</span>
                   <strong className="text-3xl text-white block mt-2">{labCompilesCount} Runs</strong>
                   <p className="text-[11px] text-slate-400 mt-1">Total Roslyn execution assemblies compiled inside this browser session.</p>
                 </div>
 
                 {/* Topics solved progress */}
-                <div className="p-5 bg-white/5 border border-white/10 rounded-2xl">
+                <div className="p-5 cs-fun-card">
                   <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">Topics Mastered</span>
                   <strong className="text-3xl text-blue-400 block mt-2">{completedList.length} / {topicsToComplete.length}</strong>
                   <p className="text-[11px] text-slate-400 mt-1">Interactive modules successfully completed with XP rewards claimed.</p>
                 </div>
 
                 {/* Quiz score indicator */}
-                <div className="p-5 bg-white/5 border border-white/10 rounded-2xl">
+                <div className="p-5 cs-fun-card">
                   <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">Casting Quiz accuracy</span>
                   <strong className="text-3xl text-purple-400 block mt-2">
                     {matchingSuccess === true ? "100%" : matchingSuccess === false ? "0% (Struggling)" : "Not Evaluated"}
@@ -2897,7 +2897,7 @@ export function CSharpFundamentalsDetail({ setSelectedModule, completedCount, ha
                 </div>
 
                 {/* Exam mode submission status */}
-                <div className="p-5 bg-white/5 border border-white/10 rounded-2xl">
+                <div className="p-5 cs-fun-card">
                   <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">Exam Grades achieved</span>
                   <strong className="text-3xl text-emerald-400 block mt-2">
                     {examResult ? `${examResult.score}/10 (${examResult.grade})` : "Not Attempted"}

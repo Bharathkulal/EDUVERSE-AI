@@ -544,3 +544,78 @@
   .cs-lab-title     { font-size: 1.35rem; }
   .cs-split-pane    { grid-template-columns: 1fr; }
 }
+
+/* ─── C# Fundamentals Theme Adjustments ─── */
+
+/* Adaptive Cards */
+.cs-fun-card {
+  background: var(--cs-card) !important;
+  border: 1px solid var(--cs-border) !important;
+  border-radius: var(--cs-radius);
+  padding: 24px;
+  box-shadow: var(--cs-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--cs-text) !important;
+}
+
+.cs-fun-inner-card {
+  background: rgba(15, 23, 42, 0.03) !important;
+  border: 1px solid rgba(15, 23, 42, 0.06) !important;
+  border-radius: var(--cs-radius-sm);
+  padding: 16px;
+  color: var(--cs-text) !important;
+}
+
+[data-theme="dark"] .cs-fun-inner-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Force dark styling context for code compilers & terminal elements */
+.cs-fun-theme-override,
+.cs-fun-theme-override * {
+  color: revert !important;
+}
+
+/* Ensure developer modules maintain contrast in bright mode */
+.csharp-lab .cs-fun-dark-card {
+  background: #090d16 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px;
+  color: #f8fafc !important;
+}
+
+.csharp-lab .cs-fun-dark-card h1,
+.csharp-lab .cs-fun-dark-card h2,
+.csharp-lab .cs-fun-dark-card h3,
+.csharp-lab .cs-fun-dark-card h4,
+.csharp-lab .cs-fun-dark-card h5,
+.csharp-lab .cs-fun-dark-card strong,
+.csharp-lab .cs-fun-dark-card p,
+.csharp-lab .cs-fun-dark-card span,
+.csharp-lab .cs-fun-dark-card div,
+.csharp-lab .cs-fun-dark-card select,
+.csharp-lab .cs-fun-dark-card input,
+.csharp-lab .cs-fun-dark-card textarea,
+.csharp-lab .cs-fun-dark-card .text-white,
+.csharp-lab .cs-fun-dark-card .text-slate-300,
+.csharp-lab .cs-fun-dark-card .text-slate-400,
+.csharp-lab .cs-fun-dark-card .text-slate-500 {
+  color: #e2e8f0 !important;
+}
+
+.csharp-lab .cs-fun-dark-card code,
+.csharp-lab .cs-fun-dark-card pre,
+.csharp-lab .cs-fun-dark-card .text-emerald-400 {
+  color: #34d399 !important; /* Keep emerald code colors */
+}
+.csharp-lab .cs-fun-dark-card .text-blue-400 {
+  color: #60a5fa !important;
+}
+.csharp-lab .cs-fun-dark-card .text-purple-400 {
+  color: #c084fc !important;
+}
+.csharp-lab .cs-fun-dark-card .text-yellow-400 {
+  color: #facc15 !important;
+}
+
