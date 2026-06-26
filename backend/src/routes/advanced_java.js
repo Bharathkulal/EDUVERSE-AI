@@ -111,12 +111,14 @@ router.get('/modules', authenticate, async (req, res) => {
     const modules = await db.query(`
       SELECT m.*, 
         COALESCE(
-          (SELECT json_agg(json_build_object(
-            'id', t.id,
-            'title', t.title,
-            'content', t.content,
-            'order_index', t.order_index
-          ) ORDER BY t.order_index ASC), '[]'::json
+          json_agg(
+            json_build_object(
+              'id', t.id,
+              'title', t.title,
+              'content', t.content,
+              'order_index', t.order_index
+            ) ORDER BY t.order_index ASC
+          ) FILTER (WHERE t.id IS NOT NULL), '[]'::json
         ) as topics
       FROM advanced_java_modules m
       LEFT JOIN advanced_java_topics t ON t.module_id = m.id

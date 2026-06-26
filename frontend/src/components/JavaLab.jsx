@@ -2435,7 +2435,8 @@ function AdvancedJavaLMS({ selectedModule, setSelectedModule, subjectName }) {
       const prac = await api.get('/api/advanced-java/practice');
       setPracticeList(prac.data);
     } catch (e) {
-      toast.error('Failed to load dashboard records.');
+      const errMsg = e.response?.data?.message || e.message || 'Failed to load dashboard records.';
+      toast.error(`Failed to load dashboard records: ${errMsg}`);
     } finally {
       setLoading(false);
     }
