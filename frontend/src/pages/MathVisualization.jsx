@@ -217,54 +217,179 @@ export default function MathVisualization() {
   // If no method selected, render the selection dashboard
   if (!selectedMethod) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans">
-        {/* HEADER */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center px-8 shadow-sm">
-          <button onClick={() => navigate('/subjects/math-proto')} className="mr-4 p-2 hover:bg-slate-100 rounded-full transition font-bold flex items-center gap-1 text-slate-600">
-            <ArrowLeft className="w-5 h-5 text-slate-600" />
-          </button>
-          <div className="flex items-center text-sm font-medium text-slate-500 gap-2">
-            <span>Home</span> <ChevronRight className="w-4 h-4" />
-            <span>Subjects</span> <ChevronRight className="w-4 h-4" />
-            <span>Mathematics</span> <ChevronRight className="w-4 h-4" />
-            <span className="text-emerald-600 font-bold">Numerical Methods</span>
-          </div>
-        </header>
+      <div className="min-h-screen flex flex-col font-sans relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a0e27 0%, #0f1638 25%, #151c4a 50%, #12153b 75%, #080b1e 100%)' }}>
+        
+        {/* ===== FLOATING MATH FORMULAS — Decorative SVG Elements ===== */}
+        {/* Integral formula — top right */}
+        <div className="absolute top-16 right-16 pointer-events-none select-none" style={{ opacity: 0.12 }}>
+          <svg width="180" height="80" viewBox="0 0 180 80">
+            <text x="0" y="55" fill="white" fontFamily="'Times New Roman', serif" fontSize="42" fontStyle="italic">∫</text>
+            <text x="18" y="20" fill="white" fontFamily="'Times New Roman', serif" fontSize="18" fontStyle="italic">b</text>
+            <text x="18" y="72" fill="white" fontFamily="'Times New Roman', serif" fontSize="18" fontStyle="italic">a</text>
+            <text x="35" y="50" fill="white" fontFamily="'Times New Roman', serif" fontSize="28" fontStyle="italic">f(x) dx</text>
+          </svg>
+        </div>
+        
+        {/* Euler's identity — left side */}
+        <div className="absolute top-[55%] left-6 pointer-events-none select-none" style={{ opacity: 0.1 }}>
+          <svg width="160" height="50" viewBox="0 0 160 50">
+            <text x="0" y="35" fill="white" fontFamily="'Times New Roman', serif" fontSize="24" fontStyle="italic">e</text>
+            <text x="15" y="20" fill="white" fontFamily="'Times New Roman', serif" fontSize="16" fontStyle="italic">iπ</text>
+            <text x="40" y="35" fill="white" fontFamily="'Times New Roman', serif" fontSize="24">+ 1 = 0</text>
+          </svg>
+        </div>
+        
+        {/* Derivative — top right area */}
+        <div className="absolute top-[30%] right-10 pointer-events-none select-none" style={{ opacity: 0.1 }}>
+          <svg width="170" height="60" viewBox="0 0 170 60">
+            <text x="0" y="25" fill="white" fontFamily="'Times New Roman', serif" fontSize="22" fontStyle="italic">d</text>
+            <line x1="0" y1="30" x2="25" y2="30" stroke="white" strokeWidth="1.5"/>
+            <text x="0" y="50" fill="white" fontFamily="'Times New Roman', serif" fontSize="22" fontStyle="italic">dx</text>
+            <text x="35" y="35" fill="white" fontFamily="'Times New Roman', serif" fontSize="26" fontStyle="italic">e</text>
+            <text x="50" y="22" fill="white" fontFamily="'Times New Roman', serif" fontSize="16" fontStyle="italic">x</text>
+            <text x="65" y="35" fill="white" fontFamily="'Times New Roman', serif" fontSize="26">= e</text>
+            <text x="108" y="22" fill="white" fontFamily="'Times New Roman', serif" fontSize="16" fontStyle="italic">x</text>
+          </svg>
+        </div>
+        
+        {/* Limit formula — bottom right */}
+        <div className="absolute bottom-20 right-24 pointer-events-none select-none" style={{ opacity: 0.1 }}>
+          <svg width="200" height="60" viewBox="0 0 200 60">
+            <text x="0" y="40" fill="white" fontFamily="'Times New Roman', serif" fontSize="20">lim</text>
+            <text x="10" y="55" fill="white" fontFamily="'Times New Roman', serif" fontSize="11" fontStyle="italic">x→0</text>
+            <text x="48" y="25" fill="white" fontFamily="'Times New Roman', serif" fontSize="22" fontStyle="italic">sin x</text>
+            <line x1="48" y1="30" x2="130" y2="30" stroke="white" strokeWidth="1.5"/>
+            <text x="70" y="50" fill="white" fontFamily="'Times New Roman', serif" fontSize="22" fontStyle="italic">x</text>
+            <text x="140" y="40" fill="white" fontFamily="'Times New Roman', serif" fontSize="22">= 1</text>
+          </svg>
+        </div>
+        
+        {/* Pythagorean — bottom left */}
+        <div className="absolute bottom-32 left-10 pointer-events-none select-none" style={{ opacity: 0.08 }}>
+          <svg width="120" height="80" viewBox="0 0 120 80">
+            <text x="0" y="25" fill="white" fontFamily="'Times New Roman', serif" fontSize="18" fontStyle="italic">a</text>
+            <line x1="0" y1="40" x2="80" y2="40" stroke="white" strokeWidth="0.8"/>
+            <text x="0" y="60" fill="white" fontFamily="'Times New Roman', serif" fontSize="18" fontStyle="italic">c</text>
+            <text x="18" y="60" fill="white" fontFamily="'Times New Roman', serif" fontSize="18">= a² + b²</text>
+          </svg>
+        </div>
 
-        {/* CARDS CONTAINER */}
-        <main className="flex-1 max-w-7xl mx-auto w-full px-8 py-10 overflow-y-auto">
-          <div className="mb-10 text-center lg:text-left">
-            <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Numerical Methods Lab</h1>
-            <p className="text-slate-500 text-lg mt-2">Select a mathematical runtime engine to execute your solution live.</p>
+        {/* Summation — left upper */}
+        <div className="absolute top-[30%] left-8 pointer-events-none select-none" style={{ opacity: 0.08 }}>
+          <svg width="140" height="80" viewBox="0 0 140 80">
+            <text x="0" y="50" fill="white" fontFamily="'Times New Roman', serif" fontSize="36">Σ</text>
+            <text x="5" y="20" fill="white" fontFamily="'Times New Roman', serif" fontSize="14" fontStyle="italic">n</text>
+            <text x="30" y="40" fill="white" fontFamily="'Times New Roman', serif" fontSize="20" fontStyle="italic">n(n+1)</text>
+            <line x1="30" y1="45" x2="115" y2="45" stroke="white" strokeWidth="1.2"/>
+            <text x="60" y="65" fill="white" fontFamily="'Times New Roman', serif" fontSize="20">2</text>
+          </svg>
+        </div>
+        
+        {/* y axis label — left top */}
+        <div className="absolute top-20 left-12 pointer-events-none select-none" style={{ opacity: 0.06 }}>
+          <svg width="40" height="120" viewBox="0 0 40 120">
+            <line x1="20" y1="10" x2="20" y2="110" stroke="white" strokeWidth="1"/>
+            <polygon points="15,15 20,5 25,15" fill="white"/>
+            <text x="5" y="35" fill="white" fontFamily="'Times New Roman', serif" fontSize="18" fontStyle="italic">y</text>
+          </svg>
+        </div>
+        
+        {/* x axis label — bottom left */}
+        <div className="absolute bottom-10 left-20 pointer-events-none select-none" style={{ opacity: 0.06 }}>
+          <svg width="120" height="40" viewBox="0 0 120 40">
+            <line x1="10" y1="20" x2="110" y2="20" stroke="white" strokeWidth="1"/>
+            <polygon points="105,15 115,20 105,25" fill="white"/>
+            <text x="90" y="38" fill="white" fontFamily="'Times New Roman', serif" fontSize="14" fontStyle="italic">x</text>
+          </svg>
+        </div>
+
+        {/* ===== GEOMETRIC COMPASS — Right Side Decorative ===== */}
+        <div className="absolute top-[25%] right-4 pointer-events-none select-none" style={{ opacity: 0.06 }}>
+          <svg width="280" height="280" viewBox="0 0 280 280">
+            <circle cx="140" cy="140" r="120" stroke="white" strokeWidth="1" fill="none"/>
+            <circle cx="140" cy="140" r="90" stroke="white" strokeWidth="0.6" fill="none"/>
+            <circle cx="140" cy="140" r="60" stroke="white" strokeWidth="0.4" fill="none"/>
+            <line x1="140" y1="10" x2="140" y2="270" stroke="white" strokeWidth="0.5"/>
+            <line x1="10" y1="140" x2="270" y2="140" stroke="white" strokeWidth="0.5"/>
+            <line x1="55" y1="55" x2="225" y2="225" stroke="white" strokeWidth="0.4"/>
+            <line x1="225" y1="55" x2="55" y2="225" stroke="white" strokeWidth="0.4"/>
+            {/* Tick marks */}
+            {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map(deg => {
+              const rad = (deg * Math.PI) / 180;
+              const x1 = 140 + 115 * Math.cos(rad);
+              const y1 = 140 + 115 * Math.sin(rad);
+              const x2 = 140 + 125 * Math.cos(rad);
+              const y2 = 140 + 125 * Math.sin(rad);
+              return <line key={deg} x1={x1} y1={y1} x2={x2} y2={y2} stroke="white" strokeWidth="0.8"/>;
+            })}
+          </svg>
+        </div>
+
+        {/* ===== GRADIENT GLOW BLOBS ===== */}
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%)' }} />
+        <div className="absolute top-1/2 left-0 w-[400px] h-[400px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%)' }} />
+
+        {/* ===== MAIN CONTENT ===== */}
+        <main className="flex-1 max-w-7xl mx-auto w-full px-8 py-10 overflow-y-auto relative z-10">
+          
+          {/* Title Section */}
+          <div className="mb-10 text-left">
+            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-3 flex items-baseline">
+              <span className="bg-gradient-to-br from-indigo-400 via-violet-400 to-purple-500 bg-clip-text text-transparent text-7xl md:text-8xl font-black leading-none" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>M</span>
+              <span className="text-white/90">athematics</span>
+            </h1>
+            <p className="text-slate-400 text-lg mt-1">Explore mathematical concepts through interactive simulations</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {CARDS.map((card) => (
+          {/* Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {CARDS.map((card, index) => (
               <motion.div
                 key={card.id}
-                whileHover={{ y: -6, scale: 1.02 }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, type: 'spring', stiffness: 100 }}
+                whileHover={{ y: -8, scale: 1.02 }}
                 onClick={() => setSelectedMethod(card.id)}
-                className="bg-white rounded-3xl border border-slate-200/80 shadow-md hover:shadow-xl transition-all p-6 flex flex-col justify-between cursor-pointer group relative overflow-hidden"
+                className="relative rounded-2xl cursor-pointer group overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(15, 23, 60, 0.9) 0%, rgba(20, 27, 65, 0.85) 50%, rgba(25, 32, 72, 0.8) 100%)',
+                  border: '1px solid rgba(99, 102, 241, 0.15)',
+                  backdropFilter: 'blur(20px)',
+                  boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+                }}
               >
-                {/* Background overlay accent */}
-                <div className={`absolute top-0 left-0 w-2 h-full bg-gradient-to-b ${card.color}`} />
-
-                <div>
-                  <div className="flex items-center justify-between mb-4 pl-2">
-                    <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${card.status === 'Online' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                      {card.status}
+                {/* Top gradient border */}
+                <div className={`h-1 w-full bg-gradient-to-r ${card.color}`} />
+                
+                {/* Card glow on hover */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(99, 102, 241, 0.1) 0%, transparent 70%)' }} />
+                
+                <div className="p-6">
+                  {/* Status & Icon Row */}
+                  <div className="flex items-center justify-between mb-5">
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${
+                      card.status === 'Online' 
+                        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)]' 
+                        : 'bg-red-500/10 text-red-400 border-red-500/25 shadow-[0_0_12px_rgba(239,68,68,0.1)]'
+                    }`}>
+                      {card.status === 'Online' ? 'ONLINE' : 'OFFLINE'}
                     </span>
-                    <span className="text-2xl group-hover:scale-110 transition duration-300">🧮</span>
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1))', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                      <span className="text-lg">🧮</span>
+                    </div>
                   </div>
 
-                  <h3 className="text-xl font-bold text-slate-800 mb-2 pl-2 group-hover:text-emerald-600 transition">{card.title}</h3>
-                  <p className="text-slate-500 text-sm leading-relaxed mb-6 pl-2">{card.desc}</p>
-                </div>
+                  {/* Title & Description */}
+                  <h3 className="text-xl font-bold text-white/90 mb-2 group-hover:text-indigo-300 transition-colors duration-300">{card.title}</h3>
+                  <p className="text-slate-400 text-sm leading-relaxed mb-6">{card.desc}</p>
 
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100 pl-2">
-                  <span className="text-xs font-bold text-slate-400 group-hover:text-emerald-500 transition flex items-center gap-1">
-                    Launch Simulator <ChevronRight className="w-3 h-3" />
-                  </span>
+                  {/* Launch Link */}
+                  <div className="flex items-center gap-1.5 text-indigo-400/80 group-hover:text-indigo-300 transition-colors duration-300">
+                    <span className="text-xs font-bold tracking-wide">Launch Simulator</span>
+                    <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300" />
+                  </div>
                 </div>
               </motion.div>
             ))}
