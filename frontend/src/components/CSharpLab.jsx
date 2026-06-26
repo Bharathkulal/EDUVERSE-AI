@@ -679,6 +679,46 @@ export default function CSharpLab() {
                 updateXP={updateXP}
                 xp={xp}
               />
+            ) : activePanel === 'exceptions' ? (
+              <CSharpExceptionsDetail 
+                setSelectedModule={setActivePanel} 
+                completedCount={completedCount}
+                handleMarkComplete={handleMarkComplete}
+                updateXP={updateXP}
+                xp={xp}
+              />
+            ) : activePanel === 'file-handling' ? (
+              <CSharpFileHandlingDetail 
+                setSelectedModule={setActivePanel} 
+                completedCount={completedCount}
+                handleMarkComplete={handleMarkComplete}
+                updateXP={updateXP}
+                xp={xp}
+              />
+            ) : activePanel === 'linq' ? (
+              <CSharpLinqDetail 
+                setSelectedModule={setActivePanel} 
+                completedCount={completedCount}
+                handleMarkComplete={handleMarkComplete}
+                updateXP={updateXP}
+                xp={xp}
+              />
+            ) : activePanel === 'delegates' ? (
+              <CSharpDelegatesDetail 
+                setSelectedModule={setActivePanel} 
+                completedCount={completedCount}
+                handleMarkComplete={handleMarkComplete}
+                updateXP={updateXP}
+                xp={xp}
+              />
+            ) : activePanel === 'async' ? (
+              <CSharpAsyncDetail 
+                setSelectedModule={setActivePanel} 
+                completedCount={completedCount}
+                handleMarkComplete={handleMarkComplete}
+                updateXP={updateXP}
+                xp={xp}
+              />
             ) : CSHARP_MODULES.filter(m => m.id === activePanel).map((mod) => {
               const hasAnswered = selectedAnswers[mod.id] !== undefined;
               const isCorrect = selectedAnswers[mod.id] === mod.quiz.correct;
