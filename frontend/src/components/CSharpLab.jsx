@@ -671,6 +671,14 @@ export default function CSharpLab() {
                 updateXP={updateXP}
                 xp={xp}
               />
+            ) : activePanel === 'collections' ? (
+              <CSharpCollectionsDetail 
+                setSelectedModule={setActivePanel} 
+                completedCount={completedCount}
+                handleMarkComplete={handleMarkComplete}
+                updateXP={updateXP}
+                xp={xp}
+              />
             ) : CSHARP_MODULES.filter(m => m.id === activePanel).map((mod) => {
               const hasAnswered = selectedAnswers[mod.id] !== undefined;
               const isCorrect = selectedAnswers[mod.id] === mod.quiz.correct;
@@ -6033,3 +6041,1569 @@ export function CSharpOOPDetail({ setSelectedModule, completedCount, handleMarkC
   );
 }
 
+// ═══════════════════════════════════════════════════════════
+// C# COLLECTIONS & GENERICS INTERACTIVE DIGITAL CLASSROOM
+// ═══════════════════════════════════════════════════════════
+export function CSharpCollectionsDetail({ setSelectedModule, completedCount, handleMarkComplete, updateXP, xp }) {
+  const [activeTab, setActiveTab] = useState('theory');
+  
+  // Analytics Telemetry States
+  const [completedTopics, setCompletedTopics] = useState(() => {
+    const saved = localStorage.getItem('cs_coll_completed');
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [labCompilesCount, setLabCompilesCount] = useState(() => {
+    return parseInt(localStorage.getItem('cs_coll_compiles') || '0', 10);
+  });
+  
+  // Code Lab Presets
+  const presets = {
+    genericList: {
+      name: "List<T> (Generic Student List)",
+      code: `using System;\nusing System.Collections.Generic;\n\nclass Program {\n    static void Main() {\n        List<string> students = new List<string>();\n        students.Add("Alice");\n        students.Add("Bob");\n        \n        Console.WriteLine("Student Count: " + students.Count);\n        foreach (var s in students) {\n            Console.WriteLine("Enrolled student: " + s);\n        }\n    }\n}`
+    },
+    queueStack: {
+      name: "Queue & Stack Operations",
+      code: `using System;\nusing System.Collections.Generic;\n\nclass Program {\n    static void Main() {\n        // Queue: First-In-First-Out (FIFO) - Bank Counter\n        Queue<string> bankLine = new Queue<string>();\n        bankLine.Enqueue("Customer 1");\n        bankLine.Enqueue("Customer 2");\n        \n        Console.WriteLine("Serving from Queue: " + bankLine.Dequeue());\n        \n        // Stack: Last-In-First-Out (LIFO) - Browser History\n        Stack<string> history = new Stack<string>();\n        history.Push("google.com");\n        history.Push("github.com");\n        \n        Console.WriteLine("Backtracking Stack: " + history.Pop());\n    }\n}`
+    },
+    genericClass: {
+      name: "Custom Generic Repository",
+      code: `using System;\n\nclass Repository<T> {\n    private T _data;\n    public void Save(T val) {\n        _data = val;\n    }\n    public T Get() => _data;\n}\n\nclass Program {\n    static void Main() {\n        Repository<int> idRepo = new Repository<int>();\n        idRepo.Save(101);\n        Console.WriteLine("Saved ID: " + idRepo.Get());\n        \n        Repository<string> nameRepo = new Repository<string>();\n        nameRepo.Save("Jane Doe");\n        Console.WriteLine("Saved Name: " + nameRepo.Get());\n    }\n}`
+    }
+  };
+  
+  const [code, setCode] = useState(presets.genericList.code);
+  const [consoleOutput, setConsoleOutput] = useState([]);
+  const [isCompiling, setIsCompiling] = useState(false);
+  const [copilotMessage, setCopilotMessage] = useState('');
+  const [copilotType, setCopilotType] = useState('info');
+
+  // Interactive Visual Diagram States
+  const [visualStep, setVisualStep] = useState(0);
+  const [simQueue, setSimQueue] = useState(["Alice", "Bob"]);
+  const [simInputName, setSimInputName] = useState("Charlie");
+  const [simStack, setSimStack] = useState(["page1.html", "page2.html"]);
+  
+  // Memory model tracing step-by-step
+  const memorySteps = [
+    { step: 0, stack: "students = null", heap: "Empty", desc: "Before initialization: No collection allocated. Reference is null." },
+    { step: 1, stack: "students = 0x8A1F", heap: "0x8A1F: List<string> { Capacity: 4, Count: 0, Items: [] }", desc: "List object instantiated on the Heap. Capacity defaults to 4. Pointer variable stored on the Stack." },
+    { step: 2, stack: "students = 0x8A1F", heap: "0x8A1F: List<string> { Capacity: 4, Count: 2, Items: ['Alice', 'Bob'] }", desc: "Items added to the contiguous memory array on the heap. Count incremented to 2." }
+  ];
+
+  // Code Explainer Line Highlight State
+  const [explainerLine, setExplainerLine] = useState(null);
+  const explainerLines = [
+    { text: "List<string> students = new List<string>();", desc: "Instantiates a type-safe generic list on the heap. Avoids boxing/unboxing overhead by allocating contiguous memory of type string." },
+    { text: "students.Add(\"Alice\");", desc: "Adds the string value to the internal buffer array. If capacity is exceeded, the array is automatically resized (doubled) under the hood." },
+    { text: "class Repository<T> {", desc: "Declares a generic class blueprint where the placeholder type 'T' will be substituted with a concrete type (like int or string) during compilation." },
+    { text: "    private T _data;", desc: "Encapsulates a field of the generic type placeholder T, ensuring absolute type safety without requiring object-casting." },
+    { text: "    public T Get() => _data;", desc: "Returns the generic type instance directly, ensuring compile-time type validation." }
+  ];
+  
+  // Interactive Practice States
+  const [selectedQuizOption, setSelectedQuizOption] = useState(null);
+  const [quizAnswerChecked, setQuizAnswerChecked] = useState(false);
+  const [droppedSlots, setDroppedSlots] = useState({ 0: null, 1: null });
+  const [matchingSuccess, setMatchingSuccess] = useState(null);
+
+  // Exam Writing Practice States
+  const [examAnswer, setExamAnswer] = useState('');
+  const [examTimer, setExamTimer] = useState(300); // 5 minutes
+  const [timerActive, setTimerActive] = useState(false);
+  const [examGrading, setExamGrading] = useState(false);
+  const [examResult, setExamResult] = useState(null);
+
+  // Interview & Viva Telemetry
+  const [activeInterviewIndex, setActiveInterviewIndex] = useState(0);
+  const [interviewQuestions] = useState([
+    { q: "What is the difference between ArrayList and List<T> in C#?", a: "ArrayList is non-generic (stores elements as objects, which incurs boxing/unboxing overhead for value types and lacks compile-time type safety). List<T> is a generic, type-safe collection that avoids boxing/unboxing, yielding significantly faster execution and cleaner code." },
+    { q: "Explain boxing and unboxing and their performance impact.", a: "Boxing is the implicit conversion of a value type (like int) to a reference type (object). Unboxing is the explicit conversion back. Both operations allocate memory on the heap and require CPU cycles for type conversions, causing performance bottlenecks in tight loops." },
+    { q: "How does a Dictionary work under the hood?", a: "A Dictionary<TKey, TValue> uses hash tables. It hashes the key to calculate a bucket index, allowing near-instantaneous O(1) retrieval, insertion, and deletion speeds." }
+  ]);
+  const [showInterviewAnswer, setShowInterviewAnswer] = useState(false);
+  const [isRecordingViva, setIsRecordingViva] = useState(false);
+  const [vivaResponse, setVivaResponse] = useState('');
+
+  // Study Notes and Cheat Sheet
+  const [notesList, setNotesList] = useState(() => {
+    const saved = localStorage.getItem('cs_coll_notes');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, color: '#fef08a', text: 'Important: Always use generic collections (System.Collections.Generic) to prevent boxing overhead.' },
+      { id: 2, color: '#bbf7d0', text: 'Dictionary lookup speed is O(1) average. Choose it over lists for key-value pair searches.' }
+    ];
+  });
+  const [newNoteText, setNewNoteText] = useState('');
+  const [noteColor, setNoteColor] = useState('#fef08a');
+  const [cheatFilter, setCheatFilter] = useState('');
+
+  // Save notes helper
+  const saveNotes = (updated) => {
+    setNotesList(updated);
+    localStorage.setItem('cs_coll_notes', JSON.stringify(updated));
+  };
+
+  // Exam timer logic
+  useEffect(() => {
+    let interval = null;
+    if (timerActive && examTimer > 0) {
+      interval = setInterval(() => {
+        setExamTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (examTimer === 0) {
+      setTimerActive(false);
+      toast.error("Time is up! Exam auto-submitted.");
+      handleSubmitExam();
+    }
+    return () => clearInterval(interval);
+  }, [timerActive, examTimer]);
+
+  // Save completed state to localstorage helper
+  const markTopicComplete = (topicName, rewardXP) => {
+    if (completedTopics[topicName]) {
+      toast.success("Topic already completed! Keep exploring.");
+      return;
+    }
+    const updated = { ...completedTopics, [topicName]: true };
+    setCompletedTopics(updated);
+    localStorage.setItem('cs_coll_completed', JSON.stringify(updated));
+    updateXP(rewardXP);
+    toast.success(`+${rewardXP} XP Earned for mastering ${topicName}!`);
+  };
+
+  // Compile runner simulation
+  const handleExecuteCode = () => {
+    setIsCompiling(true);
+    setConsoleOutput(["[Compiler] Allocating type-safe templates...", "[Compiler] Emitting intermediate IL bytecodes...", "[CLR] Instantiating generic memory arrays..."]);
+    
+    setTimeout(() => {
+      let output = [];
+      if (code.includes("students")) {
+        output = [
+          "Student Count: 2",
+          "Enrolled student: Alice",
+          "Enrolled student: Bob",
+          "",
+          "Process completed with exit code 0."
+        ];
+      } else if (code.includes("bankLine")) {
+        output = [
+          "Serving from Queue: Customer 1",
+          "Backtracking Stack: github.com",
+          "",
+          "Process completed with exit code 0."
+        ];
+      } else if (code.includes("Repository")) {
+        output = [
+          "Saved ID: 101",
+          "Saved Name: Jane Doe",
+          "",
+          "Process completed with exit code 0."
+        ];
+      } else {
+        output = [
+          "[Output] Collections code compiled successfully.",
+          "Check templates selection to run specific presets."
+        ];
+      }
+      setConsoleOutput(output);
+      setIsCompiling(false);
+      
+      const newCompileCount = labCompilesCount + 1;
+      setLabCompilesCount(newCompileCount);
+      localStorage.setItem('cs_coll_compiles', newCompileCount.toString());
+      
+      if (newCompileCount === 1) {
+        updateXP(50);
+        toast.success("+50 XP: First Collections & Generics program execution!");
+      }
+    }, 1200);
+  };
+
+  const handleCopilotAction = (actionType) => {
+    setCopilotType('info');
+    if (actionType === 'explain') {
+      setCopilotMessage("Generics allow class algorithms to defer the specification of exact types until instantiation, enforcing compile-time type check safety.");
+    } else if (actionType === 'debug') {
+      if (code.includes("List<int>") && code.includes(".Add(\"")) {
+        setCopilotType('debug');
+        setCopilotMessage("Error: Argument conversion type mismatch. Cannot insert a string literal into a List<int>.");
+      } else {
+        setCopilotType('success');
+        setCopilotMessage("Type constraints verified. Boxing operations eliminated.");
+      }
+    } else if (actionType === 'optimize') {
+      setCopilotMessage("Optimization: Specifying an initial capacity (e.g. new List<T>(100)) prevents dynamic array resizing cycles.");
+    }
+  };
+
+  // Drag and Drop Matcher logic
+  const handleVerifyMatching = () => {
+    if (droppedSlots[0] === 'where' && droppedSlots[1] === 'new()') {
+      setMatchingSuccess(true);
+      markTopicComplete('Collections Syntax Matcher', 100);
+    } else {
+      setMatchingSuccess(false);
+      toast.error("Incorrect generic constraints order. 'where T : new()' limits instantiation.");
+    }
+  };
+
+  // Exam Practice Grading Simulator
+  const handleSubmitExam = () => {
+    if (!examAnswer.trim()) {
+      toast.error("Please enter an answer before submitting.");
+      return;
+    }
+    setExamGrading(true);
+    setTimerActive(false);
+    
+    setTimeout(() => {
+      const charCount = examAnswer.length;
+      let score = 5;
+      let feedback = [];
+      
+      if (examAnswer.toLowerCase().includes("boxing") || examAnswer.toLowerCase().includes("unboxing")) {
+        score += 2;
+        feedback.push("Good mention of boxing and unboxing overhead in non-generic collections.");
+      } else {
+        feedback.push("Explain boxing/unboxing conversions to score higher marks.");
+      }
+      
+      if (examAnswer.toLowerCase().includes("type safety") || examAnswer.toLowerCase().includes("compile-time")) {
+        score += 2;
+        feedback.push("Excellent highlighting of compile-time type validation properties.");
+      } else {
+        feedback.push("Mention compiler-level type safety characteristics for complete answer context.");
+      }
+      
+      if (charCount > 250) score += 1;
+      score = Math.min(score, 10);
+      
+      setExamResult({
+        score,
+        grade: score >= 9 ? 'A+' : score >= 7 ? 'A' : score >= 5 ? 'B' : 'F',
+        feedback,
+        corrections: charCount < 100 ? ["Add code blocks comparing ArrayList vs List<int>."] : []
+      });
+      setExamGrading(false);
+      markTopicComplete('10-Mark Exam Mode', 150);
+    }, 2000);
+  };
+
+  // Mock Viva Voice Telemetry Simulation
+  const handleStartVivaRecording = () => {
+    setIsRecordingViva(true);
+    toast.success("Recording oral description...");
+    
+    setTimeout(() => {
+      setIsRecordingViva(false);
+      setVivaResponse("Generics allow us to write a class or method that can work with any data type, while maintaining complete type safety and performance by avoiding runtime casting operations.");
+      markTopicComplete('Viva Voice Prep', 80);
+      toast.success("Speech analytics evaluated successfully!");
+    }, 3000);
+  };
+
+  // Notebook handlers
+  const handleAddNote = () => {
+    if (!newNoteText.trim()) return;
+    const newNote = {
+      id: Date.now(),
+      color: noteColor,
+      text: newNoteText
+    };
+    const updated = [...notesList, newNote];
+    saveNotes(updated);
+    setNewNoteText('');
+    toast.success("Sticky note pinned!");
+  };
+
+  const handleDeleteNote = (id) => {
+    const updated = notesList.filter(n => n.id !== id);
+    saveNotes(updated);
+    toast.success("Note removed.");
+  };
+
+  const topicsToComplete = [
+    'Theory Concepts', 
+    'Memory Architecture Model', 
+    'Roslyn Code Execution', 
+    'Collections Syntax Matcher', 
+    '10-Mark Exam Mode', 
+    'Viva Voice Prep'
+  ];
+  
+  const completedList = Object.keys(completedTopics).filter(k => completedTopics[k]);
+  const progressPercent = Math.round((completedList.length / topicsToComplete.length) * 100);
+
+  return (
+    <div className="space-y-6">
+      
+      {/* ──────────────── PREMIUM HERO SECTION ──────────────── */}
+      <div className="relative overflow-hidden p-6 sm:p-8 cs-fun-dark-card border border-white/10 rounded-[32px] text-left">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-blue-500/10 rounded-full blur-[60px] pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-xl">
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] uppercase font-bold tracking-widest rounded-full">
+                Intermediate Track
+              </span>
+              <span className="px-3 py-1 bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] uppercase font-bold tracking-widest rounded-full flex items-center gap-1">
+                <Flame size={10} className="text-orange-400" /> +380 XP Total
+              </span>
+            </div>
+            
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              C# Collections & Generics
+            </h1>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              Examine type-safe containers and generic patterns. Master dynamic lists, queues, stack structures, key-value dictionaries, hashset uniqueness, and custom generic types.
+            </p>
+            
+            <div className="flex items-center gap-4 pt-2">
+              <button 
+                onClick={() => {
+                  markTopicComplete('Theory Concepts', 50);
+                  setActiveTab('visuals');
+                }}
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg hover:shadow-blue-500/20 cursor-pointer flex items-center gap-1.5"
+              >
+                <Zap size={14} /> Start Queue Simulator
+              </button>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400">Time Est: </span>
+                <span className="text-xs text-white font-bold">4.0 Hours</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Gamified Progress Meter */}
+          <div className="bg-slate-950/40 backdrop-blur-xl border border-white/10 p-5 rounded-2xl w-full md:w-80 space-y-4">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400 font-medium">Track Completion</span>
+              <span className="text-blue-400 font-extrabold">{progressPercent}%</span>
+            </div>
+            
+            {/* Progress bar */}
+            <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-white/5">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-purple-600 h-full rounded-full transition-all duration-500"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-center pt-1">
+              <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                <span className="text-[10px] text-slate-500 block">Mastery Score</span>
+                <strong className="text-sm text-white">{completedList.length}/{topicsToComplete.length}</strong>
+              </div>
+              <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                <span className="text-[10px] text-slate-500 block">Total XP Gained</span>
+                <strong className="text-sm text-purple-400 font-extrabold">+{completedList.length * 50} XP</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ──────────────── 12 TABS INTERACTIVE NAVIGATION MENU ──────────────── */}
+      <div className="flex items-center overflow-x-auto pb-2 border-b border-white/10 gap-1.5 scrollbar-thin scrollbar-thumb-white/10">
+        {[
+          { id: 'theory', label: 'Theory & Logic', icon: BookOpen },
+          { id: 'visuals', label: 'Visuals & Analogy', icon: Layers },
+          { id: 'codelab', label: 'Roslyn Code Lab', icon: Code },
+          { id: 'explainer', label: 'Code Explainer', icon: Eye },
+          { id: 'practice', label: 'Practice & Quizzes', icon: CheckCircle },
+          { id: 'exam', label: 'Exam Mode (10M)', icon: Award },
+          { id: 'pyqs', label: 'PYQs (University)', icon: FileText },
+          { id: 'interview', label: 'Interview Prep', icon: HelpCircle },
+          { id: 'viva', label: 'Viva Voice Simulation', icon: Volume2 },
+          { id: 'notes', label: 'Study Sticky Notes', icon: Edit3 },
+          { id: 'cheatsheet', label: 'Quick Cheat Sheet', icon: Clipboard },
+          { id: 'analytics', label: 'Telemetry Analytics', icon: TrendingUp }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition cursor-pointer ${
+                isActive 
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' 
+                  : 'bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Icon size={13} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ──────────────── TAB WORKSPACE CONTAINERS ──────────────── */}
+      <div className="min-h-[450px]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+            className="w-full"
+          >
+            
+            {/* 1. THEORY TAB */}
+            {activeTab === 'theory' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Detailed Description */}
+                  <div className="cs-fun-card space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">Academic Theory Overview</span>
+                      <button 
+                        onClick={() => markTopicComplete('Theory Concepts', 50)}
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                          completedTopics['Theory Concepts'] ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'
+                        }`}
+                      >
+                        {completedTopics['Theory Concepts'] ? '✓ Mastered' : 'Mark Topic Mastered'}
+                      </button>
+                    </div>
+                    <h2 className="text-xl font-bold text-white">Collections and Generics Blueprint</h2>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      C# collections organize and store groups of related elements. C# separates them into **Generic** (System.Collections.Generic) and **Non-Generic** (System.Collections) types.
+                    </p>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      Generics allow classes and methods to operate on parameterized placeholder types (`{"<T>"}`). This prevents value-type boxing operations on the heap, ensuring absolute compile-time validation checks and high CPU performance.
+                    </p>
+
+                    <div className="border-t border-white/5 pt-4">
+                      <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-2">Real-Life Analogy</h4>
+                      <div className="cs-fun-inner-card">
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                          <strong>Bank Queue vs Browser History Stack:</strong> A Queue behaves like a physical Bank Counter line—the first customer to arrive is the first customer served (FIFO: First-In-First-Out). A Stack behaves like a stack of plates or Browser History—the last page visited is the first page popped back when clicking "Back" (LIFO: Last-In-First-Out).
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Advantages & Disadvantages Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-5 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl">
+                      <strong className="text-xs text-emerald-400 uppercase tracking-wider block mb-2">Generics Advantages</strong>
+                      <ul className="text-xs text-slate-300 space-y-2 list-disc pl-4 leading-relaxed">
+                        <li>Eliminates boxing/unboxing overhead for value types (like `int`, `double`).</li>
+                        <li>Triggers compiler type errors instead of throwing runtime casting exceptions.</li>
+                        <li>Promotes clean code reuse across different data schemas.</li>
+                      </ul>
+                    </div>
+                    <div className="p-5 bg-rose-500/5 border border-rose-500/20 rounded-2xl">
+                      <strong className="text-xs text-rose-400 uppercase tracking-wider block mb-2">Non-Generic Pitfalls</strong>
+                      <ul className="text-xs text-slate-300 space-y-2 list-disc pl-4 leading-relaxed">
+                        <li>`ArrayList` casts values to type `object`, introducing performance penalties.</li>
+                        <li>Prone to crashes if incorrect types are cast during retrieval.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Technical Sidepanel */}
+                <div className="space-y-6">
+                  <div className="cs-fun-card space-y-4">
+                    <strong className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Collection Schemes</strong>
+                    
+                    <div className="space-y-3">
+                      <div className="cs-fun-inner-card flex justify-between items-center">
+                        <span className="text-xs text-slate-400">List&lt;T&gt;</span>
+                        <span className="text-xs font-bold text-white">Dynamic contiguous array</span>
+                      </div>
+                      <div className="cs-fun-inner-card flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Dictionary&lt;K,V&gt;</span>
+                        <span className="text-xs font-bold text-emerald-400">O(1) Quick hash lookup</span>
+                      </div>
+                      <div className="cs-fun-inner-card flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Queue&lt;T&gt;</span>
+                        <span className="text-xs font-bold text-white">Enqueue / Dequeue (FIFO)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="cs-fun-card text-center space-y-3">
+                    <span className="text-2xl block">💡</span>
+                    <h4 className="text-sm font-bold text-white">Boxing Performance Cost</h4>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      Boxing value types onto the heap requires garbage collection tracking. Generics solve this by allocating memory blocks customized exactly for the declared type parameter.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 2. VISUALS & ANALOGY TAB */}
+            {activeTab === 'visuals' && (
+              <div className="space-y-6 text-left">
+                
+                {/* List Allocation Stepper */}
+                <div className="cs-fun-card space-y-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Generic List&lt;string&gt; Memory Allocation</h3>
+                      <p className="text-xs text-slate-400 mt-1">Walk step-by-step through a generic list declaration to view stack pointers, heap buffers, and capacity expansion rules.</p>
+                    </div>
+                    <button 
+                      onClick={() => markTopicComplete('Memory Architecture Model', 80)}
+                      className="px-3 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/30 text-xs rounded-lg font-bold"
+                    >
+                      Unlock telemetry badge
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                    
+                    {/* Controls */}
+                    <div className="md:col-span-4 space-y-4 cs-fun-inner-card text-xs">
+                      <strong className="text-xs text-white block uppercase font-bold">List memory states:</strong>
+                      <div className="flex justify-between items-center bg-slate-950/40 p-3 rounded-xl border border-white/5 font-mono text-[11px] text-white">
+                        <span>Current Phase:</span>
+                        <span>Step {visualStep + 1} of 3</span>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button 
+                          disabled={visualStep === 0}
+                          onClick={() => setVisualStep(prev => prev - 1)}
+                          className="flex-1 py-2 bg-slate-900 border border-white/10 hover:bg-slate-800 disabled:opacity-50 text-white rounded-lg font-bold text-xs"
+                        >
+                          ← Prev State
+                        </button>
+                        <button 
+                          disabled={visualStep === 2}
+                          onClick={() => setVisualStep(prev => prev + 1)}
+                          className="flex-1 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg font-bold text-xs"
+                        >
+                          Next State →
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Stack vs Heap visualizer */}
+                    <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      
+                      {/* Code Execution Marker */}
+                      <div className="p-4 cs-fun-dark-card border rounded-xl flex flex-col justify-between text-[11px] font-mono">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Execution Line:</span>
+                        <div className="space-y-1.5 pt-3">
+                          <div className={visualStep === 0 ? 'text-purple-400 font-bold bg-white/5 p-1 rounded' : 'text-slate-500'}>{"List<string> students;"}</div>
+                          <div className={visualStep === 1 ? 'text-blue-400 font-bold bg-white/5 p-1 rounded' : 'text-slate-500'}>{"students = new List<string>();"}</div>
+                          <div className={visualStep === 2 ? 'text-emerald-400 font-bold bg-white/5 p-1 rounded' : 'text-slate-500'}>{"students.Add(\"Alice\");"}</div>
+                        </div>
+                      </div>
+
+                      {/* Stack Segment */}
+                      <div className="p-4 cs-fun-dark-card border rounded-xl space-y-2">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Stack Variable:</span>
+                        <div className="font-mono text-xs text-purple-300 pt-2">
+                          <strong className="text-[10px] text-slate-500 block uppercase">Reference pointers:</strong>
+                          {memorySteps[visualStep].stack}
+                        </div>
+                      </div>
+
+                      {/* Heap Segment */}
+                      <div className="p-4 cs-fun-dark-card border rounded-xl space-y-2">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Heap Segment:</span>
+                        <div className="font-mono text-[10px] text-emerald-300 pt-2">
+                          <strong className="text-[10px] text-slate-500 block uppercase">Allocated instances:</strong>
+                          {memorySteps[visualStep].heap}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  <div className="p-4 cs-fun-inner-card text-xs text-slate-400 leading-relaxed border-t border-white/5">
+                    <strong>Technical explanation: </strong> {memorySteps[visualStep].desc}
+                  </div>
+                </div>
+
+                {/* Queue vs Stack Simulation */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Queue container */}
+                  <div className="p-5 cs-fun-card space-y-4">
+                    <strong className="text-xs text-white block uppercase">Queue Simulation (FIFO)</strong>
+                    
+                    <div className="flex gap-2 text-xs">
+                      <input 
+                        type="text" 
+                        value={simInputName}
+                        onChange={(e) => setSimInputName(e.target.value)}
+                        className="bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 text-white outline-none w-32 focus:border-blue-500"
+                        placeholder="Name"
+                      />
+                      <button
+                        onClick={() => {
+                          if (!simInputName.trim()) return;
+                          setSimQueue([...simQueue, simInputName]);
+                          setSimInputName("");
+                          toast.success("Enqueued onto the line.");
+                        }}
+                        className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-bold"
+                      >
+                        Enqueue()
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (simQueue.length === 0) {
+                            toast.error("Queue is empty!");
+                            return;
+                          }
+                          const served = simQueue[0];
+                          setSimQueue(simQueue.slice(1));
+                          toast.success(`Dequeued ${served} from front of line.`);
+                        }}
+                        className="px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-white/10 text-white rounded text-xs"
+                      >
+                        Dequeue()
+                      </button>
+                    </div>
+
+                    <div className="flex gap-2 py-4 overflow-x-auto min-h-[80px] bg-slate-950/40 rounded-xl p-3 border border-white/5 items-center">
+                      <span className="text-[10px] text-slate-500 uppercase font-mono font-bold mr-1">Exit ←</span>
+                      {simQueue.length === 0 ? (
+                        <span className="text-xs text-slate-600 font-mono italic">Empty queue line</span>
+                      ) : (
+                        simQueue.map((item, idx) => (
+                          <div 
+                            key={idx}
+                            className="px-3 py-1.5 bg-blue-950/40 text-blue-300 border border-blue-500/20 text-xs font-bold rounded-lg whitespace-nowrap"
+                          >
+                            {item}
+                          </div>
+                        ))
+                      )}
+                      <span className="text-[10px] text-slate-500 uppercase font-mono font-bold ml-auto">← Entrance</span>
+                    </div>
+                  </div>
+
+                  {/* Stack container */}
+                  <div className="p-5 cs-fun-card space-y-4">
+                    <strong className="text-xs text-white block uppercase">Stack Simulation (LIFO)</strong>
+                    
+                    <div className="flex gap-2 text-xs">
+                      <button
+                        onClick={() => {
+                          const page = `page${simStack.length + 1}.html`;
+                          setSimStack([...simStack, page]);
+                          toast.success(`Pushed ${page} onto history stack.`);
+                        }}
+                        className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded text-xs font-bold"
+                      >
+                        Push() New Page
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (simStack.length === 0) {
+                            toast.error("Stack is empty!");
+                            return;
+                          }
+                          const popped = simStack[simStack.length - 1];
+                          setSimStack(simStack.slice(0, -1));
+                          toast.success(`Popped ${popped} from the stack.`);
+                        }}
+                        className="px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-white/10 text-white rounded text-xs"
+                      >
+                        Pop() Back
+                      </button>
+                    </div>
+
+                    <div className="flex flex-col-reverse gap-1.5 py-4 bg-slate-950/40 rounded-xl p-3 border border-white/5 min-h-[80px]">
+                      {simStack.length === 0 ? (
+                        <span className="text-xs text-slate-600 font-mono italic text-center">Empty history stack</span>
+                      ) : (
+                        simStack.map((item, idx) => (
+                          <div 
+                            key={idx}
+                            className="px-3 py-1.5 bg-purple-950/40 text-purple-300 border border-purple-500/20 text-xs font-mono rounded-lg text-center"
+                          >
+                            {item} {idx === simStack.length - 1 && "← TOP"}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* 3. CODE LAB TAB */}
+            {activeTab === 'codelab' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-left">
+                {/* Editor container */}
+                <div className="lg:col-span-8 space-y-4">
+                  <div className="p-4 cs-fun-card flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-400">Roslyn Compiler Generic Templates</span>
+                    
+                    <div className="flex items-center gap-2">
+                      <select 
+                        onChange={(e) => setCode(presets[e.target.value].code)}
+                        className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-300 text-xs font-semibold rounded-lg px-2 py-1 focus:outline-none"
+                      >
+                        <option value="genericList">List&lt;T&gt; (Generic Student List)</option>
+                        <option value="queueStack">Queue & Stack Operations</option>
+                        <option value="genericClass">Custom Generic Repository</option>
+                      </select>
+
+                      <button 
+                        onClick={() => {
+                          setCode(presets.genericList.code);
+                          setConsoleOutput([]);
+                        }}
+                        className="p-1 hover:bg-white/5 rounded text-slate-400 hover:text-white"
+                        title="Reset code editor"
+                      >
+                        <RotateCcw size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <textarea
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      className="w-full h-80 p-4 font-mono text-xs cs-fun-dark-card text-emerald-400 border border-white/10 rounded-2xl focus:outline-none focus:border-blue-500/50 resize-none leading-relaxed"
+                    />
+                    
+                    <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                      <button
+                        onClick={() => handleCopilotAction('explain')}
+                        className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 rounded border border-white/5 cursor-pointer"
+                      >
+                        💡 AI Explain
+                      </button>
+                      <button
+                        onClick={() => handleCopilotAction('debug')}
+                        className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 rounded border border-white/5 cursor-pointer"
+                      >
+                        🔧 AI Debug
+                      </button>
+                      <button
+                        onClick={() => handleCopilotAction('optimize')}
+                        className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 rounded border border-white/5 cursor-pointer"
+                      >
+                        ⚡ AI Optimize
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Executes */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-slate-500">Ctrl+Enter to compile and run</span>
+                    
+                    <button
+                      onClick={handleExecuteCode}
+                      disabled={isCompiling}
+                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/10"
+                    >
+                      {isCompiling ? (
+                        <>
+                          <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Running...
+                        </>
+                      ) : (
+                        <>
+                          <Play size={13} />
+                          Execute Blueprint
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Output & AI Copilot info */}
+                <div className="lg:col-span-4 space-y-6">
+                  {/* Console Log screen */}
+                  <div className="p-5 cs-fun-dark-card border border-white/10 rounded-2xl space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                        <Terminal size={11} /> C# Console output
+                      </span>
+                      <button 
+                        onClick={() => setConsoleOutput([])}
+                        className="text-[9px] text-slate-500 hover:text-white uppercase"
+                      >
+                        Clear log
+                      </button>
+                    </div>
+
+                    <div className="font-mono text-[11px] text-slate-300 space-y-1 min-h-[140px] max-h-[160px] overflow-y-auto">
+                      {consoleOutput.length === 0 ? (
+                        <div className="text-slate-600 text-center pt-8">Click "Execute Blueprint" to trace lists in console.</div>
+                      ) : (
+                        consoleOutput.map((line, idx) => (
+                          <div 
+                            key={idx} 
+                            className={
+                              line.startsWith('[Compiler]') ? 'text-indigo-400' :
+                              line.startsWith('[CLR]') ? 'text-purple-400' :
+                              line.startsWith('[Output]') ? 'text-slate-400 font-bold' :
+                              'text-emerald-400'
+                            }
+                          >
+                            {line}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* AI Copilot Panel */}
+                  <div className="p-5 cs-fun-card border border-indigo-500/20 rounded-2xl space-y-3">
+                    <span className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
+                      <BrainCircuit size={14} /> AI Copilot Helper
+                    </span>
+
+                    {copilotMessage ? (
+                      <div className={`p-3 rounded-xl text-xs leading-relaxed border ${
+                        copilotType === 'debug' ? 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300' :
+                        copilotType === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300' :
+                        'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-300'
+                      }`}>
+                        {copilotMessage}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-500 leading-relaxed">
+                        Use the Copilot assistant buttons inside the editor for fast, real-time code explanations, syntax checks, and optimizations.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 4. CODE EXPLAINER TAB */}
+            {activeTab === 'explainer' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                {/* Program code lines to click */}
+                <div className="lg:col-span-2 p-6 cs-fun-dark-card border border-white/10 rounded-3xl space-y-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Line-by-Line List Trace</h3>
+                    <p className="text-xs text-slate-400 mt-1">Select any line of the C# code list declaration below to explain operations, heap storage expansion, and constraints.</p>
+                  </div>
+
+                  <div className="font-mono text-xs space-y-1 cs-fun-dark-card p-4 border border-white/5 overflow-x-auto select-none">
+                    {explainerLines.map((line, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => setExplainerLine(idx)}
+                        className={`p-2 rounded-lg cursor-pointer transition-all flex gap-3 items-center ${
+                          explainerLine === idx 
+                            ? 'bg-blue-600/30 border border-blue-500/50 text-white' 
+                            : 'hover:bg-white/5 border border-transparent text-slate-400 hover:text-slate-300'
+                        }`}
+                      >
+                        <span className="w-5 text-slate-600 text-right">{idx + 1}</span>
+                        <pre className="font-mono m-0 flex-1 whitespace-pre-wrap">{line.text || " "}</pre>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Explanation text card */}
+                <div className="p-6 cs-fun-card space-y-4 flex flex-col justify-center min-h-[300px]">
+                  {explainerLine === null ? (
+                    <div className="text-center space-y-2">
+                      <span className="text-2xl">👉</span>
+                      <strong className="text-xs text-slate-400 block font-bold">Select a code line on the left to begin memory analysis.</strong>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 animate-fadeIn">
+                      <div className="flex items-center gap-1.5">
+                        <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] font-bold rounded">
+                          Line {explainerLine + 1}
+                        </span>
+                        <span className="text-xs text-slate-500 font-bold uppercase">C# Collections Memory Trace</span>
+                      </div>
+                      
+                      <h4 className="text-sm font-bold font-mono cs-fun-inner-card p-2.5 rounded border">
+                        {explainerLines[explainerLine].text || "[Empty Space]"}
+                      </h4>
+                      
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        {explainerLines[explainerLine].desc}
+                      </p>
+
+                      <div className="border-t border-white/5 pt-3">
+                        <button
+                          onClick={() => {
+                            markTopicComplete('Roslyn Code Execution', 50);
+                            setExplainerLine(null);
+                          }}
+                          className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold rounded-lg transition"
+                        >
+                          I understand this line!
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 5. PRACTICE & QUIZ TAB */}
+            {activeTab === 'practice' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-left">
+                {/* Topic Assessment Multiple Choice */}
+                <div className="lg:col-span-7 p-6 cs-fun-card space-y-4">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Multiple Choice Checkpoint</span>
+                  <h3 className="text-base font-bold text-white">Which C# collection allows retrieving elements in first-in, first-out (FIFO) order?</h3>
+                  
+                  <div className="space-y-2">
+                    {[
+                      { text: "Stack<T>", correct: false },
+                      { text: "Queue<T>", correct: true },
+                      { text: "List<T>", correct: false },
+                      { text: "Dictionary<Key,Value>", correct: false }
+                    ].map((opt, idx) => {
+                      const isSelected = selectedQuizOption === idx;
+                      return (
+                        <button
+                          key={idx}
+                          disabled={quizAnswerChecked}
+                          onClick={() => setSelectedQuizOption(idx)}
+                          className={`w-full text-left p-3.5 rounded-xl border text-xs transition ${
+                            quizAnswerChecked
+                              ? opt.correct 
+                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-bold'
+                                : isSelected 
+                                  ? 'bg-rose-500/20 border-rose-500 text-rose-300'
+                                  : 'bg-white/5 border-transparent text-slate-500'
+                              : isSelected
+                                ? 'bg-blue-600/30 border-blue-500 text-white font-bold'
+                                : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5 hover:border-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {opt.text}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {!quizAnswerChecked ? (
+                    <button
+                      onClick={() => {
+                        if (selectedQuizOption === null) {
+                          toast.error("Please select an answer.");
+                          return;
+                        }
+                        setQuizAnswerChecked(true);
+                        if (selectedQuizOption === 1) {
+                          updateXP(40);
+                          toast.success("+40 XP: Correct Answer!");
+                        } else {
+                          toast.error("Incorrect. Let's study the answer.");
+                        }
+                      }}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                    >
+                      Submit Evaluation Answer
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <p className="text-xs text-slate-400">
+                        {selectedQuizOption === 1 
+                          ? "Correct! Queue<T> uses enqueue/dequeue functions to manage items in First-In-First-Out (FIFO) sequence order."
+                          : "Remember, Stack<T> operates in LIFO, and Dictionary provides key-value hash mappings."
+                        }
+                      </p>
+                      <button
+                        onClick={() => {
+                          setSelectedQuizOption(null);
+                          setQuizAnswerChecked(false);
+                        }}
+                        className="px-3 py-1.5 bg-white/5 text-slate-300 text-[10px] font-bold rounded hover:bg-white/10"
+                      >
+                        Retry Quiz
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Drag and Drop Syntax Matcher */}
+                <div className="lg:col-span-5 p-6 cs-fun-card space-y-4">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Generics constraints matcher</span>
+                  <h3 className="text-xs text-slate-300 leading-relaxed">
+                    Place structural tokens to declare a generic class with new() constructor limits.
+                  </h3>
+
+                  {/* Variable equations to place tokens in */}
+                  <div className="space-y-3 pt-2 text-xs font-mono">
+                    <div className="flex items-center gap-2 p-3 cs-fun-inner-card">
+                      <span className="text-slate-400">class Container&lt;T&gt;</span>
+                      <button
+                        onClick={() => setDroppedSlots({ ...droppedSlots, 0: null })}
+                        className="w-20 h-7 rounded border border-dashed border-white/20 flex items-center justify-center text-[10px] bg-slate-900 text-purple-400 font-bold"
+                      >
+                        {droppedSlots[0] || "[Slot 1]"}
+                      </button>
+                      <span className="text-slate-400">{"T :"}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 p-3 cs-fun-inner-card">
+                      <button
+                        onClick={() => setDroppedSlots({ ...droppedSlots, 1: null })}
+                        className="w-20 h-7 rounded border border-dashed border-white/20 flex items-center justify-center text-[10px] bg-slate-900 text-blue-400 font-bold"
+                      >
+                        {droppedSlots[1] || "[Slot 2]"}
+                      </button>
+                      <span className="text-slate-400">{"{"}</span>
+                    </div>
+                  </div>
+
+                  {/* Items bin */}
+                  <div className="flex gap-2 flex-wrap pt-2">
+                    {['where', 'new()', 'struct', 'class'].map((item) => (
+                      <button
+                        key={item}
+                        onClick={() => {
+                          if (droppedSlots[0] === null) {
+                            setDroppedSlots({ ...droppedSlots, 0: item });
+                          } else if (droppedSlots[1] === null) {
+                            setDroppedSlots({ ...droppedSlots, 1: item });
+                          } else {
+                            toast.error("Slots are full! Click a slot to empty it.");
+                          }
+                        }}
+                        className="px-3 py-1 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-white rounded text-[11px] font-mono border border-slate-200 dark:border-white/5"
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2">
+                    <button
+                      onClick={() => setDroppedSlots({ 0: null, 1: null })}
+                      className="text-[10px] text-slate-500 hover:text-white uppercase font-bold"
+                    >
+                      Clear slots
+                    </button>
+
+                    <button
+                      onClick={handleVerifyMatching}
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold rounded-xl cursor-pointer"
+                    >
+                      Verify matching
+                    </button>
+                  </div>
+
+                  {matchingSuccess !== null && (
+                    <div className={`p-3 rounded-xl text-center text-xs font-bold ${
+                      matchingSuccess ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                    }`}>
+                      {matchingSuccess ? "🎉 Matching Success! +100 XP!" : "❌ Error: Invalid generic constraints syntax sequence."}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 6. EXAM WRITING MODE TAB */}
+            {activeTab === 'exam' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-left">
+                {/* Writing board */}
+                <div className="lg:col-span-7 p-6 cs-fun-card space-y-4">
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <div>
+                      <span className="text-xs font-bold text-purple-400 uppercase tracking-wider block">University Semester Exam Module</span>
+                      <h3 className="text-sm font-bold text-white mt-1">Q: Contrast ArrayList vs generic List&lt;T&gt; compilation and performance advantages in C#. (10 Marks)</h3>
+                    </div>
+                    
+                    {/* Timer */}
+                    <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-white/5">
+                      <Clock size={12} className="text-red-400 animate-pulse" />
+                      <span className="text-xs font-mono text-white font-bold">
+                        {Math.floor(examTimer / 60)}:{(examTimer % 60).toString().padStart(2, '0')}
+                      </span>
+                      <button
+                        onClick={() => setTimerActive(!timerActive)}
+                        className="p-0.5 hover:bg-white/5 rounded"
+                      >
+                        {timerActive ? <Pause size={10} /> : <Play size={10} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea
+                    value={examAnswer}
+                    onChange={(e) => setExamAnswer(e.target.value)}
+                    placeholder="Enter your university level description answer here (compare boxing, object conversion overheads, generic safety constraints, capacity resizing speeds, etc.)...."
+                    className="w-full h-64 p-4 text-xs bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white focus:outline-none focus:border-purple-500/50 resize-none leading-relaxed"
+                  />
+
+                  <div className="flex justify-between items-center">
+                    <button
+                      onClick={() => setExamTimer(300)}
+                      className="text-[10px] text-slate-500 hover:text-white uppercase font-bold"
+                    >
+                      Reset Timer
+                    </button>
+
+                    <button
+                      onClick={handleSubmitExam}
+                      disabled={examGrading}
+                      className="px-5 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {examGrading ? (
+                        <>
+                          <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          AI Grading...
+                        </>
+                      ) : (
+                        "Submit Answer for AI Grading"
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Score panel / AI Evaluator */}
+                <div className="lg:col-span-5 space-y-6">
+                  {examResult === null ? (
+                    <div className="p-6 cs-fun-card h-full flex flex-col justify-center text-center space-y-3 min-h-[300px]">
+                      <span className="text-3xl">📋</span>
+                      <h4 className="text-sm font-bold text-white">AI Examiner waiting for submission...</h4>
+                      <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
+                        Submit your text explanation. The AI system evaluates key terms, syntax depth, and references to verify concepts correctness.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-6 cs-fun-card space-y-4 animate-fadeIn">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-400">Scorecard Metrics</span>
+                        <span className="px-2.5 py-1 bg-purple-500/10 text-purple-400 text-xs font-black rounded-lg border border-purple-500/20">
+                          Grade {examResult.grade}
+                        </span>
+                      </div>
+
+                      <div className="text-center py-2">
+                        <strong className="text-4xl font-extrabold text-white">{examResult.score}</strong>
+                        <span className="text-slate-500 text-xs font-semibold"> / 10 Marks</span>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">AI Evaluator Feedback:</span>
+                        {examResult.feedback.map((fb, idx) => (
+                          <div key={idx} className="flex gap-2 text-xs text-slate-300 leading-relaxed">
+                            <span className="text-emerald-400">✓</span>
+                            <span>{fb}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Side-by-side comparison */}
+                      <div className="border-t border-white/5 pt-4">
+                        <strong className="text-xs font-bold text-white block mb-1.5">Model Answer Reference:</strong>
+                        <div className="p-3 bg-white/5 rounded-xl text-[10px] text-slate-400 leading-relaxed font-mono max-h-36 overflow-y-auto">
+                          <strong>ArrayList:</strong> Stores elements as standard values. Requires explicit cast conversions, triggering frequent boxing/unboxing sequences.<br/><br/>
+                          <strong>List&lt;T&gt;:</strong> Generates type instances inside intermediate IL tables during compile steps, eliminating overhead.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 7. PREVIOUS YEAR QUESTIONS (PYQs) TAB */}
+            {activeTab === 'pyqs' && (
+              <div className="p-6 cs-fun-card text-left space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-white">Previous Year University Questions</h3>
+                  <p className="text-xs text-slate-400 mt-1">Examine authentic board and term exam questions covering collections structures.</p>
+                </div>
+
+                <div className="space-y-4">
+                  {[
+                    { marks: "2 Marks", q: "Why does boxing value types cause performance issues in C#?", a: "Boxing requires casting values to heap-allocated reference objects, which increases garbage collector telemetry overhead and causes system execution delays." },
+                    { marks: "5 Marks", q: "Compare IList and IEnumerable interfaces.", a: "IEnumerable is a forward-only reader interface returning enumerator loops. IList extends IEnumerable to provide index-based additions, insertions, and removal features for collections." },
+                    { marks: "10 Marks", q: "Detail explain C# Dictionary<TKey, TValue> hashing mechanism and bucket structures.", a: "Dictionary maps keys to values via internal hash tables. Key hashes define bucket slots indexes. In case of collisions, Dictionary links items sequentially, maintaining near O(1) read/write capabilities." }
+                  ].map((pyq, idx) => (
+                    <div key={idx} className="p-4 cs-fun-inner-card space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] font-bold rounded">
+                          {pyq.marks}
+                        </span>
+                        <span className="text-xs font-bold text-white">{pyq.q}</span>
+                      </div>
+                      <p className="text-xs text-slate-400 pl-4 border-l border-white/10 leading-relaxed">
+                        <strong className="text-slate-300 text-[10px] block uppercase font-bold mb-1">Standard Solution Model:</strong>
+                        {pyq.a}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 8. INTERVIEW PREP TAB */}
+            {activeTab === 'interview' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                <div className="lg:col-span-2 p-6 cs-fun-card space-y-4">
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">C# Interview Prep Cards</span>
+                    <span className="text-xs text-slate-400 font-bold">
+                      Question {activeInterviewIndex + 1} of {interviewQuestions.length}
+                    </span>
+                  </div>
+
+                  {/* Active Question Panel */}
+                  <div className="p-6 cs-fun-dark-card rounded-2xl border border-white/5 min-h-[160px] flex flex-col justify-center">
+                    <h3 className="text-base font-bold text-white text-center">
+                      {interviewQuestions[activeInterviewIndex].q}
+                    </h3>
+                  </div>
+
+                  {/* Reveal Answers */}
+                  {showInterviewAnswer && (
+                    <div className="p-4 bg-blue-950/20 border border-blue-500/20 rounded-2xl text-xs text-slate-300 leading-relaxed animate-fadeIn">
+                      <strong className="text-blue-400 block mb-1 uppercase font-bold text-[10px]">AI Reference Answer:</strong>
+                      {interviewQuestions[activeInterviewIndex].a}
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center pt-2">
+                    <button
+                      onClick={() => setShowInterviewAnswer(!showInterviewAnswer)}
+                      className="px-4 py-2 bg-white/5 hover:bg-white/10 text-xs font-bold rounded-xl text-slate-300 cursor-pointer"
+                    >
+                      {showInterviewAnswer ? "Hide Answer" : "Reveal Answer"}
+                    </button>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setShowInterviewAnswer(false);
+                          setActiveInterviewIndex((prev) => (prev > 0 ? prev - 1 : interviewQuestions.length - 1));
+                        }}
+                        className="px-3 py-1.5 bg-slate-900 border border-white/10 text-xs font-bold rounded-lg text-white"
+                      >
+                        Prev
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowInterviewAnswer(false);
+                          setActiveInterviewIndex((prev) => (prev < interviewQuestions.length - 1 ? prev + 1 : 0));
+                        }}
+                        className="px-3 py-1.5 bg-slate-900 border border-white/10 text-xs font-bold rounded-lg text-white"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Box */}
+                <div className="p-6 cs-fun-card flex flex-col justify-center space-y-3">
+                  <span className="text-3xl text-center">💼</span>
+                  <h4 className="text-sm font-bold text-white text-center">Interviewer Focus Tips</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed text-left">
+                    Expect intermediate scenario assignments asking you to select custom collections (List vs Dictionary vs Queue vs LinkedList) matching specific asymptotic complexities.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* 9. VIVA QUESTIONS TAB */}
+            {activeTab === 'viva' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                <div className="lg:col-span-2 p-6 cs-fun-card space-y-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white font-black">Viva Oral Q&A Simulator</h3>
+                    <p className="text-xs text-slate-400 mt-1">Answer the viva question below aloud to simulate oral examination conditions.</p>
+                  </div>
+
+                  {/* Active Question */}
+                  <div className="p-4 cs-fun-dark-card rounded-xl border border-white/5">
+                    <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider block">Examiner Oral Question:</span>
+                    <strong className="text-sm text-white block mt-1.5">"Why does List&lt;T&gt; perform much faster than ArrayList when storing integers, and how is compile-time safety preserved?"</strong>
+                  </div>
+
+                  {/* Waveform graphic animation */}
+                  {isRecordingViva && (
+                    <div className="py-6 flex items-center justify-center gap-1.5">
+                      {[1, 2, 3, 4, 5, 4, 3, 2, 1, 2, 3, 4, 5, 4, 3, 2, 1].map((h, i) => (
+                        <span 
+                          key={i} 
+                          className="w-1 bg-purple-500 rounded-full animate-pulse"
+                          style={{ height: `${h * 4}px`, animationDelay: `${i * 0.05}s` }}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Voice capture trigger */}
+                  <div className="flex justify-center">
+                    <button
+                      onClick={handleStartVivaRecording}
+                      disabled={isRecordingViva}
+                      className={`px-6 py-3 rounded-full text-xs font-bold flex items-center gap-2 cursor-pointer transition ${
+                        isRecordingViva ? 'bg-red-600 text-white' : 'bg-purple-600 hover:bg-purple-500 text-white'
+                      }`}
+                    >
+                      <Volume2 size={14} className={isRecordingViva ? 'animate-bounce' : ''} />
+                      {isRecordingViva ? 'Speaking...' : 'Start Mock Speech Recording'}
+                    </button>
+                  </div>
+
+                  {vivaResponse && (
+                    <div className="p-4 cs-fun-inner-card text-xs space-y-2 animate-fadeIn">
+                      <span className="text-[10px] font-bold text-slate-400 block uppercase">Transcribed Voice:</span>
+                      <p className="text-slate-300 italic">"{vivaResponse}"</p>
+                      
+                      <div className="border-t border-white/5 pt-2 flex items-center justify-between text-[10px]">
+                        <span className="text-emerald-400 font-bold">Concept coverage: 93% Match</span>
+                        <span className="text-slate-500">Structured Response</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Telemetry metrics */}
+                <div className="p-6 cs-fun-card space-y-4">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Voice telemetry metrics</span>
+                  
+                  <div className="space-y-3 text-xs">
+                    <div className="p-3 cs-fun-inner-card flex justify-between">
+                      <span className="text-slate-400">Speech Clarity</span>
+                      <strong className="text-white">Exceptional (96%)</strong>
+                    </div>
+                    <div className="p-3 cs-fun-inner-card flex justify-between">
+                      <span className="text-slate-400">Logical Depth</span>
+                      <strong className="text-emerald-400">93/100 Marks</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 10. STUDY STICKY NOTES TAB */}
+            {activeTab === 'notes' && (
+              <div className="space-y-6 text-left">
+                <div className="p-6 cs-fun-card space-y-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Study Notes Notebook</h3>
+                    <p className="text-xs text-slate-400 mt-1">Keep temporary summaries, syntax snippets, and study warnings. Syncs instantly to browser storage.</p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                      type="text"
+                      value={newNoteText}
+                      onChange={(e) => setNewNoteText(e.target.value)}
+                      placeholder="Type a new revision note card details..."
+                      className="flex-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-blue-500/50"
+                    />
+
+                    <div className="flex items-center gap-2">
+                      {['#fef08a', '#bfdbfe', '#bbf7d0', '#fbcfe8'].map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => setNoteColor(c)}
+                          className="w-6 h-6 rounded-full border border-white/10"
+                          style={{ 
+                            backgroundColor: c, 
+                            transform: noteColor === c ? 'scale(1.2)' : 'none',
+                            outline: noteColor === c ? '2px solid white' : 'none'
+                          }}
+                        />
+                      ))}
+
+                      <button
+                        onClick={handleAddNote}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Save size={12} /> Pin Note
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sticky notes list grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {notesList.map((note) => (
+                    <div 
+                      key={note.id} 
+                      className="p-5 rounded-2xl shadow-lg flex flex-col justify-between min-h-[140px] text-slate-900 relative"
+                      style={{ backgroundColor: note.color }}
+                    >
+                      <p className="text-xs font-medium leading-relaxed">
+                        {note.text}
+                      </p>
+                      
+                      <div className="flex justify-between items-center pt-3 border-t border-black/5 mt-3">
+                        <span className="text-[9px] opacity-60">Personal study pin</span>
+                        <button
+                          onClick={() => handleDeleteNote(note.id)}
+                          className="p-1 hover:bg-black/10 rounded text-slate-700 hover:text-red-700 transition"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 11. QUICK CHEAT SHEET TAB */}
+            {activeTab === 'cheatsheet' && (
+              <div className="p-6 cs-fun-card text-left space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Collections & Generics Syntax Cheat Sheet</h3>
+                    <p className="text-xs text-slate-400 mt-1">Quick syntax summaries for generic interfaces and parameter constraints.</p>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search keywords (e.g. List, Queue)..."
+                    value={cheatFilter}
+                    onChange={(e) => setCheatFilter(e.target.value)}
+                    className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-blue-500/50 w-full sm:w-64"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Syntax reference */}
+                  <div className="space-y-3">
+                    <span className="text-xs font-bold text-blue-400 uppercase tracking-widest block">Collection Syntax</span>
+                    <div className="overflow-x-auto rounded-xl border border-white/15">
+                      <table className="w-full text-xs text-slate-300">
+                        <thead className="bg-slate-950 text-white font-bold border-b border-white/15">
+                          <tr>
+                            <th className="p-2.5 text-left">Container</th>
+                            <th className="p-2.5 text-left">C# Syntax Example</th>
+                            <th className="p-2.5 text-left">Key Property</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                          {[
+                            { name: "List<T>", example: "new List<int> { 1, 2 }", prop: "Type safe contiguous array" },
+                            { name: "Queue<T>", example: "queue.Enqueue(val);", prop: "FIFO - exit element dequeue" },
+                            { name: "Stack<T>", example: "stack.Push(val);", prop: "LIFO - exit element pop" },
+                            { name: "Dictionary", example: "dict.Add(key, value);", prop: "O(1) key value map search" }
+                          ].filter(row => 
+                            row.name.toLowerCase().includes(cheatFilter.toLowerCase()) ||
+                            row.prop.toLowerCase().includes(cheatFilter.toLowerCase())
+                          ).map((row, idx) => (
+                            <tr key={idx} className="hover:bg-white/[0.02]">
+                              <td className="p-2.5 font-bold text-white">{row.name}</td>
+                              <td className="p-2.5 font-mono text-[10px] text-purple-300">{row.example}</td>
+                              <td className="p-2.5 text-slate-400">{row.prop}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Generic Constraints table */}
+                  <div className="space-y-3">
+                    <span className="text-xs font-bold text-purple-400 uppercase tracking-widest block">Generic Constraints</span>
+                    <div className="overflow-x-auto rounded-xl border border-white/15">
+                      <table className="w-full text-xs text-slate-300">
+                        <thead className="bg-slate-950 text-white font-bold border-b border-white/15">
+                          <tr>
+                            <th className="p-2.5 text-left">Constraint</th>
+                            <th className="p-2.5 text-left">Usage Range Example</th>
+                            <th className="p-2.5 text-left">Key Rule</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                          {[
+                            { name: "where T : struct", example: "class Repo<T> where T : struct", prop: "Must be a value type" },
+                            { name: "where T : class", example: "class Repo<T> where T : class", prop: "Must be a reference type" },
+                            { name: "where T : new()", example: "class Repo<T> where T : new()", prop: "Must declare a public default constructor" },
+                            { name: "where T : Base", example: "class Repo<T> where T : ParentClass", prop: "Must extend or implement Base parent class" }
+                          ].filter(row => 
+                            row.name.toLowerCase().includes(cheatFilter.toLowerCase())
+                          ).map((row, idx) => (
+                            <tr key={idx} className="hover:bg-white/[0.02]">
+                              <td className="p-2.5 font-bold text-white">{row.name}</td>
+                              <td className="p-2.5 font-mono text-[10px] text-purple-300">{row.example}</td>
+                              <td className="p-2.5 text-slate-400">{row.prop}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 12. TELEMETRY ANALYTICS TAB */}
+            {activeTab === 'analytics' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
+                <div className="p-5 cs-fun-card">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">Compiler Runs</span>
+                  <strong className="text-3xl text-white block mt-2">{labCompilesCount} Runs</strong>
+                  <p className="text-[11px] text-slate-400 mt-1">Total Roslyn execution cycles tracked in active session.</p>
+                </div>
+
+                <div className="p-5 cs-fun-card">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">Topics Mastered</span>
+                  <strong className="text-3xl text-blue-400 block mt-2">{completedList.length} / {topicsToComplete.length}</strong>
+                  <p className="text-[11px] text-slate-400 mt-1">Percentage completion: {progressPercent}% of syllabus metrics.</p>
+                </div>
+
+                <div className="p-5 cs-fun-card">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">Evaluation Accuracy</span>
+                  <strong className="text-3xl text-purple-400 block mt-2">
+                    {matchingSuccess === true ? "100%" : matchingSuccess === false ? "0%" : "Not Tested"}
+                  </strong>
+                  <p className="text-[11px] text-slate-400 mt-1">Verification score matching conditions drag-and-drop slots.</p>
+                </div>
+
+                <div className="p-5 cs-fun-card">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold">University Grade</span>
+                  <strong className="text-3xl text-emerald-400 block mt-2">
+                    {examResult ? `${examResult.score}/10 (${examResult.grade})` : "Not Attempted"}
+                  </strong>
+                  <p className="text-[11px] text-slate-400 mt-1">Estimated exam grading outcome by the JIT evaluation system.</p>
+                </div>
+              </div>
+            )}
+
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Exit control */}
+      <div className="flex justify-between items-center pt-4 border-t border-white/10">
+        <button
+          onClick={() => setSelectedModule('dashboard')}
+          className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer"
+        >
+          ← Exit Collections Panel
+        </button>
+
+        <button
+          onClick={() => {
+            if (progressPercent === 100) {
+              handleMarkComplete('collections');
+              toast.success("Congratulations! You have completed the C# Collections & Generics Module!");
+            } else {
+              toast.error(`Please complete all activities first. Current progress: ${progressPercent}%`);
+            }
+          }}
+          className="px-5 py-2 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white text-xs font-bold rounded-xl cursor-pointer"
+        >
+          {completedCount > 3 ? "Track Completed ✓" : "Claim Collections Completion Badge"}
+        </button>
+      </div>
+
+    </div>
+  );
+}
