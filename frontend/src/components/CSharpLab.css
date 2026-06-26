@@ -6,41 +6,108 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
 @import "./DBMSLab.css";
 
-/* ─── Root Variables ─── */
+
+/* ─── Root Variables (Light Theme / Bright Mode) ─── */
 .csharp-lab {
-  --cs-primary:    #2563EB;
-  --cs-primary-h:  #1D4ED8;
+  --cs-primary:    #3B82F6;
+  --cs-primary-h:  #2563EB;
   --cs-secondary:  #60A5FA;
-  --cs-accent:     #7C3AED;
+  --cs-accent:     #8B5CF6;
   --cs-success:    #10B981;
   --cs-warning:    #F59E0B;
   --cs-danger:     #EF4444;
-  --cs-bg:         #F8FAFC;
+  --cs-bg:         transparent;
   --cs-card:       rgba(255, 255, 255, 0.75);
-  --cs-border:     #E2E8F0;
+  --cs-border:     rgba(15, 23, 42, 0.08);
   --cs-text:       #0F172A;
-  --cs-muted:      #64748B;
+  --cs-muted:      #475569;
   --cs-code-bg:    #0F172A;
-  --cs-radius:     16px;
-  --cs-radius-sm:  10px;
-  --cs-shadow:     0 4px 24px rgba(37, 99, 235, 0.08);
-  --cs-shadow-lg:  0 16px 48px rgba(37, 99, 235, 0.14);
+  --cs-radius:     28px;
+  --cs-radius-sm:  16px;
+  --cs-shadow:     0 8px 32px rgba(31, 38, 135, 0.05);
+  --cs-shadow-lg:  0 16px 48px rgba(31, 38, 135, 0.1);
 
   font-family: 'Inter', system-ui, sans-serif;
-  color: var(--cs-text);
-  background: transparent;
+  color: var(--cs-text) !important;
+  background: var(--cs-bg) !important;
+  border-radius: var(--cs-radius);
+  border: 1px solid var(--cs-border) !important;
+  box-shadow: var(--cs-shadow);
+  padding: 32px !important;
 }
 
 /* Dark theme variables support matching Layout */
 [data-theme="dark"] .csharp-lab {
-  --cs-bg:         #0B0F19;
-  --cs-card:       rgba(17, 24, 39, 0.8);
-  --cs-border:     rgba(255, 255, 255, 0.08);
-  --cs-text:       #F3F4F6;
-  --cs-muted:      #9CA3AF;
-  --cs-code-bg:    #0B0F19;
+  --cs-bg:         radial-gradient(circle at 50% 0%, #0d1428 0%, #050811 100%);
+  --cs-card:       rgba(255, 255, 255, 0.02);
+  --cs-border:     rgba(255, 255, 255, 0.07);
+  --cs-text:       #F8FAFC;
+  --cs-muted:      #94A3B8;
+  --cs-code-bg:    #090D16;
   --cs-shadow:     0 10px 30px -10px rgba(0, 0, 0, 0.5);
   --cs-shadow-lg:  0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+
+/* Ensure C# stats and glass cards are styled properly */
+.csharp-stats-card {
+  background: var(--cs-card) !important;
+  border: 1px solid var(--cs-border) !important;
+  border-radius: 24px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+  box-shadow: var(--cs-shadow);
+}
+.csharp-stats-card:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: var(--cs-primary) !important;
+  transform: translateY(-2px);
+}
+
+.csharp-glass-card {
+  background: var(--cs-card) !important;
+  border: 1px solid var(--cs-border) !important;
+  border-radius: 28px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+.csharp-glass-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at 10% 10%, var(--card-glow-color, rgba(255,255,255,0.05)) 0%, transparent 60%);
+  opacity: 0.15;
+  transition: opacity 0.4s;
+  pointer-events: none;
+  z-index: 0;
+}
+.csharp-glass-card:hover {
+  border-color: var(--card-glow-color, var(--cs-primary)) !important;
+  box-shadow: 
+    var(--cs-shadow-lg),
+    0 0 20px -5px var(--card-glow-color, rgba(255, 255, 255, 0.15)) !important;
+}
+.csharp-glass-card:hover::after {
+  opacity: 0.35;
+}
+
+/* Theme adaptation for text override inside C# components */
+.csharp-lab h1, 
+.csharp-lab h2, 
+.csharp-lab h3, 
+.csharp-lab h4, 
+.csharp-lab h5, 
+.csharp-lab strong, 
+.csharp-lab .text-white {
+  color: var(--cs-text) !important;
+}
+.csharp-lab p,
+.csharp-lab span,
+.csharp-lab .text-slate-400,
+.csharp-lab .text-slate-500 {
+  color: var(--cs-muted) !important;
 }
 
 /* ─── Breadcrumb ─── */
