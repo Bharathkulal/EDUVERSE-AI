@@ -160,12 +160,12 @@ export default function StackVisualization() {
     ];
 
     return (
-      <pre className="font-mono text-sm leading-relaxed text-slate-800 bg-white/50 p-6 rounded-xl border border-slate-200 overflow-hidden shadow-inner h-full">
+      <pre className="font-mono text-sm leading-relaxed text-[var(--db-text-main)] bg-[var(--db-card-bg-elevated)]/50 p-6 rounded-xl border border-[var(--db-card-border)] overflow-hidden shadow-inner h-full">
         <code>
           {lines.map((line) => (
             <div 
               key={line.id} 
-              className={`transition-colors duration-300 px-2 rounded ${activeLine === line.id ? 'bg-blue-100 text-blue-900 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}`}
+              className={`transition-colors duration-300 px-2 rounded ${activeLine === line.id ? 'bg-blue-500/20 text-blue-300 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}`}
             >
               {line.text}
             </div>
@@ -483,8 +483,8 @@ export default function StackVisualization() {
         <div className="w-[35%] h-full flex flex-col gap-5">
           
           {/* C Code Section */}
-          <div className="flex-1 bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg p-6 flex flex-col">
-            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <div className="flex-1 bg-[var(--db-card-bg)]/70 backdrop-blur-xl border border-[var(--db-card-border)] rounded-[24px] shadow-lg p-6 flex flex-col">
+            <h3 className="text-lg font-bold text-[var(--db-text-main)] mb-4 flex items-center gap-2">
               <Code2 className="w-5 h-5 text-emerald-500" /> Live C Implementation
             </h3>
             {renderCode()}

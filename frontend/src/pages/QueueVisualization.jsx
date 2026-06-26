@@ -6,11 +6,14 @@ import {
   Trash2, ChevronRight, Zap, Info, ShieldAlert
 } from 'lucide-react';
 import { Code2 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import '../pages/DashboardTheme.css';
 
 const MAX_CAPACITY = 6;
 
 export default function QueueVisualization() {
   const navigate = useNavigate();
+  const { isDarkMode, toggleTheme } = useTheme();
   
   // State
   // The queue is an array of fixed size MAX_CAPACITY. We fill it from left to right.
@@ -189,12 +192,12 @@ export default function QueueVisualization() {
     ];
 
     return (
-      <pre className="font-mono text-[13px] leading-relaxed text-slate-800 bg-white/50 p-6 rounded-xl border border-slate-200 overflow-hidden shadow-inner h-full overflow-y-auto">
+      <pre className="font-mono text-[13px] leading-relaxed text-[var(--db-text-main)] bg-[var(--db-card-bg-elevated)]/50 p-6 rounded-xl border border-[var(--db-card-border)] overflow-hidden shadow-inner h-full overflow-y-auto">
         <code>
           {lines.map((line) => (
             <div 
               key={line.id} 
-              className={`transition-colors duration-300 px-2 py-0.5 rounded ${activeLine === line.id ? 'bg-blue-100 text-blue-900 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}`}
+              className={`transition-colors duration-300 px-2 py-0.5 rounded ${activeLine === line.id ? 'bg-blue-500/20 text-blue-300 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}`}
             >
               {line.text}
             </div>
@@ -205,20 +208,70 @@ export default function QueueVisualization() {
   };
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-[#F8FAFC] flex flex-col font-sans">
+    <div className={`h-screen w-full overflow-hidden flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'}`} style={{ backgroundColor: 'var(--db-bg)', color: 'var(--db-text-main)' }}>
       
       {/* HEADER BREADCRUMB - 64px */}
-      <header className="h-16 shrink-0 bg-white border-b border-slate-200 flex items-center px-8 shadow-sm relative z-10">
-        <button onClick={() => navigate(-1)} className="mr-4 p-2 hover:bg-slate-100 rounded-full transition">
-          <ArrowLeft className="w-5 h-5 text-slate-600" />
-        </button>
-        <div className="flex items-center text-sm font-medium text-slate-500 gap-2">
-          <span>Home</span> <ChevronRight className="w-4 h-4" />
-          <span>Subjects</span> <ChevronRight className="w-4 h-4" />
-          <span>DSA</span> <ChevronRight className="w-4 h-4" />
-          <span className="text-blue-600 font-bold">Queue</span> <ChevronRight className="w-4 h-4 text-slate-400" />
-          <span className="text-slate-800">Operations</span>
+      <header className="h-16 shrink-0 bg-[var(--db-card-bg)] border-b border-[var(--db-header-border)] flex items-center justify-between px-8 shadow-sm relative z-10">
+        <div className="flex items-center">
+          <button onClick={() => navigate(-1)} className="mr-4 p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-full transition">
+            <ArrowLeft className="w-5 h-5 text-[var(--db-text-main)]" />
+          </button>
+          <div className="flex items-center text-sm font-medium text-[var(--db-text-muted)] gap-2">
+            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span> <ChevronRight className="w-4 h-4" />
+            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects')}>Subjects</span> <ChevronRight className="w-4 h-4" />
+            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dsa')}>DSA</span> <ChevronRight className="w-4 h-4" />
+            <span className="text-blue-500 font-bold">Queue</span> <ChevronRight className="w-4 h-4 text-slate-400" />
+            <span className="text-[var(--db-text-main)]">Operations</span>
+          </div>
         </div>
+
+        {/* Theme Toggle Button */}
+        <button 
+          onClick={toggleTheme} 
+          className="db-theme-toggle-switch" 
+          style={{
+            background: 'var(--db-input-bg)',
+            border: '1.5px solid var(--db-input-border)',
+            cursor: 'pointer',
+            padding: '2px',
+            height: '32px',
+            width: '58px',
+            borderRadius: '9999px',
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            transition: 'all 300ms ease-in-out',
+            boxShadow: 'var(--db-shadow-sm)'
+          }}
+          aria-label="Toggle Bright/Dark Theme"
+          title={isDarkMode ? 'Switch to Bright Mode' : 'Switch to Dark Mode'}
+        >
+          <span
+            style={{
+              transform: isDarkMode ? 'translateX(26px)' : 'translateX(2px)',
+              width: '24px',
+              height: '24px',
+              background: 'var(--db-text-accent)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#FFFFFF',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+              transition: 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1), background-color 300ms ease-in-out'
+            }}
+          >
+            {isDarkMode ? (
+              <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            ) : (
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+              </svg>
+            )}
+          </span>
+        </button>
       </header>
 
       {/* MAIN CONTENT - 100vh - 64px */}
@@ -227,18 +280,18 @@ export default function QueueVisualization() {
         {/* ==========================================
             LEFT PANEL: CONTROLS (25%)
         =========================================== */}
-        <div className="w-1/4 min-w-[300px] h-full bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg p-6 flex flex-col justify-between">
+        <div className="w-1/4 min-w-[300px] h-full bg-[var(--db-card-bg)]/70 backdrop-blur-xl border border-[var(--db-card-border)] rounded-[24px] shadow-lg p-6 flex flex-col justify-between">
           
           <div>
             <div className="mb-6">
-              <h2 className="text-2xl font-extrabold text-[#0F172A] flex items-center gap-2">
+              <h2 className="text-2xl font-extrabold text-[var(--db-text-main)] flex items-center gap-2">
                 <Zap className="w-6 h-6 text-blue-500" /> Try With My Value
               </h2>
-              <p className="text-[#64748B] text-sm mt-1">Experiment with your own values and watch Queue operations live.</p>
+              <p className="text-[var(--db-text-muted)] text-sm mt-1">Experiment with your own values and watch Queue operations live.</p>
             </div>
 
             {/* Input Card */}
-            <div className="bg-[#F8FAFC] p-4 rounded-2xl border border-slate-200 mb-6 shadow-inner">
+            <div className="bg-[var(--db-card-bg-elevated)] p-4 rounded-2xl border border-[var(--db-card-border)] mb-6 shadow-inner">
               <input 
                 ref={inputRef}
                 type="number"
@@ -246,14 +299,14 @@ export default function QueueVisualization() {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Auto-value or type..."
-                className="w-full text-center text-2xl font-bold bg-white border-2 border-slate-200 rounded-xl py-4 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all text-slate-800 placeholder-slate-300"
+                className="w-full text-center text-2xl font-bold bg-[var(--db-card-bg)] border-2 border-[var(--db-card-border)] rounded-xl py-4 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all text-[var(--db-text-main)] placeholder-[var(--db-text-muted)]"
               />
               <div className="flex justify-center gap-2 mt-4">
                 {[10, 20, 50, 100].map(val => (
                   <button 
                     key={val} 
                     onClick={() => { setInputValue(val.toString()); inputRef.current?.focus(); }}
-                    className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:border-blue-400 hover:text-blue-600 transition shadow-sm"
+                    className="px-3 py-1 bg-[var(--db-card-bg)] border border-[var(--db-card-border)] rounded-lg text-sm font-bold text-[var(--db-text-secondary)] hover:border-blue-400 hover:text-blue-600 transition shadow-sm"
                   >
                     [{val}]
                   </button>
@@ -271,19 +324,19 @@ export default function QueueVisualization() {
 
             {/* Operation Buttons */}
             <div className="grid grid-cols-2 gap-3 mb-6">
-              <button onClick={handleDequeue} disabled={isAnimating} className="flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-[#EF4444] border border-red-200 font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
+              <button onClick={handleDequeue} disabled={isAnimating} className="flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-[#EF4444] border border-red-500/20 font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
                 <ArrowRightToLine className="w-5 h-5 rotate-180" /> Dequeue
               </button>
-              <button onClick={handlePeek} disabled={isAnimating} className="flex items-center justify-center gap-2 bg-purple-50 hover:bg-purple-100 text-purple-600 border border-purple-200 font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
+              <button onClick={handlePeek} disabled={isAnimating} className="flex items-center justify-center gap-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
                 <Eye className="w-5 h-5" /> Peek
               </button>
-              <button disabled className="flex items-center justify-center gap-2 bg-slate-50 border border-slate-200 text-slate-600 font-bold py-3 rounded-xl opacity-70">
+              <button disabled className="flex items-center justify-center gap-2 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] text-[var(--db-text-muted)] font-bold py-3 rounded-xl opacity-70">
                 IsEmpty
               </button>
-              <button disabled className="flex items-center justify-center gap-2 bg-slate-50 border border-slate-200 text-slate-600 font-bold py-3 rounded-xl opacity-70">
+              <button disabled className="flex items-center justify-center gap-2 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] text-[var(--db-text-muted)] font-bold py-3 rounded-xl opacity-70">
                 IsFull
               </button>
-              <button onClick={handleClear} disabled={isAnimating} className="col-span-2 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
+              <button onClick={handleClear} disabled={isAnimating} className="col-span-2 flex items-center justify-center gap-2 bg-[var(--db-card-bg-elevated)] hover:bg-[var(--db-btn-secondary-hover)] border border-[var(--db-card-border)] text-[var(--db-text-secondary)] font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
                 <Trash2 className="w-5 h-5" /> Clear
               </button>
             </div>
@@ -291,20 +344,20 @@ export default function QueueVisualization() {
 
           {/* Bottom Info: Speed & History */}
           <div>
-            <div className="flex justify-between items-center bg-slate-100 p-1 rounded-xl mb-4">
+            <div className="flex justify-between items-center bg-[var(--db-card-bg-elevated)] p-1 rounded-xl mb-4 border border-[var(--db-card-border)]">
               {[0.5, 1, 2].map(s => (
                 <button 
                   key={s} 
                   onClick={() => setSpeed(s)}
-                  className={`flex-1 py-1 text-sm font-bold rounded-lg transition-all ${speed === s ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                  className={`flex-1 py-1 text-sm font-bold rounded-lg transition-all ${speed === s ? 'bg-[var(--db-card-bg)] shadow text-blue-500' : 'text-[var(--db-text-muted)] hover:text-[var(--db-text-secondary)]'}`}
                 >
                   {s}×
                 </button>
               ))}
             </div>
             
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 h-32 overflow-hidden flex flex-col">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Recent History</h4>
+            <div className="bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] rounded-xl p-4 h-32 overflow-hidden flex flex-col">
+              <h4 className="text-xs font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-2">Recent History</h4>
               <div className="flex-1 flex flex-col gap-1">
                 <AnimatePresence>
                   {history.map((h, i) => (
@@ -312,7 +365,7 @@ export default function QueueVisualization() {
                       key={i + h} 
                       initial={{ opacity: 0, x: -10 }} 
                       animate={{ opacity: i === 0 ? 1 : 0.6, x: 0 }} 
-                      className={`text-sm font-mono ${i === 0 ? 'text-slate-800 font-bold' : 'text-slate-500'}`}
+                      className={`text-sm font-mono ${i === 0 ? 'text-[var(--db-text-main)] font-bold' : 'text-[var(--db-text-muted)]'}`}
                     >
                       &gt; {h}
                     </motion.div>
@@ -327,12 +380,12 @@ export default function QueueVisualization() {
         {/* ==========================================
             CENTER PANEL: VISUALIZATION (40%)
         =========================================== */}
-        <div className="w-[40%] h-full bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg flex flex-col relative overflow-hidden">
+        <div className="w-[40%] h-full bg-[var(--db-card-bg)]/70 backdrop-blur-xl border border-[var(--db-card-border)] rounded-[24px] shadow-lg flex flex-col relative overflow-hidden">
           
           {/* Header Stats */}
           <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-10">
-            <div className="bg-white/80 backdrop-blur border border-slate-200 px-4 py-2 rounded-xl shadow-sm flex items-center gap-2">
-              <span className="font-bold text-slate-700">Elements:</span> 
+            <div className="bg-[var(--db-card-bg-elevated)]/80 backdrop-blur border border-[var(--db-card-border)] px-4 py-2 rounded-xl shadow-sm flex items-center gap-2">
+              <span className="font-bold text-[var(--db-text-main)]">Elements:</span> 
               <span className="font-mono text-lg font-black text-blue-600">
                 {front === -1 ? 0 : rear - front + 1} / {MAX_CAPACITY}
               </span>
@@ -341,7 +394,7 @@ export default function QueueVisualization() {
               {['Learn', 'Practice', 'Challenge'].map(m => (
                 <button 
                   key={m} onClick={() => setMode(m)}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition ${mode === m ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition ${mode === m ? 'bg-[var(--db-btn-secondary-bg)] text-[var(--db-text-main)] border border-[var(--db-card-border)]' : 'bg-[var(--db-card-bg-elevated)] text-[var(--db-text-muted)] hover:bg-[var(--db-btn-secondary-hover)]'}`}
                 >
                   {m}
                 </button>
@@ -352,12 +405,12 @@ export default function QueueVisualization() {
           {/* Underflow / Overflow Alerts */}
           <AnimatePresence>
             {overflow && (
-              <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="absolute top-20 left-1/2 -translate-x-1/2 bg-red-100 border border-red-300 text-red-700 font-bold px-6 py-2 rounded-full shadow-lg z-50 flex items-center gap-2">
+              <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="absolute top-20 left-1/2 -translate-x-1/2 bg-red-500/10 border border-red-500/30 text-red-400 font-bold px-6 py-2 rounded-full shadow-lg z-50 flex items-center gap-2">
                 <ShieldAlert className="w-5 h-5" /> Queue Overflow!
               </motion.div>
             )}
             {underflow && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-orange-100 border border-orange-300 text-orange-700 font-bold px-6 py-2 rounded-full shadow-lg z-50 flex items-center gap-2">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-orange-500/10 border border-orange-500/30 text-orange-400 font-bold px-6 py-2 rounded-full shadow-lg z-50 flex items-center gap-2">
                 <Info className="w-5 h-5" /> Queue Underflow!
               </motion.div>
             )}
