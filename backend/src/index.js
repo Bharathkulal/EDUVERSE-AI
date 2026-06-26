@@ -20,7 +20,6 @@ const db = require('./config/db');
       ALTER TABLE users ADD COLUMN IF NOT EXISTS privacy_profile_visible BOOLEAN DEFAULT true;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS privacy_analytics_sharing BOOLEAN DEFAULT true;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_completed BOOLEAN DEFAULT false;
-      ALTER TABLE notes ADD COLUMN IF NOT EXISTS approved BOOLEAN DEFAULT true;
       ALTER TABLE topics ADD COLUMN IF NOT EXISTS approved BOOLEAN DEFAULT true;
       ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS time_limit_minutes INTEGER DEFAULT 15;
       ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS difficulty VARCHAR(50) DEFAULT 'medium';
@@ -62,6 +61,11 @@ const db = require('./config/db');
         favorite BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+
+    // Add approved column to notes table
+    await db.query(`
+      ALTER TABLE notes ADD COLUMN IF NOT EXISTS approved BOOLEAN DEFAULT true;
     `);
 
     // Create user_xp_history table
