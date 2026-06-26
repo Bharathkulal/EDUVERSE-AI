@@ -6,11 +6,14 @@ import {
   Trash2, XCircle, ChevronRight, Zap, Info, ShieldAlert,
   Play, RotateCcw
 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import '../pages/DashboardTheme.css';
 
 const MAX_CAPACITY = 6;
 
 export default function StackVisualization() {
   const navigate = useNavigate();
+  const { isDarkMode, toggleTheme } = useTheme();
   
   // State
   const [stack, setStack] = useState([]); // array of objects {id, value}
