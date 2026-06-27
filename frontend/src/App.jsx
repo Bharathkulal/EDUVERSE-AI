@@ -8,7 +8,6 @@ import AIChatLayer from './components/AIChatLayer';
 
 // Authentication & Core pages (fast start)
 import LandingPage from './pages/LandingPage';
-import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 
@@ -91,7 +90,6 @@ export default function App() {
       <AnimatePresence mode="wait">
         <Suspense fallback={<PageLoader />}>
           <Routes location={location} key={location.pathname + location.hash}>
-            <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/" element={<HomeRedirect />} />

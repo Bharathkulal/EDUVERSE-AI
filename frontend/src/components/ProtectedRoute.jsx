@@ -13,7 +13,7 @@ export const ProtectedRoute = ({ children, adminOnly = false }) => {
     );
   }
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/?login=true" replace />;
   if (adminOnly && user.role !== 'admin') return <Navigate to="/dashboard" replace />;
 
   // Redirect students to onboarding if profile is not completed

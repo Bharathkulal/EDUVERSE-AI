@@ -225,7 +225,7 @@ export default function Register() {
         </form>
 
         <p className="text-center text-sm text-emerald-100/50 mt-6">
-          Already have an account? <Link to="/login" className="text-emerald-400 font-semibold hover:text-emerald-300 hover:underline transition">Sign In</Link>
+          Already have an account? <Link to="/?login=true" className="text-emerald-400 font-semibold hover:text-emerald-300 hover:underline transition">Sign In</Link>
         </p>
 
         <p className="text-center text-[10px] text-emerald-100/30 uppercase tracking-widest mt-6">

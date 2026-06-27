@@ -168,7 +168,7 @@ export default function Settings() {
       await api.delete('/auth/profile');
       toast.success('Account deleted successfully');
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      window.location.href = '/?login=true';
     } catch (err) {
       toast.error('Failed to delete account');
     }

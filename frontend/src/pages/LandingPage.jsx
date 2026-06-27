@@ -128,6 +128,17 @@ export default function LandingPage() {
   // Initialize Lenis smooth scroll
   useLenis();
 
+  // Open login drawer if redirected here with ?login=true query param
+  useEffect(() => {
+    if (window.location.search.includes('login=true')) {
+      setDrawerOpen(true);
+      // Clean up the URL query parameter without reloading
+      const url = new URL(window.location.href);
+      url.searchParams.delete('login');
+      window.history.replaceState({}, document.title, url.pathname + url.hash);
+    }
+  }, []);
+
   // Mouse Parallax for Hero
   useEffect(() => {
     const handleMouseMove = (e) => {

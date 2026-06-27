@@ -62,7 +62,7 @@ export default function ForgotPassword() {
         {step === 3 && (
           <p className="text-center text-green-600">Password reset successful!</p>
         )}
-        <p className="text-center mt-6"><Link to="/login" className="text-primary-600 hover:underline">Back to Login</Link></p>
+        <p className="text-center mt-6"><Link to="/?login=true" className="text-primary-600 hover:underline">Back to Login</Link></p>
       </div>
     </div>
   );
