@@ -8,7 +8,8 @@ import {
   Cpu, MessageSquare, PlayCircle, Star, Quote, Briefcase,
   Download, Share2, ShieldCheck, Mail, Globe
 } from 'lucide-react';
-import LoginDrawer from '../components/LoginDrawer';
+import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 import logoImg from '../assets/logo.png';
 import studentImg from '../assets/image.png';
 import './LandingPage.css';
@@ -125,6 +126,28 @@ export default function LandingPage() {
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const [scrolled, setScrolled] = useState(false);
 
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    setLoginLoading(true);
+    try {
+      const data = await login(email, password);
+      toast.success('Welcome back, Learner!');
+      setDrawerOpen(false);
+      navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || 'Login failed';
+      toast.error(errorMsg);
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
   // Initialize Lenis smooth scroll
   useLenis();
 
@@ -222,7 +245,17 @@ export default function LandingPage() {
       {/* ───────────────── SECTION 1: HERO ───────────────── */}
       <section className="relative min-h-screen flex items-center pt-28 pb-16 overflow-hidden">
         <Particles count={25} />
-        <div className="mx-auto max-w-7xl w-full px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+        <motion.div 
+          animate={{
+            x: drawerOpen ? "-15%" : 0,
+            opacity: drawerOpen ? 0.22 : 1,
+            filter: drawerOpen ? "blur(8px)" : "blur(0px)",
+            scale: drawerOpen ? 0.92 : 1
+          }}
+          transition={{ type: "spring", stiffness: 180, damping: 26 }}
+          onClick={() => { if (drawerOpen) setDrawerOpen(false); }}
+          className={`mx-auto max-w-7xl w-full px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10 transition-shadow ${drawerOpen ? 'cursor-pointer select-none pointer-events-none lg:pointer-events-auto' : ''}`}
+        >
           
           {/* Left Column */}
           <div className="flex flex-col gap-5 text-left">
@@ -311,7 +344,122 @@ export default function LandingPage() {
               ))}
             </motion.div>
           </div>
-        </div>
+        </motion.div>
+
+        {/* Integrated Animated Login Panel on Right */}
+        <AnimatePresence>
+          {drawerOpen && (
+            <motion.div
+              initial={{ x: "100%", opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: "100%", opacity: 0 }}
+              transition={{ type: "spring", damping: 28, stiffness: 200 }}
+              className="absolute right-0 top-0 h-full w-[45%] min-w-[400px] max-w-[465px] z-50 flex flex-col justify-center p-6 lg:p-10 text-left overflow-y-auto pr-4 mr-4 lg:mr-10"
+            >
+              <div className="space-y-6">
+                <div>
+                  <h2 className="font-display text-4xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                    EduVerse AI <span className="text-[#3B82F6]">Login</span>
+                  </h2>
+                  <p className="text-white font-bold text-lg mt-2">Welcome Back, Learner!</p>
+                  <p className="text-white/60 text-xs mt-1">Sign in to continue your path to building the future with AI.</p>
+                </div>
+
+                <form onSubmit={handleLoginSubmit} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <input
+                      type="email"
+                      className="w-full bg-white/[0.03] border border-white/10 focus:border-[#3B82F6]/60 focus:bg-white/[0.05] rounded-xl py-3 px-4 text-white text-sm outline-none transition duration-300"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      placeholder="Email Address"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      className="w-full bg-white/[0.03] border border-white/10 focus:border-[#3B82F6]/60 focus:bg-white/[0.05] rounded-xl py-3 px-4 text-white text-sm outline-none transition duration-300"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      placeholder="Password"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition text-xs"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? '👁️' : '👁️‍sh'}
+                    </button>
+                  </div>
+
+                  {/* OR Divider */}
+                  <div className="flex items-center my-4">
+                    <div className="flex-grow border-t border-white/10"></div>
+                    <span className="px-3 text-xs text-white/30 font-medium uppercase tracking-widest">or</span>
+                    <div className="flex-grow border-t border-white/10"></div>
+                  </div>
+
+                  {/* Social Buttons */}
+                  <div className="space-y-2.5">
+                    <button 
+                      type="button"
+                      onClick={() => toast.success('Google OAuth redirect...') }
+                      className="w-full flex items-center justify-center gap-3 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 hover:border-white/20 py-2.5 rounded-xl text-xs font-semibold text-white/90 transition-all duration-300 cursor-pointer"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114-3.488 0-6.315-2.827-6.315-6.315s2.827-6.315 6.315-6.315c1.8 0 3.42.756 4.584 1.971l3.14-3.14C19.467 2.656 16.08 1.5 12.24 1.5 6.315 1.5 1.5 6.315 1.5 12.24s4.815 10.74 10.74 10.74c5.985 0 10.665-4.275 10.665-10.8 0-.675-.09-1.35-.225-1.89H12.24z"/>
+                      </svg>
+                      Login with Google
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => toast.success('GitHub OAuth redirect...') }
+                      className="w-full flex items-center justify-center gap-3 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 hover:border-white/20 py-2.5 rounded-xl text-xs font-semibold text-white/90 transition-all duration-300 cursor-pointer"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"/>
+                      </svg>
+                      Login with GitHub
+                    </button>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold py-3.5 rounded-2xl text-xs tracking-wider uppercase transition-all duration-300 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] flex items-center justify-center gap-2 cursor-pointer mt-4"
+                    disabled={loginLoading}
+                  >
+                    {loginLoading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : 'Sign In'}
+                  </button>
+
+                  <div className="flex justify-between items-center text-[10px] text-white/50 pt-2">
+                    <button type="button" onClick={() => toast.success('Password reset email sent!')} className="hover:text-white transition">Forgot Password?</button>
+                    <span>Don't have an account? <button type="button" onClick={() => navigate('/register')} className="text-[#3B82F6] font-bold hover:underline">Register Now</button></span>
+                  </div>
+
+                  {/* Demo Accounts Credentials Box */}
+                  <div className="mt-5 p-3.5 rounded-xl bg-white/[0.02] border border-white/5 text-[11px] text-white/50 space-y-1.5">
+                    <p className="font-bold text-[#3B82F6] flex items-center gap-1">🔑 Demo Accounts Credentials:</p>
+                    <div className="grid grid-cols-2 gap-2 text-[10px] leading-relaxed pt-0.5">
+                      <div>
+                        <p className="font-semibold text-white/80">Student Login:</p>
+                        <p className="font-mono text-white/60">student@eduverse.ai</p>
+                        <p className="font-mono text-white/60">student123</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white/80">Admin Login:</p>
+                        <p className="font-mono text-white/60">admin@eduverse.ai</p>
+                        <p className="font-mono text-white/60">admin123</p>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Scroll indicator */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 opacity-50">
@@ -1092,8 +1240,6 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      {/* LoginDrawer for authentication */}
-      <LoginDrawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} onOpenRegister={() => navigate('/register')} />
     </div>
   );
 }

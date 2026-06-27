@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import './QuestionBank.css';
@@ -14,6 +16,10 @@ const TABS = [
 ];
 
 export default function QuestionBank() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user && user.role === 'admin';
+
   const [questions, setQuestions] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -173,9 +179,20 @@ export default function QuestionBank() {
 
   return (
     <div className="qb-container">
-      <div className="qb-header-section">
-        <h1 className="text-2xl font-bold">Smart Question Bank</h1>
-        <p className="text-slate-500">Access verified model answers and AI-driven revision tools instantly.</p>
+      <div className="qb-header-section flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        <div>
+          <h1 className="text-2xl font-bold">Smart Question Bank</h1>
+          <p className="text-slate-500">Access verified model answers and AI-driven revision tools instantly.</p>
+        </div>
+        {isAdmin && (
+          <button 
+            type="button"
+            onClick={() => navigate('/admin/questions')}
+            className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition duration-300 flex items-center gap-1.5 self-start md:self-auto cursor-pointer"
+          >
+            ⚙️ Switch to Admin Database Editor
+          </button>
+        )}
       </div>
 
       {/* Smart Search Bar */}

@@ -69,10 +69,17 @@ const generateContentWithFailover = async (prompt, enableSearch = false) => {
           const res = await axios.post(
             'https://openrouter.ai/api/v1/chat/completions',
             {
-              model: 'google/gemini-2.5-flash',
+              model: 'google/gemini-2.5-flash:free',
               messages: [{ role: 'user', content: prompt }],
             },
-            { headers: { Authorization: `Bearer ${item.key}`, 'Content-Type': 'application/json' } }
+            { 
+              headers: { 
+                Authorization: `Bearer ${item.key}`, 
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://eduverse.ai',
+                'X-Title': 'EduVerse AI'
+              } 
+            }
           );
           text = res.data?.choices?.[0]?.message?.content;
           if (!text) throw new Error('Empty response from OpenRouter');

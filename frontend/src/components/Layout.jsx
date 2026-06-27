@@ -30,7 +30,7 @@ const adminNav = [
   { path: '/admin/quizzes', label: 'Quizzes', icon: '✅' },
   { path: '/admin/dataset', label: 'Dataset', icon: '📁' },
   { path: '/admin/ml', label: 'ML Training', icon: '⚙️' },
-  { path: '/admin/questions', label: 'Question Bank', icon: '❓' },
+  { path: '/question-bank', label: 'Question Bank', icon: '❓' },
   { path: '/admin/api-settings', label: 'API Settings', icon: '🔑' },
   { path: '/admin/logs', label: 'Logs', icon: '📋' },
   { path: '/admin/analytics', label: 'Analytics', icon: '📈' },

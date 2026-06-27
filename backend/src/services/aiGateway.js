@@ -109,10 +109,18 @@ const generateResponse = async (prompt, options = {}) => {
           const res = await axios.post(
             'https://openrouter.ai/api/v1/chat/completions',
             {
-              model: item.modelName || 'google/gemini-2.5-flash',
+              model: item.modelName && item.modelName !== 'google/gemini-2.5-flash' ? item.modelName : 'google/gemini-2.5-flash:free',
               messages: [{ role: 'user', content: finalPrompt }],
             },
-            { headers: { Authorization: `Bearer ${item.key}`, 'Content-Type': 'application/json' }, timeout: 15000 }
+            { 
+              headers: { 
+                Authorization: `Bearer ${item.key}`, 
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://eduverse.ai',
+                'X-Title': 'EduVerse AI'
+              }, 
+              timeout: 15000 
+            }
           );
           text = res.data?.choices?.[0]?.message?.content;
           if (!text) throw new Error('Empty response from OpenRouter');

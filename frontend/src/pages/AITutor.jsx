@@ -18,6 +18,7 @@ const TOOLS = [
   { id: 'interview', label: 'AI Interviewer', icon: '🎙️', desc: 'Simulated interactive mock interviews' },
   { id: 'resume', label: 'Resume Reviewer', icon: '📄', desc: 'ATS analysis & bullet optimization' },
   { id: 'planner', label: 'Study Planner', icon: '📅', desc: 'Daily & weekly custom plans' },
+  { id: 'questions', label: 'Questions Bank', icon: '📚', desc: 'Search syllabus database & AI failovers' },
 ];
 
 export default function AITutor() {
@@ -82,6 +83,32 @@ export default function AITutor() {
   const [planHours, setPlanHours] = useState(4);
   const [planWeakTopics, setPlanWeakTopics] = useState('Recursion, Normalization');
   const [planResult, setPlanResult] = useState(null);
+
+  // Question Bank States
+  const [qbSearchQuery, setQbSearchQuery] = useState('');
+  const [qbResult, setQbResult] = useState(null);
+  const [qbLoading, setQbLoading] = useState(false);
+
+  const handleQbSearch = async () => {
+    if (!qbSearchQuery.trim()) {
+      toast.error('Please input a question first.');
+      return;
+    }
+    setQbLoading(true);
+    setQbResult(null);
+    try {
+      const res = await api.post('/questions/search', { query: qbSearchQuery });
+      setQbResult(res.data);
+      // Save query to history
+      setRecentChats(prev => [{ tool: 'Questions Bank', title: qbSearchQuery }, ...prev]);
+      toast.success('Search complete!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to search question bank.');
+    } finally {
+      setQbLoading(false);
+    }
+  };
 
   // ───── Ask Doubt Operator ─────
   const handleAskDoubt = (qText) => {
@@ -328,8 +355,8 @@ export default function AITutor() {
         </div>
       </div>
 
-      {/* ─── 8 Compulsory Tools Large Card Grid ─── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
+      {/* ─── 9 Compulsory Tools Large Card Grid ─── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-3 mb-6">
         {TOOLS.map((t) => {
           const isActive = selectedTool === t.id;
           return (
@@ -896,7 +923,67 @@ export default function AITutor() {
                   )}
                 </div>
               )}
+              {/* ─── Tool 9: Questions Bank ─── */}
+              {selectedTool === 'questions' && (
+                <div className="space-y-4">
+                  <div className="border-b border-slate-100 pb-3">
+                    <h3 className="text-sm font-extrabold text-slate-800">Questions Bank Search</h3>
+                    <p className="text-[11px] text-slate-500">Search verified syllabus question papers & AI cache databases.</p>
+                  </div>
 
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="Enter a syllabus question to query (e.g. Explain JRE memory models)" 
+                      value={qbSearchQuery}
+                      onChange={(e) => setQbSearchQuery(e.target.value)}
+                      className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleQbSearch(); }}
+                    />
+                    <button 
+                      onClick={handleQbSearch} 
+                      className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition cursor-pointer"
+                      disabled={qbLoading}
+                    >
+                      {qbLoading ? 'Searching...' : 'Search'}
+                    </button>
+                  </div>
+
+                  {qbLoading && (
+                    <div className="text-center py-8 text-xs text-slate-400 animate-pulse">
+                      Searching database and querying AI failover models...
+                    </div>
+                  )}
+
+                  {qbResult && !qbLoading && (
+                    <div className="p-5 rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 space-y-4 text-xs">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <span className="font-extrabold text-slate-800 uppercase tracking-wider text-[10px] flex items-center gap-1">
+                          Source: <span className={`px-2 py-0.5 rounded text-[9px] font-black ${
+                            qbResult.source === 'Question Bank' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
+                          }`}>{qbResult.source}</span>
+                        </span>
+                        {qbResult.question_type && (
+                          <span className="text-slate-400 text-[10px] font-bold">{qbResult.question_type} ({qbResult.difficulty})</span>
+                        )}
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <strong className="block text-slate-800 mb-1">Question:</strong>
+                          <p className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border font-medium text-slate-700 leading-relaxed text-slate-700 dark:text-slate-200">{qbResult.question}</p>
+                        </div>
+                        <div>
+                          <strong className="block text-slate-800 mb-1">Answer / Model Solution:</strong>
+                          <div className="p-4 bg-slate-50 dark:bg-slate-800/30 rounded-xl border text-slate-700 leading-relaxed whitespace-pre-line font-normal prose prose-sm max-w-none text-slate-700 dark:text-slate-200">
+                            {qbResult.answer}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Bottom Actions area */}

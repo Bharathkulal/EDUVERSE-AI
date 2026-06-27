@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginDrawer({ isOpen, onClose, onOpenRegister }) {
@@ -53,21 +54,29 @@ export default function LoginDrawer({ isOpen, onClose, onOpenRegister }) {
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[999] flex justify-end">
-      {/* Dark Blur Backdrop Overlay */}
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
-        onClick={onClose}
-      />
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[999] flex justify-end">
+          {/* Dark Blur Backdrop Overlay */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
 
-      {/* Login Drawer Container */}
-      <div 
-        ref={drawerRef}
-        className="relative w-full max-w-[420px] h-full bg-[#0a0a2e]/95 border-l border-indigo-500/20 backdrop-blur-xl shadow-2xl flex flex-col justify-between p-6 sm:p-8 animate-[drawerSlideIn_0.35s_cubic-bezier(0.16,1,0.3,1)_both]"
-      >
+          {/* Login Drawer Container */}
+          <motion.div 
+            ref={drawerRef}
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 26, stiffness: 220 }}
+            className="relative w-full max-w-[420px] h-full bg-[#0a0a2e]/95 border-l border-indigo-500/20 backdrop-blur-xl shadow-2xl flex flex-col justify-between p-6 sm:p-8"
+          >
         {/* Top Header section */}
         <div>
           <div className="flex justify-between items-center mb-8">
@@ -166,7 +175,9 @@ export default function LoginDrawer({ isOpen, onClose, onOpenRegister }) {
             </button>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
+  )}
+</AnimatePresence>
   );
 }
