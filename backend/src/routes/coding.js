@@ -105,6 +105,8 @@ router.get('/submissions', authenticate, async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
+});
+
 // Local interpreter simulation fallback
 function runLocalInterpreter(language, code) {
   let stdoutLines = [];
