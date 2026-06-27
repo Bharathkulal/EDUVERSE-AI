@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import TypingQuest from './TypingQuest';
 import CodingBattleSystem from './CodingBattleSystem';
+import QuizArena from './QuizArena';
+import InterviewPractice from './InterviewPractice';
 import api from '../api/axios';
 
 const HASH_TO_MODULE = {
@@ -108,10 +110,11 @@ export default function PracticeHub() {
   ];
 
   return (
-    <div className="h-full w-full flex flex-col overflow-hidden bg-[var(--db-bg-main)] text-[var(--db-text-main)] p-6 relative">
-      {/* Background Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/20 rounded-full blur-[100px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+    <div className="h-full w-full flex flex-col overflow-hidden bg-[var(--db-bg-main)] text-[var(--db-text-main)] p-6 relative premium-practice-hub">
+      {/* Background Fluid Blobs */}
+      <div className="premium-hub-blob blob-1"></div>
+      <div className="premium-hub-blob blob-2"></div>
+      <div className="premium-hub-blob blob-3"></div>
 
       <AnimatePresence mode="wait">
         {!activeModule ? (
@@ -143,11 +146,11 @@ export default function PracticeHub() {
             </div>
 
             {/* 6-Card Grid */}
-            <div className="flex-1 grid grid-cols-3 grid-rows-2 gap-6 min-h-0">
+            <div className="flex-1 grid grid-cols-3 grid-rows-2 gap-8 min-h-0 premium-hub-grid">
               {modules.map((mod, i) => (
                 <motion.div
                   key={mod.id}
-                  whileHover={{ scale: 1.02, y: -5 }}
+                  whileHover={{ scale: 1.04, y: -12 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     if (mod.id === 'daily') {
@@ -164,27 +167,35 @@ export default function PracticeHub() {
                       setActiveModule(mod.id);
                     }
                   }}
-                  className="bg-[var(--db-card-bg)] backdrop-blur-md border border-[var(--db-border)] rounded-3xl p-6 cursor-pointer hover:border-[var(--db-text-accent)] transition-all shadow-lg flex flex-col justify-center relative overflow-hidden group"
+                  className="premium-hub-card group"
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${mod.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
-                  <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300 drop-shadow-md">{mod.icon}</div>
-                  <h3 className="text-xl font-bold mb-2 group-hover:text-[var(--db-text-accent)] transition-colors">{mod.title}</h3>
-                  <p className="text-sm text-[var(--db-text-muted)] leading-relaxed">{mod.desc}</p>
-                  
-                  <div className="mt-auto pt-4 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-xs font-semibold text-[var(--db-text-accent)] uppercase tracking-wider">Start Challenge</span>
-                    <svg className="w-5 h-5 text-[var(--db-text-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                  <div className="premium-hub-card-bg" />
+                  <div className="premium-hub-card-glow" />
+                  <div className="premium-hub-card-content">
+                    <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300 drop-shadow-md">{mod.icon}</div>
+                    <h3 className="text-xl font-bold mb-2 group-hover:text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 transition-colors duration-300">{mod.title}</h3>
+                    <p className="text-sm text-slate-300 leading-relaxed">{mod.desc}</p>
+                    
+                    <div className="mt-auto pt-4 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                      <span className="text-xs font-semibold text-pink-400 uppercase tracking-wider">Start Challenge</span>
+                      <svg className="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                    </div>
                   </div>
                 </motion.div>
               ))}
             </div>
           </motion.div>
-
         ) : activeModule === 'typing' ? (
           <TypingQuest key="typing-quest" onExit={() => setActiveModule(null)} />
 
         ) : activeModule === 'coding' ? (
           <CodingBattleSystem key="coding-battle" onExit={() => setActiveModule(null)} />
+
+        ) : activeModule === 'quiz' ? (
+          <QuizArena key="quiz-arena" onExit={() => setActiveModule(null)} />
+
+        ) : activeModule === 'interview' ? (
+          <InterviewPractice key="interview-practice" onExit={() => setActiveModule(null)} />
 
         ) : activeModule === 'daily' ? (
           /* ─── DAILY CHALLENGES MODULE ─── */
