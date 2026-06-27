@@ -53,24 +53,6 @@ export default function LoginDrawer({ isOpen, onClose, onOpenRegister }) {
     }
   };
 
-  const handleSocialLogin = async (platform) => {
-    setLoading(true);
-    const selectedEmail = platform === 'Google' ? 'student@eduverse.ai' : 'admin@eduverse.ai';
-    const selectedPassword = platform === 'Google' ? 'student123' : 'admin123';
-    
-    toast.loading(`Signing in with ${platform}...`, { id: 'drawer-social' });
-    try {
-      const data = await login(selectedEmail, selectedPassword);
-      toast.success(`Welcome back! Authenticated via ${platform}`, { id: 'drawer-social' });
-      onClose();
-      navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Social authentication failed', { id: 'drawer-social' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -161,30 +143,6 @@ export default function LoginDrawer({ isOpen, onClose, onOpenRegister }) {
               {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : 'Sign In'}
             </button>
           </form>
-
-          {/* Social login divider */}
-          <div className="flex items-center text-center text-indigo-100/20 text-xs my-6">
-            <span className="flex-1 border-b border-indigo-500/10"></span>
-            <span className="px-3">or continue with</span>
-            <span className="flex-1 border-b border-indigo-500/10"></span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button 
-              type="button" 
-              className="flex items-center justify-center gap-2 py-2 border border-indigo-500/10 bg-indigo-500/5 hover:bg-indigo-500/10 rounded-xl text-white text-xs font-semibold transition"
-              onClick={() => handleSocialLogin('Google')}
-            >
-              Google
-            </button>
-            <button 
-              type="button" 
-              className="flex items-center justify-center gap-2 py-2 border border-indigo-500/10 bg-indigo-500/5 hover:bg-indigo-500/10 rounded-xl text-white text-xs font-semibold transition"
-              onClick={() => handleSocialLogin('GitHub')}
-            >
-              GitHub
-            </button>
-          </div>
         </div>
 
         {/* Bottom footer section */}
