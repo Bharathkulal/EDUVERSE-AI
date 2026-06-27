@@ -331,11 +331,11 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          <div className="lg:col-span-3 flex justify-center">
+          <div className="lg:col-span-3 flex justify-center items-end self-stretch pt-4 lg:pt-0">
             <img 
               src={heroCharacter} 
               alt="Student developer illustration" 
-              className="max-h-[176px] object-contain drop-shadow-[0_10px_20px_rgba(139,92,246,0.25)]"
+              className="max-h-[240px] md:max-h-[260px] object-contain drop-shadow-[0_10px_25px_rgba(139,92,246,0.25)] transition-all duration-300 hover:scale-105"
             />
           </div>
 
