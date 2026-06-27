@@ -9,7 +9,7 @@ import DSALab from '../components/DSALab';
 import WebDevLab from '../components/WebDevLab';
 import OnlineCompiler from '../components/OnlineCompiler';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Layers, List, GitCommit, GitMerge, Share2, PlayCircle, CheckCircle2 } from 'lucide-react';
+import { Layers, List, GitCommit, GitMerge, Share2, PlayCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 
 export default function SubjectDetail() {
   const { id } = useParams();
@@ -374,7 +374,14 @@ export default function SubjectDetail() {
           className="relative h-64 bg-gradient-to-r from-emerald-600 to-teal-700 flex flex-col justify-center px-8 sm:px-16 text-white overflow-hidden rounded-b-[40px] shadow-lg shadow-emerald-500/20"
         >
           <div className="absolute right-0 top-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-          <div className="relative z-10 max-w-7xl mx-auto w-full">
+          <div className="relative z-10 max-w-7xl mx-auto w-full flex flex-col items-start">
+            <button 
+              onClick={() => navigate('/subjects')} 
+              className="mb-4 px-3 py-1.5 bg-white/10 hover:bg-white/20 active:scale-95 rounded-xl transition text-xs font-bold flex items-center gap-1.5 text-white/90 border border-white/10"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Subjects</span>
+            </button>
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-2">Mathematics Lab</h1>
             <p className="text-teal-100 text-lg max-w-xl font-medium">Watch mathematical formulas execute live like a programming runtime.</p>
           </div>

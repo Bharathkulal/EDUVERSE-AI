@@ -422,36 +422,39 @@ export default function MathVisualization() {
     return (
       <MathBackground>
         {/* Header breadcrumb */}
-        <header className="h-14 flex items-center px-8 relative z-20">
-          <button onClick={() => navigate('/subjects/math-proto')} className="mr-4 p-2 hover:bg-white/5 rounded-full transition font-bold flex items-center gap-1 text-slate-400 hover:text-white">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex items-center text-sm font-medium text-slate-500 gap-2">
-            <span className="hover:text-slate-300 cursor-pointer">Home</span> <ChevronRight className="w-4 h-4" />
-            <span className="hover:text-slate-300 cursor-pointer">Subjects</span> <ChevronRight className="w-4 h-4" />
-            <span className="hover:text-slate-300 cursor-pointer">Mathematics</span> <ChevronRight className="w-4 h-4" />
-            <span className="text-emerald-400 font-bold">Numerical Methods</span>
+        <header className="h-16 flex items-center justify-between px-8 relative z-20 bg-[var(--db-card-bg)]/30 border-b border-[var(--db-card-border)] backdrop-blur-sm">
+          <div className="flex items-center">
+            <button onClick={() => navigate('/subjects/math-proto')} className="mr-4 p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-full transition">
+              <ArrowLeft className="w-5 h-5 text-[var(--db-text-main)]" />
+            </button>
+            <div className="flex items-center text-sm font-medium text-[var(--db-text-muted)] gap-2">
+              <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span> <ChevronRight className="w-4 h-4" />
+              <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects')}>Subjects</span> <ChevronRight className="w-4 h-4" />
+              <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects/math-proto')}>Mathematics</span> <ChevronRight className="w-4 h-4" />
+              <span className="text-emerald-500 font-bold">Numerical Methods</span>
+            </div>
           </div>
+          <ThemeToggleButton />
         </header>
 
-        <main className="max-w-7xl mx-auto w-full px-8 py-6 relative z-10">
+        <main className="max-w-7xl mx-auto w-full px-8 py-8 relative z-10">
           {/* Title Section */}
           <div className="mb-10 text-left">
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-3 flex items-baseline flex-wrap gap-3">
               <span>
-                <span className="bg-gradient-to-br from-emerald-400 via-emerald-300 to-teal-500 bg-clip-text text-transparent text-7xl md:text-8xl font-black leading-none" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>N</span>
-                <span className="text-white/90">UMERICAL</span>
+                <span className="bg-gradient-to-br from-emerald-500 to-teal-500 bg-clip-text text-transparent text-7xl md:text-8xl font-black leading-none" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>N</span>
+                <span className="text-[var(--db-text-main)]">UMERICAL</span>
               </span>
               <span>
-                <span className="bg-gradient-to-br from-emerald-400 via-emerald-300 to-teal-500 bg-clip-text text-transparent text-7xl md:text-8xl font-black leading-none" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>M</span>
-                <span className="text-white/90">ETHODS</span>
+                <span className="bg-gradient-to-br from-emerald-500 to-teal-500 bg-clip-text text-transparent text-7xl md:text-8xl font-black leading-none" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>M</span>
+                <span className="text-[var(--db-text-main)]">ETHODS</span>
               </span>
               <span>
-                <span className="bg-gradient-to-br from-emerald-400 via-emerald-300 to-teal-500 bg-clip-text text-transparent text-7xl md:text-8xl font-black leading-none" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>L</span>
-                <span className="text-white/90">AB</span>
+                <span className="bg-gradient-to-br from-emerald-500 to-teal-500 bg-clip-text text-transparent text-7xl md:text-8xl font-black leading-none" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>L</span>
+                <span className="text-[var(--db-text-main)]">AB</span>
               </span>
             </h1>
-            <p className="text-slate-400 text-lg mt-1">Select a mathematical runtime engine to execute your solution live.</p>
+            <p className="text-[var(--db-text-secondary)] text-lg mt-1">Select a mathematical runtime engine to execute your solution live.</p>
           </div>
 
           {/* Cards Grid */}
@@ -464,12 +467,7 @@ export default function MathVisualization() {
                 transition={{ delay: index * 0.08, type: 'spring', stiffness: 100 }}
                 whileHover={{ y: -8, scale: 1.02 }}
                 onClick={() => handleCardClick(card.id)}
-                className="relative rounded-2xl cursor-pointer group overflow-hidden"
-                style={{
-                  background: 'linear-gradient(145deg, rgba(8, 16, 38, 0.95) 0%, rgba(12, 22, 50, 0.9) 50%, rgba(16, 28, 58, 0.85) 100%)',
-                  border: '1px solid rgba(16, 185, 129, 0.12)',
-                  boxShadow: '0 4px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03)',
-                }}
+                className="relative rounded-2xl cursor-pointer group overflow-hidden border border-[var(--db-card-border)] bg-[var(--db-card-bg)] hover:bg-[var(--db-card-bg-elevated)] hover:border-emerald-500/40 transition-all duration-300 shadow-md"
               >
                 {/* Top gradient border */}
                 <div className={`h-1 w-full bg-gradient-to-r ${card.color}`} />
@@ -480,24 +478,24 @@ export default function MathVisualization() {
                 <div className="p-6">
                   {/* Status & Icon Row */}
                   <div className="flex items-center justify-between mb-5">
-                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border bg-emerald-500/15 text-emerald-550 border-emerald-500/30">
                       ONLINE
                     </span>
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(20, 184, 166, 0.08))', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)]">
                       <span className="text-lg">🧮</span>
                     </div>
                   </div>
 
                   {/* Title & Description */}
-                  <h3 className="text-xl font-bold text-white/90 mb-2 group-hover:text-emerald-300 transition-colors duration-300">{card.title}</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed mb-6">{card.desc}</p>
+                  <h3 className="text-xl font-bold text-[var(--db-text-main)] mb-2 group-hover:text-emerald-500 transition-colors duration-300">{card.title}</h3>
+                  <p className="text-[var(--db-text-secondary)] text-sm leading-relaxed mb-6">{card.desc}</p>
 
                   {/* Launch + GO Button */}
                   <div className="flex items-center justify-between">
-                    <span className="text-emerald-400/80 text-xs font-bold tracking-wide group-hover:text-emerald-300 transition-colors">
+                    <span className="text-emerald-500 text-xs font-bold tracking-wide group-hover:text-emerald-400 transition-colors">
                       Launch Simulator
                     </span>
-                    <button className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-extrabold rounded-lg transition-all shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40">
+                    <button className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold rounded-lg transition-all shadow-md shadow-emerald-500/20 group-hover:shadow-emerald-500/40">
                       GO
                     </button>
                   </div>
@@ -522,17 +520,20 @@ export default function MathVisualization() {
     return (
       <MathBackground>
         {/* Header */}
-        <header className="h-14 flex items-center px-8 relative z-20">
-          <button
-            onClick={() => { setSelectedMethod(null); setShowFormula(false); }}
-            className="px-4 py-1.5 hover:bg-white/5 rounded-full transition font-bold flex items-center gap-1.5 text-sm text-slate-400 hover:text-white border border-white/10"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span>Back to Topics</span>
-          </button>
+        <header className="h-16 flex items-center justify-between px-8 relative z-20 bg-[var(--db-card-bg)]/30 border-b border-[var(--db-card-border)] backdrop-blur-sm">
+          <div className="flex items-center">
+            <button
+              onClick={() => { setSelectedMethod(null); setShowFormula(false); }}
+              className="px-4 py-1.5 hover:bg-[var(--db-btn-secondary-hover)] rounded-xl transition font-bold flex items-center gap-1.5 text-sm text-[var(--db-text-secondary)] border border-[var(--db-card-border)] bg-[var(--db-card-bg)]"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Back to Topics</span>
+            </button>
+          </div>
+          <ThemeToggleButton />
         </header>
 
-        <main className="max-w-7xl mx-auto w-full px-8 py-4 relative z-10">
+        <main className="max-w-7xl mx-auto w-full px-8 py-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             
             {/* LEFT PANEL — Method Info Card */}
@@ -541,32 +542,27 @@ export default function MathVisualization() {
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ type: 'spring', stiffness: 80 }}
-                className="rounded-2xl p-8 h-full flex flex-col"
-                style={{
-                  background: 'linear-gradient(145deg, rgba(8, 16, 38, 0.95) 0%, rgba(12, 22, 50, 0.9) 100%)',
-                  border: '1px solid rgba(16, 185, 129, 0.15)',
-                  boxShadow: '0 8px 40px rgba(0, 0, 0, 0.4)',
-                }}
+                className="rounded-2xl p-8 h-full flex flex-col border border-[var(--db-card-border)] bg-[var(--db-card-bg)] shadow-md"
               >
                 {/* Status Badge */}
-                <span className="self-start text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)] mb-6">
+                <span className="self-start text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border bg-emerald-500/15 text-emerald-500 border-emerald-500/30 mb-6">
                   ONLINE
                 </span>
 
                 {/* Title */}
-                <h2 className="text-3xl font-extrabold text-white mb-3">{currentCard?.title}</h2>
-                <p className="text-slate-400 text-sm leading-relaxed mb-8">{currentCard?.desc}</p>
+                <h2 className="text-3xl font-extrabold text-[var(--db-text-main)] mb-3">{currentCard?.title}</h2>
+                <p className="text-[var(--db-text-secondary)] text-sm leading-relaxed mb-8">{currentCard?.desc}</p>
 
                 {/* Features */}
                 <div className="space-y-5 mb-8 flex-1">
                   {methodFormulas?.features?.map((feat, i) => (
                     <div key={i} className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
-                        <feat.icon className="w-5 h-5 text-emerald-400" />
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-emerald-500/10 border border-emerald-500/25">
+                        <feat.icon className="w-5 h-5 text-emerald-550" />
                       </div>
                       <div>
-                        <h4 className="text-white font-bold text-sm">{feat.title}</h4>
-                        <p className="text-slate-400 text-xs">{feat.desc}</p>
+                        <h4 className="text-[var(--db-text-main)] font-bold text-sm">{feat.title}</h4>
+                        <p className="text-[var(--db-text-muted)] text-xs">{feat.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -575,7 +571,7 @@ export default function MathVisualization() {
                 {/* Launch Button */}
                 <button
                   onClick={handleLaunchSimulator}
-                  className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-lg rounded-2xl flex items-center justify-center gap-3 transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 active:scale-[0.98]"
+                  className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-lg rounded-2xl flex items-center justify-center gap-3 transition-all shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 active:scale-[0.98]"
                 >
                   Launch Simulator <Rocket className="w-5 h-5" />
                 </button>
@@ -588,44 +584,39 @@ export default function MathVisualization() {
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ type: 'spring', stiffness: 80, delay: 0.1 }}
-                className="rounded-2xl p-8 h-full flex flex-col"
-                style={{
-                  background: 'linear-gradient(145deg, rgba(8, 16, 38, 0.95) 0%, rgba(12, 22, 50, 0.9) 100%)',
-                  border: '1px solid rgba(16, 185, 129, 0.15)',
-                  boxShadow: '0 8px 40px rgba(0, 0, 0, 0.4)',
-                }}
+                className="rounded-2xl p-8 h-full flex flex-col border border-[var(--db-card-border)] bg-[var(--db-card-bg)] shadow-md"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
-                      <FunctionSquare className="w-5 h-5 text-emerald-400" />
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-emerald-500/10 border border-emerald-500/25">
+                      <FunctionSquare className="w-5 h-5 text-emerald-550" />
                     </div>
-                    <span className="text-emerald-400 font-extrabold text-lg">Formula</span>
+                    <span className="text-emerald-500 font-extrabold text-lg">Formula</span>
                   </div>
-                  <button onClick={() => { setSelectedMethod(null); setShowFormula(false); }} className="p-2 hover:bg-white/5 rounded-lg transition text-slate-500 hover:text-white">
+                  <button onClick={() => { setSelectedMethod(null); setShowFormula(false); }} className="p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-lg transition text-[var(--db-text-muted)] hover:text-[var(--db-text-main)]">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
                 {/* Formula Title */}
-                <h3 className="text-xl font-bold text-white mb-6">{currentFormula?.title}</h3>
+                <h3 className="text-xl font-bold text-[var(--db-text-main)] mb-6">{currentFormula?.title}</h3>
 
                 {/* Formula Box */}
-                <div className="rounded-xl p-6 mb-6" style={{ background: 'rgba(16, 185, 129, 0.04)', border: '1px solid rgba(16, 185, 129, 0.12)' }}>
-                  <p className="text-emerald-300 text-xl md:text-2xl font-mono text-center leading-relaxed tracking-wide">
+                <div className="rounded-xl p-6 mb-6 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)]">
+                  <p className="text-emerald-600 dark:text-emerald-300 text-xl md:text-2xl font-mono text-center leading-relaxed tracking-wide">
                     {currentFormula?.formula}
                   </p>
                 </div>
 
                 {/* Variables */}
                 <div className="flex-1">
-                  <h4 className="text-white font-bold text-lg mb-4">Where:</h4>
+                  <h4 className="text-[var(--db-text-main)] font-bold text-lg mb-4">Where:</h4>
                   <ul className="space-y-3">
                     {currentFormula?.variables?.map((v, i) => (
                       <li key={i} className="flex items-start gap-3">
-                        <span className="text-emerald-300 font-mono font-bold text-sm shrink-0 mt-0.5">\u2022 {v.sym}</span>
-                        <span className="text-slate-400 text-sm">= {v.def}</span>
+                        <span className="text-emerald-550 font-mono font-bold text-sm shrink-0 mt-0.5">• {v.sym}</span>
+                        <span className="text-[var(--db-text-secondary)] text-sm">= {v.def}</span>
                       </li>
                     ))}
                   </ul>
@@ -633,11 +624,11 @@ export default function MathVisualization() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-8 pt-6 border-t border-white/5">
+                  <div className="flex items-center justify-between mt-8 pt-6 border-t border-[var(--db-card-border)]">
                     <button
                       onClick={() => setFormulaPage(Math.max(0, formulaPage - 1))}
                       disabled={formulaPage === 0}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition border border-white/10 ${formulaPage === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition border border-[var(--db-card-border)] ${formulaPage === 0 ? 'text-[var(--db-text-muted)] cursor-not-allowed' : 'text-[var(--db-text-secondary)] hover:bg-[var(--db-btn-secondary-hover)]'}`}
                     >
                       <ChevronLeft className="w-4 h-4" /> Previous
                     </button>
@@ -647,7 +638,7 @@ export default function MathVisualization() {
                         <button
                           key={i}
                           onClick={() => setFormulaPage(i)}
-                          className={`w-3 h-3 rounded-full transition ${i === formulaPage ? 'bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-slate-600 hover:bg-slate-500'}`}
+                          className={`w-3 h-3 rounded-full transition ${i === formulaPage ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-[var(--db-text-muted)] hover:bg-[var(--db-text-secondary)]'}`}
                         />
                       ))}
                     </div>
@@ -655,7 +646,7 @@ export default function MathVisualization() {
                     <button
                       onClick={() => setFormulaPage(Math.min(totalPages - 1, formulaPage + 1))}
                       disabled={formulaPage === totalPages - 1}
-                      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition ${formulaPage === totalPages - 1 ? 'text-slate-600 cursor-not-allowed border border-white/10' : 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20'}`}
+                      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition ${formulaPage === totalPages - 1 ? 'text-[var(--db-text-muted)] cursor-not-allowed border border-[var(--db-card-border)]' : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20'}`}
                     >
                       Next <ChevronRight className="w-4 h-4" />
                     </button>
@@ -670,57 +661,59 @@ export default function MathVisualization() {
   }
 
   // =============================================
-  // VIEW 3: VISUAL SOLVER LAYOUT (DARK THEME)
+  // VIEW 3: VISUAL SOLVER LAYOUT (DYNAMIC THEME)
   // =============================================
   return (
-    <div className="h-screen w-full overflow-hidden flex flex-col font-sans" style={{ background: '#050B18' }}>
+    <div className={`h-screen w-full overflow-hidden flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'}`} style={{ backgroundColor: 'var(--db-bg)', color: 'var(--db-text-main)' }}>
       
       {/* HEADER BREADCRUMB */}
-      <header className="h-14 shrink-0 flex items-center px-8 relative z-10" style={{ background: 'rgba(8, 14, 30, 0.95)', borderBottom: '1px solid rgba(16, 185, 129, 0.1)' }}>
-        <button 
-          onClick={() => {
-            setSelectedMethod(null);
-            setShowFormula(false);
-            setPlaybackState('IDLE');
-          }} 
-          className="mr-4 px-3 py-1.5 rounded-full transition font-bold flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 border border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/5"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Methods</span>
-        </button>
-        <div className="flex items-center text-sm font-medium text-slate-500 gap-2">
-          <span>Home</span> <ChevronRight className="w-4 h-4" />
-          <span>Subjects</span> <ChevronRight className="w-4 h-4" />
-          <span>Mathematics</span> <ChevronRight className="w-4 h-4" />
-          <span className="text-emerald-400 font-bold">{selectedMethod}</span>
+      <header className="h-16 shrink-0 bg-[var(--db-card-bg)] border-b border-[var(--db-header-border)] flex items-center justify-between px-8 shadow-sm relative z-10">
+        <div className="flex items-center">
+          <button 
+            onClick={() => {
+              setSelectedMethod(null);
+              setShowFormula(false);
+              setPlaybackState('IDLE');
+            }} 
+            className="mr-4 px-3.5 py-1.5 rounded-xl transition font-bold flex items-center gap-1.5 text-xs bg-[var(--db-input-bg)] border border-[var(--db-input-border)] text-[var(--db-text-main)] hover:bg-[var(--db-btn-secondary-hover)]"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Methods</span>
+          </button>
+          <div className="flex items-center text-sm font-medium text-[var(--db-text-muted)] gap-2">
+            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span> <ChevronRight className="w-4 h-4" />
+            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects')}>Subjects</span> <ChevronRight className="w-4 h-4" />
+            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects/math-proto')}>Mathematics</span> <ChevronRight className="w-4 h-4" />
+            <span className="text-emerald-500 font-bold">{selectedMethod}</span>
+          </div>
         </div>
+        <ThemeToggleButton />
       </header>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 p-4 gap-4 flex flex-row h-[calc(100vh-56px)] max-w-[1920px] mx-auto w-full overflow-hidden">
+      <main className="flex-1 p-4 gap-4 flex flex-row h-[calc(100vh-64px)] max-w-[1920px] mx-auto w-full overflow-hidden">
         
         {/* LEFT PANEL: INPUT SYSTEM */}
-        <div className="w-full lg:w-1/4 lg:min-w-[280px] lg:h-full rounded-2xl flex flex-col shrink-0 overflow-hidden" style={{ background: 'rgba(8, 14, 30, 0.95)', border: '1px solid rgba(16, 185, 129, 0.08)' }}>
+        <div className="w-full lg:w-1/4 lg:min-w-[280px] lg:h-full rounded-2xl flex flex-col shrink-0 overflow-hidden bg-[var(--db-card-bg)] border border-[var(--db-card-border)] shadow-md">
           
           <div className="flex-1 overflow-y-auto p-5 pb-2">
             <div className="mb-4">
-              <h2 className="text-lg font-extrabold text-white flex items-center gap-2">
-                <FunctionSquare className="w-5 h-5 text-emerald-400" /> Math Engine
+              <h2 className="text-lg font-extrabold text-[var(--db-text-main)] flex items-center gap-2">
+                <FunctionSquare className="w-5 h-5 text-emerald-500" /> Math Engine
               </h2>
-              <p className="text-slate-500 text-xs mt-1">Configure inputs and watch numerical methods solve live.</p>
+              <p className="text-[var(--db-text-muted)] text-xs mt-1">Configure inputs and watch numerical methods solve live.</p>
             </div>
 
             {/* Method Selector */}
             <div className="mb-4">
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Select Method</label>
+              <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5">Select Method</label>
               <select 
                 value={selectedMethod}
                 onChange={(e) => {
                   setSelectedMethod(e.target.value);
                   setPlaybackState('IDLE');
                 }}
-                className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}
+                className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
               >
                 {CARDS.map(c => (
                   <option key={c.id} value={c.id}>{c.title}</option>
@@ -732,36 +725,33 @@ export default function MathVisualization() {
             {selectedMethod === 'Bisection Method' ? (
               <>
                 <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 font-sans">Select Equation</label>
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Equation</label>
                   <select 
                     value={bisectionProblemId}
                     onChange={(e) => { setBisectionProblemId(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
                   >
                     <option value="bis1">f(x) = x³ - x - 1 = 0</option>
                     <option value="bis2">f(x) = x³ - 4x - 9 = 0</option>
                   </select>
                 </div>
                 <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 font-sans">Iterations (Max 10)</label>
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Iterations (Max 10)</label>
                   <input 
                     type="number" min="1" max="10" value={bisectionIterations} 
                     onChange={e => { setBisectionIterations(e.target.value); setPlaybackState('IDLE'); }} 
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
                   />
                 </div>
               </>
             ) : selectedMethod === 'Trapezoidal Rule' ? (
               <>
                 <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Target Function f(x)</label>
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Target Function f(x)</label>
                   <select 
                     value={funcId}
                     onChange={(e) => { setFuncId(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
                   >
                     {PREDEFINED_FUNCTIONS.map(f => (
                       <option key={f.id} value={f.id}>{f.label}</option>
@@ -770,23 +760,23 @@ export default function MathVisualization() {
                 </div>
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Lower [a]</label>
-                    <input type="number" step="0.1" value={a} onChange={e => { setA(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none" style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }} />
+                    <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Lower [a]</label>
+                    <input type="number" step="0.1" value={a} onChange={e => { setA(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Upper [b]</label>
-                    <input type="number" step="0.1" value={b} onChange={e => { setB(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none" style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }} />
+                    <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Upper [b]</label>
+                    <input type="number" step="0.1" value={b} onChange={e => { setB(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Steps (n)</label>
-                    <input type="number" min="1" max="20" value={n} onChange={e => { setN(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none" style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }} />
+                    <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Steps (n)</label>
+                    <input type="number" min="1" max="20" value={n} onChange={e => { setN(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
                   </div>
                 </div>
               </>
             ) : selectedMethod === 'Newton\u2019s Interpolation' ? (
               <>
                 <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
                   <select 
                     value={newtonQuestionId}
                     onChange={(e) => {
@@ -796,8 +786,7 @@ export default function MathVisualization() {
                       setNewtonDirection(targetQ.defaultDirection);
                       setPlaybackState('IDLE');
                     }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
                   >
                     {NEWTON_QUESTIONS.map(q => (
                       <option key={q.id} value={q.id}>{q.label}</option>
@@ -805,14 +794,14 @@ export default function MathVisualization() {
                   </select>
                 </div>
                 <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 font-sans">Interpolation Direction</label>
-                  <div className="flex p-1 rounded-xl" style={{ background: '#0c1426' }}>
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Interpolation Direction</label>
+                  <div className="flex p-1 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-input-border)]">
                     {['Forward', 'Backward'].map(dir => (
                       <button
                         key={dir}
                         type="button"
                         onClick={() => { setNewtonDirection(dir); setPlaybackState('IDLE'); }}
-                        className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${newtonDirection === dir ? 'bg-emerald-500 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}
+                        className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${newtonDirection === dir ? 'bg-emerald-500 text-white shadow' : 'text-[var(--db-text-secondary)] hover:text-[var(--db-text-main)]'}`}
                       >
                         {dir}
                       </button>
@@ -820,19 +809,18 @@ export default function MathVisualization() {
                   </div>
                 </div>
                 <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 font-sans">Estimate Value at (x)</label>
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Estimate Value at (x)</label>
                   <input 
                     type="number" step="0.01" value={newtonTargetX} 
                     onChange={e => { setNewtonTargetX(e.target.value); setPlaybackState('IDLE'); }} 
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
                   />
                 </div>
               </>
             ) : selectedMethod === 'Newton\u2019s Difference' ? (
               <>
                 <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
                   <select 
                     value={newtonDiffQuestionId}
                     onChange={(e) => {
@@ -842,8 +830,7 @@ export default function MathVisualization() {
                       setNewtonDiffDirection(targetQ.defaultDirection);
                       setPlaybackState('IDLE');
                     }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
                   >
                     {NEWTON_DIFF_QUESTIONS.map(q => (
                       <option key={q.id} value={q.id}>{q.label}</option>
@@ -851,14 +838,14 @@ export default function MathVisualization() {
                   </select>
                 </div>
                 <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 font-sans">Interpolation Direction</label>
-                  <div className="flex p-1 rounded-xl" style={{ background: '#0c1426' }}>
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Interpolation Direction</label>
+                  <div className="flex p-1 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-input-border)]">
                     {['Forward', 'Backward'].map(dir => (
                       <button
                         key={dir}
                         type="button"
                         onClick={() => { setNewtonDiffDirection(dir); setPlaybackState('IDLE'); }}
-                        className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${newtonDiffDirection === dir ? 'bg-emerald-500 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}
+                        className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${newtonDiffDirection === dir ? 'bg-emerald-500 text-white shadow' : 'text-[var(--db-text-secondary)] hover:text-[var(--db-text-main)]'}`}
                       >
                         {dir}
                       </button>
@@ -866,12 +853,11 @@ export default function MathVisualization() {
                   </div>
                 </div>
                 <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 font-sans">Evaluate Derivative at (x)</label>
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Evaluate Derivative at (x)</label>
                   <input 
                     type="number" step="0.01" value={newtonDiffTargetX} 
                     onChange={e => { setNewtonDiffTargetX(e.target.value); setPlaybackState('IDLE'); }} 
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
                   />
                 </div>
               </>
@@ -879,27 +865,27 @@ export default function MathVisualization() {
           </div>
 
           {/* Playback Controls */}
-          <div className="p-4 pt-2 shrink-0" style={{ borderTop: '1px solid rgba(16, 185, 129, 0.08)' }}>
-            <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: '#060d1e' }}>
-              <div className="flex justify-between items-center p-1 rounded-xl" style={{ background: '#0a1428' }}>
+          <div className="p-4 pt-2 shrink-0 border-t border-[var(--db-card-border)]">
+            <div className="rounded-2xl p-4 flex flex-col gap-3 bg-[var(--db-card-bg-elevated)]">
+              <div className="flex justify-between items-center p-1 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-card-border)]">
                 {[0.5, 1, 2].map(s => (
                   <button 
                     key={s} 
                     onClick={() => setSpeed(s)}
-                    className={`flex-1 py-1 text-xs font-bold rounded-lg transition-all ${speed === s ? 'bg-emerald-500 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}
+                    className={`flex-1 py-1 text-xs font-bold rounded-lg transition-all ${speed === s ? 'bg-emerald-500 text-white shadow' : 'text-[var(--db-text-muted)] hover:text-[var(--db-text-main)]'}`}
                   >
-                    {s}\u00D7
+                    {s}×
                   </button>
                 ))}
               </div>
               <div className="flex items-center gap-2">
                 <button 
                   onClick={handlePlayPause}
-                  className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow-lg shadow-emerald-500/30"
+                  className="flex-1 bg-emerald-500 hover:bg-emerald-655 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow-md shadow-emerald-500/20"
                 >
                   {playbackState === 'PLAYING' ? <><Pause className="w-5 h-5"/> Pause</> : <><Play className="w-5 h-5"/> {playbackState === 'FINISHED' ? 'Restart' : 'Start Solving'}</>}
                 </button>
-                <button onClick={handleReplay} className="w-12 h-[48px] rounded-xl flex items-center justify-center transition active:scale-95 text-white hover:text-emerald-300" style={{ background: '#0a1428' }}>
+                <button onClick={handleReplay} className="w-12 h-[48px] rounded-xl flex items-center justify-center transition active:scale-95 text-[var(--db-text-main)] hover:text-emerald-500 bg-[var(--db-input-bg)] border border-[var(--db-card-border)]">
                   <RotateCcw className="w-5 h-5" />
                 </button>
               </div>
@@ -908,21 +894,21 @@ export default function MathVisualization() {
         </div>
 
         {/* MIDDLE PANEL: ANIMATION ENGINE */}
-        <div className="w-full lg:flex-1 min-h-[400px] lg:h-full rounded-2xl flex flex-col relative overflow-hidden shrink-0" style={{ background: 'rgba(8, 14, 30, 0.95)', border: '1px solid rgba(16, 185, 129, 0.08)' }}>
+        <div className="w-full lg:flex-1 min-h-[400px] lg:h-full rounded-2xl flex flex-col relative overflow-hidden shrink-0 bg-[var(--db-card-bg)] border border-[var(--db-card-border)] shadow-md">
           {/* Question Display */}
-          <div className="shrink-0 px-6 py-3 flex items-center gap-3" style={{ borderBottom: '1px solid rgba(16, 185, 129, 0.08)', background: 'rgba(8, 14, 30, 0.98)' }}>
+          <div className="shrink-0 px-6 py-3 flex items-center gap-3 bg-[var(--db-card-bg-elevated)] border-b border-[var(--db-card-border)]">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-            <span className="text-[12px] font-bold text-slate-300 font-sans tracking-wide">
+            <span className="text-[12px] font-bold text-[var(--db-text-secondary)] font-sans tracking-wide">
               {getTopQuestionText()}
             </span>
           </div>
 
           {/* Status bar */}
-          <div className="px-6 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(16, 185, 129, 0.05)' }}>
-            <span className="text-emerald-400 text-[10px] font-black uppercase tracking-widest">
+          <div className="px-6 py-2 flex items-center gap-2 border-b border-[var(--db-card-border)]">
+            <span className="text-emerald-500 text-[10px] font-black uppercase tracking-widest">
               {playbackState === 'IDLE' ? 'READY TO EXECUTE' : playbackState === 'PLAYING' ? 'EXECUTING...' : playbackState === 'PAUSED' ? 'PAUSED' : 'COMPLETE'}
             </span>
-            <div className="flex-1 h-1 rounded-full overflow-hidden ml-2" style={{ background: '#0c1426' }}>
+            <div className="flex-1 h-1 rounded-full overflow-hidden ml-2 bg-[var(--db-input-bg)] border border-[var(--db-card-border)]">
               <div className={`h-full bg-emerald-500 rounded-full transition-all ${playbackState === 'PLAYING' ? 'animate-pulse' : ''}`} style={{ width: playbackState === 'FINISHED' ? '100%' : playbackState === 'PLAYING' ? '60%' : '15%' }}></div>
             </div>
           </div>
@@ -934,18 +920,18 @@ export default function MathVisualization() {
 
         {/* RIGHT PANEL: AI EXPLAINER */}
         <div className="w-full lg:w-1/4 lg:min-w-[280px] lg:h-full flex flex-col gap-4 shrink-0">
-          <div className="flex-1 rounded-2xl p-5 text-white flex flex-col relative overflow-hidden" style={{ background: 'linear-gradient(180deg, rgba(8, 14, 30, 0.98) 0%, rgba(5, 11, 24, 0.95) 100%)', border: '1px solid rgba(16, 185, 129, 0.08)' }}>
+          <div className="flex-1 rounded-2xl p-5 text-[var(--db-text-main)] flex flex-col relative overflow-hidden bg-[var(--db-card-bg)] border border-[var(--db-card-border)] shadow-md">
             <div className="absolute -top-10 -right-10 opacity-5 pointer-events-none">
-              <BrainCircuit className="w-64 h-64 text-emerald-400" />
+              <BrainCircuit className="w-64 h-64 text-emerald-500" />
             </div>
             
-            <div className="flex items-center gap-3 mb-5 relative z-10 pb-4" style={{ borderBottom: '1px solid rgba(16, 185, 129, 0.08)' }}>
-              <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                <Settings2 className="w-5 h-5 text-emerald-400" />
+            <div className="flex items-center gap-3 mb-5 relative z-10 pb-4 border-b border-[var(--db-card-border)]">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                <Settings2 className="w-5 h-5 text-emerald-500" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-200">Execution Trace</h3>
-                <p className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold">Live Interpreter</p>
+                <h3 className="text-sm font-bold text-[var(--db-text-main)]">Execution Trace</h3>
+                <p className="text-[10px] uppercase tracking-widest text-emerald-500 font-bold">Live Interpreter</p>
               </div>
             </div>
 
@@ -968,10 +954,9 @@ export default function MathVisualization() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="p-4 rounded-r-lg"
-                    style={{ background: 'rgba(16, 185, 129, 0.06)', borderLeft: '2px solid #10b981' }}
+                    className="p-4 rounded-r-lg bg-emerald-500/10 border-l-2 border-emerald-500 text-[var(--db-text-main)]"
                   >
-                    <span className="text-emerald-400 font-bold mb-1 block">CURRENT STEP:</span>
+                    <span className="text-emerald-500 font-bold mb-1 block">CURRENT STEP:</span>
                     {currentExplanation}
                   </motion.div>
                 </AnimatePresence>
@@ -981,7 +966,7 @@ export default function MathVisualization() {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="mt-4 text-emerald-400 font-bold"
+                  className="mt-4 text-emerald-500 font-bold"
                 >
                   &gt; Execution completed successfully.
                 </motion.div>

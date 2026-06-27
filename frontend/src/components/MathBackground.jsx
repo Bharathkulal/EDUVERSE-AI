@@ -1,14 +1,17 @@
 import { motion } from 'framer-motion';
+import { useTheme } from '../context/ThemeContext';
 
 /**
- * MathBackground — Reusable dark background with floating mathematical formulas
+ * MathBackground — Reusable background with floating mathematical formulas
  * Used across all Mathematics section pages for consistent theming.
  */
 export default function MathBackground({ children, className = '' }) {
+  const { isDarkMode } = useTheme();
+
   return (
     <div
-      className={`min-h-screen relative overflow-hidden ${className}`}
-      style={{ background: 'linear-gradient(135deg, #040812 0%, #070d1f 20%, #0a1228 40%, #0c1530 60%, #091020 80%, #040812 100%)' }}
+      className={`min-h-screen relative overflow-hidden ${isDarkMode ? 'dark-theme' : 'light-theme'} ${className}`}
+      style={{ backgroundColor: 'var(--db-bg)', backgroundImage: 'var(--db-bg-gradient)', color: 'var(--db-text-main)' }}
     >
       {/* ===== FLOATING MATH FORMULAS ===== */}
 

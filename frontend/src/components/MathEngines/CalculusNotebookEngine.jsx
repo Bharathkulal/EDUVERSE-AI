@@ -15,6 +15,9 @@ export default function CalculusNotebookEngine({
   // Gauss Seidel props
   gaussSeidelProblemId,
   gaussSeidelIterations,
+  // Regula Falsi props
+  rfProblemId,
+  rfIterations,
 }) {
   const [activeStepIndex, setActiveStepIndex] = useState(-1);
   const [stepComplete, setStepComplete] = useState(false);
@@ -505,8 +508,94 @@ export default function CalculusNotebookEngine({
       });
     }
 
+    // ── 5. REGULA FALSI METHOD ────────────────────────────────────────
+    else if (method === 'Regula Falsi Method') {
+      const numIters = parseInt(rfIterations) || 7;
+      const isRf1 = rfProblemId === 'rf1';
+
+      // Problem definitions
+      const f1 = (x) => Math.pow(x, 3) - 2 * x - 5;
+      const f2 = (x) => Math.pow(x, 3) - x - 2;
+      const f = isRf1 ? f1 : f2;
+      let a0 = isRf1 ? 2 : 1;
+      let b0 = isRf1 ? 3 : 2;
+      const fTex  = isRf1 ? 'f(x) = x³ - 2x - 5' : 'f(x) = x³ - x - 2';
+      const fExam = isRf1
+        ? 'f(0)=-5<0, f(1)=-6<0, f(2)=-1<0, f(3)=16>0  →  root lies between 2 and 3'
+        : 'f(1)=-2<0, f(2)=4>0  →  root lies between 1 and 2';
+
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content: `Find a real root of: ${fTex} = 0\nusing the Regula Falsi (False Position) Method\n\nStep 0: Verify sign change to bracket the root:\n${fExam}\n\nInitial bracket: a = ${a0}, b = ${b0}\n\nFormula: x = [ a·f(b) - b·f(a) ] / [ f(b) - f(a) ]`,
+        explanation: `We confirm that f(${a0}) and f(${b0}) have opposite signs, proving a root lies in [${a0}, ${b0}]. The Regula Falsi formula interpolates a chord between (a, f(a)) and (b, f(b)) to find x.`,
+      });
+
+      const history = [];
+      let a = a0, b = b0;
+      let xPrev = null;
+
+      for (let k = 1; k <= numIters; k++) {
+        const fa = f(a), fb = f(b);
+        const x = (a * fb - b * fa) / (fb - fa);
+        const fx = f(x);
+
+        const signCheck = Math.abs(fx) < 1e-8
+          ? 'Root!'
+          : fa * fx < 0 ? 'f(a)·f(x)<0' : 'f(x)·f(b)<0';
+
+        history.push({
+          iter: k,
+          a: a.toFixed(6),
+          b: b.toFixed(6),
+          x: x.toFixed(6),
+          fa: fa.toFixed(6),
+          fx: fx.toFixed(6),
+          sign: signCheck,
+        });
+
+        sequence.push({
+          type: 'math',
+          title: `STEP ${k}: REGULA FALSI ITERATION`,
+          content: `Current bracket: a = ${a.toFixed(6)}, b = ${b.toFixed(6)}\n\n` +
+                   `f(a) = f(${a.toFixed(4)}) = ${fa.toFixed(6)}\n` +
+                   `f(b) = f(${b.toFixed(4)}) = ${fb.toFixed(6)}\n\n` +
+                   `x = [ a·f(b) - b·f(a) ] / [ f(b) - f(a) ]\n` +
+                   `  = [ ${a.toFixed(4)}×${fb.toFixed(4)} - ${b.toFixed(4)}×${fa.toFixed(4)} ] / [ ${fb.toFixed(4)} - ${fa.toFixed(4)} ]\n` +
+                   `  = ${(a * fb).toFixed(6)} - ${(b * fa).toFixed(6)} / ${(fb - fa).toFixed(6)}\n` +
+                   `  = ${x.toFixed(6)}\n\n` +
+                   `f(x) = f(${x.toFixed(6)}) = ${fx.toFixed(6)}\n\n` +
+                   (Math.abs(fx) < 1e-8
+                     ? `✔ Root found! |f(x)| ≈ 0`
+                     : fa * fx < 0
+                       ? `Since f(a)·f(x) = ${(fa*fx).toFixed(6)} < 0, root lies in [a, x]\n→ New bracket: a = ${a.toFixed(4)}, b = x = ${x.toFixed(6)}`
+                       : `Since f(x)·f(b) = ${(fx*fb).toFixed(6)} < 0, root lies in [x, b]\n→ New bracket: a = x = ${x.toFixed(6)}, b = ${b.toFixed(4)}`),
+          explanation: `Iteration ${k}: We apply the Regula Falsi formula to get x = ${x.toFixed(6)}. f(x) = ${fx.toFixed(6)}. ${Math.abs(fx) < 1e-8 ? 'Root found!' : signCheck + ' so we update the bracket accordingly.'}`,
+        });
+
+        if (Math.abs(fx) < 1e-8) break;
+        if (fa * fx < 0) { b = x; } else { a = x; }
+        xPrev = x;
+      }
+
+      sequence.push({
+        type: 'rfTable',
+        title: 'CONVERGENCE TABLE',
+        history,
+        explanation: 'The Regula Falsi convergence table shows how the false position x narrows in on the root at each iteration.',
+      });
+
+      const root = history[history.length - 1].x;
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: `${fTex} = 0\n\nRequired Root  ≈  ${root}\n\n(Regula Falsi Method, ${history.length} iterations)`,
+        explanation: `The Regula Falsi method converges to x ≈ ${root} as the real root of ${fTex} = 0.`,
+      });
+    }
+
     return sequence;
-  }, [method, limitFuncId, limitApproachVal, derivFuncId, derivAtX, integFuncId, integA, integB, integN, lhopitalProblemId, gaussSeidelProblemId, gaussSeidelIterations]);
+  }, [method, limitFuncId, limitApproachVal, derivFuncId, derivAtX, integFuncId, integA, integB, integN, lhopitalProblemId, gaussSeidelProblemId, gaussSeidelIterations, rfProblemId, rfIterations]);
 
   // ─── Playback Control ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -606,6 +695,39 @@ export default function CalculusNotebookEngine({
     );
   };
 
+  // ─── Regula Falsi convergence table ───────────────────────────────────────
+  const renderRfGrid = (history) => {
+    setTimeout(() => {
+      if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
+    }, 1000);
+    return (
+      <div className="overflow-x-auto w-full border border-slate-200 rounded-xl bg-white shadow-sm mt-3">
+        <table className="w-full text-center border-collapse text-xs font-mono">
+          <thead>
+            <tr className="bg-violet-50 border-b border-slate-200">
+              {['Iter', 'a', 'b', 'x (False Pos)', 'f(a)', 'f(x)', 'Sign Check'].map((h, i) => (
+                <th key={i} className="py-2.5 px-3 border-r border-slate-200 font-bold text-violet-700 whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {history.map((row, rIdx) => (
+              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-white' : 'bg-violet-50/30'} border-b border-slate-100 hover:bg-violet-50/60 transition`}>
+                <td className="py-1.5 px-3 border-r border-slate-200 font-bold text-violet-600">{row.iter}</td>
+                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-700">{row.a}</td>
+                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-700">{row.b}</td>
+                <td className="py-1.5 px-3 border-r border-slate-200 font-bold text-blue-600">{row.x}</td>
+                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-600">{row.fa}</td>
+                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-600">{row.fx}</td>
+                <td className={`py-1.5 px-3 border-r border-slate-200 font-bold ${row.sign === 'Root!' ? 'text-emerald-600' : 'text-amber-600'}`}>{row.sign}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   const progress = activeStepIndex >= 0 ? ((activeStepIndex + 1) / steps.length) * 100 : 0;
 
   return (
@@ -679,6 +801,11 @@ export default function CalculusNotebookEngine({
                 <div className="bg-white p-6 rounded-2xl border-l-4 border-emerald-400 shadow-md">
                   <span className="text-xs font-bold text-slate-500 font-sans">Gauss-Seidel Convergence Iterations Table:</span>
                   {renderGsGrid(step.history, step.isGs1)}
+                </div>
+              ) : step.type === 'rfTable' ? (
+                <div className="bg-white p-6 rounded-2xl border-l-4 border-violet-500 shadow-md">
+                  <span className="text-xs font-bold text-slate-500 font-sans">Regula Falsi Convergence Table:</span>
+                  {renderRfGrid(step.history)}
                 </div>
               ) : step.type === 'header' ? (
                 <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-2xl border border-slate-200 shadow-sm">
