@@ -991,21 +991,50 @@
 /* ====================================================
    SUBJECT CARDS ANIMATED BLOB & GLASSMORPHISM EFFECT
    ==================================================== */
+/* ====================================================
+   SUBJECT CARDS ANIMATED BLOB & GLASSMORPHISM EFFECT
+   ==================================================== */
+.premium-subjects-grid {
+  position: relative;
+  padding: 2rem;
+  border-radius: 24px;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 30px 30px;
+  background-position: center;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.4);
+}
+
+.light-theme .premium-subjects-grid {
+  background-image: 
+    linear-gradient(rgba(15, 23, 42, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+  border: 1px solid rgba(15, 23, 42, 0.03);
+  box-shadow: inset 0 0 60px rgba(15, 23, 42, 0.02);
+}
+
 .subject-card {
   position: relative;
   width: 100%;
-  min-height: 260px;
-  border-radius: 14px;
+  min-height: 270px;
+  border-radius: 20px;
   z-index: 1;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 30px var(--db-shadow);
-  border: 1px solid var(--db-card-border);
-  background: var(--db-bg);
-  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.3);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.4s ease;
   cursor: pointer;
-  padding: 1.5rem;
+  padding: 1.75rem;
 }
 
 /* PowerPoint-style top indicator line */
@@ -1017,8 +1046,8 @@
   right: 0;
   height: 4px;
   z-index: 10;
-  border-top-left-radius: 14px;
-  border-top-right-radius: 14px;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
   background: var(--db-text-accent);
   transition: opacity 0.3s ease, height 0.3s ease;
   opacity: 0.85;
@@ -1039,18 +1068,23 @@
 }
 
 .subject-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px var(--db-shadow);
+  transform: translateY(-14px) scale(1.02);
+  border-color: rgba(236, 72, 153, 0.45);
+  box-shadow: 
+    0 30px 60px -15px rgba(0, 0, 0, 0.7),
+    0 0 50px -10px rgba(236, 72, 153, 0.25),
+    inset 0 1px 2px rgba(255, 255, 255, 0.15);
 }
 
 .light-theme .subject-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  box-shadow: 12px 12px 30px rgba(165, 180, 252, 0.12), -12px -12px 30px rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 12px 12px 30px rgba(165, 180, 252, 0.08), -12px -12px 30px rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(226, 232, 240, 0.7);
 }
 
 .light-theme .subject-card:hover {
-  box-shadow: 16px 16px 36px rgba(165, 180, 252, 0.2), -16px -16px 36px rgba(255, 255, 255, 0.95);
+  box-shadow: 18px 18px 40px rgba(165, 180, 252, 0.15), -18px -18px 40px rgba(255, 255, 255, 0.9);
+  border-color: rgba(236, 72, 153, 0.35);
 }
 
 .subject-card-bg {
@@ -1060,57 +1094,58 @@
   width: calc(100% - 10px);
   height: calc(100% - 10px);
   z-index: 2;
-  background: var(--db-card-bg);
-  opacity: 0.96;
-  backdrop-filter: blur(24px);
-  border-radius: 10px;
+  background: rgba(17, 24, 39, 0.55);
+  opacity: 0.85;
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
   overflow: hidden;
-  border: 1px solid var(--db-card-border);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   transition: background 0.35s ease, border-color 0.35s ease, opacity 0.3s ease;
 }
 
 .light-theme .subject-card-bg {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.9) 100%);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 .subject-card:hover .subject-card-bg {
-  border-color: var(--db-card-hover-border);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(17, 24, 39, 0.45);
 }
 
 .light-theme .subject-card:hover .subject-card-bg {
-  border-color: rgba(52, 211, 153, 0.35);
+  border-color: rgba(236, 72, 153, 0.2);
+  background: rgba(255, 255, 255, 0.65);
 }
 
 .subject-card-blob {
   position: absolute;
   z-index: 1;
-  top: 50%;
-  left: 50%;
-  width: 150px;
-  height: 150px;
+  top: 25%;
+  left: 25%;
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
-  opacity: 0.45;
-  filter: blur(20px);
-  animation: blob-bounce 6s infinite ease-in-out;
+  opacity: 0.7;
+  filter: blur(35px);
+  animation: blob-bounce 7s infinite ease-in-out;
   transition: opacity 0.3s ease, filter 0.3s ease;
 }
 
 .light-theme .subject-card-blob {
-  opacity: 0.5; /* brighter glow for PPT background effect in light mode */
-  filter: blur(22px);
+  opacity: 0.55;
+  filter: blur(30px);
 }
 
 .subject-card:hover .subject-card-blob {
-  opacity: 0.65;
-  filter: blur(15px);
+  opacity: 0.9;
+  filter: blur(25px);
 }
 
 .light-theme .subject-card:hover .subject-card-blob {
-  opacity: 0.7;
-  filter: blur(16px);
+  opacity: 0.85;
+  filter: blur(22px);
 }
 
 .subject-card-content {
@@ -1124,32 +1159,29 @@
   flex-grow: 1;
 }
 
-/* Individual blob color variables */
-.blob-default { background-color: var(--db-text-accent); }
-.blob-foc { background-color: #3b82f6; }
-.blob-java { background-color: #f97316; }
-.blob-advjava { background-color: #ef4444; }
-.blob-dsa { background-color: #10b981; }
-.blob-csharp { background-color: #8b5cf6; }
-.blob-dbms { background-color: #06b6d4; }
-.blob-python { background-color: #eab308; }
-.blob-webdev { background-color: #ec4899; }
+/* Individual blob color variables - Neon magenta and purple transitions */
+.blob-default { background: radial-gradient(circle, #ec4899 0%, #8b5cf6 100%); }
+.blob-foc { background: radial-gradient(circle, #ec4899 0%, #3b82f6 100%); }
+.blob-java { background: radial-gradient(circle, #f97316 0%, #ec4899 100%); }
+.blob-advjava { background: radial-gradient(circle, #ec4899 0%, #ef4444 100%); }
+.blob-dsa { background: radial-gradient(circle, #10b981 0%, #8b5cf6 100%); }
+.blob-csharp { background: radial-gradient(circle, #8b5cf6 0%, #ec4899 100%); }
+.blob-dbms { background: radial-gradient(circle, #06b6d4 0%, #ec4899 100%); }
+.blob-python { background: radial-gradient(circle, #eab308 0%, #ec4899 100%); }
+.blob-webdev { background: radial-gradient(circle, #ec4899 0%, #8b5cf6 100%); }
 
 @keyframes blob-bounce {
   0% {
-    transform: translate(-100%, -100%) translate3d(0, 0, 0);
+    transform: translate(-90%, -90%) scale(1);
   }
-  25% {
-    transform: translate(-100%, -100%) translate3d(100%, 0, 0);
+  33% {
+    transform: translate(10%, -60%) scale(1.1);
   }
-  50% {
-    transform: translate(-100%, -100%) translate3d(100%, 100%, 0);
-  }
-  75% {
-    transform: translate(-100%, -100%) translate3d(0, 100%, 0);
+  66% {
+    transform: translate(-40%, 10%) scale(0.9);
   }
   100% {
-    transform: translate(-100%, -100%) translate3d(0, 0, 0);
+    transform: translate(-90%, -90%) scale(1);
   }
 }
 

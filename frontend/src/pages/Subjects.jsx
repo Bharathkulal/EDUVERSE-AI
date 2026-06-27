@@ -273,7 +273,7 @@ export default function Subjects() {
               <h1 className="text-2xl font-bold" style={{ color: 'var(--db-text-main)' }}>Learning Modules</h1>
               <p style={{ color: 'var(--db-text-muted)' }}>Explore subjects with theory, notes, PDFs, and videos</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 premium-subjects-grid">
               {subjects.map((s) => (
                 <Link key={s.id} to={`/subjects/${s.id}`} className="subject-card group">
                   <div className={`subject-card-blob ${subjectBlobColors[s.subject_name] || 'blob-default'}`} />
