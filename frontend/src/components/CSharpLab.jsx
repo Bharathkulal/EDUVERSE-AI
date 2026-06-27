@@ -390,7 +390,45 @@ export default function CSharpLab() {
   };
 
   const handleCompilerRun = () => {
-    setCompilerOutput('Compiling App.cs utilizing Roslyn compiler...\nLinking references...\n\n[STDOUT]\nHello, EduVerse C#!\n\nProcess finished with exit code 0.');
+    const writeRegex = /Console\s*\.\s*Write(Line)?\s*\(\s*(.*?)\s*\)\s*;/g;
+    let match;
+    let outputs = [];
+    
+    while ((match = writeRegex.exec(compilerCode)) !== null) {
+      let content = match[2].trim();
+      if (content.startsWith('"') && content.endsWith('"')) {
+        outputs.push(content.substring(1, content.length - 1));
+      } else if (content.startsWith('$') && content.includes('"')) {
+        let clean = content.substring(content.indexOf('"') + 1, content.lastIndexOf('"'));
+        clean = clean.replace(/\{([\s\S]*?)\}/g, (m, expr) => {
+          const trimmedExpr = expr.trim();
+          const varRegex = new RegExp(`(?:int|double|string|var|double\\[\\]|int\\[\\])\\s+${trimmedExpr}\\s*=\\s*([\\s\\S]*?)\\s*;`);
+          const varMatch = compilerCode.match(varRegex);
+          if (varMatch) {
+            let val = varMatch[1].trim();
+            return val.startsWith('"') && val.endsWith('"') ? val.substring(1, val.length - 1) : val;
+          }
+          return trimmedExpr;
+        });
+        outputs.push(clean);
+      } else {
+        const varRegex = new RegExp(`(?:int|double|string|var|double\\[\\]|int\\[\\])\\s+${content}\\s*=\\s*([\\s\\S]*?)\\s*;`);
+        const varMatch = compilerCode.match(varRegex);
+        if (varMatch) {
+          let val = varMatch[1].trim();
+          outputs.push(val.startsWith('"') && val.endsWith('"') ? val.substring(1, val.length - 1) : val);
+        } else {
+          outputs.push(content.replace(/"/g, ''));
+        }
+      }
+    }
+    
+    if (outputs.length === 0) {
+      outputs.push("Process executed successfully (no stdout emitted).");
+    }
+
+    const finalOutput = outputs.join('\n');
+    setCompilerOutput(`Compiling App.cs utilizing Roslyn compiler...\nLinking references...\n\n[STDOUT]\n${finalOutput}\n\nProcess finished with exit code 0.`);
     updateXP(50);
   };
 
@@ -1225,7 +1263,7 @@ export default function CSharpLab() {
                       value={compilerCode}
                       onChange={(e) => setCompilerCode(e.target.value)}
                       rows={10}
-                      className="w-full p-4 bg-slate-950 border border-white/10 rounded-2xl text-xs font-mono text-emerald-400 outline-none focus:border-blue-500"
+                      className="w-full p-4 bg-slate-950 border border-white/10 rounded-2xl text-base font-mono text-emerald-400 outline-none focus:border-blue-500"
                     />
                     <div className="flex gap-2">
                       <button 
@@ -1253,7 +1291,7 @@ export default function CSharpLab() {
                 <div className="lg:col-span-5 space-y-4">
                   <div className="p-5 bg-slate-900 border border-white/10 rounded-[28px] space-y-3">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Compiler Outputs</span>
-                    <pre className="p-4 bg-slate-950 border border-white/5 rounded-2xl text-xs font-mono text-slate-300 whitespace-pre-wrap">
+                    <pre className="p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-mono text-slate-300 whitespace-pre-wrap">
                       {compilerOutput}
                     </pre>
                     {aiReviewOutput && (
@@ -7660,3 +7698,529 @@ export function CSharpCollectionsDetail({ setSelectedModule, completedCount, han
     </div>
   );
 }
+
+// ═══════════════════════════════════════════════════════════
+// UNIFIED DYNAMIC C# MODULE DETAIL COMPONENT
+// ═══════════════════════════════════════════════════════════
+export function CSharpModuleDetail({ moduleId, setSelectedModule, completedCount, handleMarkComplete, updateXP, xp }) {
+  const mod = CSHARP_MODULES.find(m => m.id === moduleId);
+  const [activeTab, setActiveTab] = useState('theory');
+  
+  // Analytics Telemetry States
+  const [completedTopics, setCompletedTopics] = useState(() => {
+    const saved = localStorage.getItem(`cs_${moduleId}_completed`);
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [labCompilesCount, setLabCompilesCount] = useState(() => {
+    return parseInt(localStorage.getItem(`cs_${moduleId}_compiles`) || '0', 10);
+  });
+
+  // Code Presets based on moduleId
+  const presetsByModule = {
+    exceptions: {
+      tryCatch: {
+        name: "Basic Try-Catch",
+        code: `using System;\n\nclass Program {\n    static void Main() {\n        try {\n            int x = 10;\n            int y = 0;\n            int result = x / y;\n            Console.WriteLine("Result: " + result);\n        } catch (DivideByZeroException ex) {\n            Console.WriteLine("Error: Cannot divide by zero!");\n            Console.WriteLine("Exception Msg: " + ex.Message);\n        }\n    }\n}`
+      },
+      finallyBlock: {
+        name: "Finally Block Cleanup",
+        code: `using System;\n\nclass Program {\n    static void Main() {\n        try {\n            Console.WriteLine("Opening database connection...");\n            throw new InvalidOperationException("DB query failed.");\n        } catch (Exception ex) {\n            Console.WriteLine("Caught: " + ex.Message);\n        } finally {\n            Console.WriteLine("Finally: Closing connection. Resource cleanup complete.");\n        }\n    }\n}`
+      }
+    },
+    'file-handling': {
+      writeRead: {
+        name: "File Read & Write",
+        code: `using System;\nusing System.IO;\n\nclass Program {\n    static void Main() {\n        string path = "demo.txt";\n        File.WriteAllText(path, "Hello from C# streams!");\n        string content = File.ReadAllText(path);\n        Console.WriteLine("File Content: " + content);\n    }\n}`
+      },
+      streamReaderWriter: {
+        name: "StreamReader & StreamWriter",
+        code: `using System;\nusing System.IO;\n\nclass Program {\n    static void Main() {\n        string path = "stream_demo.txt";\n        using (StreamWriter sw = new StreamWriter(path)) {\n            sw.WriteLine("Line 1: System.IO buffer");\n            sw.WriteLine("Line 2: Stream memory stream");\n        }\n        using (StreamReader sr = new StreamReader(path)) {\n            string line;\n            while ((line = sr.ReadLine()) != null) {\n                Console.WriteLine("Stream Line: " + line);\n            }\n        }\n    }\n}`
+      }
+    },
+    linq: {
+      filter: {
+        name: "LINQ Filtering & Select",
+        code: `using System;\nusing System.Linq;\nusing System.Collections.Generic;\n\nclass Program {\n    static void Main() {\n        List<int> numbers = new List<int> { 10, 25, 45, 60, 80, 95 };\n        var query = numbers.Where(n => n > 50).Select(n => n * 2);\n        foreach (var val in query) {\n            Console.WriteLine("Result: " + val);\n        }\n    }\n}`
+      }
+    },
+    delegates: {
+      actionFunc: {
+        name: "Func & Action Delegates",
+        code: `using System;\n\nclass Program {\n    static void Main() {\n        Func<int, int, int> add = (a, b) => a + b;\n        Action<string> print = message => Console.WriteLine(message);\n        \n        print("Result of addition: " + add(5, 7));\n    }\n}`
+      }
+    },
+    async: {
+      tasks: {
+        name: "Async / Await Threading",
+        code: `using System;\nusing System.Threading.Tasks;\n\nclass Program {\n    static async Task Main() {\n        Console.WriteLine("Main thread running...");\n        await PerformTaskAsync();\n        Console.WriteLine("Main thread finished.");\n    }\n    static async Task PerformTaskAsync() {\n        await Task.Delay(1000);\n        Console.WriteLine("Async task complete on another thread context.");\n    }\n}`
+      }
+    }
+  };
+
+  const modulePresets = presetsByModule[moduleId] || {
+    demo: {
+      name: `${mod?.label || 'Module'} Demo`,
+      code: `using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine("EduVerse C# Interactive Playground");\n    }\n}`
+    }
+  };
+
+  const firstPresetKey = Object.keys(modulePresets)[0];
+  const [code, setCode] = useState(modulePresets[firstPresetKey]?.code || '');
+  const [consoleOutput, setConsoleOutput] = useState([]);
+  const [isCompiling, setIsCompiling] = useState(false);
+
+  // Practice states
+  const [selectedQuizOption, setSelectedQuizOption] = useState(null);
+  const [quizAnswerChecked, setQuizAnswerChecked] = useState(false);
+  const [hasAnswered, setHasAnswered] = useState(false);
+
+  // Simulator Specific States
+  const [exceptionState, setExceptionState] = useState('Normal');
+  const [virtualFiles, setVirtualFiles] = useState({ 'log.txt': 'App started.' });
+  const [activeFile, setActiveFile] = useState('log.txt');
+  const [delegatesLogs, setDelegatesLogs] = useState([]);
+  const [asyncTasks, setAsyncTasks] = useState([
+    { id: 1, name: 'Fetch Data', status: 'Idle', progress: 0 },
+    { id: 2, name: 'Process DB', status: 'Idle', progress: 0 }
+  ]);
+
+  const markTopicComplete = (topicName, rewardXP) => {
+    if (completedTopics[topicName]) {
+      toast.success("Topic already completed! Keep exploring.");
+      return;
+    }
+    const updated = { ...completedTopics, [topicName]: true };
+    setCompletedTopics(updated);
+    localStorage.setItem(`cs_${moduleId}_completed`, JSON.stringify(updated));
+    updateXP(rewardXP);
+    toast.success(`+${rewardXP} XP Earned for mastering ${topicName}!`);
+  };
+
+  const handleExecuteCode = () => {
+    setIsCompiling(true);
+    setConsoleOutput(["[Compiler] Allocating IL memory spaces...", "[Compiler] Translating to CLI bytecode...", "[CLR] Executing entry point Main()..."]);
+    
+    setTimeout(() => {
+      let output = ["Execution successful.", "Process completed with exit code 0."];
+      if (moduleId === 'exceptions') {
+        output = ["Caught: DivideByZeroException", "Closing database connection.", "Resource cleanup complete."];
+      } else if (moduleId === 'file-handling') {
+        output = ["File Content: Hello from C# streams!", "Stream Line: Line 1: System.IO buffer"];
+      } else if (moduleId === 'linq') {
+        output = ["Result: 120", "Result: 160", "Result: 190"];
+      } else if (moduleId === 'delegates') {
+        output = ["Result of addition: 12"];
+      } else if (moduleId === 'async') {
+        output = ["Main thread running...", "Async task complete on another thread context.", "Main thread finished."];
+      }
+      setConsoleOutput(output);
+      setIsCompiling(false);
+      setLabCompilesCount(prev => {
+        const next = prev + 1;
+        localStorage.setItem(`cs_${moduleId}_compiles`, next.toString());
+        return next;
+      });
+      toast.success("Code compiled & executed successfully.");
+    }, 1200);
+  };
+
+  if (!mod) {
+    return (
+      <div className="p-6 text-center text-red-400">
+        Module not found.
+      </div>
+    );
+  }
+
+  const topicsToComplete = mod.topics || [];
+  const completedList = Object.keys(completedTopics).filter(k => completedTopics[k]);
+  const progressPercent = Math.min(100, Math.round((completedList.length / Math.max(1, topicsToComplete.length)) * 100));
+
+  return (
+    <div className="space-y-6 pb-12 pr-2 text-left">
+      {/* ── HEADER BANNER ── */}
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 p-6 md:p-8 bg-[#161720]">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-3">
+            <span className="px-3 py-1 bg-violet-500/10 border border-violet-500/30 text-violet-400 rounded-full text-xs font-bold uppercase tracking-wider">
+              {mod.type}
+            </span>
+            <h1 className="text-3xl font-black text-white">{mod.label}</h1>
+            <p className="text-sm text-slate-400 max-w-xl">{mod.desc}</p>
+          </div>
+          
+          <div className="flex flex-col items-center bg-white/5 border border-white/15 p-4 rounded-2xl min-w-40 text-center text-white">
+            <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold block">Module Progress</span>
+            <strong className="text-3xl text-violet-400 block mt-1">{progressPercent}%</strong>
+            <span className="text-[9px] text-slate-500 block mt-1">{completedList.length} of {topicsToComplete.length} masteries</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── TABS NAVIGATION ── */}
+      <div className="flex flex-wrap gap-2 border-b border-white/10 pb-2">
+        {['theory', 'simulator', 'codelab', 'quiz'].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 text-xs font-bold rounded-xl transition cursor-pointer ${
+              activeTab === tab 
+                ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' 
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* ── CONTENT CONTAINER ── */}
+      <div className="min-h-[400px]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+            className="w-full"
+          >
+            {/* THEORY TAB */}
+            {activeTab === 'theory' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="cs-fun-card space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-violet-400 uppercase tracking-widest">Syllabus Overview</span>
+                      <button 
+                        onClick={() => markTopicComplete('Theory Concepts', 50)}
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded transition ${
+                          completedTopics['Theory Concepts'] ? 'bg-emerald-500/20 text-emerald-400' : 'bg-violet-500/10 text-violet-400 hover:bg-violet-500/20'
+                        }`}
+                      >
+                        {completedTopics['Theory Concepts'] ? '✓ Mastered' : 'Mark Topic Mastered'}
+                      </button>
+                    </div>
+                    <p className="text-sm text-slate-300 leading-relaxed">{mod.theory}</p>
+                    
+                    <div className="border-t border-white/5 pt-4">
+                      <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-2">Real-Life Analogy</h4>
+                      <div className="cs-fun-inner-card">
+                        <p className="text-xs text-slate-400 leading-relaxed">{mod.aiExplanation}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="cs-fun-card">
+                    <strong className="text-xs text-emerald-400 uppercase tracking-wider block mb-2">Core Topics</strong>
+                    <div className="flex flex-wrap gap-2">
+                      {topicsToComplete.map((topic, i) => (
+                        <button
+                          key={i}
+                          onClick={() => markTopicComplete(topic, 30)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+                            completedTopics[topic] 
+                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                              : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                          }`}
+                        >
+                          {topic} {completedTopics[topic] ? '✓' : ''}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="cs-fun-card space-y-4">
+                    <strong className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Use Cases</strong>
+                    <div className="cs-fun-inner-card">
+                      <p className="text-xs text-slate-400 leading-relaxed">{mod.useCases}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SIMULATOR TAB */}
+            {activeTab === 'simulator' && (
+              <div className="cs-fun-card space-y-6 max-w-xl mx-auto">
+                <div className="border-b border-white/5 pb-4">
+                  <h3 className="text-base font-bold text-white">Interactive Sandbox Simulator</h3>
+                  <p className="text-xs text-slate-400">Interact with local memory variables and state engines below.</p>
+                </div>
+
+                {mod.simulatorType === 'exceptions-sim' && (
+                  <div className="space-y-4 w-full">
+                    <h5 className="text-xs font-bold text-slate-400 font-sans">Program Flow Catch Recovery</h5>
+                    <div className={`p-4 rounded-xl text-center font-bold text-xs ${
+                      exceptionState === 'Normal' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                    }`}>
+                      System State: {exceptionState}
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => setExceptionState(exceptionState === 'Normal' ? 'Exception Caught!' : 'Normal')}
+                        className="w-full py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                      >
+                        Toggle Exception State
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {mod.simulatorType === 'file-sim' && (
+                  <div className="space-y-4 w-full">
+                    <h5 className="text-xs font-bold text-slate-400 font-sans">Virtual File System Explorer</h5>
+                    <div className="p-3 bg-slate-900 border border-white/5 rounded-xl text-left space-y-1">
+                      {Object.entries(virtualFiles).map(([name, data]) => (
+                        <div 
+                          key={name} 
+                          onClick={() => setActiveFile(name)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition ${
+                            activeFile === name ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30' : 'text-slate-400'
+                          }`}
+                        >
+                          📄 {name}
+                        </div>
+                      ))}
+                    </div>
+                    <button 
+                      onClick={() => {
+                        const newName = `notes_${Object.keys(virtualFiles).length + 1}.txt`;
+                        setVirtualFiles({ ...virtualFiles, [newName]: 'New text file stream.' });
+                        setActiveFile(newName);
+                        toast.success('File created successfully.');
+                      }}
+                      className="w-full py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                    >
+                      Create new file stream
+                    </button>
+                  </div>
+                )}
+
+                {mod.simulatorType === 'linq-sim' && (
+                  <div className="space-y-4 w-full text-left">
+                    <h5 className="text-xs font-bold text-slate-400 font-sans">LINQ Query Pipeline</h5>
+                    <div className="p-3 bg-slate-900 border border-white/5 rounded-xl text-xs space-y-1">
+                      <div><strong>Source:</strong> [10, 25, 45, 60, 80, 95]</div>
+                      <div><strong>Query:</strong> numbers.Where(n =&gt; n &gt; 50)</div>
+                      <div><strong>Result:</strong> [60, 80, 95]</div>
+                    </div>
+                    <button 
+                      onClick={() => toast.success('LINQ filter evaluated.')}
+                      className="w-full py-1.5 bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-bold rounded-lg cursor-pointer mt-2"
+                    >
+                      Run LINQ Filter
+                    </button>
+                  </div>
+                )}
+
+                {mod.simulatorType === 'delegates-sim' && (
+                  <div className="space-y-4 w-full">
+                    <h5 className="text-xs font-bold text-slate-400 font-sans">Button Click Delegate Callback</h5>
+                    <div className="p-3 bg-slate-900 border border-white/5 rounded-xl text-left max-h-24 overflow-y-auto font-mono text-[9px] text-purple-400 space-y-1">
+                      {delegatesLogs.length > 0 ? delegatesLogs.map((log, i) => (
+                        <div key={i}>{log}</div>
+                      )) : <div>Click below to trigger callback...</div>}
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setDelegatesLogs([...delegatesLogs, `Delegate invoked on ${new Date().toLocaleTimeString()}`]);
+                        toast.success('Delegate invoked');
+                      }}
+                      className="w-full py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                    >
+                      Trigger Delegate
+                    </button>
+                  </div>
+                )}
+
+                {mod.simulatorType === 'async-sim' && (
+                  <div className="space-y-4 w-full">
+                    <h5 className="text-xs font-bold text-slate-400 font-sans">Task Timeline</h5>
+                    <div className="p-3 bg-slate-900 border border-white/5 rounded-xl space-y-2 text-left">
+                      {asyncTasks.map(t => (
+                        <div key={t.id} className="text-xs">
+                          <div className="flex justify-between font-bold text-[10px]">
+                            <span>{t.name}</span>
+                            <span className="text-pink-400">{t.status}</span>
+                          </div>
+                          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                            <div className="h-full bg-pink-500 transition-all duration-500" style={{ width: `${t.progress}%` }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setAsyncTasks([
+                          { id: 1, name: 'Fetch Data', status: 'Completed', progress: 100 },
+                          { id: 2, name: 'Process DB', status: 'Completed', progress: 100 }
+                        ]);
+                        toast.success('All tasks completed asynchronously!');
+                      }}
+                      className="w-full py-1.5 bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                    >
+                      Execute async Tasks
+                    </button>
+                  </div>
+                )}
+
+                {!['exceptions-sim', 'file-sim', 'linq-sim', 'delegates-sim', 'async-sim'].includes(mod.simulatorType) && (
+                  <div className="text-center p-6 bg-slate-900 border border-white/5 rounded-xl">
+                    <span className="text-2xl block mb-2">⚙️</span>
+                    <p className="text-xs text-slate-400">No active simulator for this module. Try running Code Lab preset compilers.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* CODE LAB TAB */}
+            {activeTab === 'codelab' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="lg:col-span-7 space-y-4">
+                  <div className="flex justify-between items-center bg-slate-900 px-4 py-2 rounded-t-xl border-t border-x border-white/10">
+                    <span className="text-xs font-bold text-slate-400">Roslyn Sandbox Compiler</span>
+                    <button 
+                      onClick={handleExecuteCode}
+                      disabled={isCompiling}
+                      className="px-3 py-1 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-lg cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Play size={10} /> {isCompiling ? 'Running...' : 'Run Code'}
+                    </button>
+                  </div>
+                  <textarea
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    className="w-full h-80 bg-slate-950 text-slate-100 font-mono text-base p-4 rounded-b-xl border border-white/10 outline-none resize-none focus:border-violet-500/50"
+                  />
+                </div>
+
+                <div className="lg:col-span-5 space-y-4">
+                  <div className="cs-fun-card space-y-3">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Code Presets</span>
+                    <div className="space-y-2">
+                      {Object.entries(modulePresets).map(([key, item]) => (
+                        <button
+                          key={key}
+                          onClick={() => setCode(item.code)}
+                          className="w-full text-left px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-xs font-bold text-slate-300 hover:text-white transition cursor-pointer"
+                        >
+                          🚀 {item.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-950 border border-white/10 p-4 rounded-2xl h-44 overflow-y-auto">
+                    <span className="text-xs font-bold text-slate-400 block mb-2">Console Output:</span>
+                    <div className="space-y-1">
+                      {consoleOutput.map((line, i) => (
+                        <div key={i} className="font-mono text-sm text-slate-300">{line}</div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* QUIZ TAB */}
+            {activeTab === 'quiz' && (
+              <div className="cs-fun-card space-y-6 max-w-xl mx-auto text-left">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Quiz Time</span>
+                <div className="space-y-3">
+                  <h4 className="text-sm font-bold text-white">{mod.quiz.q}</h4>
+                  <div className="grid grid-cols-1 gap-3 animate-fadeIn">
+                    {mod.quiz.options.map((opt) => {
+                      const isSelected = selectedQuizOption === opt;
+                      return (
+                        <button
+                          key={opt}
+                          disabled={hasAnswered}
+                          onClick={() => {
+                            setSelectedQuizOption(opt);
+                            setHasAnswered(true);
+                            if (opt === mod.quiz.correct) {
+                              updateXP(100);
+                              toast.success('Correct! +100 XP');
+                            } else {
+                              toast.error('Incorrect answer. Review theory.');
+                            }
+                          }}
+                          className={`w-full text-left p-3.5 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+                            isSelected 
+                              ? (opt === mod.quiz.correct ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-red-500/10 border-red-500 text-red-400')
+                              : 'bg-white/5 border-white/5 text-slate-300 hover:bg-white/10'
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {hasAnswered && (
+                    <div className="p-3 bg-white/5 rounded-xl text-xs text-slate-400 leading-relaxed border border-white/5">
+                      <strong className="text-slate-300 block mb-1">Explanation:</strong>
+                      {mod.quiz.explanation}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Exit controls */}
+      <div className="flex justify-between items-center pt-4 border-t border-white/10">
+        <button
+          onClick={() => setSelectedModule('dashboard')}
+          className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer"
+        >
+          ← Exit Module
+        </button>
+
+        <button
+          onClick={() => {
+            if (progressPercent === 100) {
+              handleMarkComplete(moduleId);
+              toast.success(`Congratulations! You have completed the C# ${mod.label} Module!`);
+            } else {
+              toast.error(`Please complete all activities first. Current progress: ${progressPercent}%`);
+            }
+          }}
+          className="px-5 py-2 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white text-xs font-bold rounded-xl cursor-pointer"
+        >
+          {completedCount > mod.index ? "Track Completed ✓" : "Claim Completion Badge"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// SPECIFIC WRAPPER COMPONENTS FOR PRE-RENDER ROUTINGS
+// ═══════════════════════════════════════════════════════════
+export function CSharpExceptionsDetail(props) {
+  return <CSharpModuleDetail {...props} moduleId="exceptions" />;
+}
+
+export function CSharpFileHandlingDetail(props) {
+  return <CSharpModuleDetail {...props} moduleId="file-handling" />;
+}
+
+export function CSharpLinqDetail(props) {
+  return <CSharpModuleDetail {...props} moduleId="linq" />;
+}
+
+export function CSharpDelegatesDetail(props) {
+  return <CSharpModuleDetail {...props} moduleId="delegates" />;
+}
+
+export function CSharpAsyncDetail(props) {
+  return <CSharpModuleDetail {...props} moduleId="async" />;
+}
+
