@@ -8,9 +8,13 @@ import {
 } from 'lucide-react';
 import NotebookEngine from '../components/MathEngines/NotebookEngine';
 import MathBackground from '../components/MathBackground';
+import { useTheme } from '../context/ThemeContext';
+import ThemeToggleButton from '../components/ThemeToggleButton';
+import './DashboardTheme.css';
 
 export default function MathVisualization() {
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
   
   // State
   const [selectedMethod, setSelectedMethod] = useState(null); // null means show the selection cards
@@ -21,6 +25,10 @@ export default function MathVisualization() {
   const [b, setB] = useState('1');
   const [n, setN] = useState('4');
   
+  // Bisection Method States
+  const [bisectionProblemId, setBisectionProblemId] = useState('bis1');
+  const [bisectionIterations, setBisectionIterations] = useState('5');
+
   // Newton's Interpolation States
   const [newtonQuestionId, setNewtonQuestionId] = useState('q9');
   const [newtonDirection, setNewtonDirection] = useState('Forward');
@@ -116,6 +124,7 @@ export default function MathVisualization() {
   ];
 
   const CARDS = [
+    { id: 'Bisection Method', title: 'Bisection Method', desc: 'Iteratively bracket and find root of a function using interval halving.', status: 'Online', color: 'from-rose-500 to-pink-600' },
     { id: 'Newton\u2019s Interpolation', title: 'Newton\u2019s Interpolation', desc: 'Estimate values between data points using forward/backward difference polynomials.', status: 'Online', color: 'from-emerald-500 to-teal-600' },
     { id: 'Newton\u2019s Difference', title: 'Newton\u2019s Difference', desc: 'Obtain first (dy/dx) and second (d\u00B2y/dx\u00B2) derivatives from difference tables.', status: 'Online', color: 'from-violet-500 to-purple-600' },
     { id: 'Trapezoidal Rule', title: 'Trapezoidal Rule', desc: 'Calculate the approximate area under a curve using boundary nodes.', status: 'Online', color: 'from-blue-500 to-indigo-600' },
@@ -126,6 +135,24 @@ export default function MathVisualization() {
 
   // Formula data for each method
   const FORMULA_DATA = {
+    'Bisection Method': {
+      features: [
+        { icon: BookOpen, title: 'Interval Halving', desc: 'Guaranteed convergence for continuous functions.' },
+        { icon: Target,   title: 'Root Finding',     desc: 'Finds real roots of f(x) = 0.' },
+        { icon: Lightbulb, title: 'Photo Problem',    desc: 'Solve f(x) = x³ - x - 1 = 0.' },
+      ],
+      formulas: [
+        {
+          title: 'Bisection Formula',
+          formula: 'x_n = (a + b) / 2',
+          variables: [
+            { sym: 'a, b', def: 'Interval boundaries where f(a) · f(b) < 0' },
+            { sym: 'x_n',  def: 'Midpoint approximation of root' },
+            { sym: 'f(x_n)', def: 'Function value. Sets new boundary matching sign.' },
+          ]
+        }
+      ]
+    },
     'Newton\u2019s Interpolation': {
       features: [
         { icon: BookOpen, title: 'Best for equal intervals', desc: 'Useful when data points are equally spaced.' },
@@ -310,7 +337,19 @@ export default function MathVisualization() {
   };
 
   const renderActiveEngine = () => {
-    if (selectedMethod === 'Trapezoidal Rule') {
+    if (selectedMethod === 'Bisection Method') {
+      return (
+        <NotebookEngine
+          method={selectedMethod}
+          playbackState={playbackState}
+          speed={speed}
+          onExplain={handleExplanationUpdate}
+          onFinish={handleExecutionFinished}
+          bisectionProblemId={bisectionProblemId}
+          bisectionIterations={bisectionIterations}
+        />
+      );
+    } else if (selectedMethod === 'Trapezoidal Rule') {
       return (
         <NotebookEngine 
           func={activeFunction} 
@@ -362,7 +401,11 @@ export default function MathVisualization() {
   };
 
   const getTopQuestionText = () => {
-    if (selectedMethod === 'Trapezoidal Rule') {
+    if (selectedMethod === 'Bisection Method') {
+      return bisectionProblemId === 'bis1'
+        ? 'Find the real root of the equation f(x) = x³ - x - 1 = 0'
+        : 'Find the real root of the equation f(x) = x³ - 4x - 9 = 0';
+    } else if (selectedMethod === 'Trapezoidal Rule') {
       return `Evaluate: I = \u222B [${a} to ${b}] ( ${activeFunction?.label?.split('=')[1]?.trim() || ''} ) dx using Trapezoidal Rule.`;
     } else if (selectedMethod === 'Newton\u2019s Interpolation') {
       return activeQuestion?.question || '';
@@ -686,7 +729,31 @@ export default function MathVisualization() {
             </div>
 
             {/* Conditional Input Rendering */}
-            {selectedMethod === 'Trapezoidal Rule' ? (
+            {selectedMethod === 'Bisection Method' ? (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 font-sans">Select Equation</label>
+                  <select 
+                    value={bisectionProblemId}
+                    onChange={(e) => { setBisectionProblemId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
+                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}
+                  >
+                    <option value="bis1">f(x) = x³ - x - 1 = 0</option>
+                    <option value="bis2">f(x) = x³ - 4x - 9 = 0</option>
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 font-sans">Iterations (Max 10)</label>
+                  <input 
+                    type="number" min="1" max="10" value={bisectionIterations} 
+                    onChange={e => { setBisectionIterations(e.target.value); setPlaybackState('IDLE'); }} 
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
+                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}
+                  />
+                </div>
+              </>
+            ) : selectedMethod === 'Trapezoidal Rule' ? (
               <>
                 <div className="mb-4">
                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Target Function f(x)</label>

@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import TypewriterStep from './TypewriterStep';
 
 export default function NotebookEngine({ 
-  func, a, b, n, method, playbackState, speed, onExplain, onFinish, dataset, targetX, direction 
+  func, a, b, n, method, playbackState, speed, onExplain, onFinish, dataset, targetX, direction,
+  bisectionProblemId, bisectionIterations
 }) {
   const [activeStepIndex, setActiveStepIndex] = useState(-1);
   const [stepComplete, setStepComplete] = useState(false);
@@ -22,7 +23,100 @@ export default function NotebookEngine({
   const steps = useMemo(() => {
     const sequence = [];
 
-    if (method === 'Trapezoidal Rule') {
+    if (method === 'Bisection Method') {
+      const isBis1 = bisectionProblemId === 'bis1';
+      const numIters = parseInt(bisectionIterations) || 5;
+
+      const f_expr = isBis1 ? (x) => x*x*x - x - 1 : (x) => x*x*x - 4*x - 9;
+      const f_tex = isBis1 ? 'x³ - x - 1 = 0' : 'x³ - 4x - 9 = 0';
+
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content: `Find the real root of the equation:\nf(x) = ${f_tex}\n\nMethod: Bisection Method\nIterations: Solve till ${numIters} iterations`,
+        explanation: 'We start by locating the interval [a, b] where the function changes sign, meaning f(a) · f(b) < 0.'
+      });
+
+      // Find interval
+      let a_val = 0, b_val = 0;
+      let checkText = 'Testing initial values:\n';
+      for (let i = 0; i <= 5; i++) {
+        const val = f_expr(i);
+        checkText += `f(${i}) = ${i}³ - ${isBis1 ? i : `4(${i})`} - ${isBis1 ? '1' : '9'} = ${val} (${val < 0 ? '-ve' : '+ve'})\n`;
+        if (val < 0) {
+          a_val = i;
+        } else if (val > 0) {
+          b_val = i;
+          break;
+        }
+      }
+      checkText += `\nSince f(${a_val}) is negative and f(${b_val}) is positive, a root lies between ${a_val} and ${b_val}.\nInitial boundaries: a = ${a_val}, b = ${b_val}`;
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 1: FIND INITIAL BOUNDARIES [a, b]',
+        content: checkText,
+        explanation: `By intermediate value theorem, since f(${a_val}) < 0 and f(${b_val}) > 0, there exists at least one real root in the interval [${a_val}, ${b_val}].`
+      });
+
+      let a_curr = a_val;
+      let b_curr = b_val;
+      let x_mid = 0;
+      const history = [];
+
+      for (let k = 1; k <= numIters; k++) {
+        const prev_a = a_curr;
+        const prev_b = b_curr;
+        x_mid = (a_curr + b_curr) / 2;
+        const f_mid = f_expr(x_mid);
+        const sign = f_mid < 0 ? '-ve' : '+ve';
+
+        history.push({ iter: k, a: prev_a, b: prev_b, x_mid, f_mid, sign });
+
+        let stepText = `Midpoint: x_${k-1} = (a + b) / 2\n`;
+        stepText += `         x_${k-1} = (${prev_a} + ${prev_b}) / 2 = ${x_mid.toFixed(5)}\n\n`;
+        stepText += `Function value at midpoint:\n`;
+        stepText += `f(${x_mid.toFixed(5)}) = (${x_mid.toFixed(5)})³ - ${isBis1 ? `${x_mid.toFixed(5)}` : `4(${x_mid.toFixed(5)})`} - ${isBis1 ? '1' : '9'}\n`;
+        stepText += `            = ${f_mid.toFixed(6)} (${sign})\n\n`;
+        
+        if (f_mid === 0) {
+          stepText += `Since f(x_${k-1}) = 0, the exact root is found!`;
+          a_curr = x_mid;
+          b_curr = x_mid;
+        } else if (f_mid < 0) {
+          stepText += `Since f(${x_mid.toFixed(5)}) is negative, the root lies between ${x_mid.toFixed(5)} and ${prev_b}.\n`;
+          stepText += `New boundaries: a = ${x_mid.toFixed(5)}, b = ${prev_b}`;
+          a_curr = x_mid;
+        } else {
+          stepText += `Since f(${x_mid.toFixed(5)}) is positive, the root lies between ${prev_a} and ${x_mid.toFixed(5)}.\n`;
+          stepText += `New boundaries: a = ${prev_a}, b = ${x_mid.toFixed(5)}`;
+          b_curr = x_mid;
+        }
+
+        sequence.push({
+          type: 'math',
+          title: `ITERATION ${k}`,
+          content: stepText,
+          explanation: `In iteration ${k}, we compute the midpoint x_${k-1} = ${x_mid.toFixed(5)} and evaluate f(x_${k-1}). Since it is ${sign}, we replace the boundary with the same sign to bracket the root closer.`
+        });
+      }
+
+      sequence.push({
+        type: 'bisTable',
+        title: 'CONVERGENCE TABLE',
+        history,
+        explanation: 'The bisection convergence table details the values of boundaries a, b, midpoint approximation, and function values at each iteration step.'
+      });
+
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: `Required root of f(x) = 0 is approximately:\nx ≈ ${x_mid.toFixed(5)}`,
+        explanation: `After ${numIters} iterations of the Bisection Method, the estimated root is x ≈ ${x_mid.toFixed(5)}.`
+      });
+    }
+
+    else if (method === 'Trapezoidal Rule') {
       const h_val = (b - a) / n;
       const functionLabel = func.label.split('=')[1].trim();
 
@@ -441,7 +535,7 @@ export default function NotebookEngine({
     }
 
     return sequence;
-  }, [func, a, b, n, method, dataset, targetX, direction]);
+  }, [func, a, b, n, method, dataset, targetX, direction, bisectionProblemId, bisectionIterations]);
 
   // Reset on IDLE
   useEffect(() => {
@@ -620,6 +714,11 @@ export default function NotebookEngine({
                   <span className="text-xs font-bold text-slate-500 font-sans">Constructed Difference Grid:</span>
                   {renderDiffGrid(step.xVals, step.yVals, step.diffs, step.operatorSymbol)}
                 </div>
+              ) : step.type === 'bisTable' ? (
+                <div className="bg-white p-6 rounded-2xl border-l-4 border-emerald-400 shadow-md">
+                  <span className="text-xs font-bold text-slate-500 font-sans">Bisection Convergence iterations Table:</span>
+                  {renderBisGrid(step.history)}
+                </div>
               ) : step.type === 'result' ? (
                 <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-8 rounded-3xl shadow-lg text-white">
                   <TypewriterStep
@@ -631,7 +730,7 @@ export default function NotebookEngine({
                     onComplete={handleTypingComplete}
                   />
                   <div className="mt-4 text-emerald-200 text-sm font-medium">
-                    {method.includes('Rule') ? 'Numerical integration complete.' : 'Numerical interpolation/differentiation complete.'}
+                    {method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : 'Numerical interpolation/differentiation complete.'}
                   </div>
                 </div>
               ) : step.type === 'header' ? (
