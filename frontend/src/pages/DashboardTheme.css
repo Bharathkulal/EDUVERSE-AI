@@ -549,7 +549,13 @@
 .light-theme .text-gray-300,
 .light-theme .text-gray-200,
 .light-theme .text-slate-500\/50,
-.light-theme .text-slate-500\/60 {
+.light-theme .text-slate-500\/60,
+.light-theme [class*="text-indigo-200"],
+.light-theme [class*="text-indigo-300"],
+.light-theme [class*="text-violet-200"],
+.light-theme [class*="text-violet-300"],
+.light-theme [class*="text-purple-200"],
+.light-theme [class*="text-purple-300"] {
   color: #4B5563 !important; /* Dark Gray for secondary/muted text labels */
 }
 
@@ -1743,6 +1749,21 @@
 .light-theme .quiz-arena-container .bg-slate-900\/10 {
   background-color: rgba(15, 23, 42, 0.03) !important;
   border: 1px solid rgba(15, 23, 42, 0.06) !important;
+}
+
+/* DSA Game Mode Rotation Override (Free Fire Style) */
+.rotate-landscape-mode {
+  transform: rotate(90deg) !important;
+  transform-origin: center !important;
+  width: 100vh !important;
+  height: 100vw !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  margin-top: -50vw !important;
+  margin-left: -50vh !important;
+  z-index: 99999 !important;
+  overflow: hidden !important;
 }
 
 

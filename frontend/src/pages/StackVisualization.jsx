@@ -15,6 +15,7 @@ const MAX_CAPACITY = 6;
 export default function StackVisualization() {
   const navigate = useNavigate();
   const { isDarkMode, toggleTheme } = useTheme();
+  const [isGameRotated, setIsGameRotated] = useState(localStorage.getItem('dsa_game_mode') === 'true');
   
   // State
   const [stack, setStack] = useState([]); // array of objects {id, value}
@@ -177,7 +178,7 @@ export default function StackVisualization() {
   };
 
   return (
-    <div className={`h-screen w-full overflow-hidden flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'}`} style={{ backgroundColor: 'var(--db-bg)', color: 'var(--db-text-main)' }}>
+    <div className={`h-screen w-full overflow-hidden flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'} ${isGameRotated ? 'rotate-landscape-mode' : ''}`} style={{ backgroundColor: 'var(--db-bg)', color: 'var(--db-text-main)' }}>
       
       {/* HEADER BREADCRUMB - 64px */}
       <header className="h-16 shrink-0 bg-[var(--db-card-bg)] border-b border-[var(--db-header-border)] flex items-center justify-between px-8 shadow-sm relative z-10">
@@ -194,8 +195,17 @@ export default function StackVisualization() {
           </div>
         </div>
 
-        {/* Theme Toggle Button */}
-        <ThemeToggleButton />
+        <div className="flex items-center gap-2">
+          {/* Game Mode Rotate Button */}
+          <button 
+            onClick={() => setIsGameRotated(!isGameRotated)}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl text-xs font-black shadow flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>🎮 Game Mode</span>
+          </button>
+          {/* Theme Toggle Button */}
+          <ThemeToggleButton />
+        </div>
       </header>
 
       {/* MAIN CONTENT - 100vh - 64px */}

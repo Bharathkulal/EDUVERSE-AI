@@ -12,6 +12,7 @@ import './DashboardTheme.css';
 export default function LinkedListVisualization() {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
+  const [isGameRotated, setIsGameRotated] = useState(localStorage.getItem('dsa_game_mode') === 'true');
   const [listType, setListType] = useState('singly'); // singly, doubly, circular
   const [operation, setOperation] = useState('insertPosition');
   const [inputValue, setInputValue] = useState('10');
@@ -280,7 +281,7 @@ export default function LinkedListVisualization() {
   };
 
   return (
-    <div className={`h-screen w-full overflow-hidden flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'}`}>
+    <div className={`h-screen w-full overflow-hidden flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'} ${isGameRotated ? 'rotate-landscape-mode' : ''}`}>
       
       {/* HEADER BREADCRUMB - 64px */}
       <header className="h-16 shrink-0 flex items-center justify-between px-8 shadow-sm relative z-10" style={{ background: 'var(--db-card-bg)', borderBottom: '1px solid var(--db-header-border)' }}>
@@ -296,7 +297,17 @@ export default function LinkedListVisualization() {
           <span style={{ color: 'var(--db-text-main)' }}>Operations</span>
         </div>
         </div>
-        <ThemeToggleButton />
+        
+        <div className="flex items-center gap-2">
+          {/* Game Mode Rotate Button */}
+          <button 
+            onClick={() => setIsGameRotated(!isGameRotated)}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl text-xs font-black shadow flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>🎮 Game Mode</span>
+          </button>
+          <ThemeToggleButton />
+        </div>
       </header>
 
       {/* CORE WORKSPACE - 3-PANEL LAYOUT */}

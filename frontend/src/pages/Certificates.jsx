@@ -63,17 +63,17 @@ export default function Certificates() {
   }
 
   return (
-    <div className="min-h-screen text-slate-100 p-6 md:p-8 space-y-8 premium-dark-page" style={{ backgroundColor: '#050B2D' }}>
+    <div className="p-6 md:p-8 space-y-8 transition-colors duration-300">
       {/* Header section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-300">
+          <h1 className="text-3xl font-extrabold text-slate-800 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-violet-400 dark:to-indigo-300">
             Certificate Command Center
           </h1>
-          <p className="text-sm text-slate-400 mt-1">Claim, download, and verify your professional learning achievements.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Claim, download, and verify your professional learning achievements.</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-300 font-bold text-xs uppercase tracking-wider">
-          <Award className="w-4 h-4 text-violet-400 animate-pulse" />
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-600 dark:text-violet-300 font-bold text-xs uppercase tracking-wider">
+          <Award className="w-4 h-4 text-violet-500 dark:text-violet-400 animate-pulse" />
           <span>{certs.filter(c => c.status === 'Completed').length} Earned</span>
         </div>
       </div>
@@ -88,35 +88,35 @@ export default function Certificates() {
             <motion.div
               key={cert.subjectId}
               whileHover={{ y: -4 }}
-              className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-6 flex flex-col justify-between h-64 hover:border-violet-500/40 hover:bg-white/[0.05] transition-all duration-300 shadow-xl"
+              className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] backdrop-blur-md p-6 flex flex-col justify-between h-64 hover:border-violet-500/40 hover:bg-slate-50/50 dark:hover:bg-white/[0.05] transition-all duration-300 shadow-sm dark:shadow-xl"
             >
               {/* Card top */}
               <div>
                 <div className="flex justify-between items-start mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400 font-black">
+                  <div className="w-10 h-10 rounded-xl bg-violet-600/10 dark:bg-violet-600/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-violet-600 dark:text-violet-400 font-black">
                     🎓
                   </div>
                   <span className={`text-[10px] px-2.5 py-1 rounded-full uppercase font-bold tracking-widest ${
-                    isCompleted ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' :
-                    isInProgress ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400' :
+                    isCompleted ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400' :
+                    isInProgress ? 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400' :
                     'bg-slate-500/10 border border-slate-500/30 text-slate-500'
                   }`}>
                     {cert.status}
                   </span>
                 </div>
 
-                <h3 className="text-xl font-bold text-slate-100 mb-1">{cert.subjectName}</h3>
-                <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">{cert.description}</p>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1">{cert.subjectName}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">{cert.description}</p>
               </div>
 
               {/* Card bottom */}
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400">
                     <span>Progress</span>
                     <span>{cert.progress}% Complete</span>
                   </div>
-                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
                     <div 
                       className={`h-full rounded-full transition-all duration-500 ${
                         isCompleted ? 'bg-emerald-500' : 'bg-violet-500'
@@ -138,7 +138,7 @@ export default function Certificates() {
                   ) : (
                     <button
                       disabled
-                      className="flex-1 py-2 px-3 bg-slate-800 border border-slate-700 text-slate-500 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-not-allowed"
+                      className="flex-1 py-2 px-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-not-allowed"
                     >
                       <Lock className="w-3.5 h-3.5" />
                       <span>Locked</span>

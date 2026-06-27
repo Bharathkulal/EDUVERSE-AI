@@ -1,6 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Trophy, Award, FileText, CheckCircle2, ChevronRight, Play, RotateCcw, 
+  User, Mail, Phone, BookOpen, Star, AlertCircle, Shield, Briefcase
+} from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const HASH_TO_TAB = {
   '#resume': 'resume',
@@ -15,6 +20,66 @@ const HASH_TO_TAB = {
 export default function CareerHub() {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('resume');
+  
+  // States for Resume builder
+  const [resumeName, setResumeName] = useState('Bharath Kulal');
+  const [resumeEmail, setResumeEmail] = useState('bharath@eduverse.ai');
+  const [resumePhone, setResumePhone] = useState('+91 9876543210');
+  const [resumeSkills, setResumeSkills] = useState('React, Node.js, Python, SQL, DSA');
+  const [generatedResume, setGeneratedResume] = useState(null);
+
+  // States for Placement prep Q&A
+  const [prepMode, setPrepMode] = useState('lobby'); // lobby, study
+  const [selectedPrepTopic, setSelectedPrepTopic] = useState('');
+  const [prepIndex, setPrepIndex] = useState(0);
+
+  // States for Company Qs
+  const [companyMode, setCompanyMode] = useState('lobby'); // lobby, questions
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [companyAnswers, setCompanyAnswers] = useState({});
+  const [companyScore, setCompanyScore] = useState(null);
+
+  // States for Interview prep
+  const [interviewMode, setInterviewMode] = useState('lobby'); // lobby, active, evaluation
+  const [interviewType, setInterviewType] = useState('');
+  const [interviewIdx, setInterviewIdx] = useState(0);
+  const [interviewAnswers, setInterviewAnswers] = useState({});
+
+  // States for Aptitude
+  const [aptitudeMode, setAptitudeMode] = useState('lobby'); // lobby, test, result
+  const [selectedAptTopic, setSelectedAptTopic] = useState(null);
+  const [aptIdx, setAptIdx] = useState(0);
+  const [selectedAptAns, setSelectedAptAns] = useState('');
+  const [aptAnswers, setAptAnswers] = useState({});
+  const [aptScore, setAptScore] = useState(0);
+
+  // States for Portfolio
+  const [portfolioGenerated, setPortfolioGenerated] = useState(false);
+
+  // States for Certifications
+  const [certs, setCerts] = useState([
+    { id: 1, name: 'Java Fundamentals', provider: 'EduVerse AI', progress: 85, icon: '☕', color: 'from-orange-500 to-red-500' },
+    { id: 2, name: 'DSA Mastery', provider: 'EduVerse AI', progress: 60, icon: '🌳', color: 'from-green-500 to-emerald-500' },
+    { id: 3, name: 'Python Developer', provider: 'EduVerse AI', progress: 40, icon: '🐍', color: 'from-blue-500 to-cyan-500' },
+    { id: 4, name: 'Database Expert', provider: 'EduVerse AI', progress: 20, icon: '🗄️', color: 'from-yellow-500 to-amber-500' },
+  ]);
+
+  const companyQuestions = [
+    { company: 'Google', role: 'SDE Intern', difficulty: 'Hard', questions: 45, icon: '🔍' },
+    { company: 'Microsoft', role: 'SDE 1', difficulty: 'Medium', questions: 62, icon: '🪟' },
+    { company: 'Amazon', role: 'SDE Intern', difficulty: 'Medium', questions: 78, icon: '📦' },
+    { company: 'TCS', role: 'Developer', difficulty: 'Easy', questions: 120, icon: '💻' },
+    { company: 'Infosys', role: 'SE', difficulty: 'Easy', questions: 95, icon: '🔷' },
+    { company: 'Wipro', role: 'Developer', difficulty: 'Easy', questions: 88, icon: '🌐' },
+  ];
+
+  const aptitudeTopics = [
+    { topic: 'Quantitative Aptitude', questions: 250, completed: 45, icon: '🔢' },
+    { topic: 'Logical Reasoning', questions: 200, completed: 30, icon: '🧩' },
+    { topic: 'Verbal Ability', questions: 180, completed: 20, icon: '📝' },
+    { topic: 'Data Interpretation', questions: 120, completed: 10, icon: '📊' },
+  ];
+  const [activeCertCertificate, setActiveCertCertificate] = useState(null);
 
   useEffect(() => {
     const hash = location.hash;
@@ -33,32 +98,71 @@ export default function CareerHub() {
     { id: 'certifications', label: 'Certifications', icon: '🏆' },
   ];
 
-  const companyQuestions = [
-    { company: 'Google', role: 'SDE Intern', difficulty: 'Hard', questions: 45, icon: '🔍' },
-    { company: 'Microsoft', role: 'SDE 1', difficulty: 'Medium', questions: 62, icon: '🪟' },
-    { company: 'Amazon', role: 'SDE Intern', difficulty: 'Medium', questions: 78, icon: '📦' },
-    { company: 'TCS', role: 'Developer', difficulty: 'Easy', questions: 120, icon: '💻' },
-    { company: 'Infosys', role: 'SE', difficulty: 'Easy', questions: 95, icon: '🔷' },
-    { company: 'Wipro', role: 'Developer', difficulty: 'Easy', questions: 88, icon: '🌐' },
-  ];
+  // Mock Placement Prep Questions
+  const prepQuestions = {
+    'Technical Round Prep': [
+      { q: 'What is a binary search tree?', a: 'A tree data structure where each node has at most two children, and the left key is smaller than parent while the right key is larger.' },
+      { q: 'Explain polymorphic behavior.', a: 'Allowing subclasses to provide custom overriding implementations for parent functions dynamically resolved at runtime.' }
+    ],
+    'HR Round Prep': [
+      { q: 'Why do you want to join us?', a: 'Highlight alignment with target company mission, culture, scaling challenges, and learning environments.' },
+      { q: 'Describe a conflict resolution scenario.', a: 'Focus on communication, objective compromises, metrics reviews, and standard team achievements.' }
+    ]
+  };
 
-  const certifications = [
-    { name: 'Java Fundamentals', provider: 'EduVerse AI', progress: 85, icon: '☕', color: 'from-orange-500 to-red-500' },
-    { name: 'DSA Mastery', provider: 'EduVerse AI', progress: 60, icon: '🌳', color: 'from-green-500 to-emerald-500' },
-    { name: 'Python Developer', provider: 'EduVerse AI', progress: 40, icon: '🐍', color: 'from-blue-500 to-cyan-500' },
-    { name: 'Database Expert', provider: 'EduVerse AI', progress: 20, icon: '🗄️', color: 'from-yellow-500 to-amber-500' },
-    { name: 'Web Development', provider: 'EduVerse AI', progress: 10, icon: '🌐', color: 'from-pink-500 to-rose-500' },
-  ];
+  // Mock Company Questions
+  const companyData = {
+    'Google': [
+      { id: 'g1', q: 'Find the longest substring without repeating characters.', ans: 'Sliding window approach' },
+      { id: 'g2', q: 'Design an autocomplete search engine suggestion service.', ans: 'Trie data structure structure' }
+    ],
+    'Microsoft': [
+      { id: 'm1', q: 'Reverse a linked list in pairs of k.', ans: 'Recursion or stack pointers' },
+      { id: 'm2', q: 'Explain deadlock conditions.', ans: 'Mutual exclusion, hold and wait, no preemption, circular wait' }
+    ]
+  };
 
-  const aptitudeTopics = [
-    { topic: 'Quantitative Aptitude', questions: 250, completed: 45, icon: '🔢' },
-    { topic: 'Logical Reasoning', questions: 200, completed: 30, icon: '🧩' },
-    { topic: 'Verbal Ability', questions: 180, completed: 20, icon: '📝' },
-    { topic: 'Data Interpretation', questions: 120, completed: 10, icon: '📊' },
-  ];
+  // Mock Aptitude Questions
+  const aptitudeData = {
+    'Quantitative Aptitude': [
+      { q: 'A train 100m long passes a platform 200m long in 30 seconds. What is its speed?', opts: ['10 m/s', '15 m/s', '20 m/s', '25 m/s'], ans: 0 },
+      { q: 'If 3 pumps work 8 hours a day to empty a tank in 2 days, how many hours a day must 4 pumps work to empty it in 1 day?', opts: ['8 hours', '12 hours', '10 hours', '6 hours'], ans: 1 }
+    ],
+    'Logical Reasoning': [
+      { q: 'Point to a photograph, a man says "I have no brother or sister but that man\'s father is my father\'s son." Whose photograph is it?', opts: ['His own', 'His son\'s', 'His father\'s', 'His nephew\'s'], ans: 1 }
+    ]
+  };
+
+  // ───── Resume Builder ─────
+  const handleBuildResume = (templateType) => {
+    setGeneratedResume({
+      template: templateType,
+      name: resumeName,
+      email: resumeEmail,
+      phone: resumePhone,
+      skills: resumeSkills
+    });
+    toast.success(`${templateType} Resume built successfully!`);
+  };
+
+  // ───── Certifications Tracker ─────
+  const handleProgressCert = (certId) => {
+    setCerts(prev => prev.map(c => {
+      if (c.id === certId) {
+        const nextProg = Math.min(c.progress + 10, 100);
+        if (nextProg === 100) {
+          toast.success(`🎉 Congratulations! Earning certificate for ${c.name}!`);
+        } else {
+          toast.success(`Progressed ${c.name} by 10%`);
+        }
+        return { ...c, progress: nextProg };
+      }
+      return c;
+    }));
+  };
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-6 pb-8 quiz-arena-container h-full overflow-y-auto">
       {/* Header */}
       <div className="relative overflow-hidden rounded-3xl p-8 border border-[rgba(245,158,11,0.2)] bg-gradient-to-br from-[#1a1005] via-[#2a1a0b] to-[#0f0b05]">
         <div className="absolute top-0 right-0 w-80 h-80 bg-amber-600/10 rounded-full blur-[100px] pointer-events-none" />
@@ -71,7 +175,15 @@ export default function CareerHub() {
         {tabs.map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+              setActiveTab(tab.id);
+              // reset states when changing tabs
+              setPrepMode('lobby');
+              setCompanyMode('lobby');
+              setInterviewMode('lobby');
+              setAptitudeMode('lobby');
+              setPortfolioGenerated(false);
+            }}
             className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === tab.id ? 'shadow-md' : 'hover:opacity-80'
             }`}
@@ -90,22 +202,71 @@ export default function CareerHub() {
       <AnimatePresence mode="wait">
         {/* RESUME BUILDER */}
         {activeTab === 'resume' && (
-          <motion.div key="resume" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
-            <div className="p-6 rounded-2xl border" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-              <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--db-text-main)' }}>📄 AI Resume Builder</h2>
-              <p className="text-sm mb-6" style={{ color: 'var(--db-text-muted)' }}>Build a professional resume powered by AI insights from your learning progress.</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {['Professional', 'Creative', 'Minimal'].map((template, i) => (
-                  <div key={i} className="p-4 rounded-xl border text-center hover:shadow-lg transition-all cursor-pointer group" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-                    <div className="w-full h-32 bg-gradient-to-br from-violet-600/10 to-indigo-600/10 rounded-lg mb-3 flex items-center justify-center text-4xl group-hover:scale-105 transition-transform">
-                      {['📋', '🎨', '✨'][i]}
+          <motion.div key="resume" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Inputs */}
+              <div className="p-6 rounded-3xl border bg-white border-slate-200 space-y-4">
+                <h3 className="text-sm font-extrabold text-slate-800">Resume Details</h3>
+                <div className="space-y-3">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-500 font-bold mb-1">Full Name</span>
+                    <input type="text" value={resumeName} onChange={e => setResumeName(e.target.value)} className="bg-slate-50 border rounded-xl px-4 py-2 text-xs text-slate-800" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-500 font-bold mb-1">Email ID</span>
+                    <input type="email" value={resumeEmail} onChange={e => setResumeEmail(e.target.value)} className="bg-slate-50 border rounded-xl px-4 py-2 text-xs text-slate-800" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-500 font-bold mb-1">Phone Number</span>
+                    <input type="text" value={resumePhone} onChange={e => setResumePhone(e.target.value)} className="bg-slate-50 border rounded-xl px-4 py-2 text-xs text-slate-800" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-500 font-bold mb-1">Key Skills (comma separated)</span>
+                    <input type="text" value={resumeSkills} onChange={e => setResumeSkills(e.target.value)} className="bg-slate-50 border rounded-xl px-4 py-2 text-xs text-slate-800" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-2">
+                  {['Professional', 'Creative', 'Minimal'].map(t => (
+                    <button key={t} onClick={() => handleBuildResume(t)} className="py-2 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-bold rounded-xl cursor-pointer">
+                      Use {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Preview */}
+              <div className="p-6 rounded-3xl border bg-white border-slate-200 flex flex-col justify-between">
+                {generatedResume ? (
+                  <div className="space-y-4 font-sans text-slate-700">
+                    <div className="border-b pb-3 text-center">
+                      <h2 className="text-lg font-extrabold tracking-tight text-slate-900">{generatedResume.name}</h2>
+                      <div className="text-[10px] text-slate-500 flex justify-center gap-4 mt-1">
+                        <span>📧 {generatedResume.email}</span>
+                        <span>📞 {generatedResume.phone}</span>
+                      </div>
                     </div>
-                    <h4 className="text-sm font-bold" style={{ color: 'var(--db-text-main)' }}>{template} Template</h4>
-                    <button className="mt-3 px-4 py-1.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-lg transition-all cursor-pointer">
-                      Use Template
+
+                    <div>
+                      <span className="text-[9px] uppercase font-bold text-violet-600 tracking-wider block">Skills & Toolsets</span>
+                      <p className="text-xs text-slate-600 mt-1">{generatedResume.skills}</p>
+                    </div>
+
+                    <div className="p-3 bg-violet-500/5 border border-violet-500/10 rounded-xl">
+                      <span className="text-[9px] uppercase font-bold text-violet-600 tracking-wider block">Eduverse Progress Verified</span>
+                      <p className="text-[10px] text-slate-600 mt-1">Verified: Level 1 DSA mastery completed & MCQ sets solved.</p>
+                    </div>
+
+                    <button onClick={() => toast.success('Downloading PDF...')} className="w-full py-2 bg-slate-950 text-white text-xs font-bold rounded-xl">
+                      Download PDF Document
                     </button>
                   </div>
-                ))}
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center text-slate-400">
+                    <p className="text-4xl">📄</p>
+                    <p className="text-xs mt-2">Fill details and choose a template to preview resume draft.</p>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
@@ -114,103 +275,338 @@ export default function CareerHub() {
         {/* PLACEMENT PREP */}
         {activeTab === 'placement' && (
           <motion.div key="placement" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                { title: 'Technical Round Prep', desc: 'DSA, OOP, DBMS questions', count: '500+ Questions', icon: '💻', color: 'from-violet-500 to-purple-600' },
-                { title: 'HR Round Prep', desc: 'Behavioral & situational questions', count: '200+ Questions', icon: '🎤', color: 'from-blue-500 to-cyan-600' },
-                { title: 'Group Discussion', desc: 'Practice GD topics and tips', count: '50+ Topics', icon: '👥', color: 'from-emerald-500 to-green-600' },
-                { title: 'Aptitude Tests', desc: 'Quantitative, logical & verbal', count: '1000+ Questions', icon: '🧮', color: 'from-amber-500 to-orange-600' },
-              ].map((item, i) => (
-                <div key={i} className="p-5 rounded-2xl border hover:shadow-lg transition-all cursor-pointer group flex gap-4" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center text-2xl text-white shadow-md shrink-0 group-hover:scale-110 transition-transform`}>
-                    {item.icon}
+            {prepMode === 'lobby' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { title: 'Technical Round Prep', desc: 'DSA, OOP, DBMS questions', count: '2 Questions Loaded', icon: '💻', color: 'from-violet-500 to-purple-600' },
+                  { title: 'HR Round Prep', desc: 'Behavioral & situational questions', count: '2 Questions Loaded', icon: '🎤', color: 'from-blue-500 to-cyan-600' },
+                ].map((item, i) => (
+                  <div 
+                    key={i} 
+                    onClick={() => { setSelectedPrepTopic(item.title); setPrepIndex(0); setPrepMode('study'); }}
+                    className="p-5 rounded-2xl border hover:shadow-lg transition-all cursor-pointer group flex gap-4 bg-white border-slate-200"
+                  >
+                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center text-2xl text-white shadow-md shrink-0 group-hover:scale-110 transition-transform`}>
+                      {item.icon}
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-800">{item.title}</h3>
+                      <p className="text-xs mb-1 text-slate-400">{item.desc}</p>
+                      <span className="text-[10px] font-bold text-violet-600">{item.count}</span>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-base font-bold" style={{ color: 'var(--db-text-main)' }}>{item.title}</h3>
-                    <p className="text-xs mb-1" style={{ color: 'var(--db-text-muted)' }}>{item.desc}</p>
-                    <span className="text-[10px] font-bold" style={{ color: 'var(--db-text-accent)' }}>{item.count}</span>
+                ))}
+              </div>
+            )}
+
+            {prepMode === 'study' && (
+              <div className="p-6 rounded-3xl border bg-white border-slate-200 space-y-4 max-w-xl mx-auto">
+                <div className="flex justify-between items-center border-b pb-3">
+                  <h3 className="text-xs font-black text-slate-800">{selectedPrepTopic}</h3>
+                  <button onClick={() => setPrepMode('lobby')} className="text-xs text-slate-400 hover:underline">Back</button>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="p-4 bg-slate-50 border rounded-2xl">
+                    <span className="text-[10px] font-bold text-violet-600 uppercase">Question {prepIndex + 1}:</span>
+                    <p className="text-xs font-semibold text-slate-800 mt-1">{prepQuestions[selectedPrepTopic][prepIndex].q}</p>
+                  </div>
+
+                  <div className="p-4 bg-violet-500/5 border border-violet-500/10 rounded-2xl">
+                    <span className="text-[10px] font-bold text-violet-600 uppercase">Recommended Answer Framework:</span>
+                    <p className="text-xs text-slate-700 mt-1">{prepQuestions[selectedPrepTopic][prepIndex].a}</p>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                <div className="flex justify-between mt-4">
+                  <button 
+                    disabled={prepIndex === 0} 
+                    onClick={() => setPrepIndex(prev => prev - 1)}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-xl disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <button 
+                    disabled={prepIndex === prepQuestions[selectedPrepTopic].length - 1} 
+                    onClick={() => setPrepIndex(prev => prev + 1)}
+                    className="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl disabled:opacity-50"
+                  >
+                    Next Question
+                  </button>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
 
         {/* COMPANY QUESTIONS */}
         {activeTab === 'company' && (
-          <motion.div key="company" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {companyQuestions.map((cq, i) => (
-              <div key={i} className="p-5 rounded-2xl border hover:shadow-lg transition-all cursor-pointer group" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-3xl group-hover:scale-110 transition-transform">{cq.icon}</div>
-                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
-                    cq.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400' :
-                    cq.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-400' :
-                    'bg-red-500/10 text-red-400'
-                  }`}>{cq.difficulty}</span>
-                </div>
-                <h3 className="text-base font-bold" style={{ color: 'var(--db-text-main)' }}>{cq.company}</h3>
-                <p className="text-xs" style={{ color: 'var(--db-text-muted)' }}>{cq.role}</p>
-                <div className="flex justify-between items-center mt-3">
-                  <span className="text-xs font-bold" style={{ color: 'var(--db-text-accent)' }}>{cq.questions} Questions</span>
-                  <span className="text-xs font-semibold" style={{ color: 'var(--db-text-muted)' }}>Start →</span>
-                </div>
+          <motion.div key="company" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
+            {companyMode === 'lobby' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {companyQuestions.map((cq, i) => (
+                  <div 
+                    key={i} 
+                    onClick={() => {
+                      if (companyData[cq.company]) {
+                        setSelectedCompany(cq.company);
+                        setCompanyAnswers({});
+                        setCompanyScore(null);
+                        setCompanyMode('questions');
+                      } else {
+                        toast.error(`Company questions database for ${cq.company} is unlocking soon.`);
+                      }
+                    }}
+                    className="p-5 rounded-2xl border hover:shadow-lg transition-all cursor-pointer group bg-white border-slate-200"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-3xl group-hover:scale-110 transition-transform">{cq.icon}</div>
+                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-violet-500/10 text-violet-600">{cq.difficulty}</span>
+                    </div>
+                    <h3 className="text-base font-bold text-slate-800">{cq.company}</h3>
+                    <p className="text-xs text-slate-400">{cq.role}</p>
+                    <div className="flex justify-between items-center mt-3">
+                      <span className="text-xs font-bold text-violet-600">{cq.company === 'Google' || cq.company === 'Microsoft' ? '2 Loaded' : 'Unlocking soon'}</span>
+                      <span className="text-xs font-semibold text-slate-500">Start →</span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
+
+            {companyMode === 'questions' && selectedCompany && (
+              <div className="p-6 rounded-3xl border bg-white border-slate-200 max-w-xl mx-auto space-y-4">
+                <div className="flex justify-between items-center border-b pb-3">
+                  <h3 className="text-xs font-black text-slate-800">{selectedCompany} Assessment</h3>
+                  <button onClick={() => setCompanyMode('lobby')} className="text-xs text-slate-400 hover:underline">Back</button>
+                </div>
+
+                {companyData[selectedCompany].map((qItem, idx) => (
+                  <div key={qItem.id} className="space-y-2 p-4 bg-slate-50 border rounded-2xl">
+                    <p className="text-xs font-bold text-slate-800">Q{idx + 1}: {qItem.q}</p>
+                    <input 
+                      type="text"
+                      placeholder="Write your approach description..."
+                      value={companyAnswers[qItem.id] || ''}
+                      onChange={e => setCompanyAnswers({...companyAnswers, [qItem.id]: e.target.value})}
+                      className="w-full bg-white border rounded-xl px-3 py-2 text-xs focus:outline-none"
+                    />
+                  </div>
+                ))}
+
+                <button 
+                  onClick={() => {
+                    setCompanyScore(90);
+                    toast.success('Approach submitted successfully!');
+                  }}
+                  className="w-full py-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl"
+                >
+                  Submit Solutions
+                </button>
+
+                {companyScore && (
+                  <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 text-xs text-slate-700">
+                    <strong className="text-emerald-600 block">Assessment Evaluated</strong>
+                    Excellent. Your solution architecture approach fits Google standards. Code reviews match expected metrics.
+                  </div>
+                )}
+              </div>
+            )}
           </motion.div>
         )}
 
         {/* INTERVIEW PREP */}
         {activeTab === 'interview' && (
           <motion.div key="interview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
-            <div className="p-6 rounded-2xl border" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-              <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--db-text-main)' }}>🎤 AI Mock Interview</h2>
-              <p className="text-sm mb-6" style={{ color: 'var(--db-text-muted)' }}>Practice with our AI interviewer that adapts to your skill level.</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {['Technical Interview', 'Behavioral Interview', 'System Design'].map((type, i) => (
-                  <div key={i} className="p-4 rounded-xl border text-center hover:shadow-lg transition-all" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-                    <div className="text-3xl mb-3">{['💻', '🎙️', '🏗️'][i]}</div>
-                    <h4 className="text-sm font-bold mb-2" style={{ color: 'var(--db-text-main)' }}>{type}</h4>
-                    <p className="text-[11px] mb-3" style={{ color: 'var(--db-text-muted)' }}>{['Data structures, algorithms, OOP', 'Teamwork, leadership, situational', 'Architecture & scalability'][i]}</p>
-                    <button className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer w-full">
-                      Start Interview
-                    </button>
-                  </div>
-                ))}
+            {interviewMode === 'lobby' && (
+              <div className="p-6 rounded-3xl border bg-white border-slate-200">
+                <h2 className="text-sm font-extrabold text-slate-800 mb-2">🎤 AI Mock Interview</h2>
+                <p className="text-xs text-slate-500 mb-6">Select a track to launch customized placement interviewing checks.</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {['Technical Interview', 'Behavioral Interview', 'System Design'].map((type, i) => (
+                    <div key={i} className="p-4 rounded-2xl border text-center hover:shadow-lg transition-all bg-slate-50 border-slate-200 flex flex-col justify-between">
+                      <div>
+                        <div className="text-3xl mb-3">{['💻', '🎙️', '🏗️'][i]}</div>
+                        <h4 className="text-sm font-bold text-slate-800 mb-2">{type}</h4>
+                        <p className="text-[10px] text-slate-400 mb-4">{['Data structures, algorithms, OOP', 'Teamwork, leadership, situational', 'Architecture & scalability'][i]}</p>
+                      </div>
+                      <button 
+                        onClick={() => { setInterviewType(type); setInterviewIdx(0); setInterviewAnswers({}); setInterviewMode('active'); }}
+                        className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer w-full"
+                      >
+                        Start Interview
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {interviewMode === 'active' && (
+              <div className="p-6 rounded-3xl border bg-white border-slate-200 max-w-xl mx-auto space-y-4">
+                <div className="flex justify-between items-center border-b pb-3">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">{interviewType} Simulator</span>
+                  <button onClick={() => setInterviewMode('lobby')} className="text-xs text-slate-400 hover:underline">Exit</button>
+                </div>
+
+                <p className="text-xs font-extrabold text-slate-800">
+                  {interviewIdx === 0 
+                    ? 'Question 1: Explain the difference between thread safe operations and default asynchronous execution.'
+                    : 'Question 2: How do you verify and optimize index queries inside database tables?'}
+                </p>
+
+                <textarea 
+                  value={interviewAnswers[interviewIdx] || ''}
+                  onChange={e => setInterviewAnswers({...interviewAnswers, [interviewIdx]: e.target.value})}
+                  placeholder="Type your response here..."
+                  className="w-full h-24 p-3 bg-slate-50 border rounded-xl text-xs focus:outline-none"
+                />
+
+                <div className="flex justify-between">
+                  <button 
+                    disabled={interviewIdx === 0}
+                    onClick={() => setInterviewIdx(0)}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-xl disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  {interviewIdx === 0 ? (
+                    <button 
+                      onClick={() => setInterviewIdx(1)}
+                      className="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl"
+                    >
+                      Next
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => setInterviewMode('evaluation')}
+                      className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-black rounded-xl"
+                    >
+                      Submit Mock Test
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {interviewMode === 'evaluation' && (
+              <div className="p-6 rounded-3xl border bg-white border-slate-200 max-w-xl mx-auto text-center space-y-4">
+                <Trophy size={40} className="text-amber-500 mx-auto" />
+                <h3 className="text-sm font-extrabold text-slate-800">Mock Interview Evaluated!</h3>
+                <p className="text-xs text-slate-500">Your mock performance score: <strong>82/100</strong></p>
+                <div className="text-[11px] text-slate-600 bg-slate-50 p-3 rounded-xl leading-relaxed text-left">
+                  <strong>Tutor Review:</strong> Strong conceptual explanation. Could optimize by giving concrete concurrency class names in Java.
+                </div>
+                <button onClick={() => setInterviewMode('lobby')} className="px-4 py-2 bg-violet-600 text-white text-xs font-bold rounded-xl">
+                  Try Another Category
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
 
         {/* APTITUDE */}
         {activeTab === 'aptitude' && (
-          <motion.div key="aptitude" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {aptitudeTopics.map((topic, i) => (
-              <div key={i} className="p-5 rounded-2xl border hover:shadow-lg transition-all" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl">{topic.icon}</span>
-                  <div>
-                    <h3 className="text-base font-bold" style={{ color: 'var(--db-text-main)' }}>{topic.topic}</h3>
-                    <p className="text-xs" style={{ color: 'var(--db-text-muted)' }}>{topic.completed}/{topic.questions} completed</p>
+          <motion.div key="aptitude" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
+            {aptitudeMode === 'lobby' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {aptitudeTopics.map((topic, i) => (
+                  <div key={i} className="p-5 rounded-2xl border hover:shadow-lg transition-all bg-white border-slate-200 flex flex-col justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{topic.icon}</span>
+                      <div>
+                        <h3 className="text-base font-bold text-slate-800">{topic.topic}</h3>
+                        <p className="text-xs text-slate-400">{topic.completed}/{topic.questions} completed</p>
+                      </div>
+                    </div>
+                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full" style={{ width: `${(topic.completed / topic.questions) * 100}%` }} />
+                    </div>
+                    <button 
+                      onClick={() => {
+                        if (aptitudeData[topic.topic]) {
+                          setSelectedAptTopic(topic.topic);
+                          setAptIdx(0);
+                          setSelectedAptAns('');
+                          setAptAnswers({});
+                          setAptScore(0);
+                          setAptitudeMode('test');
+                        } else {
+                          toast.error('Logical Reasoning and other topics are unlocking soon.');
+                        }
+                      }}
+                      className="w-full py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
+                    >
+                      Continue Practice
+                    </button>
                   </div>
+                ))}
+              </div>
+            )}
+
+            {aptitudeMode === 'test' && selectedAptTopic && (
+              <div className="p-6 rounded-3xl border bg-white border-slate-200 max-w-xl mx-auto space-y-4">
+                <div className="flex justify-between items-center border-b pb-3">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">{selectedAptTopic}</span>
+                  <button onClick={() => setAptitudeMode('lobby')} className="text-xs text-slate-400 hover:underline">Exit</button>
                 </div>
-                <div className="w-full h-2 rounded-full overflow-hidden mb-3" style={{ backgroundColor: 'var(--db-sidebar-border)' }}>
-                  <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full" style={{ width: `${(topic.completed / topic.questions) * 100}%` }} />
+
+                <p className="text-xs font-extrabold text-slate-800">
+                  {aptitudeData[selectedAptTopic][aptIdx].q}
+                </p>
+
+                <div className="space-y-2">
+                  {aptitudeData[selectedAptTopic][aptIdx].opts.map((opt, i) => (
+                    <button 
+                      key={i}
+                      onClick={() => setSelectedAptAns(i)}
+                      className={`w-full text-left p-3 rounded-xl border text-xs transition-all ${
+                        selectedAptAns === i ? 'bg-violet-600 border-violet-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-700'
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
                 </div>
-                <button className="w-full py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer">
-                  Continue Practice
+
+                <button 
+                  onClick={() => {
+                    const isCorrect = selectedAptAns === aptitudeData[selectedAptTopic][aptIdx].ans;
+                    if (isCorrect) setAptScore(prev => prev + 1);
+                    
+                    if (aptIdx < aptitudeData[selectedAptTopic].length - 1) {
+                      setAptIdx(prev => prev + 1);
+                      setSelectedAptAns('');
+                    } else {
+                      setAptitudeMode('result');
+                    }
+                  }}
+                  className="w-full py-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl"
+                >
+                  Submit & Continue
                 </button>
               </div>
-            ))}
+            )}
+
+            {aptitudeMode === 'result' && (
+              <div className="p-6 rounded-3xl border bg-white border-slate-200 max-w-xl mx-auto text-center space-y-4">
+                <Trophy size={40} className="text-amber-500 mx-auto" />
+                <h3 className="text-sm font-extrabold text-slate-800">Aptitude Practice Completed!</h3>
+                <p className="text-xs text-slate-500">Your score: <strong>{aptScore} / {aptitudeData[selectedAptTopic].length}</strong></p>
+                <button onClick={() => setAptitudeMode('lobby')} className="px-4 py-2 bg-violet-600 text-white text-xs font-bold rounded-xl">
+                  Back to Topics
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
 
         {/* PORTFOLIO */}
         {activeTab === 'portfolio' && (
           <motion.div key="portfolio" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
-            <div className="p-6 rounded-2xl border" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-              <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--db-text-main)' }}>💼 Portfolio Builder</h2>
-              <p className="text-sm mb-6" style={{ color: 'var(--db-text-muted)' }}>Create a stunning developer portfolio from your EduVerse learning data.</p>
+            <div className="p-6 rounded-3xl border bg-white border-slate-200">
+              <h2 className="text-sm font-extrabold text-slate-800 mb-2">💼 Portfolio Builder</h2>
+              <p className="text-xs text-slate-500 mb-6">Create a stunning developer portfolio from your EduVerse learning data.</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
                   { label: 'Topics Mastered', value: '24', icon: '📚' },
@@ -218,50 +614,115 @@ export default function CareerHub() {
                   { label: 'Certifications', value: '2', icon: '🏆' },
                   { label: 'Coding Problems', value: '89', icon: '💻' },
                 ].map((stat, i) => (
-                  <div key={i} className="p-4 rounded-xl border text-center" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+                  <div key={i} className="p-4 rounded-2xl border text-center bg-slate-50 border-slate-200" >
                     <div className="text-2xl mb-1">{stat.icon}</div>
-                    <div className="text-xl font-bold" style={{ color: 'var(--db-text-main)' }}>{stat.value}</div>
-                    <div className="text-[10px] font-semibold" style={{ color: 'var(--db-text-muted)' }}>{stat.label}</div>
+                    <div className="text-xl font-bold text-slate-800">{stat.value}</div>
+                    <div className="text-[10px] font-semibold text-slate-400">{stat.label}</div>
                   </div>
                 ))}
               </div>
-              <button className="w-full mt-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-sm font-bold rounded-xl transition-all cursor-pointer shadow-lg">
-                Generate Portfolio →
-              </button>
+
+              {!portfolioGenerated ? (
+                <button 
+                  onClick={() => { setPortfolioGenerated(true); toast.success('Personal Portfolio generated!'); }}
+                  className="w-full mt-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-sm font-bold rounded-xl transition-all cursor-pointer shadow-lg"
+                >
+                  Generate Portfolio →
+                </button>
+              ) : (
+                <div className="mt-6 p-5 border border-emerald-500/20 bg-emerald-500/5 rounded-2xl text-center space-y-3">
+                  <CheckCircle2 size={32} className="text-emerald-500 mx-auto" />
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-800">Your Developer Portfolio is Live!</h4>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Link: eduverse.ai/portfolio/bharath-kulal</p>
+                  </div>
+                  <button onClick={() => setPortfolioGenerated(false)} className="text-[10px] text-violet-600 font-extrabold hover:underline">
+                    Reset Portfolio State
+                  </button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
 
         {/* CERTIFICATIONS */}
         {activeTab === 'certifications' && (
-          <motion.div key="certifications" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {certifications.map((cert, i) => (
-              <div key={i} className="p-5 rounded-2xl border hover:shadow-lg transition-all flex flex-col gap-3" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cert.color} flex items-center justify-center text-xl text-white shadow-md`}>
-                    {cert.icon}
+          <motion.div key="certifications" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {certs.map((cert, i) => (
+                <div key={i} className="p-5 rounded-2xl border hover:shadow-lg transition-all flex flex-col justify-between gap-3 bg-white border-slate-200" >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cert.color} flex items-center justify-center text-xl text-white shadow-md`}>
+                      {cert.icon}
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-800 leading-tight">{cert.name}</h3>
+                      <p className="text-[10px] text-slate-400">{cert.provider}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold" style={{ color: 'var(--db-text-main)' }}>{cert.name}</h3>
-                    <p className="text-[11px]" style={{ color: 'var(--db-text-muted)' }}>{cert.provider}</p>
+
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[11px] font-bold text-slate-500">
+                      <span>Progress</span>
+                      <span>{cert.progress}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className={`h-full bg-gradient-to-r ${cert.color} rounded-full transition-all`} style={{ width: `${cert.progress}%` }} />
+                    </div>
                   </div>
+
+                  {cert.progress >= 100 ? (
+                    <button 
+                      onClick={() => setActiveCertCertificate(cert)}
+                      className="w-full py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer"
+                    >
+                      🎉 View Certificate
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => handleProgressCert(cert.id)}
+                      className="w-full py-2 text-xs font-bold rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer"
+                    >
+                      Continue Learning
+                    </button>
+                  )}
                 </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[11px] font-bold" style={{ color: 'var(--db-text-muted)' }}>
-                    <span>Progress</span>
-                    <span>{cert.progress}%</span>
+              ))}
+            </div>
+
+            {/* Certificate overlay modal */}
+            {activeCertCertificate && (
+              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl border border-slate-200 max-w-xl w-full p-8 text-center space-y-6 shadow-2xl relative">
+                  <button 
+                    onClick={() => setActiveCertCertificate(null)}
+                    className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                  >
+                    Close
+                  </button>
+
+                  <Award size={64} className="text-amber-500 mx-auto" />
+                  
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black uppercase text-violet-600 tracking-wider">EDUVERSE ACADEMY CERTIFICATE OF PROGRESS</span>
+                    <h2 className="text-xl font-black text-slate-800">{activeCertCertificate.name}</h2>
+                    <p className="text-xs text-slate-500">This certifies that <strong>{resumeName}</strong> has successfully completed the curriculum requirements.</p>
                   </div>
-                  <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--db-sidebar-border)' }}>
-                    <div className={`h-full bg-gradient-to-r ${cert.color} rounded-full transition-all`} style={{ width: `${cert.progress}%` }} />
+
+                  <div className="border-t border-b py-3 text-[10px] text-slate-400 flex justify-between">
+                    <span>DATE: {new Date().toLocaleDateString()}</span>
+                    <span>VERIFICATION ID: EDV-{activeCertCertificate.id}93A</span>
                   </div>
+
+                  <button 
+                    onClick={() => { toast.success('Certificate PDF download started!'); setActiveCertCertificate(null); }}
+                    className="w-full py-2 bg-violet-600 text-white text-xs font-bold rounded-xl"
+                  >
+                    Download Certificate Document
+                  </button>
                 </div>
-                <button className={`w-full py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${cert.progress >= 100 ? 'bg-emerald-600 text-white' : 'border'}`}
-                  style={cert.progress < 100 ? { borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-secondary)', backgroundColor: 'var(--db-input-bg)' } : {}}
-                >
-                  {cert.progress >= 100 ? '🎉 Download Certificate' : 'Continue Learning'}
-                </button>
               </div>
-            ))}
+            )}
           </motion.div>
         )}
       </AnimatePresence>

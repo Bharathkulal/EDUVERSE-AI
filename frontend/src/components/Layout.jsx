@@ -153,17 +153,6 @@ export default function Layout({ children }) {
           </div>
 
           <div className="mt-auto">
-            {/* Upgrade to Pro Card */}
-            <div className="mt-8 p-4 rounded-2xl bg-gradient-to-br from-[#2563EB]/5 to-[#60A5FA]/5 border border-[#2563EB]/10 hidden lg:block mb-4">
-              <h4 className="text-xs font-bold text-[#2563EB] uppercase tracking-wider mb-1">⚡ Upgrade to Pro</h4>
-              <p className="text-[11px] text-[var(--db-text-muted)] leading-relaxed mb-3">Unlock advanced AI insights, unlimited quizzes, mock tests & more.</p>
-              <button className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold py-2 px-3 rounded-xl transition flex items-center justify-center gap-1.5">
-                <span>Upgrade Now</span>
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </button>
-            </div>
 
             {/* XP Progress Card */}
             <div className="p-4 rounded-2xl bg-[var(--db-card-bg-elevated)] border border-[var(--db-sidebar-border)] hidden lg:block mb-4">

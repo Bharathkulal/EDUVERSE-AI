@@ -40,16 +40,16 @@ export default function StudyReport() {
   if (!report) return null;
 
   return (
-    <div className="min-h-screen text-slate-100 p-4 md:p-8 space-y-6 premium-dark-page" style={{ backgroundColor: '#050B2D' }}>
+    <div className="p-4 md:p-8 space-y-6 transition-colors duration-300">
       
       {/* Dashboard Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-6">
         <div className="text-left">
-          <span className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">STUDY PROGRESS REPORT</span>
-          <h1 className="text-3xl font-extrabold text-white mt-1">Your Learning Journey Overview</h1>
+          <span className="text-[10px] font-bold text-violet-500 dark:text-violet-400 uppercase tracking-widest">STUDY PROGRESS REPORT</span>
+          <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">Your Learning Journey Overview</h1>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-400">Report Generated: <strong>{new Date().toLocaleDateString('en-GB')}</strong></span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">Report Generated: <strong>{new Date().toLocaleDateString('en-GB')}</strong></span>
           <button
             onClick={handlePrintReport}
             className="py-2 px-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-violet-600/20 cursor-pointer"
@@ -64,45 +64,45 @@ export default function StudyReport() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Profile Card */}
-        <div className="lg:col-span-2 card-glass p-6 rounded-3xl border border-white/10 flex flex-col justify-between space-y-6">
+        <div className="lg:col-span-2 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 p-6 rounded-3xl flex flex-col justify-between space-y-6 shadow-sm dark:shadow-xl">
           <div className="flex items-center gap-4 text-left">
             <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-600 border-2 border-white flex items-center justify-center font-extrabold text-2xl text-white shadow-lg">
               {report.student.name.charAt(0)}
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">{report.student.name}</h2>
-              <span className="text-xs text-slate-400">Student ID: {report.student.id}</span>
+              <h2 className="text-2xl font-bold text-slate-800 dark:text-white">{report.student.name}</h2>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Student ID: {report.student.id}</span>
             </div>
           </div>
 
           {/* Quick Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-white/5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100 dark:border-white/5">
             <div className="text-left">
-              <span className="text-[10px] text-slate-400 block font-semibold uppercase tracking-wider">Current Level</span>
-              <span className="text-lg font-extrabold text-violet-400">{report.student.currentLevel} (Advanced)</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-semibold uppercase tracking-wider">Current Level</span>
+              <span className="text-lg font-extrabold text-violet-600 dark:text-violet-400">{report.student.currentLevel} (Advanced)</span>
             </div>
             <div className="text-left">
-              <span className="text-[10px] text-slate-400 block font-semibold uppercase tracking-wider">XP Earned</span>
-              <span className="text-lg font-extrabold text-indigo-400">{report.student.totalXP.toLocaleString()} XP</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-semibold uppercase tracking-wider">XP Earned</span>
+              <span className="text-lg font-extrabold text-indigo-600 dark:text-indigo-400">{report.student.totalXP.toLocaleString()} XP</span>
             </div>
             <div className="text-left">
-              <span className="text-[10px] text-slate-400 block font-semibold uppercase tracking-wider">Streak Days</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-semibold uppercase tracking-wider">Streak Days</span>
               <span className="text-lg font-extrabold text-amber-500">{report.student.streakDays} Days</span>
             </div>
             <div className="text-left">
-              <span className="text-[10px] text-slate-400 block font-semibold uppercase tracking-wider">Study Hours</span>
-              <span className="text-lg font-extrabold text-emerald-400">{report.student.studyHours} hrs</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-semibold uppercase tracking-wider">Study Hours</span>
+              <span className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">{report.student.studyHours} hrs</span>
             </div>
           </div>
         </div>
 
         {/* AI Readiness Score */}
-        <div className="card-glass p-6 rounded-3xl border border-white/10 flex flex-col items-center justify-center text-center">
-          <h3 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">AI Readiness Score</h3>
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 p-6 rounded-3xl flex flex-col items-center justify-center text-center shadow-sm dark:shadow-xl">
+          <h3 className="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase tracking-widest mb-4">AI Readiness Score</h3>
           <div className="relative w-36 h-36 flex items-center justify-center">
             {/* Circular Progress SVG */}
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.05)" strokeWidth="8" fill="transparent" />
+              <circle cx="50" cy="50" r="40" stroke="rgba(0,0,0,0.05)" strokeWidth="8" fill="transparent" />
               <circle 
                 cx="50" 
                 cy="50" 
@@ -122,11 +122,11 @@ export default function StudyReport() {
               </defs>
             </svg>
             <div className="absolute flex flex-col items-center">
-              <span className="text-3xl font-black text-white">{report.student.aiReadinessScore}%</span>
-              <span className="text-[8px] uppercase tracking-wider font-bold text-slate-400 mt-1">Readiness</span>
+              <span className="text-3xl font-black text-slate-800 dark:text-white">{report.student.aiReadinessScore}%</span>
+              <span className="text-[8px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400 mt-1">Readiness</span>
             </div>
           </div>
-          <span className="mt-4 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full text-xs font-bold uppercase tracking-wider">
+          <span className="mt-4 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-bold uppercase tracking-wider">
             ● Excellent Status
           </span>
         </div>
@@ -134,42 +134,42 @@ export default function StudyReport() {
 
       {/* Row 2: Performance Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="card-glass p-4 rounded-2xl border border-white/10 text-left space-y-2">
-          <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold block">Overall Progress</span>
-          <div className="text-2xl font-black text-white">{report.performance.overallProgress}%</div>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 p-4 rounded-2xl text-left space-y-2 shadow-sm dark:shadow-xl">
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold block">Overall Progress</span>
+          <div className="text-2xl font-black text-slate-800 dark:text-white">{report.performance.overallProgress}%</div>
+          <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
             <div className="h-full bg-violet-500" style={{ width: `${report.performance.overallProgress}%` }} />
           </div>
         </div>
 
-        <div className="card-glass p-4 rounded-2xl border border-white/10 text-left space-y-2">
-          <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold block">Average Quiz Score</span>
-          <div className="text-2xl font-black text-indigo-400">{report.performance.avgQuizScore}%</div>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 p-4 rounded-2xl text-left space-y-2 shadow-sm dark:shadow-xl">
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold block">Average Quiz Score</span>
+          <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{report.performance.avgQuizScore}%</div>
+          <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
             <div className="h-full bg-indigo-500" style={{ width: `${report.performance.avgQuizScore}%` }} />
           </div>
         </div>
 
-        <div className="card-glass p-4 rounded-2xl border border-white/10 text-left space-y-2">
-          <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold block">Practice Completion</span>
-          <div className="text-2xl font-black text-emerald-400">{report.performance.practiceCompletion}%</div>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 p-4 rounded-2xl text-left space-y-2 shadow-sm dark:shadow-xl">
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold block">Practice Completion</span>
+          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{report.performance.practiceCompletion}%</div>
+          <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
             <div className="h-full bg-emerald-500" style={{ width: `${report.performance.practiceCompletion}%` }} />
           </div>
         </div>
 
-        <div className="card-glass p-4 rounded-2xl border border-white/10 text-left space-y-2">
-          <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold block">Coding Labs Performance</span>
-          <div className="text-2xl font-black text-amber-500">{report.performance.codingPerformance}%</div>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 p-4 rounded-2xl text-left space-y-2 shadow-sm dark:shadow-xl">
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold block">Coding Labs Performance</span>
+          <div className="text-2xl font-black text-amber-600">{report.performance.codingPerformance}%</div>
+          <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
             <div className="h-full bg-amber-500" style={{ width: `${report.performance.codingPerformance}%` }} />
           </div>
         </div>
 
-        <div className="card-glass p-4 rounded-2xl border border-white/10 text-left space-y-2 col-span-2 md:col-span-1">
-          <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold block">Consistency Score</span>
-          <div className="text-2xl font-black text-teal-400">{report.performance.consistencyScore}%</div>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 p-4 rounded-2xl text-left space-y-2 col-span-2 md:col-span-1 shadow-sm dark:shadow-xl">
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold block">Consistency Score</span>
+          <div className="text-2xl font-black text-teal-600 dark:text-teal-400">{report.performance.consistencyScore}%</div>
+          <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
             <div className="h-full bg-teal-500" style={{ width: `${report.performance.consistencyScore}%` }} />
           </div>
         </div>
@@ -179,16 +179,16 @@ export default function StudyReport() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Table */}
-        <div className="lg:col-span-2 card-glass p-6 rounded-3xl border border-white/10 space-y-4">
-          <h3 className="text-lg font-bold text-left text-white flex items-center gap-2">
-            <BarChart2 className="w-5 h-5 text-violet-400" />
+        <div className="lg:col-span-2 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 p-6 rounded-3xl space-y-4 shadow-sm dark:shadow-xl">
+          <h3 className="text-lg font-bold text-left text-slate-800 dark:text-white flex items-center gap-2">
+            <BarChart2 className="w-5 h-5 text-violet-500 dark:text-violet-400" />
             <span>Subject-wise Mastery Level</span>
           </h3>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-white/10 text-[10px] uppercase tracking-wider text-slate-400 font-bold">
+                <tr className="border-b border-slate-200 dark:border-white/10 text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold">
                   <th className="pb-3 pt-1">Subject</th>
                   <th className="pb-3 pt-1 text-center">Progress %</th>
                   <th className="pb-3 pt-1 text-center">Accuracy %</th>
@@ -196,23 +196,23 @@ export default function StudyReport() {
                   <th className="pb-3 pt-1 text-center">Mastery Level</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-xs">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-xs">
                 {report.subjectPerformance.map((sp, idx) => (
-                  <tr key={idx} className="hover:bg-white/[0.02]">
-                    <td className="py-4 font-semibold text-slate-200">{sp.subject}</td>
+                  <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02]">
+                    <td className="py-4 font-semibold text-slate-700 dark:text-slate-200">{sp.subject}</td>
                     <td className="py-4 text-center">
-                      <span className="block font-bold">{sp.progress}%</span>
-                      <div className="w-16 bg-slate-800 h-1 rounded-full mx-auto mt-1 overflow-hidden">
+                      <span className="block font-bold text-slate-800 dark:text-slate-200">{sp.progress}%</span>
+                      <div className="w-16 bg-slate-200 dark:bg-slate-800 h-1 rounded-full mx-auto mt-1 overflow-hidden">
                         <div className="h-full bg-violet-500" style={{ width: `${sp.progress}%` }} />
                       </div>
                     </td>
-                    <td className="py-4 text-center text-indigo-300 font-bold">{sp.accuracy}%</td>
-                    <td className="py-4 text-center text-slate-400 font-medium">{sp.timeSpent}</td>
+                    <td className="py-4 text-center text-indigo-600 dark:text-indigo-300 font-bold">{sp.accuracy}%</td>
+                    <td className="py-4 text-center text-slate-500 dark:text-slate-400 font-medium">{sp.timeSpent}</td>
                     <td className="py-4 text-center">
                       <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-bold border ${
-                        sp.mastery === 'Expert' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
-                        sp.mastery === 'Intermediate' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
-                        'bg-slate-500/10 border-slate-500/30 text-slate-400'
+                        sp.mastery === 'Expert' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' :
+                        sp.mastery === 'Intermediate' ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400' :
+                        'bg-slate-500/10 border-slate-500/30 text-slate-500'
                       }`}>
                         {sp.mastery}
                       </span>
@@ -225,21 +225,21 @@ export default function StudyReport() {
         </div>
 
         {/* Weekly Trend Graph */}
-        <div className="card-glass p-6 rounded-3xl border border-white/10 flex flex-col justify-between text-left space-y-6">
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 p-6 rounded-3xl flex flex-col justify-between text-left space-y-6 shadow-sm dark:shadow-xl">
           <div>
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-indigo-400" />
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
               <span>Performance Trends</span>
             </h3>
-            <p className="text-xs text-slate-400 mt-1">Dynamic weekly score progression.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Dynamic weekly score progression.</p>
           </div>
 
           {/* Simple Vector Graph */}
           <div className="h-32 w-full flex items-end justify-between relative px-2">
             <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-              <div className="w-full border-b border-white/5 h-[1px]"></div>
-              <div className="w-full border-b border-white/5 h-[1px]"></div>
-              <div className="w-full border-b border-white/5 h-[1px]"></div>
+              <div className="w-full border-b border-slate-100 dark:border-white/5 h-[1px]"></div>
+              <div className="w-full border-b border-slate-100 dark:border-white/5 h-[1px]"></div>
+              <div className="w-full border-b border-slate-100 dark:border-white/5 h-[1px]"></div>
             </div>
             
             {/* Vector path lines representation */}
@@ -266,14 +266,14 @@ export default function StudyReport() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-4 mt-2">
+          <div className="grid grid-cols-2 gap-4 border-t border-slate-100 dark:border-white/5 pt-4 mt-2">
             <div>
-              <span className="text-[10px] text-slate-400 font-bold block uppercase">Total Quizzes</span>
-              <span className="text-lg font-black text-white">56 Done</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block uppercase">Total Quizzes</span>
+              <span className="text-lg font-black text-slate-800 dark:text-white">56 Done</span>
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 font-bold block uppercase">Coding Tasks</span>
-              <span className="text-lg font-black text-indigo-400">24 Passed</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block uppercase">Coding Tasks</span>
+              <span className="text-lg font-black text-indigo-600 dark:text-indigo-400">24 Passed</span>
             </div>
           </div>
         </div>
@@ -283,19 +283,19 @@ export default function StudyReport() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* AI Insights */}
-        <div className="card-glass p-6 rounded-3xl border border-white/10 text-left space-y-4">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <Brain className="w-5 h-5 text-violet-400" />
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 p-6 rounded-3xl text-left space-y-4 shadow-sm dark:shadow-xl">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+            <Brain className="w-5 h-5 text-violet-500 dark:text-violet-400" />
             <span>AI Analytical Coach Insights</span>
           </h3>
 
           <div className="space-y-4">
             <div>
-              <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Strengths</span>
-              <ul className="space-y-1.5 mt-1.5 text-xs text-slate-300">
+              <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">Strengths</span>
+              <ul className="space-y-1.5 mt-1.5 text-xs text-slate-600 dark:text-slate-300">
                 {report.insights.strengths.map((str, idx) => (
                   <li key={idx} className="flex items-center gap-2">
-                    <span className="text-emerald-400 font-bold">✔</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">✔</span>
                     <span>{str}</span>
                   </li>
                 ))}
@@ -303,8 +303,8 @@ export default function StudyReport() {
             </div>
 
             <div>
-              <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">Areas to Improve</span>
-              <ul className="space-y-1.5 mt-1.5 text-xs text-slate-300">
+              <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider">Areas to Improve</span>
+              <ul className="space-y-1.5 mt-1.5 text-xs text-slate-600 dark:text-slate-300">
                 {report.insights.weaknesses.map((weak, idx) => (
                   <li key={idx} className="flex items-center gap-2">
                     <span className="text-amber-500 font-bold">●</span>
@@ -314,43 +314,43 @@ export default function StudyReport() {
               </ul>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-violet-600/10 border border-violet-500/20 text-xs leading-relaxed text-violet-300">
+            <div className="p-3.5 rounded-2xl bg-violet-600/10 border border-violet-500/20 text-xs leading-relaxed text-violet-700 dark:text-violet-300">
               <strong>💡 recommendation:</strong> {report.insights.recommendation}
             </div>
           </div>
         </div>
 
         {/* Achievements Section */}
-        <div className="card-glass p-6 rounded-3xl border border-white/10 text-left space-y-4">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <Award className="w-5 h-5 text-amber-400" />
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 p-6 rounded-3xl text-left space-y-4 shadow-sm dark:shadow-xl">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+            <Award className="w-5 h-5 text-amber-500 dark:text-amber-400" />
             <span>Earned Achievements & Badges</span>
           </h3>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center text-center space-y-2">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex flex-col items-center text-center space-y-2">
               <span className="text-2xl">🔥</span>
-              <span className="text-xs font-bold text-slate-100 block">30 Day Streak</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">30 Day Streak</span>
               <span className="text-[9px] text-slate-500">Unstoppable learner</span>
             </div>
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center text-center space-y-2">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex flex-col items-center text-center space-y-2">
               <span className="text-2xl">⚔</span>
-              <span className="text-xs font-bold text-slate-100 block">DSA Expert</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">DSA Expert</span>
               <span className="text-[9px] text-slate-500">Algorithms Master</span>
             </div>
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center text-center space-y-2">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex flex-col items-center text-center space-y-2">
               <span className="text-2xl">🏆</span>
-              <span className="text-xs font-bold text-slate-100 block">Quiz Champion</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">Quiz Champion</span>
               <span className="text-[9px] text-slate-500">Perfect mock quiz runs</span>
             </div>
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center text-center space-y-2">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex flex-col items-center text-center space-y-2">
               <span className="text-2xl">🛡</span>
-              <span className="text-xs font-bold text-slate-100 block">Coding Warrior</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">Coding Warrior</span>
               <span className="text-[9px] text-slate-500">20+ coding submissions</span>
             </div>
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center text-center space-y-2">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex flex-col items-center text-center space-y-2">
               <span className="text-2xl">⚡</span>
-              <span className="text-xs font-bold text-slate-100 block">Quick Learner</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">Quick Learner</span>
               <span className="text-[9px] text-slate-500">Weekly login consistency</span>
             </div>
           </div>
@@ -361,65 +361,65 @@ export default function StudyReport() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Predictions */}
-        <div className="card-glass p-6 rounded-3xl border border-white/10 text-left space-y-4">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <Compass className="w-5 h-5 text-teal-400" />
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 p-6 rounded-3xl text-left space-y-4 shadow-sm dark:shadow-xl">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+            <Compass className="w-5 h-5 text-teal-500 dark:text-teal-400" />
             <span>Placement & Career readiness Forecast</span>
           </h3>
 
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-bold text-slate-300">
+              <div className="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-300">
                 <span>Placement Eligibility Score</span>
-                <span className="text-emerald-400">{report.predictions.placementReadiness}%</span>
+                <span className="text-emerald-600 dark:text-emerald-400">{report.predictions.placementReadiness}%</span>
               </div>
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                 <div className="h-full bg-emerald-500" style={{ width: `${report.predictions.placementReadiness}%` }} />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-bold text-slate-300">
+              <div className="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-300">
                 <span>Mock Interview Readiness</span>
-                <span className="text-indigo-400">{report.predictions.interviewReadiness}%</span>
+                <span className="text-indigo-600 dark:text-indigo-400">{report.predictions.interviewReadiness}%</span>
               </div>
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                 <div className="h-full bg-indigo-500" style={{ width: `${report.predictions.interviewReadiness}%` }} />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-bold text-slate-300">
+              <div className="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-300">
                 <span>Applied Skill Index</span>
-                <span className="text-violet-400">{report.predictions.skillReadiness}%</span>
+                <span className="text-violet-650 dark:text-violet-400">{report.predictions.skillReadiness}%</span>
               </div>
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                 <div className="h-full bg-violet-500" style={{ width: `${report.predictions.skillReadiness}%` }} />
               </div>
             </div>
 
-            <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-[11px] text-slate-400">
+            <div className="p-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-[11px] text-slate-550 dark:text-slate-400">
               💡 Forecast prediction model shows a possible score of <strong>{report.predictions.forecastScore}%</strong> next week if streak consistency is maintained.
             </div>
           </div>
         </div>
 
         {/* Personalized study plan */}
-        <div className="card-glass p-6 rounded-3xl border border-white/10 text-left space-y-4">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-amber-400" />
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 p-6 rounded-3xl text-left space-y-4 shadow-sm dark:shadow-xl">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-amber-500 dark:text-amber-400" />
             <span>Dynamic Study Plan Checklist (7 Days)</span>
           </h3>
 
           <div className="space-y-2.5">
             {report.personalizedPlan.map((plan, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10">
+              <div key={idx} className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                 <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
-                  plan.done ? 'bg-emerald-500 text-white' : 'border border-slate-500 text-transparent'
+                  plan.done ? 'bg-emerald-500 text-white' : 'border border-slate-400 dark:border-slate-500 text-transparent'
                 }`}>
                   {plan.done && '✓'}
                 </span>
-                <span className={`text-xs font-semibold ${plan.done ? 'line-through text-slate-500' : 'text-slate-200'}`}>
+                <span className={`text-xs font-semibold ${plan.done ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>
                   {plan.task}
                 </span>
               </div>

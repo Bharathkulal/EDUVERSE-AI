@@ -281,7 +281,31 @@ export default function Subjects() {
                   <div className="subject-card-content">
                     <div>
                       <div className="text-4xl mb-3">{subjectIcons[s.subject_name] || '📚'}</div>
-                      <h3 className="font-semibold text-lg text-[var(--db-text-main)] group-hover:text-emerald-500 transition-colors duration-300">{s.subject_name}</h3>
+                      <h3 className="font-semibold text-lg text-[var(--db-text-main)] group-hover:text-emerald-500 transition-colors duration-300 flex items-center justify-between">
+                        <span>{s.subject_name}</span>
+                        {s.subject_name === 'DSA' && (
+                          <span className="text-[10px] bg-orange-500 text-white px-2 py-0.5 rounded-full font-black flex items-center gap-0.5 animate-pulse">🎮 GAME</span>
+                        )}
+                      </h3>
+                      {s.subject_name === 'DSA' && (
+                        <div 
+                          className="mt-2.5 p-2 rounded-xl bg-orange-500/5 border border-orange-500/20 flex items-center justify-between text-xs cursor-default relative z-10" 
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        >
+                          <span className="font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1">🎮 Game Mode (Rotate)</span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              defaultChecked={localStorage.getItem('dsa_game_mode') === 'true'} 
+                              onChange={(e) => {
+                                localStorage.setItem('dsa_game_mode', e.target.checked ? 'true' : 'false');
+                              }}
+                              className="sr-only peer" 
+                            />
+                            <div className="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-slate-600 peer-checked:bg-orange-500"></div>
+                          </label>
+                        </div>
+                      )}
                       <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 line-clamp-3 leading-relaxed">{s.description}</p>
                     </div>
                     <div className="flex gap-4 mt-6 text-xs font-medium text-slate-400 dark:text-slate-500">
