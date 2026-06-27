@@ -46,6 +46,7 @@ const LinkedListVisualization = lazy(() => import('./pages/LinkedListVisualizati
 const TreeVisualization = lazy(() => import('./pages/TreeVisualization'));
 const GraphVisualization = lazy(() => import('./pages/GraphVisualization'));
 const MathVisualization = lazy(() => import('./pages/MathVisualization'));
+const CalculusVisualization = lazy(() => import('./pages/CalculusVisualization'));
 const ExecutionSimulator = lazy(() => import('./pages/ExecutionSimulator'));
 const FocVisualization = lazy(() => import('./pages/FocVisualization'));
 
@@ -112,6 +113,7 @@ export default function App() {
             <Route path="/dsa/tree" element={<ProtectedRoute><TreeVisualization /></ProtectedRoute>} />
             <Route path="/dsa/graph" element={<ProtectedRoute><GraphVisualization /></ProtectedRoute>} />
             <Route path="/mathematics/numerical-methods" element={<ProtectedRoute><MathVisualization /></ProtectedRoute>} />
+            <Route path="/mathematics/calculus" element={<ProtectedRoute><CalculusVisualization /></ProtectedRoute>} />
             <Route path="/dsa/stack/simulator" element={<ProtectedRoute><Layout><ExecutionSimulator /></Layout></ProtectedRoute>} />
             <Route path="/foc" element={<ProtectedRoute><Layout><FocVisualization /></Layout></ProtectedRoute>} />
 

@@ -12,6 +12,9 @@ export default function CalculusNotebookEngine({
   integFuncId, integA, integB, integN,
   // LHopital props
   lhopitalProblemId,
+  // Gauss Seidel props
+  gaussSeidelProblemId,
+  gaussSeidelIterations,
 }) {
   const [activeStepIndex, setActiveStepIndex] = useState(-1);
   const [stepComplete, setStepComplete] = useState(false);
@@ -403,8 +406,107 @@ export default function CalculusNotebookEngine({
       });
     }
 
+    else if (method === 'Gauss Seidel Method') {
+      const numIters = parseInt(gaussSeidelIterations) || 3;
+      const isGs1 = gaussSeidelProblemId === 'gs1';
+
+      if (isGs1) {
+        sequence.push({
+          type: 'header',
+          title: 'PROBLEM STATEMENT',
+          content: `Solve using Gauss-Seidel Method:\n\n10x₁ - 2x₂ - x₃ - x₄ = 3\n-2x₁ + 10x₂ - x₃ - x₄ = 15\n-x₁ - x₂ + 10x₃ - 2x₄ = 27\n-x₁ - x₂ - 2x₃ + 10x₄ = 9\n\nRewrite equations in iteration form:\nx₁ = 1/10 [ 3 + 2x₂ + x₃ + x₄ ]\nx₂ = 1/10 [ 15 + 2x₁ + x₃ + x₄ ]\nx₃ = 1/10 [ 27 + x₁ + x₂ + 2x₄ ]\nx₄ = 1/10 [ -9 + x₁ + x₂ + 2x₃ ]\n\nInitial approximation: x₁⁽⁰⁾ = x₂⁽⁰⁾ = x₃⁽⁰⁾ = x₄⁽⁰⁾ = 0`,
+          explanation: 'We state the linear system of equations, rewrite each equation to solve for its diagonal variable, and set initial guess values to zero.'
+        });
+      } else {
+        sequence.push({
+          type: 'header',
+          title: 'PROBLEM STATEMENT',
+          content: `Solve using Gauss-Seidel Method (approx. 3 decimal places):\n\n83x + 11y - 4z = 95\n7x + 52y + 13z = 104\n3x + 8y + 29z = 71\n\nRewrite equations in iteration form:\nx = 1/83 [ 95 - 11y + 4z ]\ny = 1/52 [ 104 - 7x - 13z ]\nz = 1/29 [ 71 - 3x - 8y ]\n\nInitial approximation: x⁽⁰⁾ = y⁽⁰⁾ = z⁽⁰⁾ = 0`,
+          explanation: 'We state the 3-variable system of linear equations, rewrite each equation in explicit iterative form, and set initial approximations to zero.'
+        });
+      }
+
+      let x1 = 0, x2 = 0, x3 = 0, x4 = 0;
+      let x = 0, y = 0, z = 0;
+
+      const history = [];
+      if (isGs1) {
+        history.push({ iter: 0, x1: 0, x2: 0, x3: 0, x4: 0 });
+      } else {
+        history.push({ iter: 0, x: 0, y: 0, z: 0 });
+      }
+
+      for (let k = 1; k <= numIters; k++) {
+        if (isGs1) {
+          const old_x1 = x1, old_x2 = x2, old_x3 = x3, old_x4 = x4;
+
+          x1 = (3 + 2 * x2 + x3 + x4) / 10;
+          x2 = (15 + 2 * x1 + x3 + x4) / 10;
+          x3 = (27 + x1 + x2 + 2 * x4) / 10;
+          x4 = (-9 + x1 + x2 + 2 * x3) / 10;
+
+          history.push({ iter: k, x1, x2, x3, x4 });
+
+          sequence.push({
+            type: 'math',
+            title: `ITERATION ${k}`,
+            content: `Using values: x₁=${old_x1.toFixed(4)}, x₂=${old_x2.toFixed(4)}, x₃=${old_x3.toFixed(4)}, x₄=${old_x4.toFixed(4)}\n\n` +
+                     `x₁⁽${k}⁾ = 1/10 [ 3 + 2(${old_x2.toFixed(4)}) + ${old_x3.toFixed(4)} + ${old_x4.toFixed(4)} ]\n` +
+                     `      = ${x1.toFixed(6)}\n\n` +
+                     `x₂⁽${k}⁾ = 1/10 [ 15 + 2(${x1.toFixed(4)}) + ${old_x3.toFixed(4)} + ${old_x4.toFixed(4)} ]\n` +
+                     `      = ${x2.toFixed(6)}\n\n` +
+                     `x₃⁽${k}⁾ = 1/10 [ 27 + ${x1.toFixed(4)} + ${x2.toFixed(4)} + 2(${old_x4.toFixed(4)}) ]\n` +
+                     `      = ${x3.toFixed(6)}\n\n` +
+                     `x₄⁽${k}⁾ = 1/10 [ -9 + ${x1.toFixed(4)} + ${x2.toFixed(4)} + 2(${x3.toFixed(4)}) ]\n` +
+                     `      = ${x4.toFixed(6)}`,
+            explanation: `Iteration ${k}: We solve for x₁, x₂, x₃, and x₄. Observe that the newly computed values of x₁, x₂, and x₃ are immediately used in the subsequent equations within the same iteration step.`
+          });
+        } else {
+          const old_x = x, old_y = y, old_z = z;
+
+          x = (95 - 11 * y + 4 * z) / 83;
+          y = (104 - 7 * x - 13 * z) / 52;
+          z = (71 - 3 * x - 8 * y) / 29;
+
+          history.push({ iter: k, x, y, z });
+
+          sequence.push({
+            type: 'math',
+            title: `ITERATION ${k}`,
+            content: `Using values: x=${old_x.toFixed(4)}, y=${old_y.toFixed(4)}, z=${old_z.toFixed(4)}\n\n` +
+                     `x⁽${k}⁾ = 1/83 [ 95 - 11(${old_y.toFixed(4)}) + 4(${old_z.toFixed(4)}) ]\n` +
+                     `    = ${x.toFixed(6)}\n\n` +
+                     `y⁽${k}⁾ = 1/52 [ 104 - 7(${x.toFixed(4)}) - 13(${old_z.toFixed(4)}) ]\n` +
+                     `    = ${y.toFixed(6)}\n\n` +
+                     `z⁽${k}⁾ = 1/29 [ 71 - 3(${x.toFixed(4)}) - 8(${y.toFixed(4)}) ]\n` +
+                     `    = ${z.toFixed(6)}`,
+            explanation: `Iteration ${k}: We calculate x, y, and z sequentially, substituting the updated values into the next equations right away.`
+          });
+        }
+      }
+
+      sequence.push({
+        type: 'gsTable',
+        title: 'CONVERGENCE TABLE',
+        history,
+        isGs1,
+        explanation: 'The iteration convergence table summarizes all updates from iteration 0 to the final step.'
+      });
+
+      const ansStr = isGs1
+        ? `x₁ ≈ ${x1.toFixed(4)}\nx₂ ≈ ${x2.toFixed(4)}\nx₃ ≈ ${x3.toFixed(4)}\nx₄ ≈ ${x4.toFixed(4)}`
+        : `x ≈ ${x.toFixed(4)}\ny ≈ ${y.toFixed(4)}\nz ≈ ${z.toFixed(4)}`;
+
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: ansStr,
+        explanation: `Gauss-Seidel iterations completed. The system solution has converged to the approximate values shown above.`
+      });
+    }
+
     return sequence;
-  }, [method, limitFuncId, limitApproachVal, derivFuncId, derivAtX, integFuncId, integA, integB, integN, lhopitalProblemId]);
+  }, [method, limitFuncId, limitApproachVal, derivFuncId, derivAtX, integFuncId, integA, integB, integN, lhopitalProblemId, gaussSeidelProblemId, gaussSeidelIterations]);
 
   // ─── Playback Control ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -447,6 +549,62 @@ export default function CalculusNotebookEngine({
       }
     }, getDuration(1500));
   }, [activeStepIndex, steps, onFinish, speed]);
+
+  const renderGsGrid = (history, isGs1) => {
+    // Call onComplete when table renders
+    setTimeout(() => {
+      if (playbackState === 'PLAYING' && !stepComplete) {
+        handleTypingComplete();
+      }
+    }, 1000);
+
+    return (
+      <div className="overflow-x-auto w-full border border-slate-200 rounded-xl bg-white shadow-sm mt-3">
+        <table className="w-full text-center border-collapse text-xs font-mono">
+          <thead>
+            <tr className="bg-slate-50 border-b border-slate-200">
+              <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">Iteration</th>
+              {isGs1 ? (
+                <>
+                  <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">x₁</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">x₂</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">x₃</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">x₄</th>
+                </>
+              ) : (
+                <>
+                  <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">x</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">y</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">z</th>
+                </>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {history.map((row, idx) => (
+              <tr key={idx} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/10'} border-b border-slate-100 hover:bg-slate-50/50 transition`}>
+                <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.iter}</td>
+                {isGs1 ? (
+                  <>
+                    <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.x1.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.x2.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.x3.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.x4.toFixed(6)}</td>
+                  </>
+                ) : (
+                  <>
+                    <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.x.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.y.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.z.toFixed(6)}</td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   const progress = activeStepIndex >= 0 ? ((activeStepIndex + 1) / steps.length) * 100 : 0;
 
@@ -516,6 +674,11 @@ export default function CalculusNotebookEngine({
                   <div className="mt-4 text-emerald-200 text-sm font-medium">
                     Calculus computation complete.
                   </div>
+                </div>
+              ) : step.type === 'gsTable' ? (
+                <div className="bg-white p-6 rounded-2xl border-l-4 border-emerald-400 shadow-md">
+                  <span className="text-xs font-bold text-slate-500 font-sans">Gauss-Seidel Convergence Iterations Table:</span>
+                  {renderGsGrid(step.history, step.isGs1)}
                 </div>
               ) : step.type === 'header' ? (
                 <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-2xl border border-slate-200 shadow-sm">

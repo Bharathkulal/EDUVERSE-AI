@@ -34,10 +34,19 @@ export default function CalculusVisualization() {
   // L'Hôpital input
   const [lhopitalProblemId, setLhopitalProblemId] = useState('p1');
 
+  // Gauss Seidel inputs
+  const [gaussSeidelProblemId, setGaussSeidelProblemId] = useState('gs1');
+  const [gaussSeidelIterations, setGaussSeidelIterations] = useState('3');
+
   // Playback control
   const [playbackState, setPlaybackState] = useState('IDLE');
   const [speed, setSpeed] = useState(1);
   const [currentExplanation, setCurrentExplanation] = useState('Waiting for execution to start...');
+
+  const GAUSS_SEIDEL_PROBS = [
+    { id: 'gs1', label: 'Gauss-Seidel: 4-Var System (Photo Q1)' },
+    { id: 'gs2', label: 'Gauss-Seidel: 3-Var System (Photo Q2)' },
+  ];
 
   // ─── Function / Problem Library labels ───────────────────────────────────
   const LIMIT_FUNCS = [
@@ -82,6 +91,7 @@ export default function CalculusVisualization() {
     { id: 'First Principles Derivative', title: 'First Principles Derivative', desc: 'Derive f\'(x) from the limit definition of the derivative step-by-step.',                    color: 'from-violet-500 to-purple-600'  },
     { id: 'Definite Integral',         title: 'Definite Integral',         desc: 'Evaluate ∫f(x)dx with Composite Simpson\'s 1/3 Rule and full coefficient breakdown.',           color: 'from-blue-500 to-indigo-600'    },
     { id: "L'Hôpital's Rule",          title: "L'Hôpital's Rule",          desc: 'Resolve 0/0 and ∞/∞ indeterminate forms by differentiating numerator and denominator.', color: 'from-amber-500 to-orange-600'   },
+    { id: 'Gauss Seidel Method',       title: 'Gauss Seidel Method',       desc: 'Solve systems of linear equations iteratively using successive displacement.',                  color: 'from-pink-500 to-rose-600'      },
   ];
 
   // ─── Formula data per method ──────────────────────────────────────────────
@@ -182,6 +192,25 @@ export default function CalculusVisualization() {
         },
       ],
     },
+    'Gauss Seidel Method': {
+      features: [
+        { icon: BookOpen, title: 'Iterative Solver',     desc: 'Find solutions to system of linear equations.' },
+        { icon: Target,   title: 'Successive Displacement', desc: 'Uses newly computed values immediately.' },
+        { icon: Lightbulb, title: 'Photo Problem',        desc: 'Solve 10x₁ - 2x₂ - x₃ - x₄ = 3, etc.' },
+      ],
+      formulas: [
+        {
+          title: 'Gauss-Seidel Iteration Formula',
+          formula: 'x_i^(k+1) = (1/a_ii) [ b_i − ∑(j<i) a_ij x_j^(k+1) − ∑(j>i) a_ij x_j^(k) ]',
+          variables: [
+            { sym: 'a_ii',       def: 'Diagonal coefficient for equation i' },
+            { sym: 'b_i',        def: 'RHS constant term for equation i' },
+            { sym: 'x_j^(k+1)',  def: 'New values computed in current iteration' },
+            { sym: 'x_j^(k)',    def: 'Old values from previous iteration' },
+          ],
+        },
+      ],
+    },
   };
 
   // ─── Engine Event Handlers ────────────────────────────────────────────────
@@ -236,6 +265,8 @@ export default function CalculusVisualization() {
       integB,
       integN,
       lhopitalProblemId,
+      gaussSeidelProblemId,
+      gaussSeidelIterations,
     };
 
     return <CalculusNotebookEngine {...commonProps} />;
@@ -259,6 +290,11 @@ export default function CalculusVisualization() {
     if (selectedMethod === "L'Hôpital's Rule") {
       const prob = LHOPITAL_PROBS.find(p => p.id === lhopitalProblemId);
       return `Evaluate: ${prob?.label || "L'Hôpital's limit"}`;
+    }
+    if (selectedMethod === 'Gauss Seidel Method') {
+      return gaussSeidelProblemId === 'gs1'
+        ? 'Solve: 10x₁-2x₂-x₃-x₄=3, -2x₁+10x₂-x₃-x₄=15, -x₁-x₂+10x₃-2x₄=27, -x₁-x₂-2x₃+10x₄=9'
+        : 'Solve: 83x + 11y - 4z = 95, 7x + 52y + 13z = 104, 3x + 8y + 29z = 71';
     }
     return `Solving using ${selectedMethod}.`;
   };
@@ -610,6 +646,26 @@ export default function CalculusVisualization() {
                   {LHOPITAL_PROBS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                 </select>
               </div>
+            )}
+
+            {selectedMethod === 'Gauss Seidel Method' && (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Select Equation System</label>
+                  <select value={gaussSeidelProblemId} onChange={e => { setGaussSeidelProblemId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
+                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}>
+                    {GAUSS_SEIDEL_PROBS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 font-sans">Iterations</label>
+                  <input type="number" min="1" max="10" value={gaussSeidelIterations}
+                    onChange={e => { setGaussSeidelIterations(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
+                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }} />
+                </div>
+              </>
             )}
           </div>
 
