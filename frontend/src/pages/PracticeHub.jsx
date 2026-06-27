@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import TypingQuest from './TypingQuest';
-import CodingBattleSystem from './CodingBattleSystem';
+import CodingChallenges from './CodingChallenges';
 import QuizArena from './QuizArena';
 import InterviewPractice from './InterviewPractice';
 import api from '../api/axios';
@@ -189,7 +189,7 @@ export default function PracticeHub() {
           <TypingQuest key="typing-quest" onExit={() => setActiveModule(null)} />
 
         ) : activeModule === 'coding' ? (
-          <CodingBattleSystem key="coding-battle" onExit={() => setActiveModule(null)} />
+          <CodingChallenges key="coding-challenges" onExit={() => setActiveModule(null)} />
 
         ) : activeModule === 'quiz' ? (
           <QuizArena key="quiz-arena" onExit={() => setActiveModule(null)} />

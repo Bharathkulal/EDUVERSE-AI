@@ -12,7 +12,6 @@ const studentNav = [
   { path: '/subjects', label: 'Learn', icon: '📚' },
   { path: '/practice-hub', label: 'Practice', icon: '🧪' },
   { path: '/coding', label: 'Code', icon: '💻' },
-  { path: '/dsa', label: 'Visualizers', icon: '🧩' },
   { path: '/ai-tutor', label: 'AI Center', icon: '🧠' },
   { path: '/quizzes', label: 'Arena', icon: '🏆' },
   { path: '/career-hub', label: 'Career Hub', icon: '🔥' },
