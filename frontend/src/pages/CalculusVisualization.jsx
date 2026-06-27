@@ -17,23 +17,6 @@ export default function CalculusVisualization() {
   const [showFormula, setShowFormula] = useState(false);
   const [formulaPage, setFormulaPage] = useState(0);
 
-  // Limit inputs
-  const [limitFuncId, setLimitFuncId] = useState('sin_over_x');
-  const [limitApproachVal, setLimitApproachVal] = useState('0');
-
-  // Derivative inputs
-  const [derivFuncId, setDerivFuncId] = useState('x2');
-  const [derivAtX, setDerivAtX] = useState('2');
-
-  // Integral inputs
-  const [integFuncId, setIntegFuncId] = useState('x2');
-  const [integA, setIntegA] = useState('0');
-  const [integB, setIntegB] = useState('3');
-  const [integN, setIntegN] = useState('6');
-
-  // L'Hôpital input
-  const [lhopitalProblemId, setLhopitalProblemId] = useState('p1');
-
   // Gauss Seidel inputs
   const [gaussSeidelProblemId, setGaussSeidelProblemId] = useState('gs1');
   const [gaussSeidelIterations, setGaussSeidelIterations] = useState('3');
@@ -48,150 +31,13 @@ export default function CalculusVisualization() {
     { id: 'gs2', label: 'Gauss-Seidel: 3-Var System (Photo Q2)' },
   ];
 
-  // ─── Function / Problem Library labels ───────────────────────────────────
-  const LIMIT_FUNCS = [
-    { id: 'sin_over_x',   label: 'f(x) = sin(x) / x'   },
-    { id: 'x2_minus_1',   label: 'f(x) = (x²-1)/(x-1)' },
-    { id: 'x3',           label: 'f(x) = x³'            },
-    { id: 'cos_x',        label: 'f(x) = cos(x)'        },
-    { id: 'e_x',          label: 'f(x) = eˣ'            },
-  ];
-
-  const DERIV_FUNCS = [
-    { id: 'x2',       label: 'f(x) = x²'      },
-    { id: 'x3',       label: 'f(x) = x³'      },
-    { id: 'x4',       label: 'f(x) = x⁴'      },
-    { id: 'sin_x',    label: 'f(x) = sin(x)'  },
-    { id: 'cos_x',    label: 'f(x) = cos(x)'  },
-    { id: 'e_x',      label: 'f(x) = eˣ'      },
-    { id: 'sqrt_x',   label: 'f(x) = √x'      },
-    { id: 'reciprocal', label: 'f(x) = 1/(1+x)' },
-  ];
-
-  const INTEG_FUNCS = [
-    { id: 'x2',       label: 'f(x) = x²'      },
-    { id: 'x3',       label: 'f(x) = x³'      },
-    { id: 'sin_x',    label: 'f(x) = sin(x)'  },
-    { id: 'cos_x',    label: 'f(x) = cos(x)'  },
-    { id: 'e_x',      label: 'f(x) = eˣ'      },
-    { id: 'sqrt_x',   label: 'f(x) = √x'      },
-    { id: 'reciprocal', label: 'f(x) = 1/(1+x)' },
-  ];
-
-  const LHOPITAL_PROBS = [
-    { id: 'p1', label: 'lim(x→0) sin(x)/x'          },
-    { id: 'p2', label: 'lim(x→0) (eˣ-1)/x'          },
-    { id: 'p3', label: 'lim(x→0) (1-cos x)/x²'      },
-    { id: 'p4', label: 'lim(x→0) (x - sin x)/x³'    },
-  ];
-
   // ─── Cards ────────────────────────────────────────────────────────────────
   const CARDS = [
-    { id: 'Limit Calculator',          title: 'Limit Calculator',          desc: 'Numerically approach a limit from both sides and verify convergence via table of values.',       color: 'from-emerald-500 to-teal-600'   },
-    { id: 'First Principles Derivative', title: 'First Principles Derivative', desc: 'Derive f\'(x) from the limit definition of the derivative step-by-step.',                    color: 'from-violet-500 to-purple-600'  },
-    { id: 'Definite Integral',         title: 'Definite Integral',         desc: 'Evaluate ∫f(x)dx with Composite Simpson\'s 1/3 Rule and full coefficient breakdown.',           color: 'from-blue-500 to-indigo-600'    },
-    { id: "L'Hôpital's Rule",          title: "L'Hôpital's Rule",          desc: 'Resolve 0/0 and ∞/∞ indeterminate forms by differentiating numerator and denominator.', color: 'from-amber-500 to-orange-600'   },
-    { id: 'Gauss Seidel Method',       title: 'Gauss Seidel Method',       desc: 'Solve systems of linear equations iteratively using successive displacement.',                  color: 'from-pink-500 to-rose-600'      },
+    { id: 'Gauss Seidel Method', title: 'Gauss Seidel Method', desc: 'Solve systems of linear equations iteratively using successive displacement.', color: 'from-pink-500 to-rose-600' },
   ];
 
   // ─── Formula data per method ──────────────────────────────────────────────
   const FORMULA_DATA = {
-    'Limit Calculator': {
-      features: [
-        { icon: BookOpen, title: 'Two-sided approach',  desc: 'Verify L⁻ = L⁺ from both left and right.' },
-        { icon: Target,   title: 'Numerical precision', desc: 'h decreases by factors of 10 for accuracy.' },
-        { icon: Lightbulb, title: 'Applications',       desc: 'Continuity checks, derivative foundations.' },
-      ],
-      formulas: [
-        {
-          title: 'Two-sided Limit Definition',
-          formula: 'lim(x→a) f(x) = L  iff  lim(x→a⁻) f(x) = lim(x→a⁺) f(x) = L',
-          variables: [
-            { sym: 'a',   def: 'The approach point (x → a)' },
-            { sym: 'L',   def: 'The limit value' },
-            { sym: 'a⁻',  def: 'Left-hand limit (x < a)' },
-            { sym: 'a⁺',  def: 'Right-hand limit (x > a)' },
-          ],
-        },
-        {
-          title: 'Epsilon-Delta (ε-δ) Formal Definition',
-          formula: '∀ε>0, ∃δ>0 : 0 < |x − a| < δ  ⟹  |f(x) − L| < ε',
-          variables: [
-            { sym: 'ε',  def: 'Tolerance around the limit value L' },
-            { sym: 'δ',  def: 'Tolerance around the approach point a' },
-          ],
-        },
-      ],
-    },
-
-    'First Principles Derivative': {
-      features: [
-        { icon: BookOpen, title: 'Limit definition',     desc: 'f\'(x) = lim(h→0) [f(x+h) - f(x)] / h.' },
-        { icon: Target,   title: 'Numerical convergence', desc: 'Observe the quotient as h → 0.' },
-        { icon: Lightbulb, title: 'Applications',         desc: 'Slope of tangent, rate of change.' },
-      ],
-      formulas: [
-        {
-          title: 'First Principles (Limit) Definition',
-          formula: "f'(x) = lim(h→0) [ f(x + h) − f(x) ] / h",
-          variables: [
-            { sym: 'h',        def: 'Small increment (h → 0)' },
-            { sym: 'f(x+h)',   def: 'Function evaluated at x + h' },
-            { sym: 'f(x)',     def: 'Function evaluated at x' },
-            { sym: "f'(x)",    def: 'Derivative of f at point x' },
-          ],
-        },
-        {
-          title: 'Common Derivative Rules (Reference)',
-          formula: "d/dx [xⁿ] = n·xⁿ⁻¹  |  d/dx [sin x] = cos x  |  d/dx [eˣ] = eˣ",
-          variables: [
-            { sym: 'n',    def: 'Any real exponent' },
-            { sym: 'sin x', def: 'Sine function' },
-            { sym: 'eˣ',   def: 'Natural exponential function' },
-          ],
-        },
-      ],
-    },
-
-    'Definite Integral': {
-      features: [
-        { icon: BookOpen, title: 'Composite Simpson',  desc: 'Uses parabolic arcs over n/2 sub-panels.' },
-        { icon: Target,   title: 'O(h⁴) accuracy',    desc: 'High-order error: O(h⁴) for smooth f(x).' },
-        { icon: Lightbulb, title: 'Requirement',       desc: 'Number of sub-intervals n must be even.' },
-      ],
-      formulas: [
-        {
-          title: "Composite Simpson's 1/3 Rule",
-          formula: '∫[a,b] f(x)dx ≈ (h/3)[f(x₀) + 4Σf(x_odd) + 2Σf(x_even) + f(xₙ)]',
-          variables: [
-            { sym: 'h',        def: '(b − a)/n — sub-interval width' },
-            { sym: 'n',        def: 'Number of sub-intervals (even)' },
-            { sym: 'Σf(x_odd)', def: 'Sum of f at odd-indexed nodes' },
-            { sym: 'Σf(x_even)', def: 'Sum of f at even-indexed interior nodes' },
-          ],
-        },
-      ],
-    },
-
-    "L'Hôpital's Rule": {
-      features: [
-        { icon: BookOpen, title: '0/0 or ∞/∞ forms', desc: 'Applicable only to indeterminate forms.' },
-        { icon: Target,   title: 'Differentiate separately', desc: 'Numerator and denominator differentiated independently.' },
-        { icon: Lightbulb, title: 'Applications',     desc: 'Limits, asymptotic analysis, Taylor expansions.' },
-      ],
-      formulas: [
-        {
-          title: "L'Hôpital's Rule",
-          formula: "If lim f(x)/g(x) → 0/0 or ∞/∞ then lim f(x)/g(x) = lim f'(x)/g'(x)",
-          variables: [
-            { sym: 'f(x)',    def: 'Numerator function' },
-            { sym: 'g(x)',    def: 'Denominator function' },
-            { sym: "f'(x)",   def: 'Derivative of numerator' },
-            { sym: "g'(x)",   def: 'Derivative of denominator' },
-          ],
-        },
-      ],
-    },
     'Gauss Seidel Method': {
       features: [
         { icon: BookOpen, title: 'Iterative Solver',     desc: 'Find solutions to system of linear equations.' },
@@ -256,15 +102,6 @@ export default function CalculusVisualization() {
       speed,
       onExplain: handleExplanationUpdate,
       onFinish: handleExecutionFinished,
-      limitFuncId,
-      limitApproachVal,
-      derivFuncId,
-      derivAtX,
-      integFuncId,
-      integA,
-      integB,
-      integN,
-      lhopitalProblemId,
       gaussSeidelProblemId,
       gaussSeidelIterations,
     };
@@ -274,23 +111,6 @@ export default function CalculusVisualization() {
 
   // ─── Top question text ────────────────────────────────────────────────────
   const getTopQuestionText = () => {
-    if (selectedMethod === 'Limit Calculator') {
-      const labels = { 'sin_over_x': 'sin(x)/x', 'x2_minus_1': '(x²-1)/(x-1)', 'x3': 'x³', 'cos_x': 'cos(x)', 'e_x': 'eˣ' };
-      return `Find: lim(x → ${limitApproachVal}) ${labels[limitFuncId] || 'f(x)'}`;
-    }
-    if (selectedMethod === 'First Principles Derivative') {
-      const fn = DERIV_FUNCS.find(f => f.id === derivFuncId);
-      return `Find: f'(${derivAtX}) where ${fn?.label || 'f(x)'}  using First Principles`;
-    }
-    if (selectedMethod === 'Definite Integral') {
-      const fn = INTEG_FUNCS.find(f => f.id === integFuncId);
-      const fnLabel = fn?.label?.split('=')[1]?.trim() || integFuncId;
-      return `Evaluate: ∫[${integA} to ${integB}] ( ${fnLabel} ) dx`;
-    }
-    if (selectedMethod === "L'Hôpital's Rule") {
-      const prob = LHOPITAL_PROBS.find(p => p.id === lhopitalProblemId);
-      return `Evaluate: ${prob?.label || "L'Hôpital's limit"}`;
-    }
     if (selectedMethod === 'Gauss Seidel Method') {
       return gaussSeidelProblemId === 'gs1'
         ? 'Solve: 10x₁-2x₂-x₃-x₄=3, -2x₁+10x₂-x₃-x₄=15, -x₁-x₂+10x₃-2x₄=27, -x₁-x₂-2x₃+10x₄=9'
@@ -564,90 +384,6 @@ export default function CalculusVisualization() {
             </div>
 
             {/* Conditional Inputs */}
-            {selectedMethod === 'Limit Calculator' && (
-              <>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Select Function f(x)</label>
-                  <select value={limitFuncId} onChange={e => { setLimitFuncId(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}>
-                    {LIMIT_FUNCS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
-                  </select>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Approach Value (a)</label>
-                  <input type="number" step="0.1" value={limitApproachVal}
-                    onChange={e => { setLimitApproachVal(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }} />
-                </div>
-              </>
-            )}
-
-            {selectedMethod === 'First Principles Derivative' && (
-              <>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Select Function f(x)</label>
-                  <select value={derivFuncId} onChange={e => { setDerivFuncId(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}>
-                    {DERIV_FUNCS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
-                  </select>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Evaluate at x =</label>
-                  <input type="number" step="0.5" value={derivAtX}
-                    onChange={e => { setDerivAtX(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }} />
-                </div>
-              </>
-            )}
-
-            {selectedMethod === 'Definite Integral' && (
-              <>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Select Function f(x)</label>
-                  <select value={integFuncId} onChange={e => { setIntegFuncId(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                    style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}>
-                    {INTEG_FUNCS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
-                  </select>
-                </div>
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Lower [a]</label>
-                    <input type="number" step="0.5" value={integA} onChange={e => { setIntegA(e.target.value); setPlaybackState('IDLE'); }}
-                      className="w-full text-sm font-bold rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                      style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }} />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Upper [b]</label>
-                    <input type="number" step="0.5" value={integB} onChange={e => { setIntegB(e.target.value); setPlaybackState('IDLE'); }}
-                      className="w-full text-sm font-bold rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                      style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }} />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">n (even)</label>
-                    <input type="number" min="2" step="2" value={integN} onChange={e => { setIntegN(e.target.value); setPlaybackState('IDLE'); }}
-                      className="w-full text-sm font-bold rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                      style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }} />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {selectedMethod === "L'Hôpital's Rule" && (
-              <div className="mb-4">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Select Problem</label>
-                <select value={lhopitalProblemId} onChange={e => { setLhopitalProblemId(e.target.value); setPlaybackState('IDLE'); }}
-                  className="w-full text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
-                  style={{ background: '#0c1426', border: '1px solid rgba(16, 185, 129, 0.15)', color: '#e2e8f0' }}>
-                  {LHOPITAL_PROBS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
-                </select>
-              </div>
-            )}
-
             {selectedMethod === 'Gauss Seidel Method' && (
               <>
                 <div className="mb-4">

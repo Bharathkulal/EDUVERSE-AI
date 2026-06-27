@@ -649,6 +649,37 @@ export default function NotebookEngine({
     );
   };
 
+  // ─── Bisection convergence table ─────────────────────────────────────────
+  const renderBisGrid = (history) => {
+    if (!history || history.length === 0) return null;
+    return (
+      <div className="overflow-x-auto w-full border border-slate-200 rounded-xl bg-white shadow-sm mt-3">
+        <table className="w-full text-center border-collapse text-xs font-mono">
+          <thead>
+            <tr className="bg-slate-50 border-b border-slate-200">
+              {['Iter', 'a', 'b', 'x = (a+b)/2', 'f(a)', 'f(x)', 'Sign Check'].map((h, i) => (
+                <th key={i} className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600 whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {history.map((row, rIdx) => (
+              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'} border-b border-slate-100 hover:bg-emerald-50/30 transition`}>
+                <td className="py-1.5 px-3 border-r border-slate-200 font-bold text-emerald-600">{row.iter}</td>
+                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-700">{row.a}</td>
+                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-700">{row.b}</td>
+                <td className="py-1.5 px-3 border-r border-slate-200 font-bold text-blue-600">{row.x}</td>
+                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-600">{row.fa}</td>
+                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-600">{row.fx}</td>
+                <td className={`py-1.5 px-3 border-r border-slate-200 font-bold ${row.sign === 'Root!' ? 'text-emerald-600' : 'text-amber-600'}`}>{row.sign}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   // Progress bar width
   const progress = activeStepIndex >= 0 ? ((activeStepIndex + 1) / steps.length) * 100 : 0;
 
