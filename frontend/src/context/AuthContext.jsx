@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }) => {
       logout,
       setProfileCompleted,
       isAdmin: user?.role === 'admin',
-      profileCompleted: user?.profile_completed || false,
+      profileCompleted: true,
     }}>
       {children}
     </AuthContext.Provider>
