@@ -28,6 +28,14 @@ export default function CalculusVisualization() {
   const [rfProblemId, setRfProblemId] = useState('rf1');
   const [rfIterations, setRfIterations] = useState('7');
 
+  // Iteration Method inputs
+  const [iterProblemId, setIterProblemId] = useState('it1');
+  const [iterIterations, setIterIterations] = useState('8');
+
+  // Newton-Raphson inputs
+  const [nrProblemId, setNrProblemId] = useState('nr1');
+  const [nrIterations, setNrIterations] = useState('5');
+
   // Playback control
   const [playbackState, setPlaybackState] = useState('IDLE');
   const [speed, setSpeed] = useState(1);
@@ -43,10 +51,24 @@ export default function CalculusVisualization() {
     { id: 'rf2', label: 'f(x) = x³ - x - 2 = 0  [a=1, b=2]' },
   ];
 
+  const ITER_PROBS = [
+    { id: 'it1', label: '2x = cos(x)+3  →  φ(x)=½(cos x+3) (Photo Q1)' },
+    { id: 'it2', label: 'xeˣ = 1  →  φ(x)=e⁻ˣ (Photo Q2)' },
+    { id: 'it3', label: 'x³ - x - 1 = 0  →  φ(x)=∛(x+1)' },
+  ];
+
+  const NR_PROBS = [
+    { id: 'nr1', label: 'f(x) = x³ - 2x - 5 = 0  [x₀=2.5] (Photo Q)' },
+    { id: 'nr2', label: 'f(x) = x³ - x - 1 = 0  [x₀=1.5]' },
+    { id: 'nr3', label: 'f(x) = cos(x) - x = 0  [x₀=1.0]' },
+  ];
+
   // ─── Cards ────────────────────────────────────────────────────────────────
   const CARDS = [
-    { id: 'Gauss Seidel Method', title: 'Gauss Seidel Method', desc: 'Solve systems of linear equations iteratively using successive displacement.', color: 'from-pink-500 to-rose-600' },
-    { id: 'Regula Falsi Method', title: 'Regula Falsi Method', desc: 'Find real roots of nonlinear equations using the false position (chord) method.', color: 'from-violet-500 to-purple-600' },
+    { id: 'Gauss Seidel Method',   title: 'Gauss Seidel Method',   desc: 'Solve systems of linear equations iteratively using successive displacement.',                   color: 'from-pink-500 to-rose-600'     },
+    { id: 'Regula Falsi Method',   title: 'Regula Falsi Method',   desc: 'Find real roots of nonlinear equations using the false position (chord) method.',               color: 'from-violet-500 to-purple-600' },
+    { id: 'Iteration Method',      title: 'Iteration Method',      desc: 'Solve f(x)=0 by rewriting as x=φ(x) and repeatedly applying the mapping until convergence.',   color: 'from-cyan-500 to-teal-600'    },
+    { id: 'Newton-Raphson Method', title: 'Newton-Raphson Method', desc: 'Find roots of nonlinear equations using tangent lines for quadratic convergence.',              color: 'from-amber-500 to-orange-600'  },
   ];
 
   // ─── Formula data per method ──────────────────────────────────────────────
@@ -72,19 +94,57 @@ export default function CalculusVisualization() {
     },
     'Regula Falsi Method': {
       features: [
-        { icon: BookOpen, title: 'False Position', desc: 'Interpolate a chord between two bracket points to find the root.' },
-        { icon: Target, title: 'Guaranteed Convergence', desc: 'Always stays bracketed — root never escapes the interval.' },
-        { icon: Lightbulb, title: 'Photo Problem', desc: 'Solve f(x) = x³ - 2x - 5 = 0 from your exam notebook.' },
+        { icon: BookOpen,  title: 'False Position',        desc: 'Interpolate a chord between two bracket points to find the root.' },
+        { icon: Target,    title: 'Guaranteed Convergence', desc: 'Always stays bracketed — root never escapes the interval.' },
+        { icon: Lightbulb, title: 'Photo Problem',          desc: 'Solve f(x) = x³ - 2x - 5 = 0 from your exam notebook.' },
       ],
       formulas: [
         {
           title: 'Regula Falsi (False Position) Formula',
           formula: 'x = [ a·f(b) − b·f(a) ] / [ f(b) − f(a) ]',
           variables: [
-            { sym: 'a, b',    def: 'Current bracket endpoints where f(a)·f(b) < 0' },
-            { sym: 'x',       def: 'New approximation (point where chord crosses x-axis)' },
-            { sym: 'f(a)',    def: 'Function value at left bracket a' },
-            { sym: 'f(b)',    def: 'Function value at right bracket b' },
+            { sym: 'a, b', def: 'Current bracket endpoints where f(a)·f(b) < 0' },
+            { sym: 'x',    def: 'New approximation (point where chord crosses x-axis)' },
+            { sym: 'f(a)', def: 'Function value at left bracket a' },
+            { sym: 'f(b)', def: 'Function value at right bracket b' },
+          ],
+        },
+      ],
+    },
+    'Iteration Method': {
+      features: [
+        { icon: BookOpen,  title: 'Fixed-Point Iteration', desc: 'Rewrite f(x)=0 as x=φ(x) and iterate xₙ₊₁=φ(xₙ).' },
+        { icon: Target,    title: 'Convergence Condition', desc: '|φ′(x)| < 1 in the interval ensures the iterations converge.' },
+        { icon: Lightbulb, title: 'Photo Problems',        desc: 'Solve 2x=cos(x)+3 and xeˣ=1 from your exam notebook.' },
+      ],
+      formulas: [
+        {
+          title: 'Iteration (Fixed-Point) Formula',
+          formula: 'xₙ₊₁ = φ(xₙ)',
+          variables: [
+            { sym: 'xₙ',    def: 'Current approximation at step n' },
+            { sym: 'φ(x)',  def: 'Rearranged form: x = φ(x)  from f(x) = 0' },
+            { sym: 'xₙ₊₁', def: 'Next approximation, obtained by applying φ to xₙ' },
+            { sym: '|φ′|<1', def: 'Convergence criterion — derivative of φ must be < 1 in magnitude' },
+          ],
+        },
+      ],
+    },
+    'Newton-Raphson Method': {
+      features: [
+        { icon: BookOpen,  title: 'Tangent Line Method',   desc: 'Use the tangent at xₙ to project to the x-axis for the next guess.' },
+        { icon: Target,    title: 'Quadratic Convergence', desc: 'Doubles correct decimal places each step — very fast near the root.' },
+        { icon: Lightbulb, title: 'Photo Problem',         desc: 'Solve f(x)=x³-2x-5=0 correct to 3 decimal places (x₀=2.5).' },
+      ],
+      formulas: [
+        {
+          title: 'Newton-Raphson Iteration Formula',
+          formula: 'xₙ = xₙ₋₁ − f(xₙ₋₁) / f′(xₙ₋₁)',
+          variables: [
+            { sym: 'xₙ₋₁',     def: 'Previous approximation' },
+            { sym: 'f(xₙ₋₁)',  def: 'Function value at current approximation' },
+            { sym: 'f′(xₙ₋₁)', def: 'Derivative value at current approximation' },
+            { sym: 'xₙ',       def: 'Improved approximation after applying the formula' },
           ],
         },
       ],
@@ -138,6 +198,10 @@ export default function CalculusVisualization() {
       gaussSeidelIterations,
       rfProblemId,
       rfIterations,
+      iterProblemId,
+      iterIterations,
+      nrProblemId,
+      nrIterations,
     };
 
     return <CalculusNotebookEngine {...commonProps} />;
@@ -154,6 +218,14 @@ export default function CalculusVisualization() {
       return rfProblemId === 'rf1'
         ? 'Find real root: f(x) = x³ - 2x - 5 = 0  [a=2, b=3] using Regula Falsi'
         : 'Find real root: f(x) = x³ - x - 2 = 0  [a=1, b=2] using Regula Falsi';
+    }
+    if (selectedMethod === 'Iteration Method') {
+      const labels = { it1: '2x = cos(x)+3  →  φ(x)=½(cos x+3), x₀=π/2', it2: 'xeˣ = 1  →  φ(x)=e⁻ˣ, x₀=0.5', it3: 'x³-x-1=0  →  φ(x)=∛(x+1), x₀=1.3' };
+      return `Iteration Method: ${labels[iterProblemId] || iterProblemId}`;
+    }
+    if (selectedMethod === 'Newton-Raphson Method') {
+      const labels = { nr1: 'f(x)=x³-2x-5=0, x₀=2.5 (Photo Q)', nr2: 'f(x)=x³-x-1=0, x₀=1.5', nr3: 'f(x)=cos(x)-x=0, x₀=1.0' };
+      return `Newton-Raphson: ${labels[nrProblemId] || nrProblemId}`;
     }
     return `Solving using ${selectedMethod}.`;
   };
@@ -451,6 +523,42 @@ export default function CalculusVisualization() {
                   <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Iterations</label>
                   <input type="number" min="1" max="15" value={rfIterations}
                     onChange={e => { setRfIterations(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                </div>
+              </>
+            )}
+
+            {selectedMethod === 'Iteration Method' && (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5">Select Problem</label>
+                  <select value={iterProblemId} onChange={e => { setIterProblemId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]">
+                    {ITER_PROBS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Iterations</label>
+                  <input type="number" min="1" max="15" value={iterIterations}
+                    onChange={e => { setIterIterations(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                </div>
+              </>
+            )}
+
+            {selectedMethod === 'Newton-Raphson Method' && (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5">Select Problem</label>
+                  <select value={nrProblemId} onChange={e => { setNrProblemId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]">
+                    {NR_PROBS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Iterations</label>
+                  <input type="number" min="1" max="10" value={nrIterations}
+                    onChange={e => { setNrIterations(e.target.value); setPlaybackState('IDLE'); }}
                     className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
                 </div>
               </>

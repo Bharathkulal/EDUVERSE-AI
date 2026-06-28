@@ -18,6 +18,12 @@ export default function CalculusNotebookEngine({
   // Regula Falsi props
   rfProblemId,
   rfIterations,
+  // Iteration Method props
+  iterProblemId,
+  iterIterations,
+  // Newton-Raphson props
+  nrProblemId,
+  nrIterations,
 }) {
   const [activeStepIndex, setActiveStepIndex] = useState(-1);
   const [stepComplete, setStepComplete] = useState(false);
@@ -594,8 +600,208 @@ export default function CalculusNotebookEngine({
       });
     }
 
+    // ── 6. ITERATION METHOD (FIXED-POINT) ──────────────────────────────────
+    else if (method === 'Iteration Method') {
+      const numIters = parseInt(iterIterations) || 8;
+      const probId   = iterProblemId || 'it1';
+
+      // Problem definitions
+      const ITER_DEFS = {
+        it1: {
+          fTex:    '2x - cos(x) - 3 = 0',
+          phiTex:  'φ(x) = ½(cos x + 3)',
+          phiExpr: (x) => 0.5 * (Math.cos(x) + 3),
+          dphiExpr: (x) => -0.5 * Math.sin(x),
+          x0:      Math.PI / 2,
+          x0Tex:   'π/2 ≈ 1.5708',
+          dphiTex: 'φ′(x) = -½ sin(x)',
+          condCheck: (x) => Math.abs(-0.5 * Math.sin(x)),
+          intro: '2x = cos(x)+3  ⇒  x = ½(cos x + 3)',
+          examCheck: 'f(0)=-4<0, f(π)=4.28>0 → root lies between 0 and π',
+        },
+        it2: {
+          fTex:    'x·eˣ - 1 = 0',
+          phiTex:  'φ(x) = e⁻ˣ',
+          phiExpr: (x) => Math.exp(-x),
+          dphiExpr: (x) => -Math.exp(-x),
+          x0:      0.5,
+          x0Tex:   '0.5',
+          dphiTex: 'φ′(x) = -e⁻ˣ',
+          condCheck: (x) => Math.abs(-Math.exp(-x)),
+          intro: 'xeˣ = 1  ⇒  x = e⁻ˣ',
+          examCheck: 'f(0)=-1<0, f(1)=e-1>0 → root lies between 0 and 1',
+        },
+        it3: {
+          fTex:    'x³ - x - 1 = 0',
+          phiTex:  'φ(x) = (x+1)^(1/3)',
+          phiExpr: (x) => Math.cbrt(x + 1),
+          dphiExpr: (x) => (1/3) * Math.pow(x + 1, -2/3),
+          x0:      1.3,
+          x0Tex:   '1.3',
+          dphiTex: 'φ′(x) = ⅓(x+1)^(−⅔)',
+          condCheck: (x) => Math.abs((1/3) * Math.pow(x + 1, -2/3)),
+          intro: 'x³-x-1=0  ⇒  x=(x+1)^(1/3)',
+          examCheck: 'f(1)=-1<0, f(2)=5>0 → root lies between 1 and 2',
+        },
+      };
+
+      const prob = ITER_DEFS[probId] || ITER_DEFS['it1'];
+      const condAtX0 = prob.condCheck(prob.x0);
+
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content:
+          `Find a real root of: ${prob.fTex} = 0\n` +
+          `using the Iteration (Fixed-Point) Method\n\n` +
+          `Step 0: Verify sign change:\n${prob.examCheck}\n\n` +
+          `Rearrange: ${prob.intro}\n` +
+          `∴ ${prob.phiTex}\n\n` +
+          `Convergence Check:\n` +
+          `${prob.dphiTex}\n` +
+          `|φ′(x₀)| = ${condAtX0.toFixed(4)} < 1  ✔  Iteration WILL converge\n\n` +
+          `Initial guess: x₀ = ${prob.x0Tex}\n` +
+          `Formula: xₙ₊₁ = φ(xₙ)`,
+        explanation: `We rewrite f(x)=0 as x=φ(x), verify the convergence criterion |φ′(x)|<1, and set the initial guess x₀=${prob.x0Tex}.`,
+      });
+
+      const iterHistory = [{ step: 0, x: prob.x0, phi: '-', err: '-' }];
+      let xCurr = prob.x0;
+
+      for (let k = 1; k <= numIters; k++) {
+        const xPrev = xCurr;
+        const xNext = prob.phiExpr(xPrev);
+        const err   = Math.abs(xNext - xPrev);
+        iterHistory.push({ step: k, x: xNext, phi: xNext, err: err.toFixed(8) });
+
+        sequence.push({
+          type: 'math',
+          title: `STEP ${k}: ITERATION`,
+          content:
+            `x₋ₙ = ${xPrev.toFixed(6)}\n\n` +
+            `x₊ₙ = φ(x₋ₙ) = φ(${xPrev.toFixed(6)})\n` +
+            `   = ${prob.phiTex.replace('φ(x)', `φ(${xPrev.toFixed(4)})`)}\n` +
+            `   = ${xNext.toFixed(6)}\n\n` +
+            `|x₊ₙ - x₋ₙ| = ${err.toFixed(8)}`,
+          explanation: `Step ${k}: Apply φ to ${xPrev.toFixed(6)} to get the next approximation ${xNext.toFixed(6)}. The correction |x₊ₙ - x₋ₙ| = ${err.toFixed(6)}.`,
+        });
+
+        xCurr = xNext;
+        if (err < 1e-7) break;
+      }
+
+      sequence.push({
+        type: 'iterTable',
+        title: 'CONVERGENCE TABLE',
+        history: iterHistory,
+        explanation: 'The iteration convergence table shows how xₙ approaches the fixed point step by step.',
+      });
+
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: `${prob.fTex} = 0\n\nRequired Root  ≈  ${xCurr.toFixed(6)}\n\n(Fixed-Point Iteration, ${iterHistory.length - 1} steps)`,
+        explanation: `The Iteration Method converges to x ≈ ${xCurr.toFixed(6)} as the real root of ${prob.fTex} = 0.`,
+      });
+    }
+
+    // ── 7. NEWTON-RAPHSON METHOD ─────────────────────────────────────────
+    else if (method === 'Newton-Raphson Method') {
+      const numIters = parseInt(nrIterations) || 5;
+      const probId   = nrProblemId || 'nr1';
+
+      const NR_DEFS = {
+        nr1: {
+          fTex:    'f(x) = x³ - 2x - 5',
+          dfTex:   "f'(x) = 3x² - 2",
+          f:  (x) => Math.pow(x,3) - 2*x - 5,
+          df: (x) => 3*x*x - 2,
+          x0: 2.5,
+          examCheck: 'f(2)=-1<0, f(3)=16>0 → root lies between 2 and 3; x₀=(2+3)/2=2.5',
+        },
+        nr2: {
+          fTex:    'f(x) = x³ - x - 1',
+          dfTex:   "f'(x) = 3x² - 1",
+          f:  (x) => Math.pow(x,3) - x - 1,
+          df: (x) => 3*x*x - 1,
+          x0: 1.5,
+          examCheck: 'f(1)=-1<0, f(2)=5>0 → root lies between 1 and 2; x₀=1.5',
+        },
+        nr3: {
+          fTex:    'f(x) = cos(x) - x',
+          dfTex:   "f'(x) = -sin(x) - 1",
+          f:  (x) => Math.cos(x) - x,
+          df: (x) => -Math.sin(x) - 1,
+          x0: 1.0,
+          examCheck: 'f(0)=1>0, f(1)=-0.46<0 → root lies between 0 and 1; x₀=1.0',
+        },
+      };
+
+      const prob = NR_DEFS[probId] || NR_DEFS['nr1'];
+
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content:
+          `Find a real root of: ${prob.fTex} = 0\n` +
+          `correct to 3 decimal places\n` +
+          `using the Newton-Raphson Method\n\n` +
+          `${prob.examCheck}\n\n` +
+          `Now ${prob.fTex}\n` +
+          `     ${prob.dfTex}\n\n` +
+          `Newton-Raphson Formula:\n` +
+          `xₙ = xₙ₋₁ - f(xₙ₋₁) / f′(xₙ₋₁)`,
+        explanation: `We verify a sign change, set x₀=${prob.x0}, compute both f(x) and f′(x), and repeatedly apply the Newton-Raphson tangent-line formula until convergence.`,
+      });
+
+      const nrHistory = [];
+      let xCurr = prob.x0;
+
+      for (let k = 1; k <= numIters; k++) {
+        const xPrev = xCurr;
+        const fx    = prob.f(xPrev);
+        const dfx   = prob.df(xPrev);
+        const xNext = xPrev - fx / dfx;
+        const err   = Math.abs(xNext - xPrev);
+
+        nrHistory.push({ step: k, x_prev: xPrev, fx, dfx, x_next: xNext, err });
+
+        sequence.push({
+          type: 'math',
+          title: `STEP ${k}: NEWTON-RAPHSON ITERATION`,
+          content:
+            `x₋ₙ = ${xPrev.toFixed(6)}\n\n` +
+            `f(x₋ₙ)  = f(${xPrev.toFixed(4)}) = ${fx.toFixed(6)}\n` +
+            `f′(x₋ₙ) = f′(${xPrev.toFixed(4)}) = ${dfx.toFixed(6)}\n\n` +
+            `x₊ₙ = x₋ₙ - f(x₋ₙ) / f′(x₋ₙ)\n` +
+            `   = ${xPrev.toFixed(6)} - (${fx.toFixed(6)}) / (${dfx.toFixed(6)})\n` +
+            `   = ${xPrev.toFixed(6)} - (${(fx/dfx).toFixed(6)})\n` +
+            `   = ${xNext.toFixed(6)}\n\n` +
+            `|x₊ₙ - x₋ₙ| = ${err.toFixed(8)}`,
+          explanation: `Step ${k}: Tangent at x=${xPrev.toFixed(4)} gives next approximation ${xNext.toFixed(6)}. Correction = ${err.toFixed(6)}.`,
+        });
+
+        xCurr = xNext;
+        if (err < 1e-7) break;
+      }
+
+      sequence.push({
+        type: 'nrTable',
+        title: 'CONVERGENCE TABLE',
+        history: nrHistory,
+        explanation: 'The Newton-Raphson convergence table shows quadratic convergence — the number of correct decimal places roughly doubles each iteration.',
+      });
+
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: `${prob.fTex} = 0\n\nRequired Root  ≈  ${xCurr.toFixed(6)}\n\n(Newton-Raphson Method, ${nrHistory.length} iterations)`,
+        explanation: `The Newton-Raphson method converges to x ≈ ${xCurr.toFixed(6)} as the real root of ${prob.fTex} = 0.`,
+      });
+    }
+
     return sequence;
-  }, [method, limitFuncId, limitApproachVal, derivFuncId, derivAtX, integFuncId, integA, integB, integN, lhopitalProblemId, gaussSeidelProblemId, gaussSeidelIterations, rfProblemId, rfIterations]);
+  }, [method, limitFuncId, limitApproachVal, derivFuncId, derivAtX, integFuncId, integA, integB, integN, lhopitalProblemId, gaussSeidelProblemId, gaussSeidelIterations, rfProblemId, rfIterations, iterProblemId, iterIterations, nrProblemId, nrIterations]);
 
   // ─── Playback Control ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -728,6 +934,67 @@ export default function CalculusNotebookEngine({
     );
   };
 
+  // ─── Iteration Method convergence table ───────────────────────────────────
+  const renderIterGrid = (history) => {
+    setTimeout(() => {
+      if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
+    }, 1000);
+    return (
+      <div className="overflow-x-auto w-full border border-cyan-200 rounded-xl bg-white shadow-sm mt-3">
+        <table className="w-full text-center border-collapse text-xs font-mono">
+          <thead>
+            <tr className="bg-cyan-50 border-b border-cyan-200">
+              {['Step (n)', 'xₙ', '|Δx| = |xₙ - xₙ₋₁|'].map((h, i) => (
+                <th key={i} className="py-2.5 px-3 border-r border-cyan-200 font-bold text-cyan-700 whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {history.map((row, rIdx) => (
+              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-white' : 'bg-cyan-50/30'} border-b border-cyan-100 hover:bg-cyan-50/60 transition`}>
+                <td className="py-1.5 px-3 border-r border-cyan-200 font-bold text-cyan-600">{row.step}</td>
+                <td className="py-1.5 px-3 border-r border-cyan-200 font-bold text-blue-600">{typeof row.x === 'number' ? row.x.toFixed(6) : row.x}</td>
+                <td className="py-1.5 px-3 border-r border-cyan-200 text-slate-600">{row.err}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  // ─── Newton-Raphson convergence table ─────────────────────────────────────
+  const renderNrGrid = (history) => {
+    setTimeout(() => {
+      if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
+    }, 1000);
+    return (
+      <div className="overflow-x-auto w-full border border-amber-200 rounded-xl bg-white shadow-sm mt-3">
+        <table className="w-full text-center border-collapse text-xs font-mono">
+          <thead>
+            <tr className="bg-amber-50 border-b border-amber-200">
+              {['Step', 'xₙ₋₁', 'f(xₙ₋₁)', "f'(xₙ₋₁)", 'xₙ (new)', '|Δx|'].map((h, i) => (
+                <th key={i} className="py-2.5 px-3 border-r border-amber-200 font-bold text-amber-700 whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {history.map((row, rIdx) => (
+              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-white' : 'bg-amber-50/30'} border-b border-amber-100 hover:bg-amber-50/60 transition`}>
+                <td className="py-1.5 px-3 border-r border-amber-200 font-bold text-amber-600">{row.step}</td>
+                <td className="py-1.5 px-3 border-r border-amber-200 text-slate-700">{row.x_prev.toFixed(6)}</td>
+                <td className="py-1.5 px-3 border-r border-amber-200 text-slate-600">{row.fx.toFixed(6)}</td>
+                <td className="py-1.5 px-3 border-r border-amber-200 text-slate-600">{row.dfx.toFixed(6)}</td>
+                <td className="py-1.5 px-3 border-r border-amber-200 font-bold text-blue-600">{row.x_next.toFixed(6)}</td>
+                <td className="py-1.5 px-3 border-r border-amber-200 text-slate-500">{row.err.toFixed(8)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   const progress = activeStepIndex >= 0 ? ((activeStepIndex + 1) / steps.length) * 100 : 0;
 
   return (
@@ -806,6 +1073,16 @@ export default function CalculusNotebookEngine({
                 <div className="bg-white p-6 rounded-2xl border-l-4 border-violet-500 shadow-md">
                   <span className="text-xs font-bold text-slate-500 font-sans">Regula Falsi Convergence Table:</span>
                   {renderRfGrid(step.history)}
+                </div>
+              ) : step.type === 'iterTable' ? (
+                <div className="bg-white p-6 rounded-2xl border-l-4 border-cyan-500 shadow-md">
+                  <span className="text-xs font-bold text-slate-500 font-sans">Iteration (Fixed-Point) Convergence Table:</span>
+                  {renderIterGrid(step.history)}
+                </div>
+              ) : step.type === 'nrTable' ? (
+                <div className="bg-white p-6 rounded-2xl border-l-4 border-amber-500 shadow-md">
+                  <span className="text-xs font-bold text-slate-500 font-sans">Newton-Raphson Convergence Table:</span>
+                  {renderNrGrid(step.history)}
                 </div>
               ) : step.type === 'header' ? (
                 <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-2xl border border-slate-200 shadow-sm">
