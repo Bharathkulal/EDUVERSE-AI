@@ -267,7 +267,7 @@ export default function AdminQuizzes() {
               <div className="space-y-4 pt-2">
                 <h4 className="text-[10px] uppercase tracking-wider text-slate-400 font-bold font-mono">Questions Assembly</h4>
                 {form.questions.map((q, i) => (
-                  <div key={i} className="p-4 bg-slate-950/40 border border-white/5 rounded-2xl space-y-3 relative">
+                  <div key={i} className="p-4 bg-slate-950/40 border border-white/5 rounded-2xl space-y-3 relative quiz-question-card">
                     <button type="button" onClick={() => handleRemoveQuestion(i)} className="absolute right-3 top-3 text-slate-500 hover:text-rose-500 transition">
                       <X className="w-4 h-4" />
                     </button>

@@ -198,16 +198,80 @@
 }
 
 /* Overrides for specific dark-themed nested blocks */
-.light-theme .friday-admin-container .bg-slate-950/60,
+.light-theme .friday-admin-container .bg-slate-950\/60,
 .light-theme .friday-admin-container .bg-slate-900,
-.light-theme .friday-admin-container .bg-slate-900/50,
-.light-theme .friday-admin-container .bg-slate-900/40,
-.light-theme .friday-admin-container .bg-slate-900/20,
-.light-theme .friday-admin-container .bg-slate-950/40,
-.light-theme .friday-admin-container .bg-slate-950/80 {
+.light-theme .friday-admin-container .bg-slate-900\/50,
+.light-theme .friday-admin-container .bg-slate-900\/40,
+.light-theme .friday-admin-container .bg-slate-900\/20,
+.light-theme .friday-admin-container .bg-slate-950\/40,
+.light-theme .friday-admin-container .bg-slate-950\/80 {
   background-color: var(--db-inner-card) !important;
   color: var(--db-text-secondary) !important;
   border-color: var(--db-input-border) !important;
+}
+
+/* Custom styling for the manual quiz builder question cards to keep it clean & readable */
+.quiz-question-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.light-theme .quiz-question-card {
+  background-color: var(--db-card-bg-elevated, #f8fafc) !important;
+  border: 1px solid var(--db-card-border, #e2e8f0) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+.light-theme .quiz-question-card label {
+  color: var(--db-text-secondary, #475569) !important;
+  font-weight: 600;
+}
+
+/* Theme-aware selectable item styles for lists (e.g. active datasets, active list selections) */
+.friday-selectable-item {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #94a3b8 !important;
+  transition: all 0.2s ease-in-out;
+}
+.friday-selectable-item h4,
+.friday-selectable-item .font-bold {
+  color: #e2e8f0 !important;
+}
+.friday-selectable-item:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #e2e8f0 !important;
+}
+.friday-selectable-item.active {
+  background: rgba(6, 182, 212, 0.1) !important;
+  border-color: #06b6d4 !important;
+  color: #ffffff !important;
+}
+.friday-selectable-item.active h4,
+.friday-selectable-item.active .font-bold {
+  color: #ffffff !important;
+}
+
+.light-theme .friday-selectable-item {
+  background-color: var(--db-card-bg-elevated, #f8fafc) !important;
+  border-color: var(--db-card-border, #e8ecf4) !important;
+  color: var(--db-text-secondary, #6b7280) !important;
+}
+.light-theme .friday-selectable-item h4,
+.light-theme .friday-selectable-item .font-bold {
+  color: var(--db-text-main, #111827) !important;
+}
+.light-theme .friday-selectable-item:hover {
+  border-color: var(--db-text-accent, #3b82f6) !important;
+  color: var(--db-text-main, #111827) !important;
+}
+.light-theme .friday-selectable-item.active {
+  background-color: rgba(59, 130, 246, 0.08) !important;
+  border-color: var(--db-text-accent, #3b82f6) !important;
+  color: var(--db-text-accent, #3b82f6) !important;
+}
+.light-theme .friday-selectable-item.active h4,
+.light-theme .friday-selectable-item.active .font-bold {
+  color: var(--db-text-accent, #3b82f6) !important;
 }
 
 .light-theme .friday-admin-container input[type="text"],

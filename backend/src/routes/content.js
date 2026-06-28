@@ -48,7 +48,25 @@ async function createContentVersion(noteId, content) {
 // 1. GET /api/content - Retrieve all subjects, notes, and topics
 router.get('/', authenticate, async (req, res) => {
   try {
-    const subjects = await db.query('SELECT * FROM subjects ORDER BY subject_name');
+    const subjectsResult = await db.query(
+      `SELECT s.*, 
+        (SELECT COUNT(*) FROM topics t WHERE t.subject_id = s.id) as topic_count,
+        (SELECT COUNT(*) FROM units u WHERE u.subject_id = s.id) as unit_count
+       FROM subjects s ORDER BY s.subject_name`
+    );
+    
+    // Deduplicate subjects by name, keeping the one with most topics
+    const uniqueSubjectsMap = {};
+    subjectsResult.rows.forEach(s => {
+      const existing = uniqueSubjectsMap[s.subject_name];
+      const count = parseInt(s.topic_count) || 0;
+      const existingCount = existing ? (parseInt(existing.topic_count) || 0) : -1;
+      if (count > existingCount) {
+        uniqueSubjectsMap[s.subject_name] = s;
+      }
+    });
+    const subjects = Object.values(uniqueSubjectsMap);
+
     const notes = await db.query(
       `SELECT n.*, u.name as author_name 
        FROM notes n 
@@ -63,7 +81,7 @@ router.get('/', authenticate, async (req, res) => {
     );
 
     res.json({
-      subjects: subjects.rows,
+      subjects,
       notes: notes.rows,
       topics: topics.rows
     });

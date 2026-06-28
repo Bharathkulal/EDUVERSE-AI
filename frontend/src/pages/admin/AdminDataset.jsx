@@ -143,10 +143,8 @@ export default function AdminDataset() {
                   <button
                     key={d.id}
                     onClick={() => { setSelectedDataset(d); setPreviewData(null); setStatsData(null); }}
-                    className={`w-full p-3 rounded-xl border text-left flex justify-between items-center transition ${
-                      selectedDataset?.id === d.id 
-                        ? 'bg-cyan-500/5 border-cyan-400 text-white' 
-                        : 'bg-slate-950/20 border-white/5 text-slate-400 hover:border-white/15'
+                    className={`w-full p-3 rounded-xl border text-left flex justify-between items-center transition friday-selectable-item ${
+                      selectedDataset?.id === d.id ? 'active' : ''
                     }`}
                   >
                     <div>
