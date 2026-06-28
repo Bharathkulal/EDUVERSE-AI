@@ -399,7 +399,7 @@ export default function QueueVisualization() {
           </AnimatePresence>
 
           {/* Hero Queue Container - HORIZONTAL */}
-          <div className="flex-1 flex flex-col items-center justify-center px-12">
+          <div className="flex-1 flex flex-col items-center justify-center px-12 pt-16">
             
             <div className="flex items-center w-full justify-between mb-4">
               <div className="text-slate-400 font-bold tracking-widest text-xl">FRONT</div>

@@ -385,18 +385,18 @@ export default function StackVisualization() {
               <motion.div 
                 animate={{ y: `calc(-${(stack.length * ((isGameRotated ? 24 : 48) + 8))}px)` }} // 24px/48px height + 8px gap
                 transition={{ type: "spring", stiffness: 100, damping: 15 }}
-                className="absolute -left-28 bottom-4 flex items-center gap-2 text-blue-500 font-black tracking-widest z-20"
+                className="absolute -left-28 bottom-4 flex items-center gap-2 text-[#21F1A8] font-black tracking-widest z-20"
               >
                 TOP <ArrowRightToLine className="w-6 h-6" />
               </motion.div>
-
+ 
               {/* Stack Elements */}
               <div className="relative z-10 flex flex-col-reverse justify-start gap-2 w-full h-full">
                 <AnimatePresence initial={false}>
                   {stack.map((item, index) => {
                     const isTop = index === stack.length - 1;
                     const isPeeking = peekIndex === index;
-
+ 
                     return (
                       <motion.div
                         key={item.id}
@@ -406,16 +406,16 @@ export default function StackVisualization() {
                           opacity: 1, 
                           y: 0, 
                           scale: isPeeking ? 1.05 : 1,
-                          boxShadow: isPeeking ? '0 0 20px rgba(96, 165, 250, 0.8)' : '0 4px 6px rgba(0,0,0,0.1)'
+                          boxShadow: isPeeking ? '0 0 20px rgba(33, 241, 168, 0.8)' : '0 4px 6px rgba(0,0,0,0.1)'
                         }}
                         exit={{ opacity: 0, y: -50, scale: 1.1, rotateZ: 5, backgroundColor: '#EF4444' }}
                         transition={{ 
                           duration: getDuration(0.5), 
                           layout: { type: "spring", stiffness: 200, damping: 20 }
                         }}
-                        className={`w-full rounded-xl flex items-center justify-center font-black text-white relative shadow-lg shrink-0
+                        className={`w-full rounded-xl flex items-center justify-center font-black relative shadow-lg shrink-0 transition-all duration-300
                           ${isGameRotated ? 'h-6 text-sm' : 'h-12 text-xl'}
-                          ${isTop ? 'bg-gradient-to-r from-[#2563EB] to-[#60A5FA] ring-4 ring-blue-300 ring-offset-2' : 'bg-slate-500'}`}
+                          ${isTop ? 'bg-[#21F1A8] text-[#171717] ring-4 ring-[#21F1A8]/50 ring-offset-2' : 'bg-[#171717] text-[#21F1A8] border border-[#21F1A8]/30'}`}
                       >
                         {item.value}
                       </motion.div>
@@ -462,11 +462,7 @@ export default function StackVisualization() {
         {/* ==========================================
             RIGHT PANEL: CODE (35%)
         =========================================== */}
-        <div className={`flex flex-col gap-5 shrink-0 ${
-          isGameRotated 
-            ? 'w-[35%] h-full' 
-            : 'w-full lg:w-[35%] h-auto lg:h-full'
-        }`}>
+        <div className={isGameRotated ? "flex flex-col gap-5 shrink-0 w-[35%] h-full" : "flex flex-col gap-5 shrink-0 w-full lg:w-[35%] h-auto lg:h-full"}>
           
           {/* C Code Section */}
           <div className="flex-1 bg-[var(--db-card-bg)]/70 backdrop-blur-xl border border-[var(--db-card-border)] rounded-[24px] shadow-lg p-6 flex flex-col">

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Play, Pause, SkipForward, SkipBack, RotateCcw, 
-  ChevronRight, Cpu, Code2, Database, Zap, Settings, Info
+  ChevronRight, Cpu, Code2, Database, Zap, Settings, Info,
+  ZoomIn, ZoomOut, Maximize2, RefreshCw, Layers, Compass, Terminal, Film
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggleButton from '../components/ThemeToggleButton';
@@ -12,9 +13,17 @@ import './DashboardTheme.css';
 export default function LinkedListVisualization() {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
+  
+  // Custom Zoom and Pan State
+  const [zoomScale, setZoomScale] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const canvasRef = useRef(null);
+
   const [isGameRotated, setIsGameRotated] = useState(localStorage.getItem('dsa_game_mode') === 'true');
   const [listType, setListType] = useState('singly'); // singly, doubly, circular
-  const [operation, setOperation] = useState('insertPosition');
+  const [operation, setOperation] = useState('insertBeginning'); // default to insertBeginning since empty
   const [inputValue, setInputValue] = useState('10');
   const [inputPosition, setInputPosition] = useState('2');
   const [activeTab, setActiveTab] = useState('code'); // code, variables, memory
@@ -26,18 +35,166 @@ export default function LinkedListVisualization() {
   const [showCodeSync, setShowCodeSync] = useState(true);
   const [showComplexity, setShowComplexity] = useState(true);
 
-  // Linked list state
-  const [nodes, setNodes] = useState([
-    { id: 1, value: 5, address: '0x101' },
-    { id: 2, value: 8, address: '0x102' },
-    { id: 3, value: 12, address: '0x103' }
-  ]);
+  // Linked list state starts empty
+  const [nodes, setNodes] = useState([]);
+  const [isDemoRunning, setIsDemoRunning] = useState(false);
 
   // Debugger Execution State
   const [steps, setSteps] = useState([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const playTimerRef = useRef(null);
+
+  // Zoom / Pan handlers
+  const handleMouseDown = (e) => {
+    if (e.target.closest('.interactive-control')) return;
+    setIsDragging(true);
+    dragStart.current = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    setPanOffset({
+      x: e.clientX - dragStart.current.x,
+      y: e.clientY - dragStart.current.y
+    });
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const zoomFactor = 1.1;
+    const nextScale = e.deltaY < 0 ? zoomScale * zoomFactor : zoomScale / zoomFactor;
+    setZoomScale(Math.max(0.4, Math.min(nextScale, 2.5)));
+  };
+
+  const resetCanvas = () => {
+    setZoomScale(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  // Autoplay Tour Video Demo Mode
+  const startAutoDemo = () => {
+    if (isDemoRunning) return;
+    setIsDemoRunning(true);
+    
+    const demoSteps = [];
+
+    // Step 0: Start Empty
+    demoSteps.push({
+      label: "🎥 Welcome to the Auto Tour! We start with an empty Linked List.",
+      activeLine: 7,
+      nodes: [],
+      wires: [],
+      variables: { head: 'NULL', current: 'NULL', newNode: 'NULL' }
+    });
+
+    // Step 1: Create Head Node (10)
+    demoSteps.push({
+      label: "Step 1: Allocate memory for the Head Node with data: 10.",
+      activeLine: 8,
+      nodes: [{ id: 1, value: 10, address: '0x101', state: 'new' }],
+      wires: [],
+      variables: { head: 'NULL', current: 'NULL', newNode: '0x101' }
+    });
+
+    // Step 2: Point head pointer to the head node
+    demoSteps.push({
+      label: "Step 2: Point the HEAD pointer to our new node at 0x101.",
+      activeLine: 10,
+      nodes: [{ id: 1, value: 10, address: '0x101', state: 'default' }],
+      wires: [],
+      variables: { head: '0x101', current: 'NULL', newNode: 'NULL' }
+    });
+
+    // Step 3: Create Second Node (20)
+    demoSteps.push({
+      label: "Step 3: Allocate memory for a new node with data: 20 at 0x102.",
+      activeLine: 8,
+      nodes: [
+        { id: 1, value: 10, address: '0x101', state: 'default' },
+        { id: 2, value: 20, address: '0x102', state: 'new' }
+      ],
+      wires: [],
+      variables: { head: '0x101', current: 'NULL', newNode: '0x102' }
+    });
+
+    // Step 4: Link first node next to second node
+    demoSteps.push({
+      label: "Step 4: Update first node's next pointer to point to the new node at 0x102.",
+      activeLine: 18,
+      nodes: [
+        { id: 1, value: 10, address: '0x101', state: 'default' },
+        { id: 2, value: 20, address: '0x102', state: 'new' }
+      ],
+      wires: ['new'],
+      variables: { head: '0x101', current: '0x101', newNode: '0x102' }
+    });
+
+    // Step 5: Complete insertion
+    demoSteps.push({
+      label: "Step 5: Node 20 is successfully linked at the end of Node 10.",
+      activeLine: 19,
+      nodes: [
+        { id: 1, value: 10, address: '0x101', state: 'default' },
+        { id: 2, value: 20, address: '0x102', state: 'default' }
+      ],
+      wires: ['default'],
+      variables: { head: '0x101', current: 'NULL', newNode: 'NULL' }
+    });
+
+    // Step 6: Create Third Node (30)
+    demoSteps.push({
+      label: "Step 6: Allocate memory for a new node with data: 30 at 0x103.",
+      activeLine: 8,
+      nodes: [
+        { id: 1, value: 10, address: '0x101', state: 'default' },
+        { id: 2, value: 20, address: '0x102', state: 'default' },
+        { id: 3, value: 30, address: '0x103', state: 'new' }
+      ],
+      wires: ['default', 'none'],
+      variables: { head: '0x101', current: 'NULL', newNode: '0x103' }
+    });
+
+    // Step 7: Link second node next to third node
+    demoSteps.push({
+      label: "Step 7: Update second node's next pointer to point to the new node at 0x103.",
+      activeLine: 18,
+      nodes: [
+        { id: 1, value: 10, address: '0x101', state: 'default' },
+        { id: 2, value: 20, address: '0x102', state: 'default' },
+        { id: 3, value: 30, address: '0x103', state: 'new' }
+      ],
+      wires: ['default', 'new'],
+      variables: { head: '0x101', current: '0x102', newNode: '0x103' }
+    });
+
+    // Step 8: Completed list tour
+    demoSteps.push({
+      label: "🎉 Auto Tour Complete! You now have a Linked List with nodes 10 -> 20 -> 30.",
+      activeLine: 19,
+      nodes: [
+        { id: 1, value: 10, address: '0x101', state: 'default' },
+        { id: 2, value: 20, address: '0x102', state: 'default' },
+        { id: 3, value: 30, address: '0x103', state: 'default' }
+      ],
+      wires: ['default', 'default'],
+      variables: { head: '0x101', current: 'NULL', newNode: 'NULL' }
+    });
+
+    setSteps(demoSteps);
+    setCurrentStepIndex(0);
+    setIsPlaying(true); 
+    
+    setNodes([
+      { id: 1, value: 10, address: '0x101' },
+      { id: 2, value: 20, address: '0x102' },
+      { id: 3, value: 30, address: '0x103' }
+    ]);
+    
+    setIsDemoRunning(false);
+  };
 
   // Code Definition for C
   const getCCode = () => {
@@ -124,6 +281,20 @@ export default function LinkedListVisualization() {
     const pos = parseInt(inputPosition) || 2;
     const initialNodes = [...nodes];
     const newSteps = [];
+
+    // If list is empty
+    if (initialNodes.length === 0) {
+      newSteps.push({
+        label: "Linked List is empty. Trigger 'Insert Beginning' to create the HEAD node.",
+        activeLine: 7,
+        nodes: [],
+        wires: [],
+        variables: { head: 'NULL', current: 'NULL', newNode: 'NULL' }
+      });
+      setSteps(newSteps);
+      setCurrentStepIndex(0);
+      return;
+    }
 
     // Step 0: Initial State
     newSteps.push({
@@ -279,25 +450,64 @@ export default function LinkedListVisualization() {
 
     setNodes(nextNodes);
   };
+
   return (
-    <div className={`w-full flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'} ${isGameRotated ? 'rotate-landscape-mode' : 'min-h-screen lg:h-screen lg:overflow-hidden'}`}>
+    <div className={`w-full flex flex-col font-sans db-page-wrapper transition-colors duration-300 ${
+      isDarkMode ? 'bg-[#001621] text-[#f8fafc]' : 'bg-white text-slate-800'
+    } overflow-x-hidden ${isGameRotated ? 'rotate-landscape-mode' : 'min-h-screen lg:h-screen lg:overflow-hidden'}`}>
       
-      {/* HEADER BREADCRUMB - 64px */}
-      <header className="h-16 shrink-0 flex items-center justify-between px-4 lg:px-8 shadow-sm relative z-10" style={{ background: 'var(--db-card-bg)', borderBottom: '1px solid var(--db-header-border)' }}>
-        <div className="flex items-center overflow-hidden">
-        <button onClick={() => navigate(-1)} className="mr-2 lg:mr-4 p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-full transition shrink-0">
-          <ArrowLeft className="w-5 h-5" style={{ color: 'var(--db-text-main)' }} />
-        </button>
-        <div className="flex items-center text-xs lg:text-sm font-medium gap-1.5 lg:gap-2 truncate" style={{ color: 'var(--db-text-muted)' }}>
-          <span>Home</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
-          <span>Subjects</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
-          <span>DSA</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
-          <span className="text-blue-500 font-bold">Linked List</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
-          <span style={{ color: 'var(--db-text-main)' }} className="truncate">Operations</span>
+      {/* 1. TOP HEADER BAR */}
+      <header className={`h-16 shrink-0 transition-colors duration-300 ${
+        isDarkMode ? 'bg-[#001621]/90 border-b border-[#FF4103]/20 shadow-2xl' : 'bg-white border-b border-slate-200 shadow-sm'
+      } flex items-center justify-between px-6 relative z-20`}>
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className={`p-2 rounded-full transition-all border ${
+            isDarkMode ? 'hover:bg-[#FF4103]/10 text-[#FF4103] border-[#FF4103]/20' : 'hover:bg-slate-100 text-slate-700 border-slate-200'
+          }`}>
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="flex flex-col">
+            <span className={`text-sm font-black tracking-widest ${isDarkMode ? 'text-[#FF4103]' : 'text-slate-800'}`}>EDUVERSE AI</span>
+            <span className="text-xs text-slate-500 font-semibold">Linked List Visual Lab</span>
+          </div>
         </div>
-        </div>
-        
-        <div className="flex items-center gap-2 shrink-0">
+
+        {/* Current State / Speed Controls */}
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={startAutoDemo}
+            disabled={isDemoRunning}
+            className={`px-3 py-1.5 rounded-xl text-xs font-black shadow flex items-center gap-1.5 transition-all ${
+              isDemoRunning 
+                ? 'bg-slate-400 text-white cursor-not-allowed' 
+                : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:shadow-emerald-500/25 shadow-lg'
+            }`}
+          >
+            <Film className="w-4 h-4 animate-pulse" />
+            <span>🎥 Auto Demo</span>
+          </button>
+
+          <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[10px] uppercase font-bold tracking-widest ${
+            isDarkMode ? 'bg-[#001621]/80 border-[#FF4103]/20' : 'bg-white border-slate-200'
+          }`}>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF4103] animate-pulse"></span>
+            Mode: {listType} List
+          </div>
+
+          <div className={`flex items-center p-0.5 rounded-xl border ${isDarkMode ? 'bg-[#001621] border-[#FF4103]/20' : 'bg-white border-slate-200'}`}>
+            {[0.5, 1, 2].map(s => (
+              <button 
+                key={s} 
+                onClick={() => setSpeed(s)}
+                className={`px-3 py-1 text-xs font-black rounded-lg transition-all ${
+                  speed === s ? 'bg-[#3B82F6] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                {s}×
+              </button>
+            ))}
+          </div>
+
           {/* Game Mode Rotate Button */}
           <button 
             onClick={() => {
@@ -305,47 +515,47 @@ export default function LinkedListVisualization() {
               setIsGameRotated(nextVal);
               localStorage.setItem('dsa_game_mode', nextVal ? 'true' : 'false');
             }}
-            className="px-2.5 py-1.5 lg:px-3.5 lg:py-1.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl text-[10px] lg:text-xs font-black shadow flex items-center gap-1 lg:gap-1.5 cursor-pointer"
+            className="px-3.5 py-1.5 bg-[#FF4103] text-white rounded-xl text-xs font-black shadow-lg flex items-center gap-1.5 cursor-pointer hover:bg-[#d63200]"
           >
-            <span>🎮 Game Mode</span>
+            <span>🎮 Rotate UI</span>
           </button>
           <ThemeToggleButton />
         </div>
       </header>
 
-      {/* CORE WORKSPACE - 3-PANEL LAYOUT */}
-      <main className={`flex-1 p-4 lg:p-5 gap-5 flex max-w-[1920px] mx-auto w-full ${
+      {/* 2. MAIN WORKSPACE */}
+      <main className={`flex-1 flex max-w-[1920px] mx-auto w-full overflow-hidden ${
         isGameRotated 
-          ? 'flex-row h-[calc(100vw-64px)] overflow-hidden' 
-          : 'flex-col lg:flex-row h-auto lg:h-[calc(100vh-64px)] overflow-y-auto lg:overflow-hidden'
+          ? 'flex-row h-[calc(100vw-64px)]' 
+          : 'flex-col lg:flex-row h-auto lg:h-[calc(100vh-64px)]'
       }`}>
         
         {/* ==========================================
-            LEFT PANEL: CONTROL CENTER (22%)
+            LEFT PANEL: INTERACTIVE CONFIG (25% Width)
         =========================================== */}
-        <div className={`bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg p-6 flex flex-col justify-between overflow-y-auto shrink-0 ${
-          isGameRotated 
-            ? 'w-[22%] min-w-[240px] h-full gap-2 p-4' 
-            : 'w-full lg:w-[22%] lg:min-w-[280px] h-auto lg:h-full gap-6 lg:gap-0'
-        }`}>
+        <div className={`p-6 flex flex-col justify-between overflow-y-auto shrink-0 relative z-10 transition-colors duration-300 ${
+          isDarkMode ? 'bg-[#001621]/80 border-r border-[#FF4103]/10' : 'bg-white border-r border-slate-200'
+        } ${isGameRotated ? 'w-[25%] h-full gap-4' : 'w-full lg:w-[25%] h-auto lg:h-full gap-8'}`}>
           
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-extrabold text-[#0F172A] flex items-center gap-2 mb-1">
-                <Zap className="w-6 h-6 text-blue-500" /> Controls
+            <div className={`border-b pb-4 ${isDarkMode ? 'border-[#FF4103]/10' : 'border-slate-200'}`}>
+              <h2 className="text-lg font-black text-[#3B82F6] flex items-center gap-2 tracking-wider">
+                <Compass className="w-5 h-5 animate-spin" /> CONFIG LAB
               </h2>
-              <p className="text-[#64748B] text-xs">Configure list architectures and trigger animations.</p>
+              <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Set up architecture node insertions or deletions.</p>
             </div>
 
             {/* List Type Segmented Toggle */}
-            <div>
-              <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-2">List Architecture</label>
-              <div className="grid grid-cols-3 gap-1 bg-[#F1F5F9] p-1 rounded-xl border border-slate-200">
+            <div className="space-y-2">
+              <label className="block text-[10px] uppercase tracking-widest text-[#3B82F6] font-bold">List Architecture</label>
+              <div className={`grid grid-cols-3 gap-1 p-1 rounded-xl border ${isDarkMode ? 'bg-[#001621] border-[#FF4103]/20' : 'bg-slate-50 border-slate-200'}`}>
                 {['singly', 'doubly', 'circular'].map(type => (
                   <button 
                     key={type} 
                     onClick={() => setListType(type)}
-                    className={`py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${listType === type ? 'bg-white text-blue-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
+                      listType === type ? 'bg-[#3B82F6] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+                    }`}
                   >
                     {type}
                   </button>
@@ -353,14 +563,16 @@ export default function LinkedListVisualization() {
               </div>
             </div>
 
-            {/* Operation Selector & Inputs */}
+            {/* Selector & Inputs */}
             <div className="space-y-4">
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">Select Operation</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] uppercase tracking-widest text-[#3B82F6] font-bold">Operation</label>
                 <select 
                   value={operation}
                   onChange={(e) => setOperation(e.target.value)}
-                  className="w-full bg-white border-2 border-slate-200 text-slate-700 text-xs font-bold py-2.5 px-3 rounded-xl focus:outline-none focus:border-blue-500"
+                  className={`w-full border text-xs font-bold py-2.5 px-3 rounded-xl focus:outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6] ${
+                    isDarkMode ? 'bg-[#001621] border-[#FF4103]/20 text-white' : 'bg-white border-slate-300 text-slate-800'
+                  }`}
                 >
                   <option value="insertBeginning">Insert Beginning</option>
                   <option value="insertEnd">Insert End</option>
@@ -374,280 +586,356 @@ export default function LinkedListVisualization() {
 
               {/* Value Input */}
               {operation.includes('insert') && (
-                <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">Value</label>
+                <div className="space-y-2">
+                  <label className="block text-[10px] uppercase tracking-widest text-[#3B82F6] font-bold">Value</label>
                   <input 
                     type="number" 
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Enter Value"
-                    className="w-full bg-white border-2 border-slate-200 text-slate-800 text-sm font-bold py-2 px-3 rounded-xl focus:outline-none focus:border-blue-500 text-center"
+                    className={`w-full border text-sm font-bold py-2 px-3 rounded-xl focus:outline-none focus:border-[#3B82F6] text-center ${
+                      isDarkMode ? 'bg-[#001621] border-[#FF4103]/20 text-white' : 'bg-white border-slate-300 text-slate-800'
+                    }`}
                   />
                 </div>
               )}
 
               {/* Position Input */}
               {operation.includes('Position') && (
-                <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">Index Position</label>
+                <div className="space-y-2">
+                  <label className="block text-[10px] uppercase tracking-widest text-[#3B82F6] font-bold">Position Index</label>
                   <input 
                     type="number" 
                     value={inputPosition}
                     onChange={(e) => setInputPosition(e.target.value)}
                     placeholder="Enter Position"
-                    className="w-full bg-white border-2 border-slate-200 text-slate-800 text-sm font-bold py-2 px-3 rounded-xl focus:outline-none focus:border-blue-500 text-center"
+                    className={`w-full border text-sm font-bold py-2 px-3 rounded-xl focus:outline-none focus:border-[#3B82F6] text-center ${
+                      isDarkMode ? 'bg-[#001621] border-[#FF4103]/20 text-white' : 'bg-white border-slate-300 text-slate-800'
+                    }`}
                   />
                 </div>
               )}
 
               <button 
                 onClick={executeDirectOperation}
-                className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold py-3 rounded-xl transition-all shadow-md shadow-blue-500/20 active:scale-[0.98]"
+                className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white text-xs font-black py-3 rounded-xl transition-all shadow-lg shadow-[#3B82F6]/20 active:scale-[0.98]"
               >
-                Execute Action
+                EXECUTE OPERATION
               </button>
             </div>
 
-            {/* Playback Controls */}
-            <div className="border-t border-slate-200 pt-4 space-y-3">
-              <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">Execution Debugger</label>
-              <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-200 gap-1">
-                <button onClick={handleReset} className="p-2 hover:bg-slate-200 rounded-lg transition text-slate-500 hover:text-slate-800" title="Reset Step">
+            {/* Debugger Actions */}
+            <div className={`border-t pt-4 space-y-3 ${isDarkMode ? 'border-[#FF4103]/10' : 'border-slate-200'}`}>
+              <label className="block text-[10px] uppercase tracking-widest text-[#3B82F6] font-bold">Debugger Controller</label>
+              <div className={`flex items-center justify-between p-1.5 rounded-xl border gap-1 ${
+                isDarkMode ? 'bg-[#001621] border-[#FF4103]/20' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <button onClick={handleReset} className="p-2 hover:bg-[#3B82F6]/10 rounded-lg transition text-slate-400 hover:text-slate-800" title="Reset Simulation">
                   <RotateCcw className="w-4 h-4" />
                 </button>
-                <button onClick={handlePrev} className="p-2 hover:bg-slate-200 rounded-lg transition text-slate-500 hover:text-slate-800" title="Previous Step">
+                <button onClick={handlePrev} className="p-2 hover:bg-[#3B82F6]/10 rounded-lg transition text-slate-400 hover:text-slate-800" title="Previous Step">
                   <SkipBack className="w-4 h-4" />
                 </button>
-                <button onClick={handlePlayPause} className="p-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition" title={isPlaying ? "Pause" : "Play"}>
+                <button onClick={handlePlayPause} className="p-2.5 bg-[#3B82F6] text-white hover:bg-[#2563EB] rounded-lg transition shadow-lg shadow-[#3B82F6]/20" title={isPlaying ? "Pause" : "Play"}>
                   {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
                 </button>
-                <button onClick={handleNext} className="p-2 hover:bg-slate-200 rounded-lg transition text-slate-500 hover:text-slate-800" title="Next Step">
+                <button onClick={handleNext} className="p-2 hover:bg-[#3B82F6]/10 rounded-lg transition text-slate-400 hover:text-slate-800" title="Next Step">
                   <SkipForward className="w-4 h-4" />
                 </button>
               </div>
-
-              {/* Speed Slider */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-[10px] text-slate-400 font-bold">
-                  <span>Speed</span>
-                  <span>{speed}x</span>
-                </div>
-                <div className="flex justify-between items-center bg-slate-100 p-1 rounded-xl">
-                  {[0.5, 1, 2].map(s => (
-                    <button 
-                      key={s} 
-                      onClick={() => setSpeed(s)}
-                      className={`flex-1 py-1 text-xs font-bold rounded-lg transition-all ${speed === s ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                      {s}×
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
-
-            {/* View Toggles */}
-            <div className="border-t border-slate-200 pt-4 space-y-2">
-              <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-2">Display Settings</label>
-              {[
-                { label: "Show Addresses", state: showAddresses, set: setShowAddresses },
-                { label: "Show Pointer Names", state: showPointerNames, set: setShowPointerNames },
-                { label: "Show Code Sync", state: showCodeSync, set: setShowCodeSync },
-                { label: "Show Complexity", state: showComplexity, set: setShowComplexity },
-              ].map(opt => (
-                <label key={opt.label} className="flex items-center gap-2.5 text-xs text-slate-600 cursor-pointer hover:text-slate-800 transition-colors">
-                  <input 
-                    type="checkbox" 
-                    checked={opt.state} 
-                    onChange={(e) => opt.set(e.target.checked)}
-                    className="accent-blue-600 rounded border-slate-300"
-                  />
-                  <span>{opt.label}</span>
-                </label>
-              ))}
-            </div>
-
           </div>
 
-          {/* Complexity / Metadata info */}
-          {showComplexity && (
-            <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-xl space-y-1.5 mt-6">
-              <div className="flex justify-between text-[10px] text-slate-500 font-bold">
-                <span>Active Nodes:</span>
-                <span className="text-slate-800">{activeStep.nodes?.length || 0}</span>
-              </div>
-              <div className="flex justify-between text-[10px] text-slate-500 font-bold">
-                <span>Operation:</span>
-                <span className="text-slate-800 capitalize">{operation.replace('insert', 'Insert ').replace('delete', 'Delete ')}</span>
-              </div>
-              <div className="flex justify-between text-[10px] text-slate-500 font-bold">
-                <span>Time Complexity:</span>
-                <span className="text-emerald-600">O(n)</span>
-              </div>
-              <div className="flex justify-between text-[10px] text-slate-500 font-bold">
-                <span>Space Complexity:</span>
-                <span className="text-emerald-600">O(1)</span>
-              </div>
-            </div>
-          )}
-
+          {/* Settings Display Toggles */}
+          <div className={`border-t pt-4 space-y-2 ${isDarkMode ? 'border-[#FF4103]/10' : 'border-slate-200'}`}>
+            {[
+              { label: "Show Memory Addresses", state: showAddresses, set: setShowAddresses },
+              { label: "Show Pointer Badges", state: showPointerNames, set: setShowPointerNames },
+              { label: "Show Interactive Complexity", state: showComplexity, set: setShowComplexity },
+            ].map(opt => (
+              <label key={opt.label} className="flex items-center gap-2.5 text-xs text-slate-400 cursor-pointer hover:text-slate-700 transition-colors">
+                <input 
+                  type="checkbox" 
+                  checked={opt.state} 
+                  onChange={(e) => opt.set(e.target.checked)}
+                  className="accent-[#3B82F6] rounded border-slate-300"
+                />
+                <span>{opt.label}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
         {/* ==========================================
-            CENTER PANEL: VISUALIZER (45%)
+            CENTER PANEL: INFINITE CANVAS VISUALIZER (45% Width)
         =========================================== */}
-        <div className={`bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg flex flex-col relative justify-between overflow-hidden shrink-0 ${
-          isGameRotated 
-            ? 'w-[45%] h-full' 
-            : 'w-full lg:w-[45%] h-[580px] lg:h-full'
-        }`}>
-          
-          {/* Debug Description Bar */}
-          <div className="h-12 border-b border-slate-200 bg-slate-50/80 px-6 flex items-center justify-between text-xs font-mono text-slate-500">
-            <span>Status: <span className="text-blue-600 uppercase font-extrabold">{isPlaying ? "Debugging" : "Paused"}</span></span>
-            <span>Step {currentStepIndex + 1} of {steps.length}</span>
+        <div 
+          ref={canvasRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onWheel={handleWheel}
+          className={`flex-1 flex flex-col relative justify-between overflow-hidden cursor-grab active:cursor-grabbing shrink-0 select-none transition-colors duration-300 ${
+            isDarkMode ? 'bg-[#001621]/90' : 'bg-white'
+          } ${isGameRotated ? 'w-[45%] h-full' : 'w-full lg:w-[45%] h-[580px] lg:h-full'}`}
+        >
+          {/* SVG Background Grid */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20">
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke={isDarkMode ? "#FF4103" : "#3B82F6"} strokeWidth="0.5" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
+
+          {/* Top Canvas Bar */}
+          <div className={`h-12 border-b px-6 flex items-center justify-between text-[10px] font-mono shrink-0 relative z-10 transition-colors duration-300 ${
+            isDarkMode ? 'border-[#FF4103]/10 bg-[#001621]/80 text-slate-400' : 'border-slate-200 bg-white text-slate-600'
+          }`}>
+            <span className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping"></span>
+              STEP: <span className="text-[#3B82F6] font-black">{currentStepIndex + 1} / {steps.length}</span>
+            </span>
+            <div className="flex items-center gap-2">
+              <button onClick={resetCanvas} className={`p-1 rounded border transition-all ${
+                isDarkMode ? 'hover:bg-[#FF4103]/10 border-[#FF4103]/20 text-[#FF4103]' : 'hover:bg-slate-100 border-slate-300 text-slate-700'
+              }`} title="Recenter View">
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
+              <span className="border-l border-slate-300 h-4 mx-1"></span>
+              <span>SCALE: {Math.round(zoomScale * 100)}%</span>
+            </div>
           </div>
 
-          {/* Core Visualizer Area */}
-          <div className="flex-1 w-full flex flex-col justify-center items-center relative p-6 overflow-hidden">
-            
-            {/* Labels layer (Head / Tail) */}
-            <div className="absolute top-12 flex justify-start items-center gap-24 w-full max-w-md px-6">
-              {showPointerNames && (
-                <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-extrabold tracking-widest text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-lg shadow-sm">HEAD</span>
-                  <div className="w-[1.5px] h-4 bg-blue-300"></div>
+          {/* Core Transforming Group */}
+          <div className="flex-1 w-full flex flex-col justify-center items-center relative overflow-hidden">
+            {activeStep.nodes?.length === 0 ? (
+              <div className="flex flex-col items-center gap-4 text-center max-w-xs relative z-10">
+                <div className="w-16 h-16 rounded-full bg-[#3B82F6]/10 border-2 border-dashed border-[#3B82F6]/30 flex items-center justify-center text-[#3B82F6]">
+                  <Database className="w-8 h-8 animate-bounce" />
                 </div>
-              )}
-            </div>
-
-            {/* Linked List Nodes Grid */}
-            <div className="flex items-center justify-center gap-1.5 flex-wrap max-w-2xl relative z-10">
-              
-              {activeStep.nodes?.map((node, index) => {
-                const isNew = node.state === 'new';
-                const isActive = node.state === 'active';
-
-                return (
-                  <div key={node.id} className="flex items-center">
-                    
-                    {/* Node Element */}
-                    <motion.div
-                      layout
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ 
-                        scale: isActive ? 1.05 : 1, 
-                        opacity: 1,
-                        boxShadow: isActive ? '0 0 15px rgba(37, 99, 235, 0.2)' : 'none'
-                      }}
-                      className={`relative flex flex-col rounded-xl border-2 overflow-hidden w-28 text-center transition-colors duration-300 ${
-                        isActive ? 'bg-[#2563EB] border-[#2563EB] text-white' : 
-                        isNew ? 'bg-green-50 border-green-500 text-green-700' : 'bg-[#F8FAFC] border-slate-200 text-slate-800'
-                      }`}
-                    >
-                      {/* Address Info Header */}
-                      {showAddresses && (
-                        <div className={`text-[9px] font-mono py-1 border-b ${isActive ? 'bg-blue-700 text-blue-100 border-blue-600' : 'bg-slate-100/80 text-slate-400 border-slate-200'}`}>
-                          {node.address}
-                        </div>
-                      )}
-                      
-                      {/* Node Fields split: Data | Next */}
-                      <div className="flex text-xs h-10 items-center">
-                        <div className={`flex-1 font-extrabold border-r py-2 flex flex-col justify-center ${isActive ? 'border-blue-600' : 'border-slate-200'}`}>
-                          <span className={`text-[7px] font-bold uppercase ${isActive ? 'text-blue-200' : 'text-slate-400'}`}>Data</span>
-                          <span className="text-sm">{node.value}</span>
-                        </div>
-                        <div className="flex-1 font-mono py-2 flex flex-col justify-center">
-                          <span className={`text-[7px] font-bold uppercase ${isActive ? 'text-blue-200' : 'text-slate-400'}`}>Next</span>
-                          <span className={isActive ? 'text-blue-100' : 'text-slate-500'}>
-                            {index < (activeStep.nodes?.length - 1) ? activeStep.nodes[index + 1].address : 'NULL'}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-
-                    {/* SVG Connector Wires */}
-                    {index < (activeStep.nodes?.length - 1) && (
-                      <div className="w-10 h-10 flex items-center justify-center relative">
-                        <svg className="absolute w-full h-full" viewBox="0 0 40 40">
-                          <line 
-                            x1="0" 
-                            y1="20" 
-                            x2="32" 
-                            y2="20" 
-                            stroke={activeStep.wires?.[index] === 'traversal' ? '#2563EB' : '#94A3B8'} 
-                            strokeWidth={activeStep.wires?.[index] === 'traversal' ? '4' : '2'}
-                          />
-                          <polygon 
-                            points="32,16 40,20 32,24" 
-                            fill={activeStep.wires?.[index] === 'traversal' ? '#2563EB' : '#94A3B8'} 
-                          />
-                          {activeStep.wires?.[index] === 'traversal' && (
-                            <motion.circle 
-                              r="3" 
-                              fill="#2563EB" 
-                              animate={{ cx: [0, 40] }} 
-                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            />
-                          )}
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-
-              {/* End of list element */}
-              <div className="flex items-center text-xs font-mono text-slate-500 ml-2 border-2 border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 rounded-lg shadow-sm">
-                NULL
+                <h3 className="text-sm font-black uppercase tracking-wider text-slate-500">List is Empty</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">Please create a head node using "Insert Beginning" or trigger the Auto Demo above.</p>
               </div>
+            ) : (
+              <div 
+                style={{
+                  transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomScale})`,
+                  transformOrigin: 'center',
+                  transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)'
+                }}
+                className="flex items-center justify-center gap-1.5 flex-wrap max-w-2xl relative z-10 px-12"
+              >
+                {/* Head pointer name banner */}
+                {showPointerNames && activeStep.nodes?.length > 0 && (
+                  <div className="absolute -top-16 left-8 flex flex-col items-center">
+                    <span className="text-[9px] font-black tracking-widest text-white bg-[#3B82F6] px-2.5 py-0.5 rounded-lg shadow-lg">HEAD</span>
+                    <div className="w-[1.5px] h-6 bg-[#3B82F6] border-dashed border"></div>
+                  </div>
+                )}
 
-            </div>
+                {/* Node Rendering Loop */}
+                <AnimatePresence mode="popLayout">
+                  {activeStep.nodes?.map((node, index) => {
+                    const isNew = node.state === 'new';
+                    const isActive = node.state === 'active';
+
+                    return (
+                      <motion.div 
+                        key={node.id} 
+                        layout
+                        initial={{ scale: 0.5, opacity: 0, y: -50 }}
+                        animate={{ 
+                          scale: isActive ? 1.05 : 1, 
+                          opacity: 1, 
+                          y: isNew ? -70 : 0, // Hover floating node above list chain
+                          boxShadow: isActive ? '0 0 25px rgba(59, 130, 246, 0.4)' : '0 4px 10px rgba(0,0,0,0.1)'
+                        }}
+                        exit={{ scale: 0.5, opacity: 0, y: 50, transition: { duration: 0.3 } }}
+                        transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                        className="flex items-center shrink-0 relative"
+                      >
+                        {/* Node Element */}
+                        <div className={`relative flex rounded-2xl border-2 overflow-hidden w-36 h-16 transition-all duration-300 ${
+                          isActive ? 'bg-[#3B82F6] border-[#3B82F6] text-white shadow-xl' : 
+                          isNew ? 'bg-blue-950 border-blue-500 text-white' : 
+                          isDarkMode ? 'bg-[#001621] border-[#3B82F6]/30 text-[#3B82F6]' : 'bg-white border-[#3B82F6]/30 text-slate-800 shadow-sm'
+                        }`}>
+                          
+                          {/* Data Part (Left) */}
+                          <div className={`flex-1 flex flex-col justify-center items-center h-full border-r pt-3 pb-1 ${
+                            isActive ? 'border-white/20' : 'border-[#3B82F6]/20'
+                          }`}>
+                            <span className={`text-[8px] font-extrabold uppercase tracking-wider ${
+                              isActive ? 'text-white/70' : 'text-slate-400'
+                            }`}>DATA</span>
+                            <span className={`text-base font-black leading-none mt-1 ${
+                              isActive ? 'text-white' : (isDarkMode ? 'text-[#3B82F6]' : 'text-slate-800')
+                            }`}>{node.value}</span>
+                          </div>
+
+                          {/* Link Part (Right) */}
+                          <div className={`w-12 flex flex-col justify-center items-center h-full pt-3 pb-1 ${
+                            isActive ? 'bg-white/10' : 'bg-slate-500/5'
+                          }`}>
+                            <span className={`text-[8px] font-extrabold uppercase tracking-wider ${
+                              isActive ? 'text-white/70' : 'text-slate-400'
+                            }`}>LINK</span>
+                            <div className={`w-3.5 h-3.5 rounded-full mt-1.5 flex items-center justify-center ${
+                              isActive ? 'bg-white animate-pulse' : 'bg-[#3B82F6]'
+                            }`}>
+                              <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-[#3B82F6]' : 'bg-white/80'}`} />
+                            </div>
+                          </div>
+
+                          {/* Memory Address Float at the top center */}
+                          {showAddresses && (
+                            <div className={`absolute top-0 left-0 right-0 text-[8px] font-mono text-center py-0.5 border-b ${
+                              isActive ? 'bg-white/10 text-white/90 border-white/10' : 
+                              isDarkMode ? 'bg-[#001621]/80 text-[#3B82F6]/60 border-[#3B82F6]/10' : 'bg-slate-50 text-slate-400 border-slate-100'
+                            }`}>
+                              {node.address}
+                            </div>
+                          )}
+
+                          {/* Top banner label for New Node */}
+                          {isNew && (
+                            <div className="absolute -top-6 left-0 right-0 text-[7px] font-extrabold tracking-widest text-[#3B82F6] uppercase">
+                              NEW NODE
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Pointer label under active node */}
+                        {isActive && (
+                          <div className="absolute -bottom-12 left-12 -translate-x-1/2 flex flex-col items-center z-20">
+                            <div className="w-[1.5px] h-3 bg-[#3B82F6] border-dashed border"></div>
+                            <span className="text-[8px] font-extrabold tracking-wider text-white bg-[#3B82F6] px-2 py-0.5 rounded shadow-md uppercase">TEMP</span>
+                          </div>
+                        )}
+
+                        {/* SVG Connector Wires */}
+                        {index < (activeStep.nodes?.length - 1) && (
+                          <div className="w-12 h-16 flex items-center justify-center relative shrink-0">
+                            <svg className="absolute w-full h-full overflow-visible" viewBox="0 0 48 64">
+                              <defs>
+                                <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+                                  <feGaussianBlur stdDeviation="2.5" result="blur" />
+                                  <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                  </feMerge>
+                                </filter>
+                              </defs>
+                              {isNew ? (
+                                <>
+                                  <path 
+                                    d="M -24,-50 C 12,-50 12,32 40,32" 
+                                    fill="none" 
+                                    stroke="#3b82f6" 
+                                    strokeWidth="3"
+                                  />
+                                  <polygon 
+                                    points="38,28 48,32 38,36" 
+                                    fill="#3b82f6" 
+                                  />
+                                </>
+                              ) : (
+                                <>
+                                  <motion.line 
+                                    x1="-24" 
+                                    y1="32" 
+                                    x2="40" 
+                                    y2="32" 
+                                    stroke={activeStep.wires?.[index] === 'traversal' ? '#3B82F6' : (isDarkMode ? '#3B82F6/30' : '#3B82F6/50')} 
+                                    strokeWidth={activeStep.wires?.[index] === 'traversal' ? '5.5' : '2'}
+                                    strokeDasharray={activeStep.wires?.[index] === 'traversal' ? '8, 4' : 'none'}
+                                    animate={activeStep.wires?.[index] === 'traversal' ? { strokeDashoffset: [0, -24] } : {}}
+                                    transition={{ ease: "linear", duration: 0.5, repeat: Infinity }}
+                                    filter={activeStep.wires?.[index] === 'traversal' ? 'url(#neon-glow)' : 'none'}
+                                  />
+                                  <polygon 
+                                    points="40,28 48,32 40,36" 
+                                    fill={activeStep.wires?.[index] === 'traversal' ? '#3B82F6' : (isDarkMode ? '#3B82F6/30' : '#3B82F6/50')} 
+                                    filter={activeStep.wires?.[index] === 'traversal' ? 'url(#neon-glow)' : 'none'}
+                                  />
+                                  {activeStep.wires?.[index] === 'traversal' && (
+                                    <motion.circle 
+                                      r="4" 
+                                      fill="#3B82F6" 
+                                      animate={{ cx: [-24, 48] }} 
+                                      transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                                      filter="url(#neon-glow)"
+                                    />
+                                  )}
+                                </>
+                              )}
+                            </svg>
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+
+                {/* End of list element */}
+                {activeStep.nodes?.length > 0 && (
+                  <div className="flex items-center text-xs font-mono text-[#3B82F6] ml-2 border border-[#3B82F6]/20 bg-white px-3 py-2 rounded-xl shadow-lg shrink-0">
+                    NULL
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Circular list loopback representation */}
             {listType === 'circular' && activeStep.nodes?.length > 0 && (
               <div className="absolute bottom-12 w-full max-w-sm h-8 flex items-center justify-center">
                 <svg className="w-full h-12" viewBox="0 0 400 40">
-                  <path d="M 320,10 C 320,30 80,30 80,10" fill="none" stroke="#94A3B8" strokeWidth="2" strokeDasharray="4,4" />
-                  <polygon points="76,14 80,4 84,14" fill="#94A3B8" />
-                  <text x="160" y="32" fill="#64748B" className="text-[9px] font-mono font-bold tracking-wider">LOOPBACK TO HEAD</text>
+                  <path d="M 320,10 C 320,30 80,30 80,10" fill="none" stroke="#3B82F6" strokeWidth="2" strokeDasharray="4,4" className="opacity-40" />
+                  <polygon points="76,14 80,4 84,14" fill="#3B82F6" className="opacity-60" />
+                  <text x="140" y="32" fill="#3B82F6" className="text-[9px] font-mono font-bold tracking-widest opacity-60">LOOPBACK TO HEAD</text>
                 </svg>
               </div>
             )}
-
           </div>
 
-          {/* Stepper info footer / Explanation */}
-          <div className="border-t border-slate-200 bg-slate-50/80 p-5 flex flex-col justify-center items-center gap-1">
-            <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest flex items-center gap-1.5">
-              <Info className="w-3.5 h-3.5" /> Debugger Log
+          {/* Bottom Execution Log / Explanation */}
+          <div className={`border-t p-5 flex flex-col justify-center items-center gap-1.5 z-10 transition-colors duration-300 ${
+            isDarkMode ? 'border-[#FF4103]/10 bg-[#001621]/90 text-white' : 'border-slate-200 bg-white text-slate-800'
+          }`}>
+            <h4 className="text-[10px] font-bold text-[#3B82F6] uppercase tracking-widest flex items-center gap-1.5">
+              <Terminal className="w-4 h-4 text-[#3B82F6]" /> Step Explanation
             </h4>
-            <span className="text-xs font-semibold text-slate-700 text-center max-w-md">{activeStep.label}</span>
+            <span className="text-xs font-semibold text-center max-w-lg leading-relaxed">{activeStep.label}</span>
           </div>
-
         </div>
 
         {/* ==========================================
-            RIGHT PANEL: PROGRAM WORKSPACE (33%)
+            RIGHT PANEL: CODE / WORKSPACE (30% Width)
         =========================================== */}
-        <div className={`bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg flex flex-col overflow-hidden shrink-0 ${
-          isGameRotated 
-            ? 'w-[33%] h-full' 
-            : 'w-full lg:w-[33%] lg:min-w-[340px] h-auto lg:h-full'
-        }`}>
+        <div className={`border-l flex flex-col overflow-hidden shrink-0 relative z-10 transition-colors duration-300 ${
+          isDarkMode ? 'bg-[#001621]/80 border-[#FF4103]/10' : 'bg-white border-slate-200'
+        } ${isGameRotated ? 'w-[30%] h-full' : 'w-full lg:w-[30%] h-auto lg:h-full'}`}>
           
           {/* Work Tabs */}
-          <div className="grid grid-cols-3 border-b border-slate-200 shrink-0 bg-slate-50">
+          <div className={`grid grid-cols-3 border-b shrink-0 transition-colors duration-300 ${
+            isDarkMode ? 'border-[#FF4103]/10 bg-[#001621]/90' : 'border-slate-200 bg-slate-50'
+          }`}>
             {[
               { id: 'code', label: 'C Code', icon: Code2 },
               { id: 'variables', label: 'Variables', icon: Cpu },
-              { id: 'memory', label: 'Memory Map', icon: Database }
+              { id: 'memory', label: 'Heap Map', icon: Database }
             ].map(tab => (
               <button 
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-3.5 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition ${activeTab === tab.id ? 'border-blue-600 text-blue-600 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                className={`py-3.5 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition ${
+                  activeTab === tab.id 
+                    ? 'border-[#3B82F6] text-[#3B82F6] bg-white/5' 
+                    : 'border-transparent text-slate-400 hover:text-slate-800'
+                }`}
               >
                 <tab.icon className="w-3.5 h-3.5" />
                 <span>{tab.label}</span>
@@ -656,7 +944,7 @@ export default function LinkedListVisualization() {
           </div>
 
           {/* Tab Contents */}
-          <div className="flex-1 overflow-auto p-5 bg-white">
+          <div className={`flex-1 overflow-auto p-5 transition-colors duration-300 ${isDarkMode ? 'bg-[#001621]' : 'bg-white'}`}>
             <AnimatePresence mode="wait">
               {activeTab === 'code' && (
                 <motion.div 
@@ -664,18 +952,24 @@ export default function LinkedListVisualization() {
                   initial={{ opacity: 0 }} 
                   animate={{ opacity: 1 }} 
                   exit={{ opacity: 0 }}
-                  className="font-mono text-xs leading-relaxed text-slate-600 space-y-1 h-full"
+                  className="font-mono text-xs leading-relaxed space-y-1 h-full"
                 >
-                  <pre className="text-[12px] bg-slate-50 p-4 rounded-xl border border-slate-200 overflow-y-auto h-full font-mono">
+                  <pre className={`text-[11px] p-4 rounded-xl border overflow-y-auto h-full font-mono transition-colors duration-300 ${
+                    isDarkMode ? 'bg-[#001621] border-[#FF4103]/20' : 'bg-slate-50 border-slate-200'
+                  }`}>
                     <code>
                       {getCCode().map((line) => {
-                        const isActive = activeStep.activeLine === line.line;
+                        const isLineActive = activeStep.activeLine === line.line;
                         return (
                           <div 
                             key={line.line}
-                            className={`py-0.5 px-2 rounded transition-all duration-200 flex items-start ${isActive ? 'bg-blue-100 text-blue-900 border-l-4 border-blue-500 font-bold' : 'border-l-4 border-transparent'}`}
+                            className={`py-0.5 px-2 rounded transition-all duration-200 flex items-start ${
+                              isLineActive 
+                                ? 'bg-[#3B82F6]/20 text-[#3B82F6] border-l-4 border-[#3B82F6] font-bold' 
+                                : 'border-l-4 border-transparent text-slate-400'
+                            }`}
                           >
-                            <span className="w-6 text-slate-400 select-none shrink-0 text-right mr-2">{line.line}</span>
+                            <span className="w-6 text-slate-500 select-none shrink-0 text-right mr-2">{line.line}</span>
                             <span className="whitespace-pre">{line.text}</span>
                           </div>
                         );
@@ -693,19 +987,21 @@ export default function LinkedListVisualization() {
                   exit={{ opacity: 0 }}
                   className="space-y-4 font-mono text-xs text-slate-600"
                 >
-                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Live Stack Frame</h4>
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 shadow-inner">
-                    <div className="flex justify-between items-center py-1 border-b border-slate-200">
+                  <h4 className="text-[10px] font-bold text-[#3B82F6] uppercase tracking-wider mb-2">Live Stack Frame</h4>
+                  <div className={`border rounded-xl p-4 space-y-3 shadow-inner ${
+                    isDarkMode ? 'bg-[#001621] border-[#FF4103]/20' : 'bg-slate-50 border-slate-200'
+                  }`}>
+                    <div className="flex justify-between items-center py-1 border-b border-slate-200/50">
                       <span className="text-slate-500">head</span>
-                      <span className="text-slate-800 font-bold text-xs">{activeStep.variables?.head}</span>
+                      <span className="font-bold text-xs">{activeStep.variables?.head}</span>
                     </div>
-                    <div className="flex justify-between items-center py-1 border-b border-slate-200">
+                    <div className="flex justify-between items-center py-1 border-b border-slate-200/50">
                       <span className="text-slate-500">current</span>
-                      <span className="text-blue-600 font-bold text-xs">{activeStep.variables?.current}</span>
+                      <span className="text-[#3B82F6] font-bold text-xs">{activeStep.variables?.current}</span>
                     </div>
-                    <div className="flex justify-between items-center py-1 border-b border-slate-200">
+                    <div className="flex justify-between items-center py-1 border-b border-slate-200/50">
                       <span className="text-slate-500">newNode</span>
-                      <span className="text-purple-600 font-bold text-xs">{activeStep.variables?.newNode}</span>
+                      <span className="text-blue-500 font-bold text-xs">{activeStep.variables?.newNode}</span>
                     </div>
                   </div>
                 </motion.div>
@@ -719,14 +1015,16 @@ export default function LinkedListVisualization() {
                   exit={{ opacity: 0 }}
                   className="space-y-4 font-mono text-xs text-slate-600"
                 >
-                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Heap Memory Allocation</h4>
+                  <h4 className="text-[10px] font-bold text-[#3B82F6] uppercase tracking-wider mb-2">Heap Allocation</h4>
                   <div className="space-y-2">
                     {activeStep.nodes?.map((node, i) => (
-                      <div key={node.id} className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-2.5 rounded-lg justify-between shadow-inner">
-                        <span className="text-slate-500 text-[10px] font-bold">{node.address}</span>
+                      <div key={node.id} className={`flex items-center gap-3 border p-2.5 rounded-lg justify-between shadow-inner ${
+                        isDarkMode ? 'bg-[#001621] border-[#FF4103]/20' : 'bg-slate-50 border-slate-200'
+                      }`}>
+                        <span className="text-[#3B82F6] text-[10px] font-bold">{node.address}</span>
                         <div className="flex gap-2">
-                          <span className="bg-white border border-slate-200 px-2 py-0.5 rounded text-slate-800 text-[10px] font-bold">Data: {node.value}</span>
-                          <span className="bg-white border border-slate-200 px-2 py-0.5 rounded text-blue-600 text-[10px] font-bold">
+                          <span className="bg-white border border-slate-200 px-2 py-0.5 rounded text-slate-800 text-[10px] font-bold">Val: {node.value}</span>
+                          <span className="bg-white border border-slate-200 px-2 py-0.5 rounded text-[#3B82F6] text-[10px] font-bold">
                             Next: {i < activeStep.nodes.length - 1 ? activeStep.nodes[i+1].address : 'NULL'}
                           </span>
                         </div>
@@ -738,10 +1036,23 @@ export default function LinkedListVisualization() {
             </AnimatePresence>
           </div>
 
+          {/* Complexity panel overlay */}
+          {showComplexity && (
+            <div className={`border-t p-4 space-y-2 transition-colors duration-300 ${
+              isDarkMode ? 'bg-[#001621] border-t border-[#FF4103]/20' : 'bg-white border-t border-slate-200'
+            }`}>
+              <div className="flex justify-between text-[10px] text-slate-500 font-bold">
+                <span>TIME COMPLEXITY:</span>
+                <span className="text-[#3B82F6] font-mono font-black">O(N)</span>
+              </div>
+              <div className="flex justify-between text-[10px] text-slate-500 font-bold">
+                <span>SPACE COMPLEXITY:</span>
+                <span className="text-[#3B82F6] font-mono font-black">O(1)</span>
+              </div>
+            </div>
+          )}
         </div>
-
       </main>
-
     </div>
   );
 }
