@@ -36,6 +36,12 @@ export default function CalculusVisualization() {
   const [nrProblemId, setNrProblemId] = useState('nr1');
   const [nrIterations, setNrIterations] = useState('5');
 
+  // Lagrange Interpolation inputs
+  const [lagrangeProblemId, setLagrangeProblemId] = useState('lg1');
+
+  // Newton General Interpolation inputs
+  const [newtonGenProblemId, setNewtonGenProblemId] = useState('ng1');
+
   // Playback control
   const [playbackState, setPlaybackState] = useState('IDLE');
   const [speed, setSpeed] = useState(1);
@@ -63,12 +69,26 @@ export default function CalculusVisualization() {
     { id: 'nr3', label: 'f(x) = cos(x) - x = 0  [x₀=1.0]' },
   ];
 
+  const LAGRANGE_PROBS = [
+    { id: 'lg1', label: 'log₁₀(x): (300,304,305,307) → find log₁₀(301) (Photo Q1)' },
+    { id: 'lg2', label: '√x: (150,152,154,156) → find √155 (Photo Q2)' },
+    { id: 'lg3', label: 'f(x)=1/x: (4,5,6) → find f(4.5)' },
+  ];
+
+  const NEWTON_GEN_PROBS = [
+    { id: 'ng1', label: 'log₁₀(x): (300,304,305,307) → find log₁₀(301) (Photo Q1)' },
+    { id: 'ng2', label: 'f(x): (-1,0,3,6,7) → express as polynomial (Photo Q2)' },
+    { id: 'ng3', label: 'f(x)=sin(x): (0°,30°,60°,90°) → find f(45°)' },
+  ];
+
   // ─── Cards ────────────────────────────────────────────────────────────────
   const CARDS = [
-    { id: 'Gauss Seidel Method',   title: 'Gauss Seidel Method',   desc: 'Solve systems of linear equations iteratively using successive displacement.',                   color: 'from-pink-500 to-rose-600'     },
-    { id: 'Regula Falsi Method',   title: 'Regula Falsi Method',   desc: 'Find real roots of nonlinear equations using the false position (chord) method.',               color: 'from-violet-500 to-purple-600' },
-    { id: 'Iteration Method',      title: 'Iteration Method',      desc: 'Solve f(x)=0 by rewriting as x=φ(x) and repeatedly applying the mapping until convergence.',   color: 'from-cyan-500 to-teal-600'    },
-    { id: 'Newton-Raphson Method', title: 'Newton-Raphson Method', desc: 'Find roots of nonlinear equations using tangent lines for quadratic convergence.',              color: 'from-amber-500 to-orange-600'  },
+    { id: 'Gauss Seidel Method',          title: 'Gauss Seidel Method',          desc: 'Solve systems of linear equations iteratively using successive displacement.',                      color: 'from-pink-500 to-rose-600'      },
+    { id: 'Regula Falsi Method',          title: 'Regula Falsi Method',          desc: 'Find real roots of nonlinear equations using the false position (chord) method.',                color: 'from-violet-500 to-purple-600'  },
+    { id: 'Iteration Method',             title: 'Iteration Method',             desc: 'Solve f(x)=0 by rewriting as x=φ(x) and repeatedly applying the mapping until convergence.',    color: 'from-cyan-500 to-teal-600'     },
+    { id: 'Newton-Raphson Method',        title: 'Newton-Raphson Method',        desc: 'Find roots of nonlinear equations using tangent lines for quadratic convergence.',               color: 'from-amber-500 to-orange-600'  },
+    { id: 'Lagrange Interpolation',       title: 'Lagrange Interpolation',       desc: 'Estimate f(x) at any point using a polynomial built from known data pairs.',                    color: 'from-sky-500 to-blue-600'       },
+    { id: 'Newton General Interpolation', title: "Newton's General Interpolation", desc: 'Use divided differences to build a polynomial and interpolate at any argument.',              color: 'from-fuchsia-500 to-pink-600'   },
   ];
 
   // ─── Formula data per method ──────────────────────────────────────────────
@@ -149,6 +169,44 @@ export default function CalculusVisualization() {
         },
       ],
     },
+    'Lagrange Interpolation': {
+      features: [
+        { icon: BookOpen,  title: 'Polynomial Fit',      desc: 'Constructs a unique polynomial through n+1 given data points.' },
+        { icon: Target,    title: 'Works for Unequal h', desc: 'No need for equally-spaced nodes — works with any x values.' },
+        { icon: Lightbulb, title: 'Photo Problems',      desc: 'Find log₁₀(301) and √155 from your exam notebook.' },
+      ],
+      formulas: [
+        {
+          title: "Lagrange's Interpolation Formula",
+          formula: 'L(x) = Σᵢ yᵢ · ∏ⱼ≠ᵢ (x−xⱼ)/(xᵢ−xⱼ)',
+          variables: [
+            { sym: 'xᵢ, yᵢ', def: 'Known data point pairs (i = 0, 1, …, n)' },
+            { sym: 'x',       def: 'The argument at which we interpolate' },
+            { sym: 'Lᵢ(x)',   def: 'Lagrange basis polynomial for node i' },
+            { sym: 'L(x)',    def: 'Final interpolated value at x' },
+          ],
+        },
+      ],
+    },
+    'Newton General Interpolation': {
+      features: [
+        { icon: BookOpen,  title: 'Divided Differences', desc: 'Builds a difference table [x₀,x₁], [x₀,x₁,x₂], … recursively.' },
+        { icon: Target,    title: 'Unequal Spacing OK',  desc: 'Works for any node spacing — more general than forward/backward.' },
+        { icon: Lightbulb, title: 'Photo Problems',      desc: 'Find log₁₀(301) and express f(x) as a polynomial from notebook.' },
+      ],
+      formulas: [
+        {
+          title: "Newton's General (Divided Difference) Formula",
+          formula: 'y = y₀ + (x−x₀)[x₀,x₁] + (x−x₀)(x−x₁)[x₀,x₁,x₂] + …',
+          variables: [
+            { sym: 'y₀',            def: 'Function value at x₀' },
+            { sym: '[x₀,x₁]',       def: 'First divided difference = (y₁−y₀)/(x₁−x₀)' },
+            { sym: '[x₀,x₁,x₂]',   def: 'Second divided difference (recursive)' },
+            { sym: '(x−xᵢ)',        def: 'Product terms that weight each difference level' },
+          ],
+        },
+      ],
+    },
   };
 
   // ─── Engine Event Handlers ────────────────────────────────────────────────
@@ -202,6 +260,8 @@ export default function CalculusVisualization() {
       iterIterations,
       nrProblemId,
       nrIterations,
+      lagrangeProblemId,
+      newtonGenProblemId,
     };
 
     return <CalculusNotebookEngine {...commonProps} />;
@@ -226,6 +286,14 @@ export default function CalculusVisualization() {
     if (selectedMethod === 'Newton-Raphson Method') {
       const labels = { nr1: 'f(x)=x³-2x-5=0, x₀=2.5 (Photo Q)', nr2: 'f(x)=x³-x-1=0, x₀=1.5', nr3: 'f(x)=cos(x)-x=0, x₀=1.0' };
       return `Newton-Raphson: ${labels[nrProblemId] || nrProblemId}`;
+    }
+    if (selectedMethod === 'Lagrange Interpolation') {
+      const labels = { lg1: 'Find log₁₀(301) from log table (Photo Q1)', lg2: 'Find √155 from √x table (Photo Q2)', lg3: 'Find f(4.5) for f(x)=1/x' };
+      return `Lagrange Interpolation: ${labels[lagrangeProblemId] || lagrangeProblemId}`;
+    }
+    if (selectedMethod === 'Newton General Interpolation') {
+      const labels = { ng1: 'Find log₁₀(301) via divided differences (Photo Q1)', ng2: 'Express f(x) as polynomial — divided diff table (Photo Q2)', ng3: 'Find sin(45°) via divided differences' };
+      return `Newton Divided Diff: ${labels[newtonGenProblemId] || newtonGenProblemId}`;
     }
     return `Solving using ${selectedMethod}.`;
   };
@@ -560,6 +628,30 @@ export default function CalculusVisualization() {
                   <input type="number" min="1" max="10" value={nrIterations}
                     onChange={e => { setNrIterations(e.target.value); setPlaybackState('IDLE'); }}
                     className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                </div>
+              </>
+            )}
+
+            {selectedMethod === 'Lagrange Interpolation' && (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5">Select Problem</label>
+                  <select value={lagrangeProblemId} onChange={e => { setLagrangeProblemId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]">
+                    {LAGRANGE_PROBS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                  </select>
+                </div>
+              </>
+            )}
+
+            {selectedMethod === 'Newton General Interpolation' && (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5">Select Problem</label>
+                  <select value={newtonGenProblemId} onChange={e => { setNewtonGenProblemId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]">
+                    {NEWTON_GEN_PROBS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                  </select>
                 </div>
               </>
             )}
