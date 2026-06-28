@@ -178,28 +178,32 @@ export default function StackVisualization() {
   };
 
   return (
-    <div className={`h-screen w-full overflow-hidden flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'} ${isGameRotated ? 'rotate-landscape-mode' : ''}`} style={{ backgroundColor: 'var(--db-bg)', color: 'var(--db-text-main)' }}>
+    <div className={`w-full flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'} ${isGameRotated ? 'rotate-landscape-mode' : 'min-h-screen lg:h-screen lg:overflow-hidden'}`} style={{ backgroundColor: 'var(--db-bg)', color: 'var(--db-text-main)' }}>
       
       {/* HEADER BREADCRUMB - 64px */}
-      <header className="h-16 shrink-0 bg-[var(--db-card-bg)] border-b border-[var(--db-header-border)] flex items-center justify-between px-8 shadow-sm relative z-10">
-        <div className="flex items-center">
-          <button onClick={() => navigate(-1)} className="mr-4 p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-full transition">
+      <header className="h-16 shrink-0 bg-[var(--db-card-bg)] border-b border-[var(--db-header-border)] flex items-center justify-between px-4 lg:px-8 shadow-sm relative z-10">
+        <div className="flex items-center overflow-hidden">
+          <button onClick={() => navigate(-1)} className="mr-2 lg:mr-4 p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-full transition shrink-0">
             <ArrowLeft className="w-5 h-5 text-[var(--db-text-main)]" />
           </button>
-          <div className="flex items-center text-sm font-medium text-[var(--db-text-muted)] gap-2">
-            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span> <ChevronRight className="w-4 h-4" />
-            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects')}>Subjects</span> <ChevronRight className="w-4 h-4" />
-            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dsa')}>DSA</span> <ChevronRight className="w-4 h-4" />
-            <span className="text-blue-500 font-bold">Stack</span> <ChevronRight className="w-4 h-4 text-slate-400" />
-            <span className="text-[var(--db-text-main)]">Operations</span>
+          <div className="flex items-center text-xs lg:text-sm font-medium text-[var(--db-text-muted)] gap-1.5 lg:gap-2 truncate">
+            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
+            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects')}>Subjects</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
+            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dsa')}>DSA</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
+            <span className="text-blue-500 font-bold">Stack</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 text-slate-400 shrink-0" />
+            <span className="text-[var(--db-text-main)] truncate">Operations</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Game Mode Rotate Button */}
           <button 
-            onClick={() => setIsGameRotated(!isGameRotated)}
-            className="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl text-xs font-black shadow flex items-center gap-1.5 cursor-pointer"
+            onClick={() => {
+              const nextVal = !isGameRotated;
+              setIsGameRotated(nextVal);
+              localStorage.setItem('dsa_game_mode', nextVal ? 'true' : 'false');
+            }}
+            className="px-2.5 py-1.5 lg:px-3.5 lg:py-1.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl text-[10px] lg:text-xs font-black shadow flex items-center gap-1 lg:gap-1.5 cursor-pointer"
           >
             <span>🎮 Game Mode</span>
           </button>
@@ -208,13 +212,21 @@ export default function StackVisualization() {
         </div>
       </header>
 
-      {/* MAIN CONTENT - 100vh - 64px */}
-      <main className="flex-1 p-5 gap-5 flex h-[calc(100vh-64px)] max-w-[1920px] mx-auto w-full">
+      {/* MAIN CONTENT - responsive layouts */}
+      <main className={`flex-1 p-4 lg:p-5 gap-5 flex max-w-[1920px] mx-auto w-full ${
+        isGameRotated 
+          ? 'flex-row h-[calc(100vw-64px)] overflow-hidden' 
+          : 'flex-col lg:flex-row h-auto lg:h-[calc(100vh-64px)] overflow-y-auto lg:overflow-hidden'
+      }`}>
         
         {/* ==========================================
             LEFT PANEL: CONTROLS (25%)
         =========================================== */}
-        <div className="w-1/4 min-w-[300px] h-full bg-[var(--db-card-bg)]/70 backdrop-blur-xl border border-[var(--db-card-border)] rounded-[24px] shadow-lg p-6 flex flex-col justify-between">
+        <div className={`bg-[var(--db-card-bg)]/70 backdrop-blur-xl border border-[var(--db-card-border)] rounded-[24px] shadow-lg p-6 flex flex-col justify-between shrink-0 ${
+          isGameRotated 
+            ? 'w-1/4 min-w-[260px] h-full gap-2 p-4' 
+            : 'w-full lg:w-1/4 lg:min-w-[300px] h-auto lg:h-full gap-6 lg:gap-0'
+        }`}>
           
           <div>
             <div className="mb-6">
@@ -314,7 +326,11 @@ export default function StackVisualization() {
         {/* ==========================================
             CENTER PANEL: VISUALIZATION (40%)
         =========================================== */}
-        <div className="w-[40%] h-full bg-[var(--db-card-bg)]/70 backdrop-blur-xl border border-[var(--db-card-border)] rounded-[24px] shadow-lg flex flex-col relative overflow-hidden">
+        <div className={`bg-[var(--db-card-bg)]/70 backdrop-blur-xl border border-[var(--db-card-border)] rounded-[24px] shadow-lg flex flex-col relative overflow-hidden shrink-0 ${
+          isGameRotated 
+            ? 'w-[40%] h-full' 
+            : 'w-full lg:w-[40%] h-[580px] lg:h-full'
+        }`}>
           
           {/* Header Stats */}
           <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-10">
@@ -350,25 +366,24 @@ export default function StackVisualization() {
 
           {/* Hero Stack Container */}
           <div className="flex-1 flex flex-col items-center justify-end pb-6 pt-16">
-            
-            {/* The Stack structure */}
+                    {/* The Stack structure */}
             <motion.div 
               animate={underflow ? { x: [-10, 10, -10, 10, 0] } : {}}
               transition={{ duration: 0.4 }}
-              className={`relative w-64 h-[350px] border-b-8 border-l-8 border-r-8 rounded-b-2xl flex flex-col-reverse justify-start p-2 gap-2 bg-[var(--db-card-bg-elevated)] shadow-inner transition-colors duration-300
-                ${overflow ? 'border-red-500/50 bg-red-500/10' : underflow ? 'border-orange-500/50 bg-orange-500/10' : 'border-[var(--db-card-border)]'}`
+              className={`relative w-64 border-b-8 border-l-8 border-r-8 rounded-b-2xl flex flex-col-reverse justify-start p-2 gap-2 bg-[var(--db-card-bg-elevated)] shadow-inner transition-colors duration-300
+                ${overflow ? 'border-red-500/50 bg-red-500/10' : underflow ? 'border-orange-500/50 bg-orange-500/10' : 'border-[var(--db-card-border)]'}
+                ${isGameRotated ? 'h-[180px]' : 'h-[350px]'}`
               }
             >
               {/* Empty placehoder slots */}
               <div className="absolute inset-0 flex flex-col justify-end p-2 gap-2 z-0 pointer-events-none">
                 {Array.from({ length: MAX_CAPACITY }).map((_, i) => (
-                  <div key={`empty-${i}`} className="w-full h-12 border-2 border-dashed border-[var(--db-card-border)] rounded-xl" />
+                  <div key={`empty-${i}`} className={`w-full border-2 border-dashed border-[var(--db-card-border)] rounded-xl ${isGameRotated ? 'h-6' : 'h-12'}`} />
                 ))}
               </div>
-
-              {/* TOP Pointer */}
+ 
               <motion.div 
-                animate={{ y: `calc(-${(stack.length * (48 + 8))}px)` }} // 48px height + 8px gap
+                animate={{ y: `calc(-${(stack.length * ((isGameRotated ? 24 : 48) + 8))}px)` }} // 24px/48px height + 8px gap
                 transition={{ type: "spring", stiffness: 100, damping: 15 }}
                 className="absolute -left-28 bottom-4 flex items-center gap-2 text-blue-500 font-black tracking-widest z-20"
               >
@@ -398,7 +413,8 @@ export default function StackVisualization() {
                           duration: getDuration(0.5), 
                           layout: { type: "spring", stiffness: 200, damping: 20 }
                         }}
-                        className={`w-full h-12 rounded-xl flex items-center justify-center font-black text-xl text-white relative shadow-lg shrink-0
+                        className={`w-full rounded-xl flex items-center justify-center font-black text-white relative shadow-lg shrink-0
+                          ${isGameRotated ? 'h-6 text-sm' : 'h-12 text-xl'}
                           ${isTop ? 'bg-gradient-to-r from-[#2563EB] to-[#60A5FA] ring-4 ring-blue-300 ring-offset-2' : 'bg-slate-500'}`}
                       >
                         {item.value}
@@ -446,7 +462,11 @@ export default function StackVisualization() {
         {/* ==========================================
             RIGHT PANEL: CODE (35%)
         =========================================== */}
-        <div className="w-[35%] h-full flex flex-col gap-5">
+        <div className={`flex flex-col gap-5 shrink-0 ${
+          isGameRotated 
+            ? 'w-[35%] h-full' 
+            : 'w-full lg:w-[35%] h-auto lg:h-full'
+        }`}>
           
           {/* C Code Section */}
           <div className="flex-1 bg-[var(--db-card-bg)]/70 backdrop-blur-xl border border-[var(--db-card-border)] rounded-[24px] shadow-lg p-6 flex flex-col">

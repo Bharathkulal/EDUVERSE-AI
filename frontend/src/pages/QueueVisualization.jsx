@@ -210,28 +210,32 @@ export default function QueueVisualization() {
   };
 
   return (
-    <div className={`h-screen w-full overflow-hidden flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'} ${isGameRotated ? 'rotate-landscape-mode' : ''}`} style={{ backgroundColor: 'var(--db-bg)', color: 'var(--db-text-main)' }}>
+    <div className={`w-full flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'} ${isGameRotated ? 'rotate-landscape-mode' : 'min-h-screen lg:h-screen lg:overflow-hidden'}`} style={{ backgroundColor: 'var(--db-bg)', color: 'var(--db-text-main)' }}>
       
       {/* HEADER BREADCRUMB - 64px */}
-      <header className="h-16 shrink-0 bg-[var(--db-card-bg)] border-b border-[var(--db-header-border)] flex items-center justify-between px-8 shadow-sm relative z-10">
-        <div className="flex items-center">
-          <button onClick={() => navigate(-1)} className="mr-4 p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-full transition">
+      <header className="h-16 shrink-0 bg-[var(--db-card-bg)] border-b border-[var(--db-header-border)] flex items-center justify-between px-4 lg:px-8 shadow-sm relative z-10">
+        <div className="flex items-center overflow-hidden">
+          <button onClick={() => navigate(-1)} className="mr-2 lg:mr-4 p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-full transition shrink-0">
             <ArrowLeft className="w-5 h-5 text-[var(--db-text-main)]" />
           </button>
-          <div className="flex items-center text-sm font-medium text-[var(--db-text-muted)] gap-2">
-            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span> <ChevronRight className="w-4 h-4" />
-            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects')}>Subjects</span> <ChevronRight className="w-4 h-4" />
-            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dsa')}>DSA</span> <ChevronRight className="w-4 h-4" />
-            <span className="text-blue-500 font-bold">Queue</span> <ChevronRight className="w-4 h-4 text-slate-400" />
-            <span className="text-[var(--db-text-main)]">Operations</span>
+          <div className="flex items-center text-xs lg:text-sm font-medium text-[var(--db-text-muted)] gap-1.5 lg:gap-2 truncate">
+            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
+            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects')}>Subjects</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
+            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dsa')}>DSA</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
+            <span className="text-blue-500 font-bold">Queue</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 text-slate-400 shrink-0" />
+            <span className="text-[var(--db-text-main)] truncate">Operations</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Game Mode Rotate Button */}
           <button 
-            onClick={() => setIsGameRotated(!isGameRotated)}
-            className="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl text-xs font-black shadow flex items-center gap-1.5 cursor-pointer"
+            onClick={() => {
+              const nextVal = !isGameRotated;
+              setIsGameRotated(nextVal);
+              localStorage.setItem('dsa_game_mode', nextVal ? 'true' : 'false');
+            }}
+            className="px-2.5 py-1.5 lg:px-3.5 lg:py-1.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl text-[10px] lg:text-xs font-black shadow flex items-center gap-1 lg:gap-1.5 cursor-pointer"
           >
             <span>🎮 Game Mode</span>
           </button>
@@ -240,13 +244,21 @@ export default function QueueVisualization() {
         </div>
       </header>
 
-      {/* MAIN CONTENT - 100vh - 64px */}
-      <main className="flex-1 p-5 gap-5 flex h-[calc(100vh-64px)] max-w-[1920px] mx-auto w-full">
+      {/* MAIN CONTENT - responsive layouts */}
+      <main className={`flex-1 p-4 lg:p-5 gap-5 flex max-w-[1920px] mx-auto w-full ${
+        isGameRotated 
+          ? 'flex-row h-[calc(100vw-64px)] overflow-hidden' 
+          : 'flex-col lg:flex-row h-auto lg:h-[calc(100vh-64px)] overflow-y-auto lg:overflow-hidden'
+      }`}>
         
         {/* ==========================================
             LEFT PANEL: CONTROLS (25%)
         =========================================== */}
-        <div className="w-1/4 min-w-[300px] h-full bg-[var(--db-card-bg)]/70 backdrop-blur-xl border border-[var(--db-card-border)] rounded-[24px] shadow-lg p-6 flex flex-col justify-between">
+        <div className={`bg-[var(--db-card-bg)]/70 backdrop-blur-xl border border-[var(--db-card-border)] rounded-[24px] shadow-lg p-6 flex flex-col justify-between shrink-0 ${
+          isGameRotated 
+            ? 'w-1/4 min-w-[260px] h-full gap-2 p-4' 
+            : 'w-full lg:w-1/4 lg:min-w-[300px] h-auto lg:h-full gap-6 lg:gap-0'
+        }`}>
           
           <div>
             <div className="mb-6">
@@ -346,7 +358,11 @@ export default function QueueVisualization() {
         {/* ==========================================
             CENTER PANEL: VISUALIZATION (40%)
         =========================================== */}
-        <div className="w-[40%] h-full bg-[var(--db-card-bg)]/70 backdrop-blur-xl border border-[var(--db-card-border)] rounded-[24px] shadow-lg flex flex-col relative overflow-hidden">
+        <div className={`bg-[var(--db-card-bg)]/70 backdrop-blur-xl border border-[var(--db-card-border)] rounded-[24px] shadow-lg flex flex-col relative overflow-hidden shrink-0 ${
+          isGameRotated 
+            ? 'w-[40%] h-full' 
+            : 'w-full lg:w-[40%] h-[580px] lg:h-full'
+        }`}>
           
           {/* Header Stats */}
           <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-10">
@@ -511,7 +527,11 @@ export default function QueueVisualization() {
         {/* ==========================================
             RIGHT PANEL: CODE (35%)
         =========================================== */}
-        <div className="w-[35%] h-full flex flex-col gap-5">
+        <div className={`flex flex-col gap-5 shrink-0 ${
+          isGameRotated 
+            ? 'w-[35%] h-full' 
+            : 'w-full lg:w-[35%] h-auto lg:h-full'
+        }`}>
           
           {/* C Code Section */}
           <div className="flex-1 bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg p-6 flex flex-col">
