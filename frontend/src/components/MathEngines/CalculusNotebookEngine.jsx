@@ -24,6 +24,10 @@ export default function CalculusNotebookEngine({
   // Newton-Raphson props
   nrProblemId,
   nrIterations,
+  // Lagrange props
+  lagrangeProblemId,
+  // Newton General props
+  newtonGenProblemId,
 }) {
   const [activeStepIndex, setActiveStepIndex] = useState(-1);
   const [stepComplete, setStepComplete] = useState(false);
@@ -800,8 +804,272 @@ export default function CalculusNotebookEngine({
       });
     }
 
+    // ── 8. LAGRANGE INTERPOLATION ─────────────────────────────────────────
+    else if (method === 'Lagrange Interpolation') {
+      const LAGRANGE_DEFS = {
+        lg1: {
+          title: "log₁₀(x) Interpolation (Photo Q1)",
+          x: [300, 304, 305, 307],
+          y: [2.4771, 2.4829, 2.4843, 2.4871],
+          targetX: 301,
+          yLabel: "log₁₀(x)"
+        },
+        lg2: {
+          title: "√x Interpolation (Photo Q2)",
+          x: [150, 152, 154, 156],
+          y: [12.247, 12.329, 12.410, 12.490],
+          targetX: 155,
+          yLabel: "√x"
+        },
+        lg3: {
+          title: "f(x) = 1/x Interpolation",
+          x: [4, 5, 6],
+          y: [0.25, 0.2, 0.166667],
+          targetX: 4.5,
+          yLabel: "1/x"
+        }
+      };
+
+      const prob = LAGRANGE_DEFS[lagrangeProblemId] || LAGRANGE_DEFS['lg1'];
+      const ptsX = prob.x;
+      const ptsY = prob.y;
+      const targetX = prob.targetX;
+      const n = ptsX.length;
+
+      const terms = [];
+      let interpolatedValue = 0;
+
+      for (let i = 0; i < n; i++) {
+        let numStrParts = [];
+        let denStrParts = [];
+        let numVal = 1;
+        let denVal = 1;
+
+        for (let j = 0; j < n; j++) {
+          if (j === i) continue;
+          numStrParts.push(`(${targetX} - ${ptsX[j]})`);
+          denStrParts.push(`(${ptsX[i]} - ${ptsX[j]})`);
+          numVal *= (targetX - ptsX[j]);
+          denVal *= (ptsX[i] - ptsX[j]);
+        }
+
+        const numStr = numStrParts.join(' · ');
+        const denStr = denStrParts.join(' · ');
+        const lVal = numVal / denVal;
+        const termVal = ptsY[i] * lVal;
+        interpolatedValue += termVal;
+
+        terms.push({
+          i,
+          numStr,
+          denStr,
+          numVal,
+          denVal,
+          lVal,
+          termVal
+        });
+      }
+
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content: `Evaluate ${prob.yLabel} at x = ${targetX} using Lagrange's Interpolation Formula.\n\n` +
+                 `Given data points:\n` +
+                 ptsX.map((xi, idx) => `  (${xi}, ${ptsY[idx]})`).join('\n') + `\n\n` +
+                 `Lagrange Formula:\n` +
+                 `y = L(x) = ∑ᵢ yᵢ · Lᵢ(x)\n` +
+                 `where Lᵢ(x) = ∏ⱼ≠ᵢ (x − xⱼ) / (xᵢ − xⱼ)`,
+        explanation: `We set up Lagrange's interpolation for ${prob.title}. Since the data points are not necessarily equally spaced, Lagrange's formula is ideal.`,
+      });
+
+      let formStr = `Substitute values into Lagrange basis polynomials Lᵢ(${targetX}):\n\n`;
+      terms.forEach((term, idx) => {
+        const xFormulaNum = ptsX.filter((_, k) => k !== idx).map(xj => `(x - ${xj})`).join(' · ');
+        const xFormulaDen = ptsX.filter((_, k) => k !== idx).map(xj => `(${ptsX[idx]} - ${xj})`).join(' · ');
+        formStr += `L${idx}(x) = [ ${xFormulaNum} ] / [ ${xFormulaDen} ]\n`;
+        formStr += `L${idx}(${targetX}) = [ ${term.numStr} ] / [ ${term.denStr} ]\n`;
+        formStr += `      = ${term.numVal} / ${term.denVal} = ${term.lVal.toFixed(6)}\n\n`;
+      });
+      sequence.push({
+        type: 'math',
+        title: 'STEP 1: CALCULATE LAGRANGE BASIS COEFFICIENTS',
+        content: formStr,
+        explanation: `We evaluate the Lagrange basis polynomial Lᵢ(x) at x = ${targetX} for each node. These act as weighting factors for the y values.`,
+      });
+
+      let sumStr = `Multiply each yᵢ by its corresponding basis coefficient Lᵢ(${targetX}) and sum:\n\n`;
+      terms.forEach((term, idx) => {
+        sumStr += `Term ${idx}: y${idx} · L${idx}(${targetX}) = ${ptsY[idx]} · (${term.lVal.toFixed(6)}) = ${term.termVal.toFixed(6)}\n`;
+      });
+      sumStr += `\nSum: L(${targetX}) = ` + terms.map(t => t.termVal.toFixed(6)).join(' + ') + `\n`;
+      sumStr += `          = ${interpolatedValue.toFixed(6)}`;
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 2: SUM WEIGHTED CONTRIBUTIONS',
+        content: sumStr,
+        explanation: `We sum the weighted contributions from all points to obtain the final interpolated value.`,
+      });
+
+      sequence.push({
+        type: 'lagrangeTable',
+        title: 'INTERPOLATION BASIS TERMS TABLE',
+        points: { x: ptsX, y: ptsY },
+        targetX,
+        terms,
+        interpolatedValue,
+        explanation: 'This interactive table summarizes all node values, basis computations, and term contributions.'
+      });
+
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: `Interpolated Value at x = ${targetX}:\n\n` +
+                 `f(${targetX})  ≈  ${interpolatedValue.toFixed(6)}\n\n` +
+                 `Method: Lagrange Interpolation (${n} points)`,
+        explanation: `Lagrange interpolation evaluated at x = ${targetX} yields ${interpolatedValue.toFixed(6)}.`,
+      });
+    }
+
+    // ── 9. NEWTON GENERAL INTERPOLATION ───────────────────────────────────
+    else if (method === 'Newton General Interpolation') {
+      const NEWTON_GEN_DEFS = {
+        ng1: {
+          title: "log₁₀(x) Newton Divided Difference (Photo Q1)",
+          x: [300, 304, 305, 307],
+          y: [2.4771, 2.4829, 2.4843, 2.4871],
+          targetX: 301,
+          yLabel: "log₁₀(x)"
+        },
+        ng2: {
+          title: "f(x) Polynomial Express (Photo Q2)",
+          x: [-1, 0, 3, 6, 7],
+          y: [3, -6, 39, 822, 1611],
+          targetX: null,
+          yLabel: "f(x)"
+        },
+        ng3: {
+          title: "sin(x) Newton Divided Difference",
+          x: [0, 30, 60, 90],
+          y: [0, 0.5, 0.866025, 1.0],
+          targetX: 45,
+          yLabel: "sin(x)"
+        }
+      };
+
+      const prob = NEWTON_GEN_DEFS[newtonGenProblemId] || NEWTON_GEN_DEFS['ng1'];
+      const ptsX = prob.x;
+      const ptsY = prob.y;
+      const targetX = prob.targetX;
+      const n = ptsX.length;
+
+      const py = Array.from({ length: n }, () => Array(n).fill(0));
+      for (let i = 0; i < n; i++) py[i][0] = ptsY[i];
+
+      for (let j = 1; j < n; j++) {
+        for (let i = 0; i < n - j; i++) {
+          py[i][j] = (py[i + 1][j - 1] - py[i][j - 1]) / (ptsX[i + j] - ptsX[i]);
+        }
+      }
+
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content: targetX !== null
+          ? `Evaluate ${prob.yLabel} at x = ${targetX} using Newton's General (Divided Difference) Interpolation Formula.\n\n` +
+            `Given data points:\n` +
+            ptsX.map((xi, idx) => `  (${xi}, ${ptsY[idx]})`).join('\n') + `\n\n` +
+            `Newton's General Formula:\n` +
+            `y = y₀ + (x−x₀)[x₀,x₁] + (x−x₀)(x−x₁)[x₀,x₁,x₂] + (x−x₀)(x−x₁)(x−x₂)[x₀,x₁,x₂,x₃] + …`
+          : `Find the polynomial expression f(x) using Newton's General (Divided Difference) Interpolation Formula.\n\n` +
+            `Given data points:\n` +
+            ptsX.map((xi, idx) => `  (${xi}, ${ptsY[idx]})`).join('\n') + `\n\n` +
+            `Newton's General Formula:\n` +
+            `y = y₀ + (x−x₀)[x₀,x₁] + (x−x₀)(x−x₁)[x₀,x₁,x₂] + …`,
+        explanation: `We set up Newton's general divided difference method. We will compute the divided difference table first.`,
+      });
+
+      sequence.push({
+        type: 'newtonGenTable',
+        title: 'DIVIDED DIFFERENCE TABLE',
+        x: ptsX,
+        py,
+        n,
+        explanation: 'The divided difference table computes 1st, 2nd, 3rd, and higher-order differences. The top diagonal represents the coefficients used in Newton\'s formula.',
+      });
+
+      let calcStr = '';
+      let interpolatedValue = py[0][0];
+
+      if (targetX !== null) {
+        let termValList = [py[0][0]];
+        let runningProd = 1;
+        calcStr = `Formula evaluation at x = ${targetX}:\n\n` +
+                  `y = y₀ + (x−x₀)[x₀,x₁] + (x−x₀)(x−x₁)[x₀,x₁,x₂] + …\n\n` +
+                  `Term 0: y₀ = ${py[0][0].toFixed(6)}\n`;
+
+        for (let j = 1; j < n; j++) {
+          const diff = py[0][j];
+          runningProd *= (targetX - ptsX[j - 1]);
+          const partStr = ptsX.slice(0, j).map(xi => `(${targetX} - ${xi})`).join('');
+          const termVal = diff * runningProd;
+          interpolatedValue += termVal;
+          termValList.push(termVal);
+
+          calcStr += `Term ${j}: ${partStr} · [x₀,…,x_${j}]\n`;
+          calcStr += `        = ${runningProd.toFixed(4)} · (${diff.toFixed(6)})\n`;
+          calcStr += `        = ${termVal.toFixed(6)}\n`;
+        }
+
+        calcStr += `\nSumming terms:\n`;
+        calcStr += `y = ` + termValList.map(v => v.toFixed(6)).join(' + ') + `\n`;
+        calcStr += `  = ${interpolatedValue.toFixed(6)}`;
+      } else {
+        // Express as polynomial for ng2
+        calcStr = `Formula construction for f(x):\n\n` +
+                  `f(x) = y₀ + (x−x₀)[x₀,x₁] + (x−x₀)(x−x₁)[x₀,x₁,x₂] + …\n\n` +
+                  `Substitute divided differences:\n` +
+                  `f(x) = 3 + (x - (-1))·(-9) + (x - (-1))(x - 0)·(6) + (x - (-1))(x - 0)(x - 3)·(5) + (x - (-1))(x - 0)(x - 3)(x - 6)·(1)\n` +
+                  `     = 3 - 9(x + 1) + 6x(x + 1) + 5x(x + 1)(x - 3) + x(x + 1)(x - 3)(x - 6)\n\n` +
+                  `Expand term-by-term:\n` +
+                  `• Term 0 & 1: 3 - 9x - 9 = -9x - 6\n` +
+                  `• Term 2:     6(x² + x) = 6x² + 6x\n` +
+                  `• Term 3:     5(x³ - 2x² - 3x) = 5x³ - 10x² - 15x\n` +
+                  `• Term 4:     1(x⁴ - 8x³ + 9x² + 18x) = x⁴ - 8x³ + 9x² + 18x\n\n` +
+                  `Summing and combining like powers:\n` +
+                  `f(x) = x⁴ + (5 - 8)x³ + (6 - 10 + 9)x² + (-9 + 6 - 15 + 18)x - 6\n` +
+                  `f(x) = x⁴ - 3x³ + 5x² - 6`;
+      }
+
+      sequence.push({
+        type: 'math',
+        title: targetX !== null ? 'STEP 1: EVALUATING NEWTON POLYNOMIAL' : 'STEP 1: EXPANDING NEWTON POLYNOMIAL',
+        content: calcStr,
+        explanation: targetX !== null
+          ? `We plug in x = ${targetX} and evaluate each term using the top row coefficients from the divided difference table.`
+          : `We expand the terms and combine like terms to express f(x) as a simplified polynomial.`,
+      });
+
+      const finalContent = targetX !== null
+        ? `Interpolated Value at x = ${targetX}:\n\n` +
+          `f(${targetX})  ≈  ${interpolatedValue.toFixed(6)}\n\n` +
+          `Method: Newton's General Interpolation`
+        : `Final Interpolating Polynomial:\n\n` +
+          `f(x)  =  x⁴ - 3x³ + 5x² - 6\n\n` +
+          `Method: Newton's General Interpolation`;
+
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: finalContent,
+        explanation: targetX !== null
+          ? `Newton's general divided difference interpolation evaluated at x = ${targetX} yields ${interpolatedValue.toFixed(6)}.`
+          : `Newton's general divided difference interpolation yields the polynomial f(x) = x⁴ - 3x³ + 5x² - 6.`,
+      });
+    }
+
     return sequence;
-  }, [method, limitFuncId, limitApproachVal, derivFuncId, derivAtX, integFuncId, integA, integB, integN, lhopitalProblemId, gaussSeidelProblemId, gaussSeidelIterations, rfProblemId, rfIterations, iterProblemId, iterIterations, nrProblemId, nrIterations]);
+  }, [method, limitFuncId, limitApproachVal, derivFuncId, derivAtX, integFuncId, integA, integB, integN, lhopitalProblemId, gaussSeidelProblemId, gaussSeidelIterations, rfProblemId, rfIterations, iterProblemId, iterIterations, nrProblemId, nrIterations, lagrangeProblemId, newtonGenProblemId]);
 
   // ─── Playback Control ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -995,6 +1263,97 @@ export default function CalculusNotebookEngine({
     );
   };
 
+  const renderLagrangeGrid = (points, targetX, terms, interpolatedValue) => {
+    setTimeout(() => {
+      if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
+    }, 1000);
+    return (
+      <div className="overflow-x-auto w-full border border-sky-200 rounded-xl bg-white shadow-sm mt-3">
+        <table className="w-full text-center border-collapse text-xs font-mono">
+          <thead>
+            <tr className="bg-sky-50 border-b border-sky-200">
+              {['i', 'x_i', 'y_i', 'Numerator term', 'Denominator term', 'Basis L_i(x)', 'Contribution y_i · L_i(x)'].map((h, idx) => (
+                <th key={idx} className="py-2.5 px-3 border-r border-sky-200 font-bold text-sky-700 whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {terms.map((term, i) => (
+              <tr key={i} className={`${i % 2 === 0 ? 'bg-white' : 'bg-sky-50/30'} border-b border-sky-100 hover:bg-sky-50/60 transition`}>
+                <td className="py-2 px-3 border-r border-sky-200 font-bold text-sky-600">{i}</td>
+                <td className="py-2 px-3 border-r border-sky-200 text-slate-700">{points.x[i]}</td>
+                <td className="py-2 px-3 border-r border-sky-200 text-slate-700">{points.y[i]}</td>
+                <td className="py-2 px-3 border-r border-sky-200 text-slate-500">{term.numStr} = {term.numVal.toFixed(4)}</td>
+                <td className="py-2 px-3 border-r border-sky-200 text-slate-500">{term.denStr} = {term.denVal.toFixed(4)}</td>
+                <td className="py-2 px-3 border-r border-sky-200 font-bold text-blue-600">{term.lVal.toFixed(6)}</td>
+                <td className="py-2 px-3 border-r border-sky-200 font-bold text-emerald-600">{(points.y[i] * term.lVal).toFixed(6)}</td>
+              </tr>
+            ))}
+            <tr className="bg-sky-100/50 font-bold border-t-2 border-sky-200">
+              <td colSpan="5" className="py-2.5 px-3 border-r border-sky-200 text-right text-sky-850">Summed Interpolated Value at x = {targetX}:</td>
+              <td colSpan="2" className="py-2.5 px-3 text-emerald-700 text-base font-extrabold">{interpolatedValue.toFixed(6)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  const renderNewtonGenGrid = (x, py, n) => {
+    setTimeout(() => {
+      if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
+    }, 1000);
+
+    const headers = ['x', 'y = f(x)'];
+    for (let i = 1; i < n; i++) {
+      let suffix = '';
+      if (i === 1) suffix = '1st Diff';
+      else if (i === 2) suffix = '2nd Diff';
+      else if (i === 3) suffix = '3rd Diff';
+      else suffix = `${i}th Diff`;
+      headers.push(suffix);
+    }
+
+    return (
+      <div className="overflow-x-auto w-full border border-fuchsia-200 rounded-xl bg-white shadow-sm mt-3">
+        <table className="w-full text-center border-collapse text-xs font-mono">
+          <thead>
+            <tr className="bg-fuchsia-50 border-b border-fuchsia-200">
+              {headers.map((h, i) => (
+                <th key={i} className="py-2.5 px-3 border-r border-fuchsia-200 font-bold text-fuchsia-700 whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {x.map((xi, i) => (
+              <tr key={i} className={`${i % 2 === 0 ? 'bg-white' : 'bg-fuchsia-50/30'} border-b border-fuchsia-100 hover:bg-fuchsia-50/60 transition`}>
+                <td className="py-2 px-3 border-r border-fuchsia-200 font-bold text-fuchsia-600">{xi}</td>
+                {Array.from({ length: n }).map((_, j) => {
+                  const val = py[i][j];
+                  const exists = i < n - j;
+                  const isFormulaCoeff = i === 0 && exists;
+                  return (
+                    <td
+                      key={j}
+                      className={`py-2 px-3 border-r border-fuchsia-200 ${
+                        exists ? 'text-slate-700 font-semibold' : 'text-slate-300 italic'
+                      } ${isFormulaCoeff ? 'bg-fuchsia-100/70 text-fuchsia-900 font-bold border border-fuchsia-300' : ''}`}
+                    >
+                      {exists ? (Math.abs(val) < 1e-9 ? '0' : val.toFixed(6).replace(/\.?0+$/, '')) : '-'}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="p-3 bg-fuchsia-50/50 text-[10px] text-fuchsia-700 font-bold font-sans">
+          ★ Highlighted diagonal values are the coefficients used in Newton's general interpolation formula.
+        </div>
+      </div>
+    );
+  };
+
   const progress = activeStepIndex >= 0 ? ((activeStepIndex + 1) / steps.length) * 100 : 0;
 
   return (
@@ -1083,6 +1442,16 @@ export default function CalculusNotebookEngine({
                 <div className="bg-white p-6 rounded-2xl border-l-4 border-amber-500 shadow-md">
                   <span className="text-xs font-bold text-slate-500 font-sans">Newton-Raphson Convergence Table:</span>
                   {renderNrGrid(step.history)}
+                </div>
+              ) : step.type === 'lagrangeTable' ? (
+                <div className="bg-white p-6 rounded-2xl border-l-4 border-sky-400 shadow-md">
+                  <span className="text-xs font-bold text-slate-500 font-sans">Lagrange Interpolation Basis Polynomials Table:</span>
+                  {renderLagrangeGrid(step.points, step.targetX, step.terms, step.interpolatedValue)}
+                </div>
+              ) : step.type === 'newtonGenTable' ? (
+                <div className="bg-white p-6 rounded-2xl border-l-4 border-fuchsia-400 shadow-md">
+                  <span className="text-xs font-bold text-slate-500 font-sans">Newton Divided Difference Table:</span>
+                  {renderNewtonGenGrid(step.x, step.py, step.n)}
                 </div>
               ) : step.type === 'header' ? (
                 <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-2xl border border-slate-200 shadow-sm">
