@@ -1,10 +1,12 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import AIChatLayer from './components/AIChatLayer';
+import { useVoiceAssistant } from './context/VoiceContext';
+import VoiceAssistantWidget from './components/VoiceAssistantWidget';
 
 // Authentication & Core pages (fast start)
 import LandingPage from './pages/LandingPage';
@@ -84,10 +86,34 @@ const PageLoader = () => (
 
 export default function App() {
   const location = useLocation();
+  const { toggleEnabled } = useVoiceAssistant();
+
+  // Double-tap anywhere on screen to toggle F.R.I.D.A.Y. voice guide
+  useEffect(() => {
+    let lastTap = 0;
+    const handleDoubleTap = (e) => {
+      const currentTime = new Date().getTime();
+      const tapLength = currentTime - lastTap;
+      if (tapLength < 300 && tapLength > 0) {
+        toggleEnabled();
+        e.preventDefault();
+      }
+      lastTap = currentTime;
+    };
+
+    window.addEventListener('touchend', handleDoubleTap, { passive: false });
+    window.addEventListener('click', handleDoubleTap);
+
+    return () => {
+      window.removeEventListener('touchend', handleDoubleTap);
+      window.removeEventListener('click', handleDoubleTap);
+    };
+  }, [toggleEnabled]);
 
   return (
     <>
       <AIChatLayer />
+      <VoiceAssistantWidget />
       <AnimatePresence mode="wait">
         <Suspense fallback={<PageLoader />}>
           <Routes location={location} key={location.pathname + location.hash}>
