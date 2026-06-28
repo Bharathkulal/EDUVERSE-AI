@@ -1114,7 +1114,6 @@ export default function CalculusNotebookEngine({
   }, [activeStepIndex, steps, onFinish, speed]);
 
   const renderGsGrid = (history, isGs1) => {
-    // Call onComplete when table renders
     setTimeout(() => {
       if (playbackState === 'PLAYING' && !stepComplete) {
         handleTypingComplete();
@@ -1122,43 +1121,43 @@ export default function CalculusNotebookEngine({
     }, 1000);
 
     return (
-      <div className="overflow-x-auto w-full border border-slate-200 rounded-xl bg-white shadow-sm mt-3">
+      <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
         <table className="w-full text-center border-collapse text-xs font-mono">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
-              <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">Iteration</th>
+            <tr className="bg-[var(--db-card-bg-elevated)] border-b border-[var(--db-card-border)]">
+              <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-slate-600">Iteration</th>
               {isGs1 ? (
                 <>
-                  <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">x₁</th>
-                  <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">x₂</th>
-                  <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">x₃</th>
-                  <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">x₄</th>
+                  <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-slate-600">x₁</th>
+                  <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-slate-600">x₂</th>
+                  <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-slate-600">x₃</th>
+                  <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-slate-600">x₄</th>
                 </>
               ) : (
                 <>
-                  <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">x</th>
-                  <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">y</th>
-                  <th className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600">z</th>
+                  <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-slate-600">x</th>
+                  <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-slate-600">y</th>
+                  <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-slate-600">z</th>
                 </>
               )}
             </tr>
           </thead>
           <tbody>
             {history.map((row, idx) => (
-              <tr key={idx} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/10'} border-b border-slate-100 hover:bg-slate-50/50 transition`}>
-                <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.iter}</td>
+              <tr key={idx} className={`${idx % 2 === 0 ? 'bg-[var(--db-card-bg)]' : 'bg-[var(--db-card-bg-elevated)]/40'} border-b border-[var(--db-card-border)]/50 hover:bg-[var(--db-card-bg-elevated)]/80 transition`}>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.iter}</td>
                 {isGs1 ? (
                   <>
-                    <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.x1.toFixed(6)}</td>
-                    <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.x2.toFixed(6)}</td>
-                    <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.x3.toFixed(6)}</td>
-                    <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.x4.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.x1.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.x2.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.x3.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.x4.toFixed(6)}</td>
                   </>
                 ) : (
                   <>
-                    <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.x.toFixed(6)}</td>
-                    <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.y.toFixed(6)}</td>
-                    <td className="py-2 px-3 border-r border-slate-200 font-semibold text-slate-700">{row.z.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.x.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.y.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.z.toFixed(6)}</td>
                   </>
                 )}
               </tr>
@@ -1169,31 +1168,30 @@ export default function CalculusNotebookEngine({
     );
   };
 
-  // ─── Regula Falsi convergence table ───────────────────────────────────────
   const renderRfGrid = (history) => {
     setTimeout(() => {
       if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
     }, 1000);
     return (
-      <div className="overflow-x-auto w-full border border-slate-200 rounded-xl bg-white shadow-sm mt-3">
+      <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
         <table className="w-full text-center border-collapse text-xs font-mono">
           <thead>
-            <tr className="bg-violet-50 border-b border-slate-200">
+            <tr className="bg-[var(--db-card-bg-elevated)] border-b border-[var(--db-card-border)]">
               {['Iter', 'a', 'b', 'x (False Pos)', 'f(a)', 'f(x)', 'Sign Check'].map((h, i) => (
-                <th key={i} className="py-2.5 px-3 border-r border-slate-200 font-bold text-violet-700 whitespace-nowrap">{h}</th>
+                <th key={i} className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-violet-700 whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {history.map((row, rIdx) => (
-              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-white' : 'bg-violet-50/30'} border-b border-slate-100 hover:bg-violet-50/60 transition`}>
-                <td className="py-1.5 px-3 border-r border-slate-200 font-bold text-violet-600">{row.iter}</td>
-                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-700">{row.a}</td>
-                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-700">{row.b}</td>
-                <td className="py-1.5 px-3 border-r border-slate-200 font-bold text-blue-600">{row.x}</td>
-                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-600">{row.fa}</td>
-                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-600">{row.fx}</td>
-                <td className={`py-1.5 px-3 border-r border-slate-200 font-bold ${row.sign === 'Root!' ? 'text-emerald-600' : 'text-amber-600'}`}>{row.sign}</td>
+              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-[var(--db-card-bg)]' : 'bg-[var(--db-card-bg-elevated)]/40'} border-b border-[var(--db-card-border)]/50 hover:bg-[var(--db-card-bg-elevated)]/80 transition`}>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] font-bold text-violet-600">{row.iter}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] text-slate-700">{row.a}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] text-slate-700">{row.b}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] font-bold text-blue-600">{row.x}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] text-slate-600">{row.fa}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] text-slate-600">{row.fx}</td>
+                <td className={`py-1.5 px-3 border-r border-[var(--db-card-border)] font-bold ${row.sign === 'Root!' ? 'text-emerald-600' : 'text-amber-600'}`}>{row.sign}</td>
               </tr>
             ))}
           </tbody>
@@ -1202,27 +1200,26 @@ export default function CalculusNotebookEngine({
     );
   };
 
-  // ─── Iteration Method convergence table ───────────────────────────────────
   const renderIterGrid = (history) => {
     setTimeout(() => {
       if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
     }, 1000);
     return (
-      <div className="overflow-x-auto w-full border border-cyan-200 rounded-xl bg-white shadow-sm mt-3">
+      <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
         <table className="w-full text-center border-collapse text-xs font-mono">
           <thead>
-            <tr className="bg-cyan-50 border-b border-cyan-200">
+            <tr className="bg-[var(--db-card-bg-elevated)] border-b border-[var(--db-card-border)]">
               {['Step (n)', 'xₙ', '|Δx| = |xₙ - xₙ₋₁|'].map((h, i) => (
-                <th key={i} className="py-2.5 px-3 border-r border-cyan-200 font-bold text-cyan-700 whitespace-nowrap">{h}</th>
+                <th key={i} className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-cyan-700 whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {history.map((row, rIdx) => (
-              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-white' : 'bg-cyan-50/30'} border-b border-cyan-100 hover:bg-cyan-50/60 transition`}>
-                <td className="py-1.5 px-3 border-r border-cyan-200 font-bold text-cyan-600">{row.step}</td>
-                <td className="py-1.5 px-3 border-r border-cyan-200 font-bold text-blue-600">{typeof row.x === 'number' ? row.x.toFixed(6) : row.x}</td>
-                <td className="py-1.5 px-3 border-r border-cyan-200 text-slate-600">{row.err}</td>
+              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-[var(--db-card-bg)]' : 'bg-[var(--db-card-bg-elevated)]/40'} border-b border-[var(--db-card-border)]/50 hover:bg-[var(--db-card-bg-elevated)]/80 transition`}>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] font-bold text-cyan-600">{row.step}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] font-bold text-blue-600">{typeof row.x === 'number' ? row.x.toFixed(6) : row.x}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] text-slate-600">{row.err}</td>
               </tr>
             ))}
           </tbody>
@@ -1231,30 +1228,29 @@ export default function CalculusNotebookEngine({
     );
   };
 
-  // ─── Newton-Raphson convergence table ─────────────────────────────────────
   const renderNrGrid = (history) => {
     setTimeout(() => {
       if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
     }, 1000);
     return (
-      <div className="overflow-x-auto w-full border border-amber-200 rounded-xl bg-white shadow-sm mt-3">
+      <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
         <table className="w-full text-center border-collapse text-xs font-mono">
           <thead>
-            <tr className="bg-amber-50 border-b border-amber-200">
+            <tr className="bg-[var(--db-card-bg-elevated)] border-b border-[var(--db-card-border)]">
               {['Step', 'xₙ₋₁', 'f(xₙ₋₁)', "f'(xₙ₋₁)", 'xₙ (new)', '|Δx|'].map((h, i) => (
-                <th key={i} className="py-2.5 px-3 border-r border-amber-200 font-bold text-amber-700 whitespace-nowrap">{h}</th>
+                <th key={i} className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-amber-700 whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {history.map((row, rIdx) => (
-              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-white' : 'bg-amber-50/30'} border-b border-amber-100 hover:bg-amber-50/60 transition`}>
-                <td className="py-1.5 px-3 border-r border-amber-200 font-bold text-amber-600">{row.step}</td>
-                <td className="py-1.5 px-3 border-r border-amber-200 text-slate-700">{row.x_prev.toFixed(6)}</td>
-                <td className="py-1.5 px-3 border-r border-amber-200 text-slate-600">{row.fx.toFixed(6)}</td>
-                <td className="py-1.5 px-3 border-r border-amber-200 text-slate-600">{row.dfx.toFixed(6)}</td>
-                <td className="py-1.5 px-3 border-r border-amber-200 font-bold text-blue-600">{row.x_next.toFixed(6)}</td>
-                <td className="py-1.5 px-3 border-r border-amber-200 text-slate-500">{row.err.toFixed(8)}</td>
+              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-[var(--db-card-bg)]' : 'bg-[var(--db-card-bg-elevated)]/40'} border-b border-[var(--db-card-border)]/50 hover:bg-[var(--db-card-bg-elevated)]/80 transition`}>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] font-bold text-amber-600">{row.step}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] text-slate-700">{row.x_prev.toFixed(6)}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] text-slate-600">{row.fx.toFixed(6)}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] text-slate-600">{row.dfx.toFixed(6)}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] font-bold text-blue-600">{row.x_next.toFixed(6)}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] text-slate-500">{row.err.toFixed(8)}</td>
               </tr>
             ))}
           </tbody>
@@ -1268,30 +1264,30 @@ export default function CalculusNotebookEngine({
       if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
     }, 1000);
     return (
-      <div className="overflow-x-auto w-full border border-sky-200 rounded-xl bg-white shadow-sm mt-3">
+      <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
         <table className="w-full text-center border-collapse text-xs font-mono">
           <thead>
-            <tr className="bg-sky-50 border-b border-sky-200">
+            <tr className="bg-[var(--db-card-bg-elevated)] border-b border-[var(--db-card-border)]">
               {['i', 'x_i', 'y_i', 'Numerator term', 'Denominator term', 'Basis L_i(x)', 'Contribution y_i · L_i(x)'].map((h, idx) => (
-                <th key={idx} className="py-2.5 px-3 border-r border-sky-200 font-bold text-sky-700 whitespace-nowrap">{h}</th>
+                <th key={idx} className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-sky-700 whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {terms.map((term, i) => (
-              <tr key={i} className={`${i % 2 === 0 ? 'bg-white' : 'bg-sky-50/30'} border-b border-sky-100 hover:bg-sky-50/60 transition`}>
-                <td className="py-2 px-3 border-r border-sky-200 font-bold text-sky-600">{i}</td>
-                <td className="py-2 px-3 border-r border-sky-200 text-slate-700">{points.x[i]}</td>
-                <td className="py-2 px-3 border-r border-sky-200 text-slate-700">{points.y[i]}</td>
-                <td className="py-2 px-3 border-r border-sky-200 text-slate-500">{term.numStr} = {term.numVal.toFixed(4)}</td>
-                <td className="py-2 px-3 border-r border-sky-200 text-slate-500">{term.denStr} = {term.denVal.toFixed(4)}</td>
-                <td className="py-2 px-3 border-r border-sky-200 font-bold text-blue-600">{term.lVal.toFixed(6)}</td>
-                <td className="py-2 px-3 border-r border-sky-200 font-bold text-emerald-600">{(points.y[i] * term.lVal).toFixed(6)}</td>
+              <tr key={i} className={`${i % 2 === 0 ? 'bg-[var(--db-card-bg)]' : 'bg-[var(--db-card-bg-elevated)]/40'} border-b border-[var(--db-card-border)]/50 hover:bg-[var(--db-card-bg-elevated)]/80 transition`}>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-bold text-sky-600">{i}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-700">{points.x[i]}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-700">{points.y[i]}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-500">{term.numStr} = {term.numVal.toFixed(4)}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-500">{term.denStr} = {term.denVal.toFixed(4)}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-bold text-blue-600">{term.lVal.toFixed(6)}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-bold text-emerald-600">{(points.y[i] * term.lVal).toFixed(6)}</td>
               </tr>
             ))}
-            <tr className="bg-sky-100/50 font-bold border-t-2 border-sky-200">
-              <td colSpan="5" className="py-2.5 px-3 border-r border-sky-200 text-right text-sky-850">Summed Interpolated Value at x = {targetX}:</td>
-              <td colSpan="2" className="py-2.5 px-3 text-emerald-700 text-base font-extrabold">{interpolatedValue.toFixed(6)}</td>
+            <tr className="bg-[var(--db-card-bg-elevated)] font-bold border-t-2 border-[var(--db-card-border)]">
+              <td colSpan="5" className="py-2.5 px-3 border-r border-[var(--db-card-border)] text-right text-[var(--db-text-secondary)]">Summed Interpolated Value at x = {targetX}:</td>
+              <td colSpan="2" className="py-2.5 px-3 text-emerald-600 text-base font-extrabold">{interpolatedValue.toFixed(6)}</td>
             </tr>
           </tbody>
         </table>
@@ -1315,19 +1311,19 @@ export default function CalculusNotebookEngine({
     }
 
     return (
-      <div className="overflow-x-auto w-full border border-fuchsia-200 rounded-xl bg-white shadow-sm mt-3">
+      <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
         <table className="w-full text-center border-collapse text-xs font-mono">
           <thead>
-            <tr className="bg-fuchsia-50 border-b border-fuchsia-200">
+            <tr className="bg-[var(--db-card-bg-elevated)] border-b border-[var(--db-card-border)]">
               {headers.map((h, i) => (
-                <th key={i} className="py-2.5 px-3 border-r border-fuchsia-200 font-bold text-fuchsia-700 whitespace-nowrap">{h}</th>
+                <th key={i} className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-fuchsia-700 whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {x.map((xi, i) => (
-              <tr key={i} className={`${i % 2 === 0 ? 'bg-white' : 'bg-fuchsia-50/30'} border-b border-fuchsia-100 hover:bg-fuchsia-50/60 transition`}>
-                <td className="py-2 px-3 border-r border-fuchsia-200 font-bold text-fuchsia-600">{xi}</td>
+              <tr key={i} className={`${i % 2 === 0 ? 'bg-[var(--db-card-bg)]' : 'bg-[var(--db-card-bg-elevated)]/40'} border-b border-[var(--db-card-border)]/50 hover:bg-[var(--db-card-bg-elevated)]/80 transition`}>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-bold text-fuchsia-600">{xi}</td>
                 {Array.from({ length: n }).map((_, j) => {
                   const val = py[i][j];
                   const exists = i < n - j;
@@ -1335,9 +1331,9 @@ export default function CalculusNotebookEngine({
                   return (
                     <td
                       key={j}
-                      className={`py-2 px-3 border-r border-fuchsia-200 ${
+                      className={`py-2 px-3 border-r border-[var(--db-card-border)] ${
                         exists ? 'text-slate-700 font-semibold' : 'text-slate-300 italic'
-                      } ${isFormulaCoeff ? 'bg-fuchsia-100/70 text-fuchsia-900 font-bold border border-fuchsia-300' : ''}`}
+                      } ${isFormulaCoeff ? 'bg-fuchsia-500/10 text-fuchsia-600 font-bold border border-fuchsia-400/30' : ''}`}
                     >
                       {exists ? (Math.abs(val) < 1e-9 ? '0' : val.toFixed(6).replace(/\.?0+$/, '')) : '-'}
                     </td>
@@ -1347,7 +1343,7 @@ export default function CalculusNotebookEngine({
             ))}
           </tbody>
         </table>
-        <div className="p-3 bg-fuchsia-50/50 text-[10px] text-fuchsia-700 font-bold font-sans">
+        <div className="p-3 bg-[var(--db-card-bg-elevated)]/50 text-[10px] text-fuchsia-700 font-bold font-sans border-t border-[var(--db-card-border)]">
           ★ Highlighted diagonal values are the coefficients used in Newton's general interpolation formula.
         </div>
       </div>
@@ -1360,9 +1356,9 @@ export default function CalculusNotebookEngine({
     <div className="w-full h-full flex flex-col overflow-hidden">
 
       {/* Top: Progress bar + step counter */}
-      <div className="shrink-0 px-8 pt-6 pb-4 border-b border-slate-100 bg-white/50 backdrop-blur-sm z-10">
+      <div className="shrink-0 px-8 pt-6 pb-4 border-b border-[var(--db-card-border)] bg-[var(--db-card-bg)]/80 backdrop-blur-sm z-10">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+          <span className="text-[11px] font-bold text-[var(--db-text-muted)] uppercase tracking-widest">
             {activeStepIndex >= 0
               ? `Step ${activeStepIndex + 1} of ${steps.length}`
               : 'Ready to execute'}
@@ -1371,7 +1367,7 @@ export default function CalculusNotebookEngine({
             <span className="text-[11px] font-bold text-emerald-500 uppercase tracking-widest">✓ Complete</span>
           )}
         </div>
-        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className="w-full h-1.5 bg-[var(--db-card-border)]/50 rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full"
             animate={{ width: `${progress}%` }}
@@ -1424,37 +1420,37 @@ export default function CalculusNotebookEngine({
                   </div>
                 </div>
               ) : step.type === 'gsTable' ? (
-                <div className="bg-white p-6 rounded-2xl border-l-4 border-emerald-400 shadow-md">
+                <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-emerald-400 shadow-md border-y border-r border-[var(--db-card-border)]/50">
                   <span className="text-xs font-bold text-slate-500 font-sans">Gauss-Seidel Convergence Iterations Table:</span>
                   {renderGsGrid(step.history, step.isGs1)}
                 </div>
               ) : step.type === 'rfTable' ? (
-                <div className="bg-white p-6 rounded-2xl border-l-4 border-violet-500 shadow-md">
+                <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-violet-500 shadow-md border-y border-r border-[var(--db-card-border)]/50">
                   <span className="text-xs font-bold text-slate-500 font-sans">Regula Falsi Convergence Table:</span>
                   {renderRfGrid(step.history)}
                 </div>
               ) : step.type === 'iterTable' ? (
-                <div className="bg-white p-6 rounded-2xl border-l-4 border-cyan-500 shadow-md">
+                <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-cyan-500 shadow-md border-y border-r border-[var(--db-card-border)]/50">
                   <span className="text-xs font-bold text-slate-500 font-sans">Iteration (Fixed-Point) Convergence Table:</span>
                   {renderIterGrid(step.history)}
                 </div>
               ) : step.type === 'nrTable' ? (
-                <div className="bg-white p-6 rounded-2xl border-l-4 border-amber-500 shadow-md">
+                <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-amber-500 shadow-md border-y border-r border-[var(--db-card-border)]/50">
                   <span className="text-xs font-bold text-slate-500 font-sans">Newton-Raphson Convergence Table:</span>
                   {renderNrGrid(step.history)}
                 </div>
               ) : step.type === 'lagrangeTable' ? (
-                <div className="bg-white p-6 rounded-2xl border-l-4 border-sky-400 shadow-md">
+                <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-sky-400 shadow-md border-y border-r border-[var(--db-card-border)]/50">
                   <span className="text-xs font-bold text-slate-500 font-sans">Lagrange Interpolation Basis Polynomials Table:</span>
                   {renderLagrangeGrid(step.points, step.targetX, step.terms, step.interpolatedValue)}
                 </div>
               ) : step.type === 'newtonGenTable' ? (
-                <div className="bg-white p-6 rounded-2xl border-l-4 border-fuchsia-400 shadow-md">
+                <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-fuchsia-400 shadow-md border-y border-r border-[var(--db-card-border)]/50">
                   <span className="text-xs font-bold text-slate-500 font-sans">Newton Divided Difference Table:</span>
                   {renderNewtonGenGrid(step.x, step.py, step.n)}
                 </div>
               ) : step.type === 'header' ? (
-                <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="bg-gradient-to-br from-[var(--db-card-bg-elevated)] to-[var(--db-card-bg)] p-6 rounded-2xl border border-[var(--db-card-border)] shadow-sm">
                   <TypewriterStep
                     text={step.content}
                     isActive={isCurrent && playbackState === 'PLAYING' && !stepComplete}
@@ -1465,7 +1461,7 @@ export default function CalculusNotebookEngine({
                   />
                 </div>
               ) : (
-                <div className="bg-white p-6 rounded-2xl border-l-4 border-emerald-400 shadow-md">
+                <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-emerald-400 shadow-md border-y border-r border-[var(--db-card-border)]/50">
                   <TypewriterStep
                     text={step.content}
                     isActive={isCurrent && playbackState === 'PLAYING' && !stepComplete}
