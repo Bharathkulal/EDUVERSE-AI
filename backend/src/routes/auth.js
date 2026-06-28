@@ -1,4 +1,5 @@
 const express = require('express');
+const axios = require('axios');
 const { body } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -104,6 +105,64 @@ router.post(
     }
   }
 );
+
+router.post('/google', async (req, res) => {
+  try {
+    const { accessToken } = req.body;
+    if (!accessToken) {
+      return res.status(400).json({ message: 'Google Access Token is required' });
+    }
+
+    // Verify token with Google's userinfo API
+    const googleRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    const payload = googleRes.data;
+    const email = payload.email.toLowerCase();
+    const name = payload.name;
+
+    // Find or create user
+    let userResult = await db.query(
+      'SELECT id, name, email, role, profile_completed FROM users WHERE email = $1',
+      [email]
+    );
+
+    let user;
+    if (userResult.rows.length === 0) {
+      // Create user
+      const result = await db.query(
+        'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role, profile_completed',
+        [name, email, '', 'student'] // Empty password for OAuth users
+      );
+      user = result.rows[0];
+
+      // Insert student progress
+      await db.query(
+        'INSERT INTO student_progress (student_id) VALUES ($1) ON CONFLICT (student_id) DO NOTHING',
+        [user.id]
+      );
+    } else {
+      user = userResult.rows[0];
+      
+      // Check if blocked
+      const blockedCheck = await db.query('SELECT blocked FROM users WHERE id = $1', [user.id]);
+      if (blockedCheck.rows.length > 0 && blockedCheck.rows[0].blocked) {
+        return res.status(403).json({ message: 'This account has been temporarily blocked by administration.' });
+      }
+    }
+
+    // Log Login activity
+    const { logActivity } = require('../utils/system_logger');
+    logActivity(user.id, 'login', 'Auth', 'User logged in successfully via Google OAuth', false).catch(e => console.error(e));
+
+    const token = generateToken(user);
+    res.json({ message: 'Login successful', token, user });
+  } catch (err) {
+    console.error('Google Auth Error:', err.message);
+    res.status(401).json({ message: 'Google verification failed or token is invalid' });
+  }
+});
 
 router.post(
   '/forgot-password',

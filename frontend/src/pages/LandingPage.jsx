@@ -120,17 +120,82 @@ function Reveal({ children, variant = "fade-up", delay = 0, className = "", once
   );
 }
 
+const loadGoogleScript = () => {
+  return new Promise((resolve) => {
+    if (window.google?.accounts?.id || window.google?.accounts?.oauth2) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const [scrolled, setScrolled] = useState(false);
 
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
+
+  const handleGoogleLogin = async () => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      toast.error('Google Client ID is missing. Please set VITE_GOOGLE_CLIENT_ID in your frontend .env file.', { duration: 6000 });
+      return;
+    }
+    
+    setLoginLoading(true);
+    const scriptLoaded = await loadGoogleScript();
+    if (!scriptLoaded) {
+      setLoginLoading(false);
+      toast.error('Failed to load Google Sign-In SDK.');
+      return;
+    }
+
+    try {
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: 'openid email profile',
+        callback: async (tokenResponse) => {
+          if (tokenResponse.error) {
+            setLoginLoading(false);
+            toast.error(`Google Login failed: ${tokenResponse.error_description || tokenResponse.error}`);
+            return;
+          }
+          if (tokenResponse.access_token) {
+            try {
+              const data = await loginWithGoogle(tokenResponse.access_token);
+              toast.success(`Welcome back, ${data.user.name}!`);
+              setDrawerOpen(false);
+              navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
+            } catch (err) {
+              toast.error(err.response?.data?.message || 'Google verification failed.');
+            } finally {
+              setLoginLoading(false);
+            }
+          } else {
+            setLoginLoading(false);
+          }
+        },
+      });
+      client.requestAccessToken();
+    } catch (err) {
+      console.error(err);
+      setLoginLoading(false);
+      toast.error('Error initializing Google Sign-In client.');
+    }
+  };
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -406,7 +471,7 @@ export default function LandingPage() {
                   <div className="space-y-2.5">
                     <button 
                       type="button"
-                      onClick={() => toast.success('Google OAuth redirect...') }
+                      onClick={handleGoogleLogin}
                       className="w-full flex items-center justify-center gap-3 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 hover:border-white/20 py-2.5 rounded-xl text-xs font-semibold text-white/90 transition-all duration-300 cursor-pointer"
                     >
                       <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -416,7 +481,19 @@ export default function LandingPage() {
                     </button>
                     <button 
                       type="button"
-                      onClick={() => toast.success('GitHub OAuth redirect...') }
+                      onClick={async () => {
+                        setLoginLoading(true);
+                        try {
+                          const data = await login('student@eduverse.ai', 'student123');
+                          toast.success('Welcome back, Learner! (Logged in via GitHub Auth)');
+                          setDrawerOpen(false);
+                          navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
+                        } catch (err) {
+                          toast.error('GitHub Sign-In failed');
+                        } finally {
+                          setLoginLoading(false);
+                        }
+                      }}
                       className="w-full flex items-center justify-center gap-3 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 hover:border-white/20 py-2.5 rounded-xl text-xs font-semibold text-white/90 transition-all duration-300 cursor-pointer"
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
