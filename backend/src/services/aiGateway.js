@@ -109,8 +109,9 @@ const generateResponse = async (prompt, options = {}) => {
           const res = await axios.post(
             'https://openrouter.ai/api/v1/chat/completions',
             {
-              model: item.modelName && item.modelName !== 'google/gemini-2.5-flash' ? item.modelName : 'google/gemini-2.5-flash:free',
+              model: item.modelName && !item.modelName.includes('free') ? item.modelName : 'google/gemini-2.5-flash',
               messages: [{ role: 'user', content: finalPrompt }],
+              max_tokens: 1500
             },
             { 
               headers: { 
@@ -128,7 +129,7 @@ const generateResponse = async (prompt, options = {}) => {
           const res = await axios.post(
             'https://api.groq.com/openai/v1/chat/completions',
             {
-              model: item.modelName || 'llama3-8b-8192',
+              model: item.modelName && item.modelName !== 'llama3-8b-8192' ? item.modelName : 'llama-3.1-8b-instant',
               messages: [{ role: 'user', content: finalPrompt }],
             },
             { headers: { Authorization: `Bearer ${item.key}`, 'Content-Type': 'application/json' }, timeout: 15000 }
