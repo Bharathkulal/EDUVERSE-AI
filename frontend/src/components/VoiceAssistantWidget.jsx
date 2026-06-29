@@ -83,7 +83,7 @@ export default function VoiceAssistantWidget() {
       {/* Floating Action Orb Button (Bottom Left) */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-full flex items-center justify-center border-2 border-blue-500/80 bg-white/10 dark:bg-slate-900/20 backdrop-blur-md shadow-lg shadow-blue-500/10 hover:shadow-blue-500/25 transition-all cursor-pointer"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center border-2 border-blue-500/80 bg-white/10 dark:bg-slate-900/20 backdrop-blur-md shadow-lg shadow-blue-500/10 hover:shadow-blue-500/25 transition-all cursor-pointer"
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
         aria-label="EduVerse Voice Guide"
@@ -116,7 +116,7 @@ export default function VoiceAssistantWidget() {
 
       {/* Floating Subtitles Strip */}
       {subtitle && (
-        <div className="fixed bottom-24 left-6 z-40 max-w-sm md:max-w-md bg-slate-900/90 backdrop-blur-md text-white px-4 py-2.5 rounded-xl border border-slate-700/50 shadow-2xl text-xs font-medium animate-fade-in flex items-center gap-2">
+        <div className="fixed bottom-24 right-6 z-40 max-w-sm md:max-w-md bg-slate-900/90 backdrop-blur-md text-white px-4 py-2.5 rounded-xl border border-slate-700/50 shadow-2xl text-xs font-medium animate-fade-in flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
           <p className="line-clamp-3 leading-relaxed">{subtitle}</p>
         </div>
@@ -131,7 +131,7 @@ export default function VoiceAssistantWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="fixed bottom-24 left-6 z-50 w-80 md:w-96 bg-white/90 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden text-slate-800 dark:text-slate-100"
+            className="fixed bottom-24 right-6 z-50 w-80 md:w-96 bg-white/90 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden text-slate-800 dark:text-slate-100"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-4 text-white flex items-center justify-between">
