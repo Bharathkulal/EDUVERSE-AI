@@ -244,6 +244,27 @@ export default function CalculusVisualization() {
         },
       ],
     },
+    'Fitting Straight Line': {
+      features: [
+        { icon: BookOpen,  title: 'Linear Regression',   desc: 'Find the best-fitting straight line through a set of data points.' },
+        { icon: Target,    title: 'Least Squares Method', desc: 'Minimizes the sum of squared residuals (errors).' },
+        { icon: Lightbulb, title: 'Photo Problems',      desc: 'Fit copper rod l vs T and experimental x vs y from your notebook.' },
+      ],
+      formulas: [
+        {
+          title: 'Fitting a Straight Line Formula',
+          formula: 'y = a₀ + a₁x',
+          variables: [
+            { sym: 'a₀',         def: 'y-intercept of the line' },
+            { sym: 'a₁',         def: 'Slope (coefficient of x) of the line' },
+            { sym: 'Σy',         def: 'Sum of all y values' },
+            { sym: 'Σx',         def: 'Sum of all x values' },
+            { sym: 'Normal Eq 1', def: 'Σy = n·a₀ + a₁·Σx' },
+            { sym: 'Normal Eq 2', def: 'Σxy = a₀·Σx + a₁·Σx²' },
+          ],
+        },
+      ],
+    },
   };
 
   // ─── Engine Event Handlers ────────────────────────────────────────────────
@@ -291,6 +312,9 @@ export default function CalculusVisualization() {
       onFinish: handleExecutionFinished,
       gaussSeidelProblemId,
       gaussSeidelIterations,
+      jacobiProblemId,
+      jacobiIterations,
+      fslProblemId,
       rfProblemId,
       rfIterations,
       iterProblemId,
@@ -310,6 +334,11 @@ export default function CalculusVisualization() {
       return gaussSeidelProblemId === 'gs1'
         ? 'Solve: 10x₁-2x₂-x₃-x₄=3, -2x₁+10x₂-x₃-x₄=15, -x₁-x₂+10x₃-2x₄=27, -x₁-x₂-2x₃+10x₄=9'
         : 'Solve: 83x + 11y - 4z = 95, 7x + 52y + 13z = 104, 3x + 8y + 29z = 71';
+    }
+    if (selectedMethod === 'Jacobi Method') {
+      return jacobiProblemId === 'jb1'
+        ? 'Solve (Jacobi): 10x₁-2x₂-x₃-x₄=3, -2x₁+10x₂-x₃-x₄=15, -x₁-x₂+10x₃-2x₄=27, -x₁-x₂-2x₃+10x₄=9'
+        : 'Solve (Jacobi): 83x + 11y - 4z = 95, 7x + 52y + 13z = 104, 3x + 8y + 29z = 71';
     }
     if (selectedMethod === 'Regula Falsi Method') {
       return rfProblemId === 'rf1'
@@ -331,6 +360,11 @@ export default function CalculusVisualization() {
     if (selectedMethod === 'Newton General Interpolation') {
       const labels = { ng1: 'Find log₁₀(301) via divided differences (Photo Q1)', ng2: 'Express f(x) as polynomial — divided diff table (Photo Q2)', ng3: 'Find sin(45°) via divided differences' };
       return `Newton Divided Diff: ${labels[newtonGenProblemId] || newtonGenProblemId}`;
+    }
+    if (selectedMethod === 'Fitting Straight Line') {
+      return fslProblemId === 'fs1'
+        ? 'Fit straight line: Copper rod T vs l (Photo Q1)'
+        : 'Fit straight line: Experiment x vs y (Photo Q2)';
     }
     return `Solving using ${selectedMethod}.`;
   };
@@ -615,6 +649,24 @@ export default function CalculusVisualization() {
               </>
             )}
 
+            {selectedMethod === 'Jacobi Method' && (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5">Select Equation System</label>
+                  <select value={jacobiProblemId} onChange={e => { setJacobiProblemId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]">
+                    {JACOBI_PROBS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Iterations</label>
+                  <input type="number" min="1" max="10" value={jacobiIterations}
+                    onChange={e => { setJacobiIterations(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                </div>
+              </>
+            )}
+
             {selectedMethod === 'Regula Falsi Method' && (
               <>
                 <div className="mb-4">
@@ -688,6 +740,18 @@ export default function CalculusVisualization() {
                   <select value={newtonGenProblemId} onChange={e => { setNewtonGenProblemId(e.target.value); setPlaybackState('IDLE'); }}
                     className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]">
                     {NEWTON_GEN_PROBS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                  </select>
+                </div>
+              </>
+            )}
+
+            {selectedMethod === 'Fitting Straight Line' && (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5">Select Dataset</label>
+                  <select value={fslProblemId} onChange={e => { setFslProblemId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]">
+                    {FSL_PROBS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                   </select>
                 </div>
               </>

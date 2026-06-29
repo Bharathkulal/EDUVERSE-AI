@@ -15,6 +15,11 @@ export default function CalculusNotebookEngine({
   // Gauss Seidel props
   gaussSeidelProblemId,
   gaussSeidelIterations,
+  // Jacobi props
+  jacobiProblemId,
+  jacobiIterations,
+  // Fitting Straight Line props
+  fslProblemId,
   // Regula Falsi props
   rfProblemId,
   rfIterations,
@@ -1068,8 +1073,207 @@ export default function CalculusNotebookEngine({
       });
     }
 
+    // ── 10. JACOBI METHOD ──────────────────────────────────────────────────
+    else if (method === 'Jacobi Method') {
+      const numIters = parseInt(jacobiIterations) || 3;
+      const isJb1 = jacobiProblemId === 'jb1';
+
+      if (isJb1) {
+        sequence.push({
+          type: 'header',
+          title: 'PROBLEM STATEMENT',
+          content: `Solve using Jacobi Method:\n\n10x₁ - 2x₂ - x₃ - x₄ = 3\n-2x₁ + 10x₂ - x₃ - x₄ = 15\n-x₁ - x₂ + 10x₃ - 2x₄ = 27\n-x₁ - x₂ - 2x₃ + 10x₄ = -9\n\nRewrite equations in Jacobi iteration form:\nx₁⁽ᵏ⁺¹⁾ = 1/10 [ 3 + 2x₂⁽ᵏ⁾ + x₃⁽ᵏ⁾ + x₄⁽ᵏ⁾ ]\nx₂⁽ᵏ⁺¹⁾ = 1/10 [ 15 + 2x₁⁽ᵏ⁾ + x₃⁽ᵏ⁾ + x₄⁽ᵏ⁾ ]\nx₃⁽ᵏ⁺¹⁾ = 1/10 [ 27 + x₁⁽ᵏ⁾ + x₂⁽ᵏ⁾ + 2x₄⁽ᵏ⁾ ]\nx₄⁽ᵏ⁺¹⁾ = 1/10 [ -9 + x₁⁽ᵏ⁾ + x₂⁽ᵏ⁾ + 2x₃⁽ᵏ⁾ ]\n\nInitial approximation: x₁⁽⁰⁾ = x₂⁽⁰⁾ = x₃⁽⁰⁾ = x₄⁽⁰⁾ = 0`,
+          explanation: 'We state the linear system of equations, rewrite each equation to solve for its diagonal variable using the old iteration values, and set initial guess values to zero.'
+        });
+      } else {
+        sequence.push({
+          type: 'header',
+          title: 'PROBLEM STATEMENT',
+          content: `Solve using Jacobi Method:\n\n83x + 11y - 4z = 95\n7x + 52y + 13z = 104\n3x + 8y + 29z = 71\n\nRewrite equations in Jacobi iteration form:\nx⁽ᵏ⁺¹⁾ = 1/83 [ 95 - 11y⁽ᵏ⁾ + 4z⁽ᵏ⁾ ]\ny⁽ᵏ⁺¹⁾ = 1/52 [ 104 - 7x⁽ᵏ⁾ - 13z⁽ᵏ⁾ ]\nz⁽ᵏ⁺¹⁾ = 1/29 [ 71 - 3x⁽ᵏ⁾ - 8y⁽ᵏ⁾ ]\n\nInitial approximation: x⁽⁰⁾ = y⁽⁰⁾ = z⁽⁰⁾ = 0`,
+          explanation: 'We state the 3-variable system of linear equations, rewrite each equation in Jacobi iterative form using the values from the previous step, and set initial approximations to zero.'
+        });
+      }
+
+      let x1 = 0, x2 = 0, x3 = 0, x4 = 0;
+      let x = 0, y = 0, z = 0;
+
+      const history = [];
+      if (isJb1) {
+        history.push({ iter: 0, x1: 0, x2: 0, x3: 0, x4: 0 });
+      } else {
+        history.push({ iter: 0, x: 0, y: 0, z: 0 });
+      }
+
+      for (let k = 1; k <= numIters; k++) {
+        if (isJb1) {
+          const old_x1 = x1, old_x2 = x2, old_x3 = x3, old_x4 = x4;
+
+          const next_x1 = (3 + 2 * old_x2 + old_x3 + old_x4) / 10;
+          const next_x2 = (15 + 2 * old_x1 + old_x3 + old_x4) / 10;
+          const next_x3 = (27 + old_x1 + old_x2 + 2 * old_x4) / 10;
+          const next_x4 = (-9 + old_x1 + old_x2 + 2 * old_x3) / 10;
+
+          x1 = next_x1;
+          x2 = next_x2;
+          x3 = next_x3;
+          x4 = next_x4;
+
+          history.push({ iter: k, x1, x2, x3, x4 });
+
+          sequence.push({
+            type: 'math',
+            title: `ITERATION ${k}`,
+            content: `Using values from iteration ${k-1}: x₁=${old_x1.toFixed(4)}, x₂=${old_x2.toFixed(4)}, x₃=${old_x3.toFixed(4)}, x₄=${old_x4.toFixed(4)}\n\n` +
+                     `x₁⁽${k}⁾ = 1/10 [ 3 + 2(${old_x2.toFixed(4)}) + ${old_x3.toFixed(4)} + ${old_x4.toFixed(4)} ]\n` +
+                     `      = ${x1.toFixed(6)}\n\n` +
+                     `x₂⁽${k}⁾ = 1/10 [ 15 + 2(${old_x1.toFixed(4)}) + ${old_x3.toFixed(4)} + ${old_x4.toFixed(4)} ]\n` +
+                     `      = ${x2.toFixed(6)}\n\n` +
+                     `x₃⁽${k}⁾ = 1/10 [ 27 + ${old_x1.toFixed(4)} + ${old_x2.toFixed(4)} + 2(${old_x4.toFixed(4)}) ]\n` +
+                     `      = ${x3.toFixed(6)}\n\n` +
+                     `x₄⁽${k}⁾ = 1/10 [ -9 + ${old_x1.toFixed(4)} + ${old_x2.toFixed(4)} + 2(${old_x3.toFixed(4)}) ]\n` +
+                     `      = ${x4.toFixed(6)}`,
+            explanation: `Iteration ${k}: We calculate the new approximations simultaneously. In contrast to Gauss-Seidel, Jacobi uses ONLY the old values from iteration ${k-1} for all computations in this step.`
+          });
+        } else {
+          const old_x = x, old_y = y, old_z = z;
+
+          const next_x = (95 - 11 * old_y + 4 * old_z) / 83;
+          const next_y = (104 - 7 * old_x - 13 * old_z) / 52;
+          const next_z = (71 - 3 * old_x - 8 * old_y) / 29;
+
+          x = next_x;
+          y = next_y;
+          z = next_z;
+
+          history.push({ iter: k, x, y, z });
+
+          sequence.push({
+            type: 'math',
+            title: `ITERATION ${k}`,
+            content: `Using values from iteration ${k-1}: x=${old_x.toFixed(4)}, y=${old_y.toFixed(4)}, z=${old_z.toFixed(4)}\n\n` +
+                     `x⁽${k}⁾ = 1/83 [ 95 - 11(${old_y.toFixed(4)}) + 4(${old_z.toFixed(4)}) ]\n` +
+                     `    = ${x.toFixed(6)}\n\n` +
+                     `y⁽${k}⁾ = 1/52 [ 104 - 7(${old_x.toFixed(4)}) - 13(${old_z.toFixed(4)}) ]\n` +
+                     `    = ${y.toFixed(6)}\n\n` +
+                     `z⁽${k}⁾ = 1/29 [ 71 - 3(${old_x.toFixed(4)}) - 8(${old_y.toFixed(4)}) ]\n` +
+                     `    = ${z.toFixed(6)}`,
+            explanation: `Iteration ${k}: We solve for x, y, and z concurrently using the values from the previous iteration step.`
+          });
+        }
+      }
+
+      sequence.push({
+        type: 'jbTable',
+        title: 'CONVERGENCE TABLE',
+        history,
+        isJb1,
+        explanation: 'The Jacobi iteration convergence table summarizes all updates from iteration 0 to the final step.'
+      });
+
+      const ansStr = isJb1
+        ? `x₁ ≈ ${x1.toFixed(4)}\nx₂ ≈ ${x2.toFixed(4)}\nx₃ ≈ ${x3.toFixed(4)}\nx₄ ≈ ${x4.toFixed(4)}`
+        : `x ≈ ${x.toFixed(4)}\ny ≈ ${y.toFixed(4)}\nz ≈ ${z.toFixed(4)}`;
+
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: ansStr,
+        explanation: `Jacobi iterations completed. The system solution has converged to the approximate values shown above.`
+      });
+    }
+
+    // ── 11. FITTING STRAIGHT LINE ──────────────────────────────────────────
+    else if (method === 'Fitting Straight Line') {
+      const isFs1 = fslProblemId === 'fs1';
+      
+      const ptsX = isFs1 ? [80, 85, 90, 95, 100] : [1, 2, 3, 4, 5];
+      const ptsY = isFs1 ? [15, 18, 22, 25, 29] : [2.1, 3.9, 6.2, 8.1, 10.3];
+      const title = isFs1 ? 'Copper Rod T vs l Fitting' : 'Experimental x vs y Fitting';
+      const xLabel = isFs1 ? 'l (length)' : 'x';
+      const yLabel = isFs1 ? 'T (temp)' : 'y';
+      
+      const n = ptsX.length;
+      
+      let sumX = 0;
+      let sumY = 0;
+      let sumXX = 0;
+      let sumXY = 0;
+      
+      const rows = ptsX.map((xi, i) => {
+        const yi = ptsY[i];
+        const xx = xi * xi;
+        const xy = xi * yi;
+        sumX += xi;
+        sumY += yi;
+        sumXX += xx;
+        sumXY += xy;
+        return { xi, yi, xx, xy };
+      });
+      
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content: `Fit a straight line of the form: y = a₀ + a₁x\nto the following ${n} data points:\n` +
+                 ptsX.map((xi, idx) => `  x = ${xi}, y = ${ptsY[idx]}`).join('\n') + `\n\n` +
+                 `Normal Equations:\n` +
+                 `1) Σy = n·a₀ + a₁·Σx\n` +
+                 `2) Σxy = a₀·Σx + a₁·Σx²`,
+        explanation: `We aim to find the line y = a₀ + a₁x that best fits the data points. We set up the two normal equations derived from the principle of least squares.`
+      });
+      
+      sequence.push({
+        type: 'fslTable',
+        title: 'DATA SUMMARY TABLE',
+        rows,
+        sums: { sumX, sumY, sumXX, sumXY },
+        xLabel,
+        yLabel,
+        explanation: `We build a table of values computing x², xy, and their column sums. These sums are required coefficients for our normal equations.`
+      });
+      
+      // Calculate a1 and a0
+      const denom = n * sumXX - sumX * sumX;
+      const numA1 = n * sumXY - sumX * sumY;
+      const a1 = numA1 / denom;
+      const a0 = (sumY - a1 * sumX) / n;
+      
+      let solveStr = `Substitute sums into the Normal Equations:\n\n` +
+                     `1) ${sumY} = ${n}a₀ + ${sumX}a₁\n` +
+                     `2) ${sumXY} = ${sumX}a₀ + ${sumXX}a₁\n\n` +
+                     `Solve for slope (a₁) and intercept (a₀):\n\n` +
+                     `a₁ = [ n·Σxy - Σx·Σy ] / [ n·Σx² - (Σx)² ]\n` +
+                     `   = [ ${n}·(${sumXY}) - (${sumX})·(${sumY}) ] / [ ${n}·(${sumXX}) - (${sumX})² ]\n` +
+                     `   = [ ${n * sumXY} - ${sumX * sumY} ] / [ ${n * sumXX} - ${sumX * sumX} ]\n` +
+                     `   = ${numA1} / ${denom}\n` +
+                     `   = ${a1.toFixed(6)}\n\n` +
+                     `a₀ = [ Σy - a₁·Σx ] / n\n` +
+                     `   = [ ${sumY} - (${a1.toFixed(4)})·(${sumX}) ] / ${n}\n` +
+                     `   = [ ${sumY} - ${(a1 * sumX).toFixed(4)} ] / ${n}\n` +
+                     `   = ${(sumY - a1 * sumX).toFixed(6)} / ${n}\n` +
+                     `   = ${a0.toFixed(6)}`;
+      
+      sequence.push({
+        type: 'math',
+        title: 'STEP 1: SOLVE FOR COEFFICIENTS',
+        content: solveStr,
+        explanation: `We substitute the sums into the formulas derived from the normal equations. Solving them yields the y-intercept a₀ = ${a0.toFixed(4)} and slope a₁ = ${a1.toFixed(4)}.`
+      });
+      
+      const fitStr = `Fitted Equation:\ny = ${a0.toFixed(4)} + ${a1.toFixed(4)}x\n\n` +
+                     `where:\n` +
+                     `- Intercept a₀ = ${a0.toFixed(6)}\n` +
+                     `- Slope     a₁ = ${a1.toFixed(6)}`;
+                     
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: fitStr,
+        explanation: `The least squares regression line is y = ${a0.toFixed(4)} + ${a1.toFixed(4)}x. This line minimizes the vertical distance to all data points.`
+      });
+    }
+
     return sequence;
-  }, [method, limitFuncId, limitApproachVal, derivFuncId, derivAtX, integFuncId, integA, integB, integN, lhopitalProblemId, gaussSeidelProblemId, gaussSeidelIterations, rfProblemId, rfIterations, iterProblemId, iterIterations, nrProblemId, nrIterations, lagrangeProblemId, newtonGenProblemId]);
+  }, [method, limitFuncId, limitApproachVal, derivFuncId, derivAtX, integFuncId, integA, integB, integN, lhopitalProblemId, gaussSeidelProblemId, gaussSeidelIterations, jacobiProblemId, jacobiIterations, fslProblemId, rfProblemId, rfIterations, iterProblemId, iterIterations, nrProblemId, nrIterations, lagrangeProblemId, newtonGenProblemId]);
 
   // ─── Playback Control ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -1350,6 +1554,99 @@ export default function CalculusNotebookEngine({
     );
   };
 
+  const renderJbGrid = (history, isJb1) => {
+    setTimeout(() => {
+      if (playbackState === 'PLAYING' && !stepComplete) {
+        handleTypingComplete();
+      }
+    }, 1000);
+
+    return (
+      <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
+        <table className="w-full text-center border-collapse text-xs font-mono">
+          <thead>
+            <tr className="bg-[var(--db-card-bg-elevated)] border-b border-[var(--db-card-border)]">
+              <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-indigo-700">Iteration</th>
+              {isJb1 ? (
+                <>
+                  <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-indigo-700">x₁</th>
+                  <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-indigo-700">x₂</th>
+                  <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-indigo-700">x₃</th>
+                  <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-indigo-700">x₄</th>
+                </>
+              ) : (
+                <>
+                  <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-indigo-700">x</th>
+                  <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-indigo-700">y</th>
+                  <th className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-indigo-700">z</th>
+                </>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {history.map((row, idx) => (
+              <tr key={idx} className={`${idx % 2 === 0 ? 'bg-[var(--db-card-bg)]' : 'bg-[var(--db-card-bg-elevated)]/40'} border-b border-[var(--db-card-border)]/50 hover:bg-[var(--db-card-bg-elevated)]/80 transition`}>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.iter}</td>
+                {isJb1 ? (
+                  <>
+                    <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.x1.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.x2.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.x3.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.x4.toFixed(6)}</td>
+                  </>
+                ) : (
+                  <>
+                    <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.x.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.y.toFixed(6)}</td>
+                    <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-semibold text-slate-700">{row.z.toFixed(6)}</td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  const renderFslGrid = (rows, sums, xLabel, yLabel) => {
+    setTimeout(() => {
+      if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
+    }, 1000);
+
+    return (
+      <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
+        <table className="w-full text-center border-collapse text-xs font-mono">
+          <thead>
+            <tr className="bg-[var(--db-card-bg-elevated)] border-b border-[var(--db-card-border)]">
+              {['i', `${xLabel} (x)`, `${yLabel} (y)`, 'x²', 'x·y'].map((h, idx) => (
+                <th key={idx} className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-sky-700 whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr key={i} className={`${i % 2 === 0 ? 'bg-[var(--db-card-bg)]' : 'bg-[var(--db-card-bg-elevated)]/40'} border-b border-[var(--db-card-border)]/50 hover:bg-[var(--db-card-bg-elevated)]/80 transition`}>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-bold text-sky-600">{i + 1}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-700">{row.xi}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-700">{row.yi}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-500">{row.xx}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-550">{row.xy.toFixed(2)}</td>
+              </tr>
+            ))}
+            <tr className="bg-[var(--db-card-bg-elevated)] font-bold border-t-2 border-[var(--db-card-border)]">
+              <td className="py-2.5 px-3 border-r border-[var(--db-card-border)] text-sky-700">Σ (Sum)</td>
+              <td className="py-2.5 px-3 border-r border-[var(--db-card-border)] text-slate-700">{sums.sumX}</td>
+              <td className="py-2.5 px-3 border-r border-[var(--db-card-border)] text-slate-700">{sums.sumY}</td>
+              <td className="py-2.5 px-3 border-r border-[var(--db-card-border)] text-slate-500">{sums.sumXX}</td>
+              <td className="py-2.5 px-3 text-slate-550">{sums.sumXY.toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   const progress = activeStepIndex >= 0 ? ((activeStepIndex + 1) / steps.length) * 100 : 0;
 
   return (
@@ -1448,6 +1745,16 @@ export default function CalculusNotebookEngine({
                 <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-fuchsia-400 shadow-md border-y border-r border-[var(--db-card-border)]/50">
                   <span className="text-xs font-bold text-slate-500 font-sans">Newton Divided Difference Table:</span>
                   {renderNewtonGenGrid(step.x, step.py, step.n)}
+                </div>
+              ) : step.type === 'jbTable' ? (
+                <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-indigo-400 shadow-md border-y border-r border-[var(--db-card-border)]/50">
+                  <span className="text-xs font-bold text-slate-500 font-sans">Jacobi Convergence Iterations Table:</span>
+                  {renderJbGrid(step.history, step.isJb1)}
+                </div>
+              ) : step.type === 'fslTable' ? (
+                <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-sky-400 shadow-md border-y border-r border-[var(--db-card-border)]/50">
+                  <span className="text-xs font-bold text-slate-500 font-sans">Least Squares Data Summary Table:</span>
+                  {renderFslGrid(step.rows, step.sums, step.xLabel, step.yLabel)}
                 </div>
               ) : step.type === 'header' ? (
                 <div className="bg-gradient-to-br from-[var(--db-card-bg-elevated)] to-[var(--db-card-bg)] p-6 rounded-2xl border border-[var(--db-card-border)] shadow-sm">
