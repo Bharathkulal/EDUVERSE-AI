@@ -44,6 +44,8 @@ export default function LinkedListVisualization() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const playTimerRef = useRef(null);
+  const pendingNodesRef = useRef(null); // Stores final nodes to commit after animation
+  const isAnimatingRef = useRef(false); // Prevent generateSteps during animation
 
   // Zoom / Pan handlers
   const handleMouseDown = (e) => {
@@ -284,16 +286,50 @@ export default function LinkedListVisualization() {
 
     // If list is empty
     if (initialNodes.length === 0) {
-      newSteps.push({
-        label: "Linked List is empty. Trigger 'Insert Beginning' to create the HEAD node.",
-        activeLine: 7,
-        nodes: [],
-        wires: [],
-        variables: { head: 'NULL', current: 'NULL', newNode: 'NULL' }
-      });
-      setSteps(newSteps);
-      setCurrentStepIndex(0);
-      return;
+      if (operation.includes('insert')) {
+        // Step 0: Initial State
+        newSteps.push({
+          label: "Linked List is empty. HEAD points to NULL.",
+          activeLine: 7,
+          nodes: [],
+          wires: [],
+          variables: { head: 'NULL', current: 'NULL', newNode: 'NULL' }
+        });
+
+        // Step 1: Create New Node
+        const newNodeObj = { id: 99, value: val, address: '0x101', state: 'new', isVirtual: true };
+        newSteps.push({
+          label: `Allocate memory for HEAD node with data: ${val}.`,
+          activeLine: 8,
+          nodes: [newNodeObj],
+          wires: [],
+          variables: { head: 'NULL', current: 'NULL', newNode: '0x101' }
+        });
+
+        // Step 2: Point HEAD -> New Node
+        newSteps.push({
+          label: "Update HEAD pointer to point to the new node at 0x101.",
+          activeLine: 10,
+          nodes: [{ ...newNodeObj, state: 'default' }],
+          wires: [],
+          variables: { head: '0x101', current: 'NULL', newNode: 'NULL' }
+        });
+
+        setSteps(newSteps);
+        setCurrentStepIndex(0);
+        return;
+      } else {
+        newSteps.push({
+          label: "Linked List is empty. No operations to animate.",
+          activeLine: 7,
+          nodes: [],
+          wires: [],
+          variables: { head: 'NULL', current: 'NULL', newNode: 'NULL' }
+        });
+        setSteps(newSteps);
+        setCurrentStepIndex(0);
+        return;
+      }
     }
 
     // Step 0: Initial State
@@ -380,16 +416,27 @@ export default function LinkedListVisualization() {
   };
 
   useEffect(() => {
+    // Don't regenerate steps while an animation is actively playing
+    if (isAnimatingRef.current) return;
     generateSteps();
   }, [listType, operation, nodes]);
 
   // Handle playing simulation
   useEffect(() => {
     if (isPlaying) {
+      isAnimatingRef.current = true;
       playTimerRef.current = setInterval(() => {
         setCurrentStepIndex((prev) => {
           if (prev >= steps.length - 1) {
             setIsPlaying(false);
+            isAnimatingRef.current = false;
+            // Auto-commit pending nodes after animation finishes
+            if (pendingNodesRef.current) {
+              setTimeout(() => {
+                setNodes(pendingNodesRef.current);
+                pendingNodesRef.current = null;
+              }, 600);
+            }
             return prev;
           }
           return prev + 1;
@@ -423,8 +470,10 @@ export default function LinkedListVisualization() {
     variables: { head: 'NULL', current: 'NULL', newNode: 'NULL' }
   };
 
-  // Perform operational change directly to testing list state
+  // Perform operational change — compute final nodes, generate steps, and animate
   const executeDirectOperation = () => {
+    if (isPlaying) return; // Don't allow while already animating
+    
     const val = parseInt(inputValue) || 10;
     const pos = parseInt(inputPosition) || 1;
     let nextNodes = [...nodes];
@@ -448,7 +497,16 @@ export default function LinkedListVisualization() {
       nextNodes = [];
     }
 
-    setNodes(nextNodes);
+    // Store the final nodes to commit after animation completes
+    pendingNodesRef.current = nextNodes;
+    
+    // Generate steps based on current state, then start playing
+    generateSteps();
+    setCurrentStepIndex(0);
+    // Small delay to ensure steps are set before playing
+    setTimeout(() => {
+      setIsPlaying(true);
+    }, 100);
   };
 
   return (
@@ -618,9 +676,18 @@ export default function LinkedListVisualization() {
 
               <button 
                 onClick={executeDirectOperation}
-                className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white text-xs font-black py-3 rounded-xl transition-all shadow-lg shadow-[#3B82F6]/20 active:scale-[0.98]"
+                disabled={isPlaying}
+                className={`w-full text-white text-xs font-black py-3 rounded-xl transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 ${
+                  isPlaying 
+                    ? 'bg-slate-400 cursor-not-allowed shadow-none' 
+                    : 'bg-[#3B82F6] hover:bg-[#2563EB] shadow-[#3B82F6]/20'
+                }`}
               >
-                EXECUTE OPERATION
+                {isPlaying ? (
+                  <><Pause className="w-3.5 h-3.5" /> ANIMATING...</>
+                ) : (
+                  <><Play className="w-3.5 h-3.5 fill-current" /> START ANIMATION</>
+                )}
               </button>
             </div>
 
@@ -730,9 +797,11 @@ export default function LinkedListVisualization() {
               >
                 {/* Head pointer name banner */}
                 {showPointerNames && activeStep.nodes?.length > 0 && (
-                  <div className="absolute -top-16 left-8 flex flex-col items-center">
-                    <span className="text-[9px] font-black tracking-widest text-white bg-[#3B82F6] px-2.5 py-0.5 rounded-lg shadow-lg">HEAD</span>
-                    <div className="w-[1.5px] h-6 bg-[#3B82F6] border-dashed border"></div>
+                  <div className="absolute -top-14 left-8 flex flex-col items-center">
+                    <span className={`text-[10px] font-black tracking-widest px-3 py-1 rounded-md shadow-sm border ${
+                      isDarkMode ? 'bg-emerald-900/50 text-emerald-400 border-emerald-700' : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                    }`}>HEAD</span>
+                    <div className="w-[2px] h-5 bg-emerald-400/60"></div>
                   </div>
                 )}
 
@@ -741,6 +810,7 @@ export default function LinkedListVisualization() {
                   {activeStep.nodes?.map((node, index) => {
                     const isNew = node.state === 'new';
                     const isActive = node.state === 'active';
+                    const isHead = index === 0;
 
                     return (
                       <motion.div 
@@ -750,79 +820,116 @@ export default function LinkedListVisualization() {
                         animate={{ 
                           scale: isActive ? 1.05 : 1, 
                           opacity: 1, 
-                          y: isNew ? -70 : 0, // Hover floating node above list chain
-                          boxShadow: isActive ? '0 0 25px rgba(59, 130, 246, 0.4)' : '0 4px 10px rgba(0,0,0,0.1)'
+                          y: isNew ? -70 : 0,
                         }}
                         exit={{ scale: 0.5, opacity: 0, y: 50, transition: { duration: 0.3 } }}
                         transition={{ type: "spring", stiffness: 200, damping: 20 }}
                         className="flex items-center shrink-0 relative"
                       >
-                        {/* Node Element */}
-                        <div className={`relative flex rounded-2xl border-2 overflow-hidden w-36 h-16 transition-all duration-300 ${
-                          isActive ? 'bg-[#3B82F6] border-[#3B82F6] text-white shadow-xl' : 
-                          isNew ? 'bg-blue-950 border-blue-500 text-white' : 
-                          isDarkMode ? 'bg-[#001621] border-[#3B82F6]/30 text-[#3B82F6]' : 'bg-white border-[#3B82F6]/30 text-slate-800 shadow-sm'
-                        }`}>
-                          
-                          {/* Data Part (Left) */}
-                          <div className={`flex-1 flex flex-col justify-center items-center h-full border-r pt-3 pb-1 ${
-                            isActive ? 'border-white/20' : 'border-[#3B82F6]/20'
+                        {/* Node Card */}
+                        <div 
+                          className={`relative flex rounded-xl overflow-hidden transition-all duration-300 ${
+                            isActive 
+                              ? 'shadow-[0_8px_30px_rgba(79,70,229,0.4)]' 
+                              : isNew 
+                                ? 'shadow-[0_8px_30px_rgba(79,70,229,0.3)]' 
+                                : 'shadow-[0_4px_16px_rgba(0,0,0,0.08)]'
+                          }`}
+                          style={{ width: '140px', height: '64px' }}
+                        >
+                          {/* Data Part (Left ~70%) */}
+                          <div className={`flex-1 flex items-center justify-center transition-all duration-300 ${
+                            isActive 
+                              ? 'bg-[#4F46E5]' 
+                              : isNew 
+                                ? 'bg-[#4338CA]' 
+                                : isHead 
+                                  ? 'bg-[#4F46E5]' 
+                                  : isDarkMode 
+                                    ? 'bg-[#0f1c2e] border-r border-slate-700' 
+                                    : 'bg-white border-r border-slate-200'
                           }`}>
-                            <span className={`text-[8px] font-extrabold uppercase tracking-wider ${
-                              isActive ? 'text-white/70' : 'text-slate-400'
-                            }`}>DATA</span>
-                            <span className={`text-base font-black leading-none mt-1 ${
-                              isActive ? 'text-white' : (isDarkMode ? 'text-[#3B82F6]' : 'text-slate-800')
+                            <span className={`text-2xl font-black leading-none ${
+                              (isActive || isNew || isHead) 
+                                ? 'text-white' 
+                                : isDarkMode 
+                                  ? 'text-slate-200' 
+                                  : 'text-slate-700'
                             }`}>{node.value}</span>
                           </div>
 
-                          {/* Link Part (Right) */}
-                          <div className={`w-12 flex flex-col justify-center items-center h-full pt-3 pb-1 ${
-                            isActive ? 'bg-white/10' : 'bg-slate-500/5'
-                          }`}>
-                            <span className={`text-[8px] font-extrabold uppercase tracking-wider ${
-                              isActive ? 'text-white/70' : 'text-slate-400'
-                            }`}>LINK</span>
-                            <div className={`w-3.5 h-3.5 rounded-full mt-1.5 flex items-center justify-center ${
-                              isActive ? 'bg-white animate-pulse' : 'bg-[#3B82F6]'
+                          {/* Link Part (Right ~30%) */}
+                          <div className={`flex items-center justify-center transition-all duration-300 ${
+                            isActive 
+                              ? 'bg-[#3730A3]' 
+                              : isNew 
+                                ? 'bg-[#312E81]' 
+                                : isHead 
+                                  ? 'bg-[#3730A3]' 
+                                  : isDarkMode 
+                                    ? 'bg-[#0a1420]' 
+                                    : 'bg-slate-50'
+                          }`} style={{ width: '44px' }}>
+                            <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all ${
+                              isActive ? 'bg-white/30 animate-pulse' : ''
                             }`}>
-                              <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-[#3B82F6]' : 'bg-white/80'}`} />
+                              <div className={`w-2.5 h-2.5 rounded-full ${
+                                (isActive || isNew || isHead) 
+                                  ? 'bg-white/80' 
+                                  : isDarkMode 
+                                    ? 'bg-slate-500' 
+                                    : 'bg-slate-400'
+                              }`} />
                             </div>
                           </div>
 
-                          {/* Memory Address Float at the top center */}
-                          {showAddresses && (
-                            <div className={`absolute top-0 left-0 right-0 text-[8px] font-mono text-center py-0.5 border-b ${
-                              isActive ? 'bg-white/10 text-white/90 border-white/10' : 
-                              isDarkMode ? 'bg-[#001621]/80 text-[#3B82F6]/60 border-[#3B82F6]/10' : 'bg-slate-50 text-slate-400 border-slate-100'
-                            }`}>
-                              {node.address}
-                            </div>
-                          )}
-
-                          {/* Top banner label for New Node */}
-                          {isNew && (
-                            <div className="absolute -top-6 left-0 right-0 text-[7px] font-extrabold tracking-widest text-[#3B82F6] uppercase">
-                              NEW NODE
-                            </div>
-                          )}
+                          {/* Outer border */}
+                          <div className={`absolute inset-0 rounded-xl border-2 pointer-events-none ${
+                            isActive 
+                              ? 'border-[#4F46E5]' 
+                              : isNew 
+                                ? 'border-[#4338CA]' 
+                                : isHead 
+                                  ? 'border-[#4F46E5]' 
+                                  : isDarkMode 
+                                    ? 'border-slate-700' 
+                                    : 'border-slate-200'
+                          }`} />
                         </div>
 
-                        {/* Pointer label under active node */}
-                        {isActive && (
-                          <div className="absolute -bottom-12 left-12 -translate-x-1/2 flex flex-col items-center z-20">
-                            <div className="w-[1.5px] h-3 bg-[#3B82F6] border-dashed border"></div>
-                            <span className="text-[8px] font-extrabold tracking-wider text-white bg-[#3B82F6] px-2 py-0.5 rounded shadow-md uppercase">TEMP</span>
+                        {/* Memory Address Badge (below node) */}
+                        {showAddresses && (
+                          <div className={`absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] font-mono font-bold ${
+                            isDarkMode ? 'text-slate-500' : 'text-slate-400'
+                          }`}>
+                            {node.address}
                           </div>
                         )}
 
-                        {/* SVG Connector Wires */}
+                        {/* Top banner label for New Node */}
+                        {isNew && (
+                          <div className="absolute -top-7 left-0 right-0 text-center">
+                            <span className="text-[8px] font-extrabold tracking-widest text-indigo-500 uppercase bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
+                              NEW NODE
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Pointer label under active node */}
+                        {isActive && (
+                          <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 flex flex-col items-center z-20">
+                            <div className="w-[2px] h-3 bg-[#4F46E5]"></div>
+                            <span className="text-[8px] font-extrabold tracking-wider text-white bg-[#4F46E5] px-2.5 py-0.5 rounded-md shadow-md uppercase">CURRENT</span>
+                          </div>
+                        )}
+
+                        {/* SVG Connector Arrow */}
                         {index < (activeStep.nodes?.length - 1) && (
-                          <div className="w-12 h-16 flex items-center justify-center relative shrink-0">
+                          <div className="flex items-center justify-center relative shrink-0" style={{ width: '48px', height: '64px' }}>
                             <svg className="absolute w-full h-full overflow-visible" viewBox="0 0 48 64">
                               <defs>
-                                <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
-                                  <feGaussianBlur stdDeviation="2.5" result="blur" />
+                                <filter id={`glow-${index}`} x="-20%" y="-20%" width="140%" height="140%">
+                                  <feGaussianBlur stdDeviation="2" result="blur" />
                                   <feMerge>
                                     <feMergeNode in="blur" />
                                     <feMergeNode in="SourceGraphic" />
@@ -832,42 +939,46 @@ export default function LinkedListVisualization() {
                               {isNew ? (
                                 <>
                                   <path 
-                                    d="M -24,-50 C 12,-50 12,32 40,32" 
+                                    d="M -20,-46 C 14,-46 14,32 38,32" 
                                     fill="none" 
-                                    stroke="#3b82f6" 
-                                    strokeWidth="3"
+                                    stroke="#4F46E5" 
+                                    strokeWidth="2.5"
+                                    strokeDasharray="6,3"
                                   />
-                                  <polygon 
-                                    points="38,28 48,32 38,36" 
-                                    fill="#3b82f6" 
-                                  />
+                                  <polygon points="36,28 46,32 36,36" fill="#4F46E5" />
                                 </>
                               ) : (
                                 <>
                                   <motion.line 
-                                    x1="-24" 
-                                    y1="32" 
-                                    x2="40" 
-                                    y2="32" 
-                                    stroke={activeStep.wires?.[index] === 'traversal' ? '#3B82F6' : (isDarkMode ? '#3B82F6/30' : '#3B82F6/50')} 
-                                    strokeWidth={activeStep.wires?.[index] === 'traversal' ? '5.5' : '2'}
+                                    x1="-20" y1="32" x2="38" y2="32" 
+                                    stroke={
+                                      activeStep.wires?.[index] === 'traversal' 
+                                        ? '#4F46E5' 
+                                        : (isDarkMode ? 'rgba(99,102,241,0.4)' : 'rgba(99,102,241,0.5)')
+                                    } 
+                                    strokeWidth={activeStep.wires?.[index] === 'traversal' ? '4' : '2.5'}
                                     strokeDasharray={activeStep.wires?.[index] === 'traversal' ? '8, 4' : 'none'}
                                     animate={activeStep.wires?.[index] === 'traversal' ? { strokeDashoffset: [0, -24] } : {}}
                                     transition={{ ease: "linear", duration: 0.5, repeat: Infinity }}
-                                    filter={activeStep.wires?.[index] === 'traversal' ? 'url(#neon-glow)' : 'none'}
+                                    filter={activeStep.wires?.[index] === 'traversal' ? `url(#glow-${index})` : 'none'}
                                   />
                                   <polygon 
-                                    points="40,28 48,32 40,36" 
-                                    fill={activeStep.wires?.[index] === 'traversal' ? '#3B82F6' : (isDarkMode ? '#3B82F6/30' : '#3B82F6/50')} 
-                                    filter={activeStep.wires?.[index] === 'traversal' ? 'url(#neon-glow)' : 'none'}
+                                    points="36,28 46,32 36,36" 
+                                    fill={
+                                      activeStep.wires?.[index] === 'traversal' 
+                                        ? '#4F46E5' 
+                                        : (isDarkMode ? 'rgba(99,102,241,0.4)' : 'rgba(99,102,241,0.5)')
+                                    } 
+                                    filter={activeStep.wires?.[index] === 'traversal' ? `url(#glow-${index})` : 'none'}
                                   />
                                   {activeStep.wires?.[index] === 'traversal' && (
                                     <motion.circle 
-                                      r="4" 
-                                      fill="#3B82F6" 
-                                      animate={{ cx: [-24, 48] }} 
+                                      r="3.5" 
+                                      fill="#4F46E5" 
+                                      cy="32"
+                                      animate={{ cx: [-20, 46] }} 
                                       transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                                      filter="url(#neon-glow)"
+                                      filter={`url(#glow-${index})`}
                                     />
                                   )}
                                 </>
@@ -880,10 +991,14 @@ export default function LinkedListVisualization() {
                   })}
                 </AnimatePresence>
 
-                {/* End of list element */}
+                {/* NULL terminator */}
                 {activeStep.nodes?.length > 0 && (
-                  <div className="flex items-center text-xs font-mono text-[#3B82F6] ml-2 border border-[#3B82F6]/20 bg-white px-3 py-2 rounded-xl shadow-lg shrink-0">
-                    NULL
+                  <div className={`flex items-center shrink-0 ml-1`}>
+                    <div className={`text-[11px] font-mono font-bold px-3 py-1.5 rounded-lg border ${
+                      isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-400'
+                    }`}>
+                      NULL
+                    </div>
                   </div>
                 )}
               </div>

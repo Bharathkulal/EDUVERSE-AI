@@ -618,7 +618,10 @@ export default function Overview() {
                 >
                   <span className="text-[10px] font-extrabold">{day.count}</span>
                   {/* Tooltip */}
-                  <div className="absolute bottom-full mb-1 hidden group-hover:block bg-black/90 text-[9px] text-white px-2 py-1 rounded whitespace-nowrap z-30 border border-slate-800 shadow-md">
+                  <div
+                    className="absolute bottom-full mb-1 hidden group-hover:block text-[9px] px-2 py-1 rounded whitespace-nowrap z-30 border border-slate-800 shadow-md"
+                    style={{ color: '#ffffff', backgroundColor: '#000000' }}
+                  >
                     {day.date}: {day.count} action{day.count !== 1 ? 's' : ''}
                   </div>
                 </div>
