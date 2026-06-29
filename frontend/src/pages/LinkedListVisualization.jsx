@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Play, Pause, SkipForward, SkipBack, RotateCcw, 
   ChevronRight, Cpu, Code2, Database, Zap, Settings, Info,
-  ZoomIn, ZoomOut, Maximize2, RefreshCw, Layers, Compass, Terminal, Film
+  ZoomIn, ZoomOut, Maximize2, RefreshCw, Layers, Compass, Terminal, Film, Volume2
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useVoiceAssistant } from '../context/VoiceContext';
