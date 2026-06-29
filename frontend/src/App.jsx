@@ -40,6 +40,8 @@ const TypingQuest = lazy(() => import('./pages/TypingQuest'));
 const CodingBattleSystem = lazy(() => import('./pages/CodingBattleSystem'));
 const Community = lazy(() => import('./pages/Community'));
 const CareerHub = lazy(() => import('./pages/CareerHub'));
+// Python AI Learning Platform
+const PythonLessonPage = lazy(() => import('./python/PythonLessonPage'));
 
 // Lazy Loaded DSA/Math Visualizer Pages
 const StackVisualization = lazy(() => import('./pages/StackVisualization'));
@@ -163,6 +165,9 @@ export default function App() {
             {/* Career Hub & Community */}
             <Route path="/career-hub" element={<ProtectedRoute><Layout><CareerHub /></Layout></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><Layout><Community /></Layout></ProtectedRoute>} />
+
+            {/* Python AI Learning Platform */}
+            <Route path="/python/course/:lessonSlug" element={<ProtectedRoute><Layout><PythonLessonPage /></Layout></ProtectedRoute>} />
 
             {/* DSA index route — redirect to first visualizer */}
             <Route path="/dsa" element={<Navigate to="/dsa/stack" replace />} />

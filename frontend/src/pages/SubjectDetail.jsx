@@ -8,6 +8,7 @@ import JavaLab from '../components/JavaLab';
 import DSALab from '../components/DSALab';
 import WebDevLab from '../components/WebDevLab';
 import OnlineCompiler from '../components/OnlineCompiler';
+import PythonCoursePage from '../python/PythonCoursePage';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Layers, List, GitCommit, GitMerge, Share2, PlayCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 
@@ -61,7 +62,7 @@ export default function SubjectDetail() {
 
   if (!subject) return <div className="animate-pulse h-96 bg-slate-200 rounded-xl" />;
 
-  // Python — dedicated online compiler
+  // Python — Full AI-powered learning platform
   if (subject.subject_name === 'Python') {
     return (
       <div>
@@ -81,15 +82,7 @@ export default function SubjectDetail() {
             </button>
           </div>
         )}
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px' }}>{subject.subject_name}</h1>
-          <p style={{ color: '#64748B', margin: 0, fontSize: '0.9rem' }}>{subject.description}</p>
-        </div>
-        <OnlineCompiler
-          language="python"
-          title="Python Online Compiler"
-          subtitle="Write, run, and debug Python programs instantly in your browser."
-        />
+        <PythonCoursePage />
       </div>
     );
   }
