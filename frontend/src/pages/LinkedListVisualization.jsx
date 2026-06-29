@@ -7,12 +7,14 @@ import {
   ZoomIn, ZoomOut, Maximize2, RefreshCw, Layers, Compass, Terminal, Film
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { useVoiceAssistant } from '../context/VoiceContext';
 import ThemeToggleButton from '../components/ThemeToggleButton';
 import './DashboardTheme.css';
 
 export default function LinkedListVisualization() {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
+  const { isEnabled, toggleEnabled } = useVoiceAssistant();
   
   // Custom Zoom and Pan State
   const [zoomScale, setZoomScale] = useState(1);
@@ -714,17 +716,24 @@ export default function LinkedListVisualization() {
           </div>
 
           {/* Settings Display Toggles */}
-          <div className={`border-t pt-4 space-y-2 ${isDarkMode ? 'border-[#FF4103]/10' : 'border-slate-200'}`}>
+          <div className={`border-t pt-4 space-y-2 relative overflow-hidden ${isDarkMode ? 'border-[#FF4103]/10' : 'border-slate-200'}`}>
+            {/* Watermark Background */}
+            <div className="absolute right-0 bottom-0 opacity-[0.06] dark:opacity-[0.03] pointer-events-none select-none flex flex-col items-center justify-center translate-y-1 translate-x-1">
+              <Volume2 className="w-16 h-16 text-blue-500" />
+              <span className="text-[14px] font-black tracking-widest text-blue-500 -mt-1">FRIDAY</span>
+            </div>
+
             {[
               { label: "Show Memory Addresses", state: showAddresses, set: setShowAddresses },
               { label: "Show Pointer Badges", state: showPointerNames, set: setShowPointerNames },
               { label: "Show Interactive Complexity", state: showComplexity, set: setShowComplexity },
+              { label: "Enable Friday Voice Guide", state: isEnabled, set: toggleEnabled, isFridayToggle: true }
             ].map(opt => (
-              <label key={opt.label} className="flex items-center gap-2.5 text-xs text-slate-400 cursor-pointer hover:text-slate-700 transition-colors">
+              <label key={opt.label} className="flex items-center gap-2.5 text-xs text-slate-400 cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors relative z-10">
                 <input 
                   type="checkbox" 
                   checked={opt.state} 
-                  onChange={(e) => opt.set(e.target.checked)}
+                  onChange={(e) => opt.isFridayToggle ? opt.set() : opt.set(e.target.checked)}
                   className="accent-[#3B82F6] rounded border-slate-300"
                 />
                 <span>{opt.label}</span>

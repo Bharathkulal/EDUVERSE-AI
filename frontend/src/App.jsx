@@ -112,7 +112,6 @@ export default function App() {
 
   return (
     <>
-      <AIChatLayer />
       <VoiceAssistantWidget />
       <AnimatePresence mode="wait">
         <Suspense fallback={<PageLoader />}>

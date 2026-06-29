@@ -83,7 +83,7 @@ export default function VoiceAssistantWidget() {
       {/* Floating Action Orb Button (Bottom Left) */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 left-6 z-50 w-16 h-16 rounded-full flex items-center justify-center border-2 shadow-xl outline-none focus:ring-2 focus:ring-blue-500 bg-gradient-to-br transition-all cursor-pointer ${getOrbGradients()}`}
+        className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-full flex items-center justify-center border-2 border-blue-500/80 bg-white/10 dark:bg-slate-900/20 backdrop-blur-md shadow-lg shadow-blue-500/10 hover:shadow-blue-500/25 transition-all cursor-pointer"
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
         aria-label="EduVerse Voice Guide"
@@ -92,28 +92,24 @@ export default function VoiceAssistantWidget() {
         {/* Animated concentric rings */}
         {isEnabled && activeState !== 'idle' && (
           <motion.div
-            className="absolute inset-[-4px] rounded-full border-2 border-inherit opacity-40"
+            className="absolute inset-[-4px] rounded-full border-2 border-blue-500/30 opacity-40"
             animate={{ scale: [1, 1.25, 1], rotate: 360 }}
             transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
           />
         )}
 
-        <div className="flex flex-col items-center justify-center relative text-white">
+        <div className="flex flex-col items-center justify-center relative text-blue-500 dark:text-blue-400">
           {activeState === 'listening' ? (
-            <Mic className="w-6 h-6 animate-bounce" />
+            <Mic className="w-5.5 h-5.5 animate-bounce" />
           ) : isMuted ? (
-            <VolumeX className="w-6 h-6" />
+            <VolumeX className="w-5.5 h-5.5 text-slate-400" />
           ) : (
-            <Volume2 className="w-6 h-6" />
+            <Volume2 className="w-5.5 h-5.5" />
           )}
-          
-          <span className="text-[8px] uppercase tracking-wider font-extrabold mt-0.5">
-            {activeState === 'idle' ? 'FRIDAY' : activeState}
-          </span>
         </div>
 
         {/* Small enable indicator dot */}
-        <span className={`absolute top-0 right-0 w-4.5 h-4.5 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-black ${isEnabled ? 'bg-emerald-500' : 'bg-slate-400'}`}>
+        <span className={`absolute -top-1 -right-1 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-extrabold ${isEnabled ? 'bg-emerald-500 text-slate-900' : 'bg-slate-400 text-white'}`}>
           {isEnabled ? 'ON' : 'OFF'}
         </span>
       </motion.button>
