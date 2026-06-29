@@ -6,7 +6,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import AIChatLayer from './components/AIChatLayer';
 import { useVoiceAssistant } from './context/VoiceContext';
-import VoiceAssistantWidget from './components/VoiceAssistantWidget';
+
 
 // Authentication & Core pages (fast start)
 import LandingPage from './pages/LandingPage';
@@ -112,7 +112,7 @@ export default function App() {
 
   return (
     <>
-      <VoiceAssistantWidget />
+      <AIChatLayer />
       <AnimatePresence mode="wait">
         <Suspense fallback={<PageLoader />}>
           <Routes location={location} key={location.pathname + location.hash}>

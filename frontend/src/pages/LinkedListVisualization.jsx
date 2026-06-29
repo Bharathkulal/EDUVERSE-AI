@@ -1160,21 +1160,6 @@ export default function LinkedListVisualization() {
             </AnimatePresence>
           </div>
 
-          {/* Complexity panel overlay */}
-          {showComplexity && (
-            <div className={`border-t p-4 space-y-2 transition-colors duration-300 ${
-              isDarkMode ? 'bg-[#001621] border-t border-[#FF4103]/20' : 'bg-white border-t border-slate-200'
-            }`}>
-              <div className="flex justify-between text-[10px] text-slate-500 font-bold">
-                <span>TIME COMPLEXITY:</span>
-                <span className="text-[#3B82F6] font-mono font-black">O(N)</span>
-              </div>
-              <div className="flex justify-between text-[10px] text-slate-500 font-bold">
-                <span>SPACE COMPLEXITY:</span>
-                <span className="text-[#3B82F6] font-mono font-black">O(1)</span>
-              </div>
-            </div>
-          )}
         </div>
       </main>
     </div>
