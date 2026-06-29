@@ -24,6 +24,13 @@ export default function CalculusVisualization() {
   const [gaussSeidelProblemId, setGaussSeidelProblemId] = useState('gs1');
   const [gaussSeidelIterations, setGaussSeidelIterations] = useState('3');
 
+  // Jacobi inputs
+  const [jacobiProblemId, setJacobiProblemId] = useState('jb1');
+  const [jacobiIterations, setJacobiIterations] = useState('3');
+
+  // Fitting Straight Line inputs
+  const [fslProblemId, setFslProblemId] = useState('fs1');
+
   // Regula Falsi inputs
   const [rfProblemId, setRfProblemId] = useState('rf1');
   const [rfIterations, setRfIterations] = useState('7');
@@ -50,6 +57,16 @@ export default function CalculusVisualization() {
   const GAUSS_SEIDEL_PROBS = [
     { id: 'gs1', label: 'Gauss-Seidel: 4-Var System (Photo Q1)' },
     { id: 'gs2', label: 'Gauss-Seidel: 3-Var System (Photo Q2)' },
+  ];
+
+  const JACOBI_PROBS = [
+    { id: 'jb1', label: 'Jacobi: 4-Var System (Photo Q1)' },
+    { id: 'jb2', label: 'Jacobi: 3-Var System (Photo Q2)' },
+  ];
+
+  const FSL_PROBS = [
+    { id: 'fs1', label: 'FSL: Copper rod T vs l (Photo Q1)' },
+    { id: 'fs2', label: 'FSL: Experiment x vs y (Photo Q2)' },
   ];
 
   const RF_PROBS = [
@@ -84,11 +101,13 @@ export default function CalculusVisualization() {
   // ─── Cards ────────────────────────────────────────────────────────────────
   const CARDS = [
     { id: 'Gauss Seidel Method',          title: 'Gauss Seidel Method',          desc: 'Solve systems of linear equations iteratively using successive displacement.',                      color: 'from-pink-500 to-rose-600'      },
+    { id: 'Jacobi Method',                title: 'Jacobi Method',                desc: 'Solve systems of linear equations iteratively using simultaneous displacement.',                    color: 'from-indigo-500 to-purple-600'  },
     { id: 'Regula Falsi Method',          title: 'Regula Falsi Method',          desc: 'Find real roots of nonlinear equations using the false position (chord) method.',                color: 'from-violet-500 to-purple-600'  },
     { id: 'Iteration Method',             title: 'Iteration Method',             desc: 'Solve f(x)=0 by rewriting as x=φ(x) and repeatedly applying the mapping until convergence.',    color: 'from-cyan-500 to-teal-600'     },
     { id: 'Newton-Raphson Method',        title: 'Newton-Raphson Method',        desc: 'Find roots of nonlinear equations using tangent lines for quadratic convergence.',               color: 'from-amber-500 to-orange-600'  },
     { id: 'Lagrange Interpolation',       title: 'Lagrange Interpolation',       desc: 'Estimate f(x) at any point using a polynomial built from known data pairs.',                    color: 'from-sky-500 to-blue-600'       },
     { id: 'Newton General Interpolation', title: "Newton's General Interpolation", desc: 'Use divided differences to build a polynomial and interpolate at any argument.',              color: 'from-fuchsia-500 to-pink-600'   },
+    { id: 'Fitting Straight Line',        title: 'Fitting Straight Line',        desc: 'Fit a straight line y = a₀ + a₁x to a set of data points using least squares.',                    color: 'from-sky-500 to-teal-600'       },
   ];
 
   // ─── Formula data per method ──────────────────────────────────────────────
@@ -108,6 +127,24 @@ export default function CalculusVisualization() {
             { sym: 'b_i',        def: 'RHS constant term for equation i' },
             { sym: 'x_j^(k+1)',  def: 'New values computed in current iteration' },
             { sym: 'x_j^(k)',    def: 'Old values from previous iteration' },
+          ],
+        },
+      ],
+    },
+    'Jacobi Method': {
+      features: [
+        { icon: BookOpen, title: 'Iterative Solver',     desc: 'Find solutions to system of linear equations.' },
+        { icon: Target,   title: 'Simultaneous Displacement', desc: 'Uses old values from previous iteration.' },
+        { icon: Lightbulb, title: 'Photo Problem',        desc: 'Solve 10x₁ - 2x₂ - x₃ - x₄ = 3, etc.' },
+      ],
+      formulas: [
+        {
+          title: 'Jacobi Iteration Formula',
+          formula: 'x_i^(k+1) = (1/a_ii) [ b_i − ∑(j≠i) a_ij x_j^(k) ]',
+          variables: [
+            { sym: 'a_ii',       def: 'Diagonal coefficient for equation i' },
+            { sym: 'b_i',        def: 'RHS constant term for equation i' },
+            { sym: 'x_j^(k)',    def: 'Values from previous iteration' },
           ],
         },
       ],
