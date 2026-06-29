@@ -534,6 +534,15 @@ const db = require('./config/db');
         next_best_action TEXT,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+
+      CREATE TABLE IF NOT EXISTS compiler_codes (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        language VARCHAR(50) NOT NULL,
+        code TEXT NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, language)
+      );
     `);
 
     // Seed modules if empty

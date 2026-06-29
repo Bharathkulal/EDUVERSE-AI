@@ -289,4 +289,67 @@ Return ONLY the raw JSON. Do not include markdown formatting, extra text or wrap
   }
 });
 
+// Auto-save code editor state
+router.post('/save', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { language, code } = req.body;
+    if (!language || code === undefined) {
+      return res.status(400).json({ message: 'Language and code are required' });
+    }
+    const result = await db.query(
+      `INSERT INTO compiler_codes (user_id, language, code, updated_at)
+       VALUES ($1, $2, $3, NOW())
+       ON CONFLICT (user_id, language) DO UPDATE SET code = EXCLUDED.code, updated_at = NOW()
+       RETURNING *`,
+      [userId, language.toLowerCase(), code]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error saving code' });
+  }
+});
+
+// Load auto-saved code
+router.get('/load', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { language } = req.query;
+    if (!language) {
+      return res.status(400).json({ message: 'Language is required' });
+    }
+    const result = await db.query(
+      `SELECT code FROM compiler_codes WHERE user_id = $1 AND language = $2`,
+      [userId, language.toLowerCase()]
+    );
+    if (result.rows.length === 0) {
+      return res.json({ code: null });
+    }
+    res.json({ code: result.rows[0].code });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error loading code' });
+  }
+});
+
+// Clear auto-saved code
+router.post('/clear', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { language } = req.body;
+    if (!language) {
+      return res.status(400).json({ message: 'Language is required' });
+    }
+    await db.query(
+      `DELETE FROM compiler_codes WHERE user_id = $1 AND language = $2`,
+      [userId, language.toLowerCase()]
+    );
+    res.json({ message: 'Code cleared successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error clearing code' });
+  }
+});
+
 module.exports = router;
