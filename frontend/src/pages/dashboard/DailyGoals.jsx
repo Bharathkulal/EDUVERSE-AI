@@ -225,7 +225,11 @@ export default function DailyGoals() {
                       className={`flex items-center justify-between p-3.5 bg-white/[0.01] hover:bg-white/[0.02] border border-white/5 rounded-xl transition ${g.completed ? 'opacity-60' : ''}`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <button onClick={() => handleToggleGoal(g.id, g.completed)} className="text-slate-400 hover:text-white transition">
+                        <button 
+                          onClick={() => !g.is_ai && handleToggleGoal(g.id, g.completed)} 
+                          disabled={g.is_ai}
+                          className={`text-slate-400 hover:text-white transition ${g.is_ai ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                        >
                           {g.completed ? (
                             <CheckCircle className="w-5 h-5 text-emerald-400" />
                           ) : (
@@ -234,7 +238,7 @@ export default function DailyGoals() {
                         </button>
                         <div className="min-w-0">
                           <span className={`text-xs font-semibold text-white block ${g.completed ? 'line-through text-slate-500' : ''}`}>
-                            {g.title}
+                            {g.title} {g.is_ai && <span className="text-[9px] text-violet-400 font-bold ml-1.5 px-2 py-0.5 rounded-full bg-violet-600/10 border border-violet-500/20 inline-block align-middle">🤖 AI Tracked</span>}
                           </span>
                           <div className="flex items-center gap-2 mt-1">
                             <span className={`text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${getPriorityTag(g.priority)}`}>

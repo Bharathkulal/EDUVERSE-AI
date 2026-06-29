@@ -4,6 +4,7 @@ const db = require('../config/db');
 const validate = require('../middleware/validate');
 const { authenticate, authorizeAdmin } = require('../middleware/auth');
 const aiGateway = require('../services/aiGateway');
+const { checkAndCompleteAiGoal } = require('../utils/goalTracker');
 
 const router = express.Router();
 
@@ -78,6 +79,9 @@ router.post(
          VALUES ($1, $2, $3, $4, $5) RETURNING *`,
         [studentId, problem_id || null, language, code, score]
       );
+
+      // Trigger automatic AI goal completion
+      await checkAndCompleteAiGoal(studentId, 'coding');
 
       res.status(201).json({ submission: result.rows[0], score, message: 'Code submitted successfully' });
     } catch (err) {

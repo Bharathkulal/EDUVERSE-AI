@@ -257,6 +257,11 @@ const db = require('./config/db');
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    
+    // Add is_ai column to student_goals table
+    await db.query(`
+      ALTER TABLE student_goals ADD COLUMN IF NOT EXISTS is_ai BOOLEAN DEFAULT false;
+    `);
 
     // Create ml_training_jobs table
     await db.query(`

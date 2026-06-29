@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../config/db');
 const { authenticate } = require('../middleware/auth');
+const { checkAndCompleteAiGoal } = require('../utils/goalTracker');
 
 const router = express.Router();
 
@@ -204,6 +205,9 @@ router.post('/complete-topic', authenticate, async (req, res) => {
       'INSERT INTO user_xp_history (user_id, xp_amount, action) VALUES ($1, $2, $3)',
       [studentId, xpAwarded, 'Completed a topic']
     );
+
+    // Trigger automatic AI goal completion
+    await checkAndCompleteAiGoal(studentId, 'practice');
 
     // Update streak
     const todayStr = new Date().toISOString().split('T')[0];
@@ -915,6 +919,11 @@ router.put('/goals/:id', authenticate, async (req, res) => {
     }
 
     const goal = goalCheck.rows[0];
+    
+    if (goal.is_ai) {
+      return res.status(400).json({ message: 'AI-generated goals cannot be ticked manually. They are automatically tracked by AI/ML!' });
+    }
+
     if (goal.completed === completed) {
       return res.json(goal);
     }
@@ -985,8 +994,8 @@ router.post('/goals/ai-generate', authenticate, async (req, res) => {
     const inserted = [];
     for (const g of generated) {
       const result = await db.query(
-        `INSERT INTO student_goals (student_id, title, priority, xp_reward)
-         VALUES ($1, $2, $3, $4) RETURNING *`,
+        `INSERT INTO student_goals (student_id, title, priority, xp_reward, is_ai)
+         VALUES ($1, $2, $3, $4, true) RETURNING *`,
         [studentId, g.title, g.priority, g.xp_reward]
       );
       inserted.push(result.rows[0]);

@@ -485,13 +485,14 @@ export default function StudentDashboard() {
                       <input 
                         type="checkbox"
                         checked={item.completed}
-                        onChange={() => handleToggleGoal(item.id, item.completed)}
-                        className="w-4 h-4 rounded text-violet-600 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-2 cursor-pointer"
+                        disabled={item.is_ai}
+                        onChange={() => !item.is_ai && handleToggleGoal(item.id, item.completed)}
+                        className={`w-4 h-4 rounded text-violet-600 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-2 ${item.is_ai ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                       />
                       <span 
                         className={`text-sm font-medium ${item.completed ? 'line-through text-slate-500' : 'text-slate-300'}`}
                       >
-                        {item.title}
+                        {item.title} {item.is_ai && <span className="text-[10px] text-violet-400 font-bold ml-1.5 px-2 py-0.5 rounded-full bg-violet-600/10 border border-violet-500/20">🤖 AI Tracked</span>}
                       </span>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-extrabold tracking-wider ${
                         item.priority === 'high' ? 'bg-red-500/10 text-red-400' :
