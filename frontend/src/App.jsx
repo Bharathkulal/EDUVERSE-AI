@@ -42,6 +42,8 @@ const Community = lazy(() => import('./pages/Community'));
 const CareerHub = lazy(() => import('./pages/CareerHub'));
 // Python AI Learning Platform
 const PythonLessonPage = lazy(() => import('./python/PythonLessonPage'));
+// Advanced Java AI Learning Platform
+const JavaLessonPage = lazy(() => import('./advanced-java/JavaLessonPage'));
 
 // Lazy Loaded DSA/Math Visualizer Pages
 const StackVisualization = lazy(() => import('./pages/StackVisualization'));
@@ -168,6 +170,9 @@ export default function App() {
 
             {/* Python AI Learning Platform */}
             <Route path="/python/course/:lessonSlug" element={<ProtectedRoute><Layout><PythonLessonPage /></Layout></ProtectedRoute>} />
+
+            {/* Advanced Java AI Learning Platform */}
+            <Route path="/advanced-java/course/:lessonSlug" element={<ProtectedRoute><Layout><JavaLessonPage /></Layout></ProtectedRoute>} />
 
             {/* DSA index route — redirect to first visualizer */}
             <Route path="/dsa" element={<Navigate to="/dsa/stack" replace />} />

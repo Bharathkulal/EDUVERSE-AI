@@ -9,6 +9,7 @@ import DSALab from '../components/DSALab';
 import WebDevLab from '../components/WebDevLab';
 import OnlineCompiler from '../components/OnlineCompiler';
 import PythonCoursePage from '../python/PythonCoursePage';
+import JavaCoursePage from '../advanced-java/JavaCoursePage';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Layers, List, GitCommit, GitMerge, Share2, PlayCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 
@@ -156,8 +157,36 @@ export default function SubjectDetail() {
     );
   }
 
-  // Advanced Java & Core Java get the interactive lab experience
-  if (subject.subject_name === 'Advanced Java' || subject.subject_name === 'Java') {
+  // Advanced Java gets the premium AI-powered learning platform
+  if (subject.subject_name === 'Advanced Java') {
+    return (
+      <div>
+        {isCompleted && (
+          <div className="mb-6 p-6 rounded-2xl bg-gradient-to-r from-amber-500/20 via-orange-600/10 to-transparent border border-amber-500/30 backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg shadow-amber-900/10 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-500/30 text-amber-400">
+                <span className="text-2xl">🏆</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-amber-200">Congratulations! Subject Completed</h3>
+                <p className="text-sm text-slate-300">You have successfully mastered all topics in this subject. Your official certificate is ready!</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => navigate('/certificates')}
+              className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-900 font-bold rounded-xl transition duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-amber-500/20 whitespace-nowrap text-sm flex items-center gap-2"
+            >
+              🎓 Claim Certificate
+            </button>
+          </div>
+        )}
+        <JavaCoursePage />
+      </div>
+    );
+  }
+
+  // Core Java gets the interactive lab experience
+  if (subject.subject_name === 'Java') {
     return (
       <div>
         {isCompleted && (
@@ -180,12 +209,12 @@ export default function SubjectDetail() {
           </div>
         )}
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px' }}>{subject.subject_name}</h1>
+          <h1 style={{ fontSize: '1.5rem', fonttitle: 800, margin: '0 0 4px' }}>{subject.subject_name}</h1>
           <p style={{ color: '#64748B', margin: 0, fontSize: '0.9rem' }}>{subject.description}</p>
         </div>
         <JavaLab subjectName={subject.subject_name} />
         <OnlineCompiler
-          language={subject.subject_name === 'Advanced Java' ? 'advanced java' : 'java'}
+          language="java"
           title={`${subject.subject_name} Online Compiler`}
           subtitle="Write, compile, and run Java programs directly in your browser."
         />

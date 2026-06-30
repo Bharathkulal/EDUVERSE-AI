@@ -1,6 +1,6 @@
 /**
  * PythonCoursePage — Course index shown when user opens the Python subject
- * Replaces the old single-compiler view with 10 beautiful lesson cards.
+ * Replaces the old single-compiler view with 10 beautiful glassmorphic lesson cards.
  */
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -8,14 +8,33 @@ import { BookOpen, Zap, Trophy, TrendingUp, Star, Code2 } from 'lucide-react';
 import PythonLessonCard from './components/PythonLessonCard';
 import { PYTHON_LESSONS } from './data/pythonLessons';
 import usePythonStore from './store/usePythonStore';
+import { useTheme } from '../context/ThemeContext';
 
 export default function PythonCoursePage() {
+  const { isDarkMode: isDark } = useTheme();
   const xpEarned   = usePythonStore(s => s.getTotalXP());
   const completed  = usePythonStore(s => s.completedLessons);
   const overall    = usePythonStore(s => s.getOverallProgress(PYTHON_LESSONS));
 
   const totalXP    = useMemo(() => PYTHON_LESSONS.reduce((s, l) => s + l.xp, 0), []);
   const totalMins  = useMemo(() => PYTHON_LESSONS.reduce((s, l) => s + parseInt(l.duration), 0), []);
+
+  // Reusable glass card styles
+  const glassCard = isDark
+    ? {
+        background: 'rgba(15, 23, 42, 0.5)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.06)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+      }
+    : {
+        background: 'rgba(255, 255, 255, 0.65)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(0,0,0,0.06)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)',
+      };
 
   return (
     <div className="space-y-8">
@@ -25,9 +44,13 @@ export default function PythonCoursePage() {
         animate={{ opacity: 1, y: 0 }}
         className="relative rounded-2xl overflow-hidden p-8"
         style={{
-          background: 'linear-gradient(135deg, #1a0533 0%, #0d1b2a 40%, #001f3f 100%)',
-          border: '1px solid rgba(99,102,241,0.3)',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
+          background: isDark
+            ? 'linear-gradient(135deg, #1a0533 0%, #0d1b2a 40%, #001f3f 100%)'
+            : 'linear-gradient(135deg, #2e1065 0%, #1e1b4b 40%, #172554 100%)',
+          border: isDark ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(99,102,241,0.4)',
+          boxShadow: isDark
+            ? '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)'
+            : '0 20px 60px rgba(30,27,75,0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
         }}
       >
         {/* Animated background orbs */}
@@ -59,33 +82,37 @@ export default function PythonCoursePage() {
           {/* Text */}
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold uppercase tracking-widest text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-full px-2 py-0.5">
+              <span className="text-xs font-bold uppercase tracking-widest text-blue-300 bg-blue-500/15 border border-blue-400/25 rounded-full px-2.5 py-0.5">
                 Interactive Learning
               </span>
             </div>
             <h1 className="text-3xl font-black text-white mb-2">Python Programming</h1>
-            <p className="text-slate-400 text-sm max-w-xl leading-relaxed">
+            <p className="text-slate-300 text-sm max-w-xl leading-relaxed">
               Master Python from scratch with AI-powered lessons, live coding, animated teacher explanations,
               and real-time quizzes. From variables to dictionaries — one lesson at a time.
             </p>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-3 flex-shrink-0">
+          <div className="grid grid-cols-2 gap-3 flex-shrink-0 w-full md:w-auto">
             {[
-              { icon: BookOpen,   label: 'Lessons',    value: PYTHON_LESSONS.length, color: '#3B82F6' },
-              { icon: Zap,        label: 'Total XP',   value: totalXP,              color: '#F59E0B' },
-              { icon: Trophy,     label: 'Completed',  value: completed.length,      color: '#22C55E' },
-              { icon: TrendingUp, label: 'Progress',   value: `${overall}%`,        color: '#8B5CF6' },
+              { icon: BookOpen,   label: 'Lessons',    value: PYTHON_LESSONS.length, color: '#60a5fa' },
+              { icon: Zap,        label: 'Total XP',   value: totalXP,              color: '#fbbf24' },
+              { icon: Trophy,     label: 'Completed',  value: completed.length,      color: '#34d399' },
+              { icon: TrendingUp, label: 'Progress',   value: `${overall}%`,        color: '#a78bfa' },
             ].map(({ icon: Icon, label, value, color }) => (
               <div
                 key={label}
-                className="rounded-xl p-3 text-center border"
-                style={{ background: color + '10', borderColor: color + '30' }}
+                className="rounded-xl p-3 text-center"
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  border: `1px solid rgba(255,255,255,0.1)`,
+                  backdropFilter: 'blur(8px)',
+                }}
               >
                 <Icon size={16} style={{ color }} className="mx-auto mb-1" />
                 <div className="text-sm font-black" style={{ color }}>{value}</div>
-                <div className="text-[10px] text-slate-500 uppercase tracking-wider">{label}</div>
+                <div className="text-[10px] text-slate-400 uppercase tracking-wider">{label}</div>
               </div>
             ))}
           </div>
@@ -93,11 +120,11 @@ export default function PythonCoursePage() {
 
         {/* Overall progress bar */}
         <div className="relative z-10 mt-6">
-          <div className="flex justify-between text-xs text-slate-400 mb-2">
+          <div className="flex justify-between text-xs text-slate-300 mb-2">
             <span className="font-medium">Course Progress</span>
             <span className="font-bold text-white">{overall}% Complete</span>
           </div>
-          <div className="h-2 bg-slate-800/60 rounded-full overflow-hidden border border-slate-700/50">
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.06)' }}>
             <motion.div
               className="h-full rounded-full"
               style={{ background: 'linear-gradient(90deg, #3B82F6, #8B5CF6, #EC4899)' }}
@@ -106,7 +133,7 @@ export default function PythonCoursePage() {
               transition={{ duration: 1.2, ease: 'easeOut' }}
             />
           </div>
-          <div className="flex justify-between text-[10px] text-slate-600 mt-1">
+          <div className="flex justify-between text-[10px] text-slate-400 mt-1">
             <span>{completed.length} lessons done</span>
             <span>{Math.round((totalMins / 60) * 10) / 10} hours total</span>
           </div>
@@ -118,16 +145,25 @@ export default function PythonCoursePage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="rounded-xl p-4 border border-amber-500/20 bg-amber-500/5"
+        className="rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4"
+        style={glassCard}
       >
-        <div className="flex items-center gap-3">
-          <Star size={18} className="text-amber-400" />
+        <div className="flex items-center gap-3 w-full md:w-auto flex-1">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{
+              background: isDark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.1)',
+              border: `1px solid ${isDark ? 'rgba(245,158,11,0.25)' : 'rgba(245,158,11,0.2)'}`,
+            }}
+          >
+            <Star size={18} className={isDark ? 'text-amber-400' : 'text-amber-505'} />
+          </div>
           <div className="flex-1">
-            <div className="flex justify-between text-sm mb-1">
-              <span className="text-amber-200 font-medium">XP Earned</span>
-              <span className="font-bold text-amber-400">{xpEarned} / {totalXP} XP</span>
+            <div className="flex justify-between text-sm mb-1.5">
+              <span className={`font-semibold ${isDark ? 'text-slate-200' : 'text-slate-850'}`}>XP Earned</span>
+              <span className={`font-bold ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>{xpEarned} / {totalXP} XP</span>
             </div>
-            <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div className={`h-2 ${isDark ? 'bg-slate-800' : 'bg-slate-200'} rounded-full overflow-hidden`}>
               <motion.div
                 className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-400"
                 initial={{ width: 0 }}
@@ -152,11 +188,12 @@ export default function PythonCoursePage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="rounded-xl p-3 border border-slate-800/60 bg-slate-900/40 text-center"
+            className="rounded-2xl p-4 text-center"
+            style={glassCard}
           >
             <div className="text-2xl mb-1">{icon}</div>
-            <div className="text-xs font-bold text-white">{label}</div>
-            <div className="text-[10px] text-slate-500">{desc}</div>
+            <div className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{label}</div>
+            <div className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-500'} mt-0.5`}>{desc}</div>
           </motion.div>
         ))}
       </div>
@@ -164,16 +201,23 @@ export default function PythonCoursePage() {
       {/* ─── Course Cards ─── */}
       <div>
         <div className="flex items-center gap-3 mb-5">
-          <Code2 size={18} className="text-blue-400" />
-          <h2 className="text-lg font-bold text-white">Course Modules</h2>
-          <span className="text-xs text-slate-500 bg-slate-800 border border-slate-700 rounded-full px-2 py-0.5">
+          <Code2 size={18} className={isDark ? 'text-blue-400' : 'text-blue-600'} />
+          <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Course Modules</h2>
+          <span
+            className="text-xs font-semibold rounded-full px-2.5 py-0.5"
+            style={{
+              background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+              border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+              color: isDark ? '#94a3b8' : '#475569',
+            }}
+          >
             {PYTHON_LESSONS.length} lessons
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {PYTHON_LESSONS.map((lesson, index) => (
-            <PythonLessonCard key={lesson.id} lesson={lesson} index={index} />
+            <PythonLessonCard key={lesson.id} lesson={lesson} index={index} isDark={isDark} />
           ))}
         </div>
       </div>
