@@ -171,7 +171,7 @@ export default function CareerHub() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex items-center gap-1 p-1 rounded-2xl w-fit flex-wrap" style={{ backgroundColor: 'var(--db-input-bg)', border: '1px solid var(--db-sidebar-border)' }}>
+      <div className="flex items-center gap-1 p-1 rounded-2xl w-full max-w-full overflow-x-auto scrollbar-none" style={{ backgroundColor: 'var(--db-input-bg)', border: '1px solid var(--db-sidebar-border)' }}>
         {tabs.map(tab => (
           <button
             key={tab.id}
@@ -184,7 +184,7 @@ export default function CareerHub() {
               setAptitudeMode('lobby');
               setPortfolioGenerated(false);
             }}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 flex-shrink-0 ${
               activeTab === tab.id ? 'shadow-md' : 'hover:opacity-80'
             }`}
             style={{

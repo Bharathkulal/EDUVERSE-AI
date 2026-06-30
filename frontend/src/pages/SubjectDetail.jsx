@@ -9,7 +9,7 @@ import DSALab from '../components/DSALab';
 import WebDevLab from '../components/WebDevLab';
 import OnlineCompiler from '../components/OnlineCompiler';
 import PythonCoursePage from '../python/PythonCoursePage';
-import JavaCoursePage from '../advanced-java/JavaCoursePage';
+import JavaHub from '../advanced-java/JavaHub';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Layers, List, GitCommit, GitMerge, Share2, PlayCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 
@@ -180,7 +180,7 @@ export default function SubjectDetail() {
             </button>
           </div>
         )}
-        <JavaCoursePage />
+        <JavaHub />
       </div>
     );
   }
