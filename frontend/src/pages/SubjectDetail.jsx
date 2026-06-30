@@ -18,6 +18,8 @@ export default function SubjectDetail() {
   const navigate = useNavigate();
   const [subject, setSubject] = useState(null);
   const [activeTopic, setActiveTopic] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 300], [0, 100]);
@@ -26,7 +28,10 @@ export default function SubjectDetail() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [certId, setCertId] = useState(null);
 
-  useEffect(() => {
+  const fetchSubject = () => {
+    setLoading(true);
+    setError(null);
+
     if (id === 'math-proto') {
       setSubject({
         id: 'math-proto',
@@ -34,13 +39,17 @@ export default function SubjectDetail() {
         description: 'Advanced numerical methods and calculus execution engines.',
         topics: []
       });
+      setLoading(false);
       return;
     }
     api.get(`/subjects/${id}`).then((res) => {
       setSubject(res.data);
       if (res.data.topics?.length) setActiveTopic(res.data.topics[0]);
+      setLoading(false);
     }).catch(err => {
       console.error(err);
+      setError(err.response?.status === 404 ? 'Subject not found' : 'Failed to load subject. Please check your connection and try again.');
+      setLoading(false);
     });
 
     api.get('/progress/certificates').then((res) => {
@@ -50,6 +59,10 @@ export default function SubjectDetail() {
         setCertId(matched.certId);
       }
     }).catch(err => console.error(err));
+  };
+
+  useEffect(() => {
+    fetchSubject();
   }, [id]);
 
   const markComplete = async (topicId) => {
@@ -61,7 +74,40 @@ export default function SubjectDetail() {
     }
   };
 
-  if (!subject) return <div className="animate-pulse h-96 bg-slate-200 rounded-xl" />;
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-12 h-12 rounded-full border-4 border-t-blue-500 border-slate-200 animate-spin"></div>
+        <p className="text-sm text-slate-500 font-medium animate-pulse">Loading subject...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center text-3xl">⚠️</div>
+        <h2 className="text-xl font-bold text-slate-700">{error}</h2>
+        <p className="text-sm text-slate-400">Something went wrong while loading this subject.</p>
+        <div className="flex gap-3 mt-2">
+          <button
+            onClick={() => navigate('/subjects')}
+            className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium text-sm transition"
+          >
+            ← Back to Subjects
+          </button>
+          <button
+            onClick={fetchSubject}
+            className="px-5 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-medium text-sm transition"
+          >
+            🔄 Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!subject) return null;
 
   // Python — Full AI-powered learning platform
   if (subject.subject_name === 'Python') {

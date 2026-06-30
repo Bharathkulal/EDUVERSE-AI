@@ -108,7 +108,7 @@ export default function CSharpHub() {
           className="relative group cursor-pointer p-[1px] rounded-3xl overflow-hidden"
           onClick={() => setActiveView('theory')}
         >
-          <div className={`absolute inset-0 bg-gradient-to-b from-purple-550/40 to-transparent opacity-50 group-hover:opacity-100 transition duration-300`} />
+          <div className={`absolute inset-0 bg-gradient-to-b from-purple-550/40 to-transparent opacity-50 group-hover:opacity-100 transition duration-300 pointer-events-none`} />
           <div className={`relative p-8 rounded-3.5xl flex flex-col justify-between h-full border min-h-[360px] ${
             isDark ? 'bg-[#120e2a]/90 border-white/5' : 'bg-white border-slate-200 shadow-md group-hover:shadow-lg transition-shadow'
           }`}>
@@ -148,7 +148,7 @@ export default function CSharpHub() {
           className="relative group cursor-pointer p-[1px] rounded-3xl overflow-hidden"
           onClick={() => setActiveView('practical')}
         >
-          <div className={`absolute inset-0 bg-gradient-to-b from-indigo-500/40 to-transparent opacity-50 group-hover:opacity-100 transition duration-300`} />
+          <div className={`absolute inset-0 bg-gradient-to-b from-indigo-500/40 to-transparent opacity-50 group-hover:opacity-100 transition duration-300 pointer-events-none`} />
           <div className={`relative p-8 rounded-3.5xl flex flex-col justify-between h-full border min-h-[360px] ${
             isDark ? 'bg-[#120e2a]/90 border-white/5' : 'bg-white border-slate-200 shadow-md group-hover:shadow-lg transition-shadow'
           }`}>
