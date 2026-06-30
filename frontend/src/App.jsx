@@ -45,6 +45,12 @@ const PythonLessonPage = lazy(() => import('./python/PythonLessonPage'));
 // Advanced Java AI Learning Platform
 const JavaLessonPage = lazy(() => import('./advanced-java/JavaLessonPage'));
 
+// IT Suite pages
+const ITSuiteDashboard = lazy(() => import('./pages/it-suite/ITSuiteDashboard'));
+const WordEditor = lazy(() => import('./pages/it-suite/WordEditor'));
+const ExcelSpreadsheet = lazy(() => import('./pages/it-suite/ExcelSpreadsheet'));
+const SlidesEditor = lazy(() => import('./pages/it-suite/SlidesEditor'));
+
 // Lazy Loaded DSA/Math Visualizer Pages
 const StackVisualization = lazy(() => import('./pages/StackVisualization'));
 const QueueVisualization = lazy(() => import('./pages/QueueVisualization'));
@@ -173,6 +179,12 @@ export default function App() {
 
             {/* Advanced Java AI Learning Platform */}
             <Route path="/advanced-java/course/:lessonSlug" element={<ProtectedRoute><Layout><JavaLessonPage /></Layout></ProtectedRoute>} />
+
+            {/* IT Suite Routes */}
+            <Route path="/it-suite" element={<ProtectedRoute><Layout><ITSuiteDashboard /></Layout></ProtectedRoute>} />
+            <Route path="/it-suite/word/:id" element={<ProtectedRoute><Layout><WordEditor /></Layout></ProtectedRoute>} />
+            <Route path="/it-suite/excel/:id" element={<ProtectedRoute><Layout><ExcelSpreadsheet /></Layout></ProtectedRoute>} />
+            <Route path="/it-suite/slides/:id" element={<ProtectedRoute><Layout><SlidesEditor /></Layout></ProtectedRoute>} />
 
             {/* DSA index route — redirect to first visualizer */}
             <Route path="/dsa" element={<Navigate to="/dsa/stack" replace />} />
