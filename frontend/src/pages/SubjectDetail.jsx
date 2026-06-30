@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
-import CSharpLab from '../components/CSharpLab';
+import CSharpHub from '../csharp/CSharpHub';
 import DBMSLab from '../components/DBMSLab';
 import JavaLab from '../components/JavaLab';
 import DSALab from '../components/DSALab';
@@ -245,16 +245,7 @@ export default function SubjectDetail() {
             </button>
           </div>
         )}
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px' }}>{subject.subject_name}</h1>
-          <p style={{ color: '#64748B', margin: 0, fontSize: '0.9rem' }}>{subject.description}</p>
-        </div>
-        <CSharpLab />
-        <OnlineCompiler
-          language="c#"
-          title="C# Online Compiler"
-          subtitle="Write, compile and run C# programs with LINQ, OOP, and .NET features."
-        />
+        <CSharpHub />
       </div>
     );
   }
