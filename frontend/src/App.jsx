@@ -61,6 +61,7 @@ const MathVisualization = lazy(() => import('./pages/MathVisualization'));
 const CalculusVisualization = lazy(() => import('./pages/CalculusVisualization'));
 const ExecutionSimulator = lazy(() => import('./pages/ExecutionSimulator'));
 const FocVisualization = lazy(() => import('./pages/FocVisualization'));
+const TechVerse = lazy(() => import('./pages/TechVerse'));
 
 // Lazy Loaded Admin Pages
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -151,6 +152,7 @@ export default function App() {
             <Route path="/mathematics/calculus" element={<ProtectedRoute><CalculusVisualization /></ProtectedRoute>} />
             <Route path="/dsa/stack/simulator" element={<ProtectedRoute><Layout><ExecutionSimulator /></Layout></ProtectedRoute>} />
             <Route path="/foc" element={<ProtectedRoute><Layout><FocVisualization /></Layout></ProtectedRoute>} />
+            <Route path="/techverse" element={<ProtectedRoute><Layout><TechVerse /></Layout></ProtectedRoute>} />
 
             <Route path="/practice-hub" element={<ProtectedRoute><Layout><PracticeHub /></Layout></ProtectedRoute>} />
 
