@@ -6,11 +6,13 @@ import {
   Mic, MicOff, Volume2, Plus, CornerDownRight, CheckCircle, ChevronDown, 
   Columns, HelpCircle, Save 
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../api/axios';
 import io from 'socket.io-client';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import './ITSuite.css';
+
 
 export default function WordEditor() {
   const { id } = useParams();

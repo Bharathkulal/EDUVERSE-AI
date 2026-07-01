@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import heroCharacter from '../assets/hero_character.png';
+import { FileText, FileSpreadsheet, Presentation, Plus, Upload, FolderOpen, ArrowRight } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 // ── Animated Counter Hook ──────────────────────────────
 function CountUp({ end, duration = 800 }) {
@@ -76,6 +78,11 @@ export default function StudentDashboard() {
   const [goals, setGoals] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [heatmapData, setHeatmapData] = useState([]);
+  const [itDocs, setItDocs] = useState([]);
+
+  const wordUploadRef = useRef(null);
+  const excelUploadRef = useRef(null);
+  const slidesUploadRef = useRef(null);
   
   // Local state for goals management
   const [newGoalTitle, setNewGoalTitle] = useState('');
@@ -93,20 +100,94 @@ export default function StudentDashboard() {
       api.get('/progress/analytics'),
       api.get('/progress/goals'),
       api.get('/progress/leaderboard'),
-      api.get('/progress/heatmap')
+      api.get('/progress/heatmap'),
+      api.get('/it-suite/files')
     ])
-      .then(([dashRes, analyticsRes, goalsRes, leaderboardRes, heatmapRes]) => {
+      .then(([dashRes, analyticsRes, goalsRes, leaderboardRes, heatmapRes, itRes]) => {
         setDbData(dashRes.data);
         setAnalytics(analyticsRes.data);
         setGoals(goalsRes.data);
         setLeaderboard(leaderboardRes.data.leaderboard || []);
         setHeatmapData(heatmapRes.data.heatmapData || []);
+        setItDocs(itRes.data.documents || []);
       })
       .catch((err) => {
         console.error('Error fetching dashboard data:', err);
         setError('Failed to load dashboard data');
       })
       .finally(() => setLoading(false));
+  };
+
+  const handleLaunchApp = async (type) => {
+    const typedDocs = itDocs.filter(d => d.type === type && !d.is_in_recycle_bin);
+    if (typedDocs.length > 0) {
+      navigate(`/it-suite/${type}/${typedDocs[0].id}`);
+    } else {
+      await handleNewDocument(type);
+    }
+  };
+
+  const handleNewDocument = async (type) => {
+    try {
+      const res = await api.post('/it-suite/documents', {
+        name: `Untitled ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+        type
+      });
+      toast.success(`Created new ${type.toUpperCase()} document`);
+      navigate(`/it-suite/${type}/${res.data.id}`);
+    } catch (err) {
+      toast.error('Failed to create new document');
+    }
+  };
+
+  const handleUploadDocument = async (type, event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      let content = e.target.result;
+      const name = file.name;
+      
+      if (type === 'excel' && file.name.endsWith('.csv')) {
+        const rows = content.split('\n');
+        const sheetData = {};
+        rows.forEach((row, rIdx) => {
+          const cols = row.split(',');
+          cols.forEach((colVal, cIdx) => {
+            const cellRef = `${String.fromCharCode(65 + cIdx)}${rIdx + 1}`;
+            sheetData[cellRef] = { value: colVal.trim() };
+          });
+        });
+        content = JSON.stringify({
+          activeSheet: 'Sheet1',
+          sheets: {
+            'Sheet1': {
+              data: sheetData,
+              cols: {},
+              rows: {},
+              frozenRows: 0,
+              frozenCols: 0
+            }
+          }
+        });
+      }
+      
+      try {
+        const res = await api.post('/it-suite/documents', {
+          name: name.substring(0, name.lastIndexOf('.')) || name,
+          type,
+          content
+        });
+        toast.success(`Uploaded ${name} successfully!`);
+        const itRes = await api.get('/it-suite/files');
+        setItDocs(itRes.data.documents || []);
+        navigate(`/it-suite/${type}/${res.data.id}`);
+      } catch (err) {
+        toast.error('Failed to upload document');
+      }
+    };
+    reader.readAsText(file);
   };
 
   useEffect(() => {
@@ -426,6 +507,224 @@ export default function StudentDashboard() {
             <span className="text-[12px] font-semibold uppercase tracking-wider block text-slate-400">Study Hours</span>
             <span className="text-2xl font-bold block leading-none mt-0.5 text-white">{studyHours.toFixed(1)}h</span>
             <span className="text-[12px] font-bold block mt-1 text-blue-500">{completedLessons} topics done</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── INFORMATION TECHNOLOGY SECTION ── */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
+            🖥️ INFORMATION TECHNOLOGY
+          </h2>
+          <button 
+            onClick={() => navigate('/it-suite')}
+            className="text-xs font-bold text-violet-400 hover:text-violet-300 transition-all cursor-pointer flex items-center gap-1"
+          >
+            Go to IT Suite Dashboard <ArrowRight size={14} />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Card 1: EduVerse Word */}
+          <div className="p-5 rounded-2xl border border-slate-800 bg-[#161720] hover:border-blue-500/50 flex flex-col justify-between hover:shadow-md transition-all min-h-[350px]">
+            <div className="space-y-4 text-left">
+              <div className="flex items-start justify-between">
+                <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center shadow-sm">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => handleLaunchApp('word')}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition"
+                  >
+                    Open
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-bold text-white">EduVerse Word</h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Create, edit, and collaborate on essays, resumes, and formal reports with AI writing assistance.
+                </p>
+              </div>
+
+              {/* Recent Files */}
+              <div className="space-y-2 pt-2">
+                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Recent Files</h4>
+                {itDocs.filter(d => d.type === 'word' && !d.is_in_recycle_bin).slice(0, 3).length > 0 ? (
+                  itDocs.filter(d => d.type === 'word' && !d.is_in_recycle_bin).slice(0, 3).map(doc => (
+                    <div 
+                      key={doc.id}
+                      onClick={() => navigate(`/it-suite/word/${doc.id}`)}
+                      className="text-xs font-medium text-slate-350 hover:text-blue-400 cursor-pointer flex items-center gap-1.5 truncate"
+                    >
+                      📄 <span className="truncate">{doc.name}</span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-600 block italic">No recent documents</span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-800/85">
+              <button 
+                onClick={() => handleNewDocument('word')}
+                className="flex-1 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 border border-white/10"
+              >
+                <Plus size={14} /> New Document
+              </button>
+              <button 
+                onClick={() => wordUploadRef.current?.click()}
+                className="p-2 bg-white/5 hover:bg-white/10 text-slate-355 rounded-xl text-xs font-bold transition border border-white/10"
+                title="Upload Document"
+              >
+                <Upload size={14} />
+              </button>
+              <input 
+                type="file" 
+                ref={wordUploadRef} 
+                onChange={(e) => handleUploadDocument('word', e)} 
+                accept=".txt,.html,.md,.docx" 
+                className="hidden" 
+              />
+            </div>
+          </div>
+
+          {/* Card 2: EduVerse Excel */}
+          <div className="p-5 rounded-2xl border border-slate-800 bg-[#161720] hover:border-emerald-500/50 flex flex-col justify-between hover:shadow-md transition-all min-h-[350px]">
+            <div className="space-y-4 text-left">
+              <div className="flex items-start justify-between">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shadow-sm">
+                  <FileSpreadsheet className="w-6 h-6" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => handleLaunchApp('excel')}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition"
+                  >
+                    Open
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-bold text-white">EduVerse Excel</h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Build budgets, sort data grids, generate charts, and solve mathematical formulas instantly.
+                </p>
+              </div>
+
+              {/* Recent Files */}
+              <div className="space-y-2 pt-2">
+                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Recent Files</h4>
+                {itDocs.filter(d => d.type === 'excel' && !d.is_in_recycle_bin).slice(0, 3).length > 0 ? (
+                  itDocs.filter(d => d.type === 'excel' && !d.is_in_recycle_bin).slice(0, 3).map(doc => (
+                    <div 
+                      key={doc.id}
+                      onClick={() => navigate(`/it-suite/excel/${doc.id}`)}
+                      className="text-xs font-medium text-slate-350 hover:text-emerald-400 cursor-pointer flex items-center gap-1.5 truncate"
+                    >
+                      📊 <span className="truncate">{doc.name}</span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-600 block italic">No recent documents</span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-800/85">
+              <button 
+                onClick={() => handleNewDocument('excel')}
+                className="flex-1 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 border border-white/10"
+              >
+                <Plus size={14} /> New Spreadsheet
+              </button>
+              <button 
+                onClick={() => excelUploadRef.current?.click()}
+                className="p-2 bg-white/5 hover:bg-white/10 text-slate-355 rounded-xl text-xs font-bold transition border border-white/10"
+                title="Upload Document"
+              >
+                <Upload size={14} />
+              </button>
+              <input 
+                type="file" 
+                ref={excelUploadRef} 
+                onChange={(e) => handleUploadDocument('excel', e)} 
+                accept=".csv,.xlsx" 
+                className="hidden" 
+              />
+            </div>
+          </div>
+
+          {/* Card 3: EduVerse Slides */}
+          <div className="p-5 rounded-2xl border border-slate-800 bg-[#161720] hover:border-amber-500/50 flex flex-col justify-between hover:shadow-md transition-all min-h-[350px]">
+            <div className="space-y-4 text-left">
+              <div className="flex items-start justify-between">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shadow-sm">
+                  <Presentation className="w-6 h-6" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => handleLaunchApp('slides')}
+                    className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg transition"
+                  >
+                    Open
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-bold text-white">EduVerse Slides</h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Design beautiful slide decks, present concepts visually, and generate custom presentations with AI.
+                </p>
+              </div>
+
+              {/* Recent Files */}
+              <div className="space-y-2 pt-2">
+                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Recent Files</h4>
+                {itDocs.filter(d => d.type === 'slides' && !d.is_in_recycle_bin).slice(0, 3).length > 0 ? (
+                  itDocs.filter(d => d.type === 'slides' && !d.is_in_recycle_bin).slice(0, 3).map(doc => (
+                    <div 
+                      key={doc.id}
+                      onClick={() => navigate(`/it-suite/slides/${doc.id}`)}
+                      className="text-xs font-medium text-slate-355 hover:text-amber-400 cursor-pointer flex items-center gap-1.5 truncate"
+                    >
+                      🚀 <span className="truncate">{doc.name}</span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-600 block italic">No recent documents</span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-800/85">
+              <button 
+                onClick={() => handleNewDocument('slides')}
+                className="flex-1 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 border border-white/10"
+              >
+                <Plus size={14} /> New Slideshow
+              </button>
+              <button 
+                onClick={() => slidesUploadRef.current?.click()}
+                className="p-2 bg-white/5 hover:bg-white/10 text-slate-355 rounded-xl text-xs font-bold transition border border-white/10"
+                title="Upload Document"
+              >
+                <Upload size={14} />
+              </button>
+              <input 
+                type="file" 
+                ref={slidesUploadRef} 
+                onChange={(e) => handleUploadDocument('slides', e)} 
+                accept=".json,.pptx" 
+                className="hidden" 
+              />
+            </div>
           </div>
         </div>
       </div>

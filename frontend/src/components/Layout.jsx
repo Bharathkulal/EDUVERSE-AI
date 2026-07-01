@@ -9,6 +9,7 @@ import '../pages/DashboardTheme.css';
 
 const studentNav = [
   { path: '/dashboard', label: 'Dashboard', icon: '⚡' },
+  { path: '/it-suite', label: 'IT Suite', icon: '🏢' },
   { path: '/subjects', label: 'Learn', icon: '📚' },
   { path: '/practice-hub', label: 'Practice', icon: '🧪' },
   { path: '/coding', label: 'Code', icon: '💻' },
@@ -20,7 +21,6 @@ const studentNav = [
   { path: '/certificates', label: 'Certificates', icon: '🎓' },
   { path: '/study-report', label: 'Study Report', icon: '📈' },
   { path: '/ai-profile', label: 'Profile', icon: '👤' },
-  { path: '/it-suite', label: 'IT Suite', icon: '🏢' },
 ];
 
 
