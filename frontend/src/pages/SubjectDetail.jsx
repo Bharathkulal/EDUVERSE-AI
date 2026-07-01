@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import CSharpHub from '../csharp/CSharpHub';
+import DBMSHub from '../dbms/DBMSHub';
 import DBMSLab from '../components/DBMSLab';
 import JavaLab from '../components/JavaLab';
 import DSALab from '../components/DSALab';
@@ -523,47 +524,32 @@ export default function SubjectDetail() {
     }
   }
 
-  // DBMS gets the interactive lab experience
+  // DBMS gets the premium AI-powered learning platform
   if (subject.subject_name === 'DBMS') {
-    if (activeView === 'hub') {
-      return (
-        <SubjectHub
-          subjectName="DBMS"
-          description={subject.description}
-          isDark={isDark}
-          onSelectView={setActiveView}
-        />
-      );
-    }
-
-    if (activeView === 'theory') {
-      return renderTheoryTopics();
-    }
-
-    if (activeView === 'practical') {
-      return (
-        <div className="relative">
-          <button 
-            onClick={() => setActiveView('hub')}
-            className={`absolute top-4 left-4 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
-              isDark 
-                ? 'bg-[#120e2a] hover:bg-[#1a143b] text-white border-purple-500/20' 
-                : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-sm'
-            }`}
-          >
-            ← Back to Hub
-          </button>
-          <div className="pt-16">
-            <DBMSLab />
-            <OnlineCompiler
-              language="dbms"
-              title="SQL Online Compiler"
-              subtitle="Write and run SQL queries live — SELECT, INSERT, CREATE, JOIN and more."
-            />
+    return (
+      <div>
+        {isCompleted && (
+          <div className="mb-6 p-6 rounded-2xl bg-gradient-to-r from-cyan-500/20 via-teal-600/10 to-transparent border border-cyan-500/30 backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg shadow-cyan-900/10 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30 text-cyan-400">
+                <span className="text-2xl">🏆</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-cyan-200">Congratulations! Subject Completed</h3>
+                <p className="text-sm text-slate-300">You have successfully mastered all topics in this subject. Your official certificate is ready!</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => navigate('/certificates')}
+              className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-slate-900 font-bold rounded-xl transition duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-cyan-500/20 whitespace-nowrap text-sm flex items-center gap-2"
+            >
+              🎓 Claim Certificate
+            </button>
           </div>
-        </div>
-      );
-    }
+        )}
+        <DBMSHub />
+      </div>
+    );
   }
 
   // Advanced Java gets the premium AI-powered learning platform
