@@ -121,7 +121,7 @@ export default function Layout({ children }) {
         }}
       >
         <div className="flex flex-col h-full justify-between overflow-hidden">
-          <div className="flex flex-col flex-1">
+          <div className="flex flex-col flex-1 min-h-0">
             {/* Logo */}
             <div className="db-sidebar-logo flex flex-col items-start gap-1 pb-4 border-b border-[var(--db-sidebar-border)] mb-4 flex-shrink-0">
               <div className="flex items-center gap-3">
