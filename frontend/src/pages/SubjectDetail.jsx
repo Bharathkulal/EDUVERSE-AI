@@ -696,25 +696,20 @@ export default function SubjectDetail() {
                 : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-sm'
             }`}
           >
+            {/* L100: Back button */}
             ← Back to Hub
           </button>
           
-          <div className="pt-16 w-full flex flex-col">
-            <div className="w-full" style={{ height: 'calc(100vh - 80px)' }}>
-              <FocVisualization />
+          <div className="pt-20 w-full flex flex-col px-6">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                🔮 Integrated 3D TechVerse Sandbox
+              </h2>
+              <p className="text-xs text-slate-400 font-medium">
+                Inspect physical components, CPU register flow, and trace custom memory architectures interactively.
+              </p>
             </div>
-            
-            <div className="w-full border-t border-purple-500/20 mt-8 pt-8 px-6">
-              <div className="mb-6">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  🔮 Integrated 3D TechVerse Sandbox
-                </h2>
-                <p className="text-xs text-slate-400">
-                  Inspect physical components, CPU register flow, and trace custom memory architectures interactively.
-                </p>
-              </div>
-              <TechVerse />
-            </div>
+            <TechVerse />
           </div>
         </div>
       );
