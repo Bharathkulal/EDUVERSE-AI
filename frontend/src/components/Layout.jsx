@@ -10,6 +10,7 @@ import '../pages/DashboardTheme.css';
 
 const studentNav = [
   { path: '/dashboard', label: 'Dashboard', icon: '⚡' },
+  { path: '/chat-learn', label: 'Chat & Learn', icon: '💬' },
   { path: '/techverse', label: '3D TechVerse', icon: '🔮' },
   { path: '/it-suite', label: 'IT Suite', icon: '🏢' },
   { path: '/subjects', label: 'Learn', icon: '📚' },
@@ -46,7 +47,7 @@ const TOP_LEVEL_PATHS = [
   '/dashboard/activity', '/dashboard/continue',
   '/subjects', '/practice-hub', '/quizzes', '/coding', '/dbms-lab', '/ai-tutor',
   '/progress', '/certificates', '/study-report', '/ml-analytics', '/ai-profile', '/question-bank',
-  '/voice-assistant', '/settings', '/community', '/career-hub', '/it-suite', '/techverse',
+  '/voice-assistant', '/settings', '/community', '/career-hub', '/it-suite', '/techverse', '/chat-learn',
   '/admin', '/admin/students', '/admin/content', '/admin/quizzes',
   '/admin/dataset', '/admin/ml', '/admin/questions', '/admin/api-settings',
   '/admin/logs', '/admin/analytics', '/admin/alerts',

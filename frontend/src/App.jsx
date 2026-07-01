@@ -33,6 +33,7 @@ const StudyReport = lazy(() => import('./pages/StudyReport'));
 const MLAnalytics = lazy(() => import('./pages/MLAnalytics'));
 const Settings = lazy(() => import('./pages/Settings'));
 const AIProfile = lazy(() => import('./pages/AIProfile'));
+const ChatLearn = lazy(() => import('./pages/ChatLearn'));
 const QuestionBank = lazy(() => import('./pages/QuestionBank'));
 const VoiceAssistant = lazy(() => import('./pages/VoiceAssistant'));
 const StudentOnboarding = lazy(() => import('./pages/StudentOnboarding'));
@@ -161,6 +162,7 @@ export default function App() {
             <Route path="/coding" element={<ProtectedRoute><Layout><Coding /></Layout></ProtectedRoute>} />
             <Route path="/dbms-lab" element={<ProtectedRoute><Layout><DBMSLab /></Layout></ProtectedRoute>} />
             <Route path="/ai-tutor" element={<ProtectedRoute><Layout><AITutor /></Layout></ProtectedRoute>} />
+            <Route path="/chat-learn" element={<ProtectedRoute><Layout><ChatLearn /></Layout></ProtectedRoute>} />
             <Route path="/progress" element={<ProtectedRoute><Layout><Progress /></Layout></ProtectedRoute>} />
             <Route path="/certificates" element={<ProtectedRoute><Layout><Certificates /></Layout></ProtectedRoute>} />
             <Route path="/study-report" element={<ProtectedRoute><Layout><StudyReport /></Layout></ProtectedRoute>} />
