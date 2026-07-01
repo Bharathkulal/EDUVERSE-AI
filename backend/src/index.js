@@ -310,7 +310,7 @@ const db = require('./config/db');
     `);
 
     // Seed default providers
-    const providers = ['gemini', 'openrouter', 'groq', 'together', 'deepgram', 'elevenlabs', 'assemblyai', 'azure_speech', 'custom'];
+    const providers = ['gemini', 'openrouter', 'groq', 'together', 'deepgram', 'elevenlabs', 'assemblyai', 'azure_speech', 'custom', 'openai', 'anthropic'];
     const defaultModels = {
       gemini: 'gemini-2.0-flash',
       openrouter: 'google/gemini-2.5-flash',
@@ -320,7 +320,9 @@ const db = require('./config/db');
       elevenlabs: 'eleven_monolingual_v1',
       assemblyai: 'best',
       azure_speech: 'default',
-      custom: 'default'
+      custom: 'default',
+      openai: 'gpt-4o-mini',
+      anthropic: 'claude-3-5-sonnet-20241022'
     };
     for (let i = 0; i < providers.length; i++) {
       const p = providers[i];
@@ -691,38 +693,120 @@ const db = require('./config/db');
       }
     }
 
-    console.log('Database migrations completed successfully.');
-  } catch (err) {
-    console.error('Error running migrations:', err);
-  }
-})();
+      // Create Chat & Learn Tables
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS chat_sessions (
+          id SERIAL PRIMARY KEY,
+          student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          title VARCHAR(255) DEFAULT 'New Chat',
+          pinned BOOLEAN DEFAULT false,
+          favorite BOOLEAN DEFAULT false,
+          shared BOOLEAN DEFAULT false,
+          collection_name VARCHAR(100) DEFAULT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
 
-const authRoutes = require('./routes/auth');
-const subjectRoutes = require('./routes/subjects');
-const quizRoutes = require('./routes/quizzes');
-const codingRoutes = require('./routes/coding');
-const progressRoutes = require('./routes/progress');
-const advancedJavaRoutes = require('./routes/advanced_java');
-const predictionRoutes = require('./routes/predictions');
-const adminRoutes = require('./routes/admin');
-const mlRoutes = require('./routes/ml');
-const aiRoutes = require('./routes/ai');
-const onboardingRoutes = require('./routes/onboarding');
-const questionBankRoutes = require('./routes/question_bank');
-const fridayRoutes = require('./routes/friday');
-const apiSettingsRoutes = require('./routes/api_settings');
-const adminSystemRoutes = require('./routes/admin_system');
-const notesRoutes = require('./routes/notes');
-const contentRoutes = require('./routes/content');
-const datasetRoutes = require('./routes/datasets');
-const dashboardRoutes = require('./routes/dashboard');
-const itSuiteRoutes = require('./routes/it_suite');
-const http = require('http');
-const { Server } = require('socket.io');
-const { setIoInstance } = require('./utils/system_logger');
-const { authenticate } = require('./middleware/auth');
+        CREATE TABLE IF NOT EXISTS chat_messages (
+          id SERIAL PRIMARY KEY,
+          session_id INTEGER REFERENCES chat_sessions(id) ON DELETE CASCADE,
+          role VARCHAR(50) CHECK (role IN ('user', 'assistant')),
+          content TEXT NOT NULL,
+          multimodal_type VARCHAR(50) DEFAULT NULL,
+          file_url VARCHAR(500) DEFAULT NULL,
+          file_name VARCHAR(255) DEFAULT NULL,
+          file_size INTEGER DEFAULT NULL,
+          detected_metadata JSONB DEFAULT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
 
-const app = express();
+        CREATE TABLE IF NOT EXISTS prompt_templates (
+          id SERIAL PRIMARY KEY,
+          student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          title VARCHAR(255) NOT NULL,
+          prompt TEXT NOT NULL,
+          category VARCHAR(100) DEFAULT 'General',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS chat_preferences (
+          student_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+          preferred_language VARCHAR(50) DEFAULT 'English',
+          preferred_model VARCHAR(100) DEFAULT 'gemini-2.0-flash',
+          learning_mode_enabled BOOLEAN DEFAULT false,
+          voice_enabled BOOLEAN DEFAULT false,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS student_recommendations (
+          id SERIAL PRIMARY KEY,
+          student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          weak_topic VARCHAR(255),
+          detected_pattern VARCHAR(255),
+          study_time_prediction_mins INTEGER,
+          predicted_score DECIMAL(5,2),
+          recommended_action TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS generated_educational_files (
+          id SERIAL PRIMARY KEY,
+          student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          file_name VARCHAR(255) NOT NULL,
+          file_type VARCHAR(50) NOT NULL,
+          file_url VARCHAR(500) NOT NULL,
+          folder_path VARCHAR(255) DEFAULT 'General',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      // Seed default templates if empty
+      const checkPrompts = await db.query('SELECT 1 FROM prompt_templates LIMIT 1');
+      if (checkPrompts.rows.length === 0) {
+        console.log('Seeding default prompt templates...');
+        await db.query(`
+          INSERT INTO prompt_templates (title, prompt, category) VALUES
+          ('Explain like I am 5', 'Explain this concept using simple analogies, short sentences, and everyday terms as if I am 5 years old: {topic}', 'Tutor'),
+          ('Generate Practice Questions', 'Provide 5 difficult practice questions (with solutions) for the following topic: {topic}', 'Quiz'),
+          ('Create Mind Map Outline', 'Generate a structured hierarchical outline for a mind map representing the key details of: {topic}', 'Study Guide'),
+          ('Debug My Code', 'Analyze this code snippet, point out the logical/syntactical errors, explain why they occur, and write the corrected version: {topic}', 'Coding'),
+          ('Explain Chemistry Structure', 'Break down the chemistry structure, reactants, bonds, and applications: {topic}', 'Science')
+        `);
+      }
+
+      console.log('Database migrations completed successfully.');
+    } catch (err) {
+      console.error('Error running migrations:', err);
+    }
+  })();
+
+  const authRoutes = require('./routes/auth');
+  const subjectRoutes = require('./routes/subjects');
+  const quizRoutes = require('./routes/quizzes');
+  const codingRoutes = require('./routes/coding');
+  const progressRoutes = require('./routes/progress');
+  const advancedJavaRoutes = require('./routes/advanced_java');
+  const predictionRoutes = require('./routes/predictions');
+  const adminRoutes = require('./routes/admin');
+  const mlRoutes = require('./routes/ml');
+  const aiRoutes = require('./routes/ai');
+  const onboardingRoutes = require('./routes/onboarding');
+  const questionBankRoutes = require('./routes/question_bank');
+  const fridayRoutes = require('./routes/friday');
+  const apiSettingsRoutes = require('./routes/api_settings');
+  const adminSystemRoutes = require('./routes/admin_system');
+  const notesRoutes = require('./routes/notes');
+  const contentRoutes = require('./routes/content');
+  const datasetRoutes = require('./routes/datasets');
+  const dashboardRoutes = require('./routes/dashboard');
+  const itSuiteRoutes = require('./routes/it_suite');
+  const chatLearnRoutes = require('./routes/chat_learn');
+  const http = require('http');
+  const { Server } = require('socket.io');
+  const { setIoInstance } = require('./utils/system_logger');
+  const { authenticate } = require('./middleware/auth');
+
+  const app = express();
 const PORT = process.env.PORT || 5000;
 
 const server = http.createServer(app);
@@ -901,6 +985,8 @@ app.use('/api/content', contentRoutes);
 app.use('/api/datasets', datasetRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/it-suite', itSuiteRoutes);
+app.use('/api/chat-learn', chatLearnRoutes);
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

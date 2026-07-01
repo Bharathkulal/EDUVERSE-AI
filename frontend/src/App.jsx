@@ -34,6 +34,7 @@ const StudyReport = lazy(() => import('./pages/StudyReport'));
 const MLAnalytics = lazy(() => import('./pages/MLAnalytics'));
 const Settings = lazy(() => import('./pages/Settings'));
 const AIProfile = lazy(() => import('./pages/AIProfile'));
+const ChatLearn = lazy(() => import('./pages/ChatLearn'));
 const QuestionBank = lazy(() => import('./pages/QuestionBank'));
 const VoiceAssistant = lazy(() => import('./pages/VoiceAssistant'));
 const StudentOnboarding = lazy(() => import('./pages/StudentOnboarding'));
@@ -62,6 +63,7 @@ const MathVisualization = lazy(() => import('./pages/MathVisualization'));
 const CalculusVisualization = lazy(() => import('./pages/CalculusVisualization'));
 const ExecutionSimulator = lazy(() => import('./pages/ExecutionSimulator'));
 const FocVisualization = lazy(() => import('./pages/FocVisualization'));
+const TechVerse = lazy(() => import('./pages/TechVerse'));
 
 // Lazy Loaded Admin Pages
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -158,6 +160,7 @@ export default function App() {
             <Route path="/mathematics/calculus" element={<ProtectedRoute><CalculusVisualization /></ProtectedRoute>} />
             <Route path="/dsa/stack/simulator" element={<ProtectedRoute><Layout><ExecutionSimulator /></Layout></ProtectedRoute>} />
             <Route path="/foc" element={<ProtectedRoute><Layout><FocVisualization /></Layout></ProtectedRoute>} />
+            <Route path="/techverse" element={<ProtectedRoute><Layout><TechVerse /></Layout></ProtectedRoute>} />
 
             <Route path="/practice-hub" element={<ProtectedRoute><Layout><PracticeHub /></Layout></ProtectedRoute>} />
 
@@ -166,6 +169,7 @@ export default function App() {
             <Route path="/coding" element={<ProtectedRoute><Layout><Coding /></Layout></ProtectedRoute>} />
             <Route path="/dbms-lab" element={<ProtectedRoute><Layout><DBMSLab /></Layout></ProtectedRoute>} />
             <Route path="/ai-tutor" element={<ProtectedRoute><Layout><AITutor /></Layout></ProtectedRoute>} />
+            <Route path="/chat-learn" element={<ProtectedRoute><Layout><ChatLearn /></Layout></ProtectedRoute>} />
             <Route path="/progress" element={<ProtectedRoute><Layout><Progress /></Layout></ProtectedRoute>} />
             <Route path="/certificates" element={<ProtectedRoute><Layout><Certificates /></Layout></ProtectedRoute>} />
             <Route path="/study-report" element={<ProtectedRoute><Layout><StudyReport /></Layout></ProtectedRoute>} />
