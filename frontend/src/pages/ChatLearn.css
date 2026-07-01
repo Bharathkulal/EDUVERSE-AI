@@ -667,3 +667,72 @@
     max-width: 95%;
   }
 }
+
+/* Sleek Agent Selector Row */
+.agent-selector-row {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 0.75rem;
+  background: var(--db-sidebar-bg);
+  border-bottom: 1px solid var(--db-sidebar-border);
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.agent-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--db-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.agent-selector-btn:hover {
+  color: var(--db-text-main);
+  background: var(--db-btn-secondary-hover);
+}
+
+.agent-selector-btn.chatgpt.active {
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.agent-selector-btn.gemini.active {
+  color: #3B82F6;
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.agent-selector-btn.claude.active {
+  color: #F97316;
+  background: rgba(249, 115, 22, 0.08);
+  border-color: rgba(249, 115, 22, 0.25);
+}
+
+/* Agent Specific Avatar Customizer */
+.chatgpt-avatar {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border: 1px solid rgba(16, 185, 129, 0.25) !important;
+  color: #10B981 !important;
+}
+
+.gemini-avatar {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border: 1px solid rgba(59, 130, 246, 0.25) !important;
+  color: #3B82F6 !important;
+}
+
+.claude-avatar {
+  background: rgba(249, 115, 22, 0.1) !important;
+  border: 1px solid rgba(249, 115, 22, 0.25) !important;
+  color: #F97316 !important;
+}

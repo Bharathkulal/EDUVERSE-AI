@@ -310,7 +310,7 @@ const db = require('./config/db');
     `);
 
     // Seed default providers
-    const providers = ['gemini', 'openrouter', 'groq', 'together', 'deepgram', 'elevenlabs', 'assemblyai', 'azure_speech', 'custom'];
+    const providers = ['gemini', 'openrouter', 'groq', 'together', 'deepgram', 'elevenlabs', 'assemblyai', 'azure_speech', 'custom', 'openai', 'anthropic'];
     const defaultModels = {
       gemini: 'gemini-2.0-flash',
       openrouter: 'google/gemini-2.5-flash',
@@ -320,7 +320,9 @@ const db = require('./config/db');
       elevenlabs: 'eleven_monolingual_v1',
       assemblyai: 'best',
       azure_speech: 'default',
-      custom: 'default'
+      custom: 'default',
+      openai: 'gpt-4o-mini',
+      anthropic: 'claude-3-5-sonnet-20241022'
     };
     for (let i = 0; i < providers.length; i++) {
       const p = providers[i];

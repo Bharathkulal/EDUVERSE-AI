@@ -30,6 +30,8 @@ const getProviderConfig = async (providerName) => {
         elevenlabs: 'ELEVENLABS_API_KEY',
         assemblyai: 'ASSEMBLYAI_API_KEY',
         azure_speech: 'AZURE_SPEECH_KEY',
+        openai: 'OPENAI_API_KEY',
+        anthropic: 'ANTHROPIC_API_KEY'
       };
       const envVar = envMap[providerName];
       key = envVar ? process.env[envVar] || '' : '';
@@ -54,7 +56,7 @@ const getActiveProviders = async (type = 'llm') => {
   );
   
   const providers = [];
-  const llmTypes = ['gemini', 'openrouter', 'groq', 'together', 'custom'];
+  const llmTypes = ['gemini', 'openrouter', 'groq', 'together', 'custom', 'openai', 'anthropic'];
   const speechTypes = ['deepgram', 'assemblyai', 'elevenlabs', 'azure_speech'];
 
   for (const row of result.rows) {
@@ -76,9 +78,19 @@ const getActiveProviders = async (type = 'llm') => {
   return providers;
 };
 
-// Core response generator with automatic failover
 const generateResponse = async (prompt, options = {}) => {
-  const providers = await getActiveProviders('llm');
+  let providers = await getActiveProviders('llm');
+  if (options.provider) {
+    const matched = providers.filter(p => p.provider === options.provider);
+    if (matched.length > 0) {
+      providers = matched;
+    } else {
+      const directConfig = await getProviderConfig(options.provider);
+      if (directConfig && directConfig.key) {
+        providers = [directConfig];
+      }
+    }
+  }
   if (providers.length === 0) {
     throw new Error('No active AI providers configured.');
   }
@@ -147,6 +159,36 @@ const generateResponse = async (prompt, options = {}) => {
           );
           text = res.data?.choices?.[0]?.message?.content;
           if (!text) throw new Error('Empty response from Together AI');
+        } else if (item.provider === 'openai') {
+          const res = await axios.post(
+            'https://api.openai.com/v1/chat/completions',
+            {
+              model: item.modelName || 'gpt-4o-mini',
+              messages: [{ role: 'user', content: finalPrompt }],
+            },
+            { headers: { Authorization: `Bearer ${item.key}`, 'Content-Type': 'application/json' }, timeout: 15000 }
+          );
+          text = res.data?.choices?.[0]?.message?.content;
+          if (!text) throw new Error('Empty response from OpenAI');
+        } else if (item.provider === 'anthropic') {
+          const res = await axios.post(
+            'https://api.anthropic.com/v1/messages',
+            {
+              model: item.modelName || 'claude-3-5-sonnet-20241022',
+              max_tokens: 1500,
+              messages: [{ role: 'user', content: finalPrompt }],
+            },
+            { 
+              headers: { 
+                'x-api-key': item.key, 
+                'anthropic-version': '2023-06-01',
+                'Content-Type': 'application/json' 
+              }, 
+              timeout: 15000 
+            }
+          );
+          text = res.data?.content?.[0]?.text;
+          if (!text) throw new Error('Empty response from Anthropic');
         } else if (item.provider === 'custom') {
           // Fallback / mock/ custom endpoint
           text = `[Custom Provider Response] ${prompt}`;

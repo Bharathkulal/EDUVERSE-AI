@@ -19,6 +19,7 @@ export default function ChatLearn() {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentStreamingText, setCurrentStreamingText] = useState('');
+  const [activeAgent, setActiveAgent] = useState('chatgpt'); // chatgpt, gemini, claude
   
   // Library Accordions
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -362,7 +363,8 @@ export default function ChatLearn() {
       file_name: uploadDraft?.file_name || null,
       file_size: uploadDraft?.file_size || null,
       parsed_text: uploadDraft?.parsed_text || null,
-      api_tool: selectedTool || null
+      api_tool: selectedTool || null,
+      agent_type: activeAgent
     };
 
     // Insert optimistic user message
@@ -769,6 +771,28 @@ export default function ChatLearn() {
 
       {/* CENTER WORKSPACE */}
       <main className="chat-center-area">
+        {/* Sleek Agent Selector Row */}
+        <div className="agent-selector-row">
+          <button 
+            className={`agent-selector-btn chatgpt ${activeAgent === 'chatgpt' ? 'active' : ''}`}
+            onClick={() => setActiveAgent('chatgpt')}
+          >
+            <span>🟢</span> ChatGPT
+          </button>
+          <button 
+            className={`agent-selector-btn gemini ${activeAgent === 'gemini' ? 'active' : ''}`}
+            onClick={() => setActiveAgent('gemini')}
+          >
+            <span>🔮</span> Gemini
+          </button>
+          <button 
+            className={`agent-selector-btn claude ${activeAgent === 'claude' ? 'active' : ''}`}
+            onClick={() => setActiveAgent('claude')}
+          >
+            <span>🟠</span> Claude
+          </button>
+        </div>
+
         {/* Welcome or Empty State */}
         {messages.length === 0 && !isLoading && (
           <div className="chat-welcome-container">
@@ -798,8 +822,8 @@ export default function ChatLearn() {
           <div className="chat-messages-viewport">
             {messages.map((msg) => (
               <div key={msg.id} className={`chat-message-row ${msg.role}`}>
-                <div className="chat-avatar">
-                  {msg.role === 'user' ? '👤' : '🤖'}
+                <div className={`chat-avatar ${msg.role === 'assistant' ? (activeAgent === 'chatgpt' ? 'chatgpt-avatar' : activeAgent === 'claude' ? 'claude-avatar' : 'gemini-avatar') : ''}`}>
+                  {msg.role === 'user' ? '👤' : (activeAgent === 'chatgpt' ? '🟢' : activeAgent === 'claude' ? '🟠' : '🔮')}
                 </div>
                 <div className="message-bubble-wrapper">
                   <div className="message-bubble">
@@ -840,7 +864,9 @@ export default function ChatLearn() {
             {/* Current Streaming Message */}
             {isLoading && (
               <div className="chat-message-row assistant">
-                <div className="chat-avatar">🤖</div>
+                <div className={`chat-avatar ${activeAgent === 'chatgpt' ? 'chatgpt-avatar' : activeAgent === 'claude' ? 'claude-avatar' : 'gemini-avatar'}`}>
+                  {activeAgent === 'chatgpt' ? '🟢' : activeAgent === 'claude' ? '🟠' : '🔮'}
+                </div>
                 <div className="message-bubble-wrapper">
                   <div className="message-bubble">
                     {currentStreamingText ? (

@@ -239,7 +239,7 @@ router.post('/sessions/:id/messages', authenticate, async (req, res) => {
   try {
     const studentId = req.user.id;
     const sessionId = req.params.id;
-    const { content, multimodal_type, file_url, file_name, file_size, parsed_text, api_tool } = req.body;
+    const { content, multimodal_type, file_url, file_name, file_size, parsed_text, api_tool, agent_type } = req.body;
 
     const sessionCheck = await db.query(
       'SELECT id FROM chat_sessions WHERE id = $1 AND student_id = $2',
@@ -361,6 +361,18 @@ router.post('/sessions/:id/messages', authenticate, async (req, res) => {
 
     promptText += `Student Question: ${content}`;
 
+    let targetProvider = null;
+    if (agent_type === 'chatgpt') {
+      targetProvider = 'openai';
+      systemInstruction += `\nAct as ChatGPT, a helpful AI assistant developed by OpenAI. Keep the branding aligned with ChatGPT.`;
+    } else if (agent_type === 'gemini') {
+      targetProvider = 'gemini';
+      systemInstruction += `\nAct as Gemini, a highly advanced AI assistant developed by Google. Keep the branding aligned with Gemini.`;
+    } else if (agent_type === 'claude') {
+      targetProvider = 'anthropic';
+      systemInstruction += `\nAct as Claude, a helpful, honest, and harmless AI assistant developed by Anthropic. Keep the branding aligned with Claude.`;
+    }
+
     let responseText = '';
     let apiCallResult = null;
 
@@ -369,7 +381,8 @@ router.post('/sessions/:id/messages', authenticate, async (req, res) => {
     } else {
       try {
         apiCallResult = await aiGateway.generateResponse(promptText, {
-          systemInstruction
+          systemInstruction,
+          provider: targetProvider
         });
         responseText = apiCallResult.text;
       } catch (err) {
