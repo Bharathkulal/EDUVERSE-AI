@@ -365,6 +365,12 @@ Provide a friendly, helpful, and concise response in 1 to 2 sentences. Include m
       },
       (err) => {
         setIsListening(false);
+        if (err === 'not-allowed' || err === 'service-not-allowed') {
+          console.warn('Speech recognition permission denied or disabled:', err);
+          setIsEnabled(false);
+          isEnabledRef.current = false;
+          SpeechRecognitionService.stop();
+        }
       }
     );
     setIsListening(true);

@@ -54,7 +54,7 @@ const getActiveProviders = async (type = 'llm') => {
      WHERE disabled = false AND (cooldown_until IS NULL OR cooldown_until < NOW())
      ORDER BY priority ASC`
   );
-  
+
   const providers = [];
   const llmTypes = ['gemini', 'openrouter', 'groq', 'together', 'custom', 'openai', 'anthropic'];
   const speechTypes = ['deepgram', 'assemblyai', 'elevenlabs', 'azure_speech'];
@@ -125,14 +125,14 @@ const generateResponse = async (prompt, options = {}) => {
               messages: [{ role: 'user', content: finalPrompt }],
               max_tokens: 1500
             },
-            { 
-              headers: { 
-                Authorization: `Bearer ${item.key}`, 
+            {
+              headers: {
+                Authorization: `Bearer ${item.key}`,
                 'Content-Type': 'application/json',
                 'HTTP-Referer': 'https://eduverse.ai',
                 'X-Title': 'EduVerse AI'
-              }, 
-              timeout: 15000 
+              },
+              timeout: 15000
             }
           );
           text = res.data?.choices?.[0]?.message?.content;
@@ -178,13 +178,13 @@ const generateResponse = async (prompt, options = {}) => {
               max_tokens: 1500,
               messages: [{ role: 'user', content: finalPrompt }],
             },
-            { 
-              headers: { 
-                'x-api-key': item.key, 
+            {
+              headers: {
+                'x-api-key': item.key,
                 'anthropic-version': '2023-06-01',
-                'Content-Type': 'application/json' 
-              }, 
-              timeout: 15000 
+                'Content-Type': 'application/json'
+              },
+              timeout: 15000
             }
           );
           text = res.data?.content?.[0]?.text;
@@ -197,7 +197,7 @@ const generateResponse = async (prompt, options = {}) => {
         }
 
         success = true;
-        break; 
+        break;
       } catch (err) {
         attemptError = err;
         if (attempt < maxRetries) {
