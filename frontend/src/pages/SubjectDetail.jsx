@@ -10,6 +10,7 @@ import WebDevLab from '../components/WebDevLab';
 import OnlineCompiler from '../components/OnlineCompiler';
 import PythonCoursePage from '../python/PythonCoursePage';
 import JavaHub from '../advanced-java/JavaHub';
+import FocVisualization from './FocVisualization';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Layers, List, GitCommit, GitMerge, Share2, PlayCircle, CheckCircle2, ArrowLeft, ArrowRight, Trophy } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
@@ -92,6 +93,19 @@ const SUBJECT_HUB_METADATA = {
     theoryPills: ['Calculus Rules', 'Linear Equations', 'Vector Spaces', 'Probability', 'Mathematical Proofs'],
     labDesc: 'Execute numerical calculations, Gauss-Seidel equations, and Simpson integration formulas live.',
     labPills: ['Gauss Solver', 'RK4 Simulator', 'Simpson Rules', 'Bisection Rooter', 'Matrix Transform']
+  },
+  'FOC': {
+    icon: '🔢',
+    accentFrom: 'from-blue-600',
+    accentTo: 'to-indigo-700',
+    accentText: 'from-blue-400 via-indigo-400 to-purple-400',
+    level: 'Level 1 — Novice',
+    xp: '400 XP',
+    completion: 10,
+    theoryDesc: 'Learn basic computer systems, number system conversions, logic gates, operating systems, and computer architecture.',
+    theoryPills: ['Number Systems', 'Logic Gates', 'ASCII & Unicode', 'Flowcharts', 'CPU Architecture'],
+    labDesc: 'Interact with visual computing simulators, logic gate boards, and CPU instruction datapath tracing.',
+    labPills: ['Logic Simulators', 'Number Converter', 'CPU datapath trace', 'Gate Playgrounds', 'Interactive Quizzes']
   }
 };
 
@@ -653,8 +667,40 @@ export default function SubjectDetail() {
 
   // --- NEW FRAMER MOTION FOC PROTOTYPE ---
   if (subject.subject_name === 'FOC') {
-    navigate('/foc');
-    return null;
+    if (activeView === 'hub') {
+      return (
+        <SubjectHub
+          subjectName="FOC"
+          description={subject.description}
+          isDark={isDark}
+          onSelectView={setActiveView}
+        />
+      );
+    }
+
+    if (activeView === 'theory') {
+      return renderTheoryTopics();
+    }
+
+    if (activeView === 'practical') {
+      return (
+        <div className="relative w-full h-full min-h-screen">
+          <button 
+            onClick={() => setActiveView('hub')}
+            className={`absolute top-4 left-4 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
+              isDark 
+                ? 'bg-[#120e2a] hover:bg-[#1a143b] text-white border-purple-500/20' 
+                : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-sm'
+            }`}
+          >
+            ← Back to Hub
+          </button>
+          <div className="pt-16 h-full w-full">
+            <FocVisualization />
+          </div>
+        </div>
+      );
+    }
   }
 
   // --- NEW FRAMER MOTION DSA PROTOTYPE ---
