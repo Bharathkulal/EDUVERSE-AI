@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, ChevronRight, ChevronLeft, Play, Pause, RotateCcw, 
   Settings2, Activity, BrainCircuit, FunctionSquare, Rocket, X,
-  Layers, BookOpen, Target, Lightbulb, Zap
+  Layers, BookOpen, Target, Lightbulb, Zap, ArrowRight
 } from 'lucide-react';
 import NotebookEngine from '../components/MathEngines/NotebookEngine';
 import MathBackground from '../components/MathBackground';
@@ -124,13 +124,104 @@ export default function MathVisualization() {
   ];
 
   const CARDS = [
-    { id: 'Bisection Method', title: 'Bisection Method', desc: 'Iteratively bracket and find root of a function using interval halving.', status: 'Online', color: 'from-rose-500 to-pink-600' },
-    { id: 'Newton\u2019s Interpolation', title: 'Newton\u2019s Interpolation', desc: 'Estimate values between data points using forward/backward difference polynomials.', status: 'Online', color: 'from-emerald-500 to-teal-600' },
-    { id: 'Newton\u2019s Difference', title: 'Newton\u2019s Difference', desc: 'Obtain first (dy/dx) and second (d\u00B2y/dx\u00B2) derivatives from difference tables.', status: 'Online', color: 'from-violet-500 to-purple-600' },
-    { id: 'Trapezoidal Rule', title: 'Trapezoidal Rule', desc: 'Calculate the approximate area under a curve using boundary nodes.', status: 'Online', color: 'from-blue-500 to-indigo-600' },
-    { id: 'Simpson\u2019s 1/3 Rule', title: 'Simpson\u2019s 1/3 Rule', desc: 'Higher accuracy quadratic polynomial area approximation.', status: 'Online', color: 'from-amber-500 to-orange-600' },
-    { id: 'Simpson\u2019s 3/8 Rule', title: 'Simpson\u2019s 3/8 Rule', desc: 'Cubic polynomial boundaries for high precision integration.', status: 'Online', color: 'from-pink-500 to-rose-600' },
-    { id: 'RK4', title: 'RK4 Method', desc: 'Solve ordinary differential equations step-by-step.', status: 'Online', color: 'from-sky-500 to-blue-600' }
+    { 
+      id: 'Bisection Method', 
+      title: 'Bisection Method', 
+      desc: 'Iteratively bracket and find root of a function using interval halving.', 
+      status: 'Intermediate', 
+      time: '15 mins', 
+      xp: '100 XP', 
+      progress: 80,
+      tags: ['Root Finding', 'Interval Halving', 'f(a)·f(b) < 0'],
+      colorTheme: 'blue',
+      btnClass: 'bg-blue-600 hover:bg-blue-700 text-white',
+      badgeClass: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+      icon: '📐'
+    },
+    { 
+      id: 'Newton\u2019s Interpolation', 
+      title: 'Newton\u2019s Interpolation', 
+      desc: 'Estimate values between data points using forward/backward difference polynomials.', 
+      status: 'Intermediate', 
+      time: '20 mins', 
+      xp: '120 XP', 
+      progress: 60,
+      tags: ['Equal Intervals', 'Forward Diff', 'Backward Diff'],
+      colorTheme: 'cyan',
+      btnClass: 'bg-cyan-600 hover:bg-cyan-700 text-white',
+      badgeClass: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
+      icon: '📈'
+    },
+    { 
+      id: 'Newton\u2019s Difference', 
+      title: 'Newton\u2019s Difference', 
+      desc: 'Obtain first (dy/dx) and second (d\u00B2y/dx\u00B2) derivatives from difference tables.', 
+      status: 'Advanced', 
+      time: '15 mins', 
+      xp: '150 XP', 
+      progress: 40,
+      tags: ['First Derivative', 'Second Derivative', 'Table Diff'],
+      colorTheme: 'emerald',
+      btnClass: 'bg-emerald-600 hover:bg-emerald-700 text-white',
+      badgeClass: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+      icon: '📊'
+    },
+    { 
+      id: 'Trapezoidal Rule', 
+      title: 'Trapezoidal Rule', 
+      desc: 'Calculate the approximate area under a curve using boundary nodes.', 
+      status: 'Beginner', 
+      time: '10 mins', 
+      xp: '80 XP', 
+      progress: 90,
+      tags: ['Integration', 'Linear Segments', 'Area Approx'],
+      colorTheme: 'violet',
+      btnClass: 'bg-violet-600 hover:bg-violet-700 text-white',
+      badgeClass: 'bg-violet-500/10 border-violet-500/20 text-violet-400',
+      icon: '〰️'
+    },
+    { 
+      id: 'Simpson\u2019s 1/3 Rule', 
+      title: 'Simpson\u2019s 1/3 Rule', 
+      desc: 'Higher accuracy quadratic polynomial area approximation.', 
+      status: 'Intermediate', 
+      time: '15 mins', 
+      xp: '100 XP', 
+      progress: 75,
+      tags: ['Integration', 'Quadratic', 'Even n'],
+      colorTheme: 'amber',
+      btnClass: 'bg-amber-500 hover:bg-amber-600 text-white',
+      badgeClass: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
+      icon: '📐'
+    },
+    { 
+      id: 'Simpson\u2019s 3/8 Rule', 
+      title: 'Simpson\u2019s 3/8 Rule', 
+      desc: 'Cubic polynomial boundaries for high precision integration.', 
+      status: 'Advanced', 
+      time: '20 mins', 
+      xp: '150 XP', 
+      progress: 30,
+      tags: ['Integration', 'Cubic', 'Multiple of 3'],
+      colorTheme: 'rose',
+      btnClass: 'bg-rose-500 hover:bg-rose-600 text-white',
+      badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-400',
+      icon: '🌀'
+    },
+    { 
+      id: 'RK4', 
+      title: 'RK4 Method', 
+      desc: 'Solve ordinary differential equations step-by-step.', 
+      status: 'Advanced', 
+      time: '25 mins', 
+      xp: '200 XP', 
+      progress: 10,
+      tags: ['ODE Solver', '4th Order', 'Single Step'],
+      colorTheme: 'sky',
+      btnClass: 'bg-sky-500 hover:bg-sky-600 text-white',
+      badgeClass: 'bg-sky-500/10 border-sky-500/20 text-sky-400',
+      icon: '🧪'
+    }
   ];
 
   // Formula data for each method
@@ -467,39 +558,85 @@ export default function MathVisualization() {
                 transition={{ delay: index * 0.08, type: 'spring', stiffness: 100 }}
                 whileHover={{ y: -8, scale: 1.02 }}
                 onClick={() => handleCardClick(card.id)}
-                className="relative rounded-2xl cursor-pointer group overflow-hidden border border-[var(--db-card-border)] bg-[var(--db-card-bg)] hover:bg-[var(--db-card-bg-elevated)] hover:border-emerald-500/40 transition-all duration-300 shadow-md"
+                className="relative rounded-[24px] cursor-pointer group overflow-hidden border border-[var(--db-card-border)] bg-[var(--db-card-bg)] hover:bg-[var(--db-card-bg-elevated)] transition-all duration-300 shadow-md p-6 flex flex-col justify-between min-h-[380px]"
               >
-                {/* Top gradient border */}
-                <div className={`h-1 w-full bg-gradient-to-r ${card.color}`} />
-                
-                {/* Card glow on hover */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(16, 185, 129, 0.08) 0%, transparent 70%)' }} />
-                
-                <div className="p-6">
-                  {/* Status & Icon Row */}
-                  <div className="flex items-center justify-between mb-5">
-                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border bg-emerald-500/15 text-emerald-550 border-emerald-500/30">
-                      ONLINE
-                    </span>
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)]">
-                      <span className="text-lg">🧮</span>
+                {/* Top border highlight */}
+                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-${card.colorTheme === 'amber' ? 'amber-500' : card.colorTheme === 'emerald' ? 'emerald-500' : card.colorTheme}-500/40 to-transparent`} />
+
+                <div className="space-y-4">
+                  {/* Top Row: Icon and Method Number + Title */}
+                  <div className="flex gap-4 items-start text-left">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${card.badgeClass}`}>
+                      <span className="text-xl">{card.icon}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase tracking-widest font-extrabold text-slate-400">
+                        METHOD {index + 1}
+                      </span>
+                      <h3 className="text-base font-bold text-white mt-0.5 group-hover:text-emerald-400 transition-colors">
+                        {card.title}
+                      </h3>
                     </div>
                   </div>
 
-                  {/* Title & Description */}
-                  <h3 className="text-xl font-bold text-[var(--db-text-main)] mb-2 group-hover:text-emerald-500 transition-colors duration-300">{card.title}</h3>
-                  <p className="text-[var(--db-text-secondary)] text-sm leading-relaxed mb-6">{card.desc}</p>
+                  {/* Description */}
+                  <p className="text-slate-400 text-xs leading-relaxed text-left line-clamp-2">
+                    {card.desc}
+                  </p>
 
-                  {/* Launch + GO Button */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-emerald-500 text-xs font-bold tracking-wide group-hover:text-emerald-400 transition-colors">
-                      Launch Simulator
+                  {/* Tag Pills */}
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {card.tags.map((tag, idx) => (
+                      <span key={idx} className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-700/50 bg-slate-800/40 text-slate-300">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Difficulty, Time, XP row */}
+                  <div className="flex items-center gap-3 text-[11px] pt-1">
+                    <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] border ${
+                      card.status === 'Beginner' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                      card.status === 'Intermediate' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                      'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                    }`}>
+                      {card.status}
                     </span>
-                    <button className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold rounded-lg transition-all shadow-md shadow-emerald-500/20 group-hover:shadow-emerald-500/40">
-                      GO
-                    </button>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-slate-400 font-medium font-mono">{card.time}</span>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-emerald-400 font-bold font-mono">{card.xp}</span>
                   </div>
                 </div>
+
+                {/* Progress bar section */}
+                <div className="mt-4 pt-3 border-t border-[var(--db-card-border)] space-y-1.5 text-left">
+                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                    <span>Progress</span>
+                    <span>{card.progress}%</span>
+                  </div>
+                  <div className="w-full bg-slate-800/50 h-1.5 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-500 ${
+                        card.colorTheme === 'blue' ? 'bg-blue-500' :
+                        card.colorTheme === 'cyan' ? 'bg-cyan-500' :
+                        card.colorTheme === 'emerald' ? 'bg-emerald-500' :
+                        card.colorTheme === 'violet' ? 'bg-violet-500' :
+                        card.colorTheme === 'amber' ? 'bg-amber-500' :
+                        card.colorTheme === 'rose' ? 'bg-rose-500' :
+                        'bg-sky-500'
+                      }`}
+                      style={{ width: `${card.progress}%` }} 
+                    />
+                  </div>
+                </div>
+
+                {/* Action button at bottom */}
+                <button className={`w-full py-2.5 mt-5 font-bold rounded-xl text-xs transition duration-200 flex items-center justify-center gap-1.5 ${card.btnClass}`}>
+                  <span>Launch Simulator</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+
               </motion.div>
             ))}
           </div>
