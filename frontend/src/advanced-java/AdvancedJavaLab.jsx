@@ -233,7 +233,7 @@ const ACHIEVEMENTS = [
 ];
 
 export default function AdvancedJavaLab({ onBack }) {
-  const { isDark } = useTheme();
+  const { isDarkMode: isDark } = useTheme();
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'roadmap', 'workspace', 'challenges', 'debug', 'projects', 'db-lab', 'achievements'
   const [selectedNode, setSelectedNode] = useState(ROADMAP_NODES[0]);
   const [analytics, setAnalytics] = useState(null);

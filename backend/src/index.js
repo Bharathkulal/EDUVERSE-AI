@@ -543,6 +543,52 @@ const db = require('./config/db');
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(user_id, language)
       );
+
+      CREATE TABLE IF NOT EXISTS it_suite_folders (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        parent_id INTEGER REFERENCES it_suite_folders(id) ON DELETE CASCADE,
+        is_starred BOOLEAN DEFAULT false,
+        is_in_recycle_bin BOOLEAN DEFAULT false,
+        tags VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS it_suite_documents (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        folder_id INTEGER REFERENCES it_suite_folders(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        type VARCHAR(50) NOT NULL CHECK (type IN ('word', 'excel', 'slides')),
+        content TEXT,
+        is_starred BOOLEAN DEFAULT false,
+        is_in_recycle_bin BOOLEAN DEFAULT false,
+        tags VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS it_suite_versions (
+        id SERIAL PRIMARY KEY,
+        document_id INTEGER REFERENCES it_suite_documents(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        content TEXT NOT NULL,
+        version_number INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS it_suite_comments (
+        id SERIAL PRIMARY KEY,
+        document_id INTEGER REFERENCES it_suite_documents(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        comment_text TEXT NOT NULL,
+        selection_range TEXT,
+        resolved BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
     `);
 
     // Seed modules if empty
@@ -670,6 +716,7 @@ const notesRoutes = require('./routes/notes');
 const contentRoutes = require('./routes/content');
 const datasetRoutes = require('./routes/datasets');
 const dashboardRoutes = require('./routes/dashboard');
+const itSuiteRoutes = require('./routes/it_suite');
 const http = require('http');
 const { Server } = require('socket.io');
 const { setIoInstance } = require('./utils/system_logger');
@@ -690,6 +737,21 @@ setIoInstance(io);
 
 io.on('connection', (socket) => {
   console.log('A user connected to real-time sync socket:', socket.id);
+  
+  socket.on('join-document', ({ documentId, username }) => {
+    socket.join(`doc-${documentId}`);
+    socket.to(`doc-${documentId}`).emit('user-joined', { username, socketId: socket.id });
+    console.log(`User ${username} joined document ${documentId}`);
+  });
+
+  socket.on('document-update', ({ documentId, content }) => {
+    socket.to(`doc-${documentId}`).emit('document-remote-update', { content });
+  });
+
+  socket.on('cursor-move', ({ documentId, cursorInfo }) => {
+    socket.to(`doc-${documentId}`).emit('cursor-remote-move', { socketId: socket.id, cursorInfo });
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected from sync socket:', socket.id);
   });
@@ -838,6 +900,7 @@ app.use('/api/notes', notesRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/datasets', datasetRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/it-suite', itSuiteRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
