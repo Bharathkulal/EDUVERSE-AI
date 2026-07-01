@@ -8,7 +8,7 @@ import { useTheme } from '../context/ThemeContext';
 
 export default function JavaHub() {
   const [activeView, setActiveView] = useState('hub'); // 'hub', 'theory', 'practical'
-  const { isDark } = useTheme();
+  const { isDarkMode: isDark } = useTheme();
   const navigate = useNavigate();
 
   if (activeView === 'theory') {

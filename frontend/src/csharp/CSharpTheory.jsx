@@ -4,7 +4,7 @@ import {
   ArrowLeft, Clock, Zap, BookOpen, CheckCircle, Award, BarChart2,
   HelpCircle, MessageSquare, RefreshCw, Code2, Play, Sparkles, StickyNote,
   Volume2, ShieldAlert, Cpu, Database, ChevronRight, CornerDownRight,
-  Sun, Moon, VolumeX, Pause, BrainCircuit, Activity
+  Sun, Moon, VolumeX, Pause, BrainCircuit, Activity, Trophy
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
@@ -88,7 +88,7 @@ const BADGES = [
 ];
 
 export default function CSharpTheory() {
-  const { isDark } = useTheme();
+  const { isDarkMode: isDark } = useTheme();
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [currentChapterIdx, setCurrentChapterIdx] = useState(0);
   const [activeLessonTab, setActiveLessonTab] = useState('learn'); // 'learn', 'architecture', 'practice', 'quiz', 'projects'

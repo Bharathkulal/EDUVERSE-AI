@@ -207,7 +207,7 @@ const ACHIEVEMENTS = [
 ];
 
 export default function CSharpPracticalLab({ onBack }) {
-  const { isDark } = useTheme();
+  const { isDarkMode: isDark } = useTheme();
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'roadmap', 'workspace', 'debug', 'projects', 'db-lab', 'achievements'
   const [selectedNode, setSelectedNode] = useState(ROADMAP_NODES[0]);
   const [workspaceCode, setWorkspaceCode] = useState('');

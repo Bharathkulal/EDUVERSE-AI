@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function CSharpHub() {
   const [activeView, setActiveView] = useState('hub'); // 'hub', 'theory', 'practical'
-  const { isDark } = useTheme();
+  const { isDarkMode: isDark } = useTheme();
   const navigate = useNavigate();
 
   if (activeView === 'theory') {
