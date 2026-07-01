@@ -12,6 +12,7 @@ import OnlineCompiler from '../components/OnlineCompiler';
 import PythonCoursePage from '../python/PythonCoursePage';
 import JavaHub from '../advanced-java/JavaHub';
 import FocVisualization from './FocVisualization';
+import TechVerse from './TechVerse';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Layers, List, GitCommit, GitMerge, Share2, PlayCircle, CheckCircle2, ArrowLeft, ArrowRight, Trophy } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
@@ -665,10 +666,6 @@ export default function SubjectDetail() {
     }
 
     if (activeView === 'theory') {
-      return renderTheoryTopics();
-    }
-
-    if (activeView === 'practical') {
       return (
         <div className="relative w-full h-full min-h-screen">
           <button 
@@ -683,6 +680,41 @@ export default function SubjectDetail() {
           </button>
           <div className="pt-16 h-full w-full">
             <FocVisualization />
+          </div>
+        </div>
+      );
+    }
+
+    if (activeView === 'practical') {
+      return (
+        <div className="relative w-full h-full min-h-screen overflow-y-auto bg-[#070313] pb-20">
+          <button 
+            onClick={() => setActiveView('hub')}
+            className={`absolute top-4 left-4 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
+              isDark 
+                ? 'bg-[#120e2a] hover:bg-[#1a143b] text-white border-purple-500/20' 
+                : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-sm'
+            }`}
+          >
+            ← Back to Hub
+          </button>
+          
+          <div className="pt-16 w-full flex flex-col">
+            <div className="w-full" style={{ height: 'calc(100vh - 80px)' }}>
+              <FocVisualization />
+            </div>
+            
+            <div className="w-full border-t border-purple-500/20 mt-8 pt-8 px-6">
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  🔮 Integrated 3D TechVerse Sandbox
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Inspect physical components, CPU register flow, and trace custom memory architectures interactively.
+                </p>
+              </div>
+              <TechVerse />
+            </div>
           </div>
         </div>
       );
