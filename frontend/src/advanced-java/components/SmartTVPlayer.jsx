@@ -9,7 +9,7 @@ import {
   Play, Pause, SkipForward, SkipBack, Volume2, VolumeX,
   Maximize, Minimize, Bookmark, StickyNote, Settings,
   ChevronLeft, ChevronRight, Monitor, Type, Clock,
-  Mic, MicOff, PictureInPicture2
+  Mic, MicOff, PictureInPicture2, Globe
 } from 'lucide-react';
 import { useVoiceAssistant } from '../../context/VoiceContext';
 
@@ -23,11 +23,12 @@ export default function SmartTVPlayer({
   accentColor = '#3B82F6',
   onTalkingChange,
 }) {
-  const { speak, stopSpeech, activeState, subtitle, settings, getNarrativeText } = useVoiceAssistant();
+  const { speak, stopSpeech, activeState, subtitle, settings, getNarrativeText, updateSettings, isEnabled, toggleEnabled } = useVoiceAssistant();
   const [isPlaying, setIsPlaying]       = useState(false);
   const [showCaptions, setShowCaptions] = useState(true);
   const [speed, setSpeed]               = useState(1);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [showLangMenu, setShowLangMenu]   = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showNotes, setShowNotes]       = useState(false);
   const [noteText, setNoteText]         = useState('');
@@ -42,22 +43,6 @@ export default function SmartTVPlayer({
   const script = lesson?.script || [];
   const step   = script[currentStep] || {};
   const progress = totalSteps > 0 ? ((currentStep + 1) / totalSteps) * 100 : 0;
-
-  // Auto-advance timer
-  useEffect(() => {
-    if (isPlaying) {
-      speakStep(currentStep);
-    }
-    return () => {
-      clearTimeout(timerRef.current);
-      stopSpeech();
-    };
-  }, [currentStep, isPlaying, speakStep]);
-
-  // Sync isTalking state with global state
-  useEffect(() => {
-    onTalkingChange?.(activeState === 'speaking');
-  }, [activeState, onTalkingChange]);
 
   const speakStep = useCallback((idx) => {
     const text = script[idx]?.text;
@@ -75,6 +60,25 @@ export default function SmartTVPlayer({
     });
   }, [isPlaying, totalSteps, onStepChange, speak, script]);
 
+  // Auto-advance timer
+  useEffect(() => {
+    if (isPlaying) {
+      if (!isEnabled) {
+        toggleEnabled();
+      }
+      speakStep(currentStep);
+    }
+    return () => {
+      clearTimeout(timerRef.current);
+      stopSpeech();
+    };
+  }, [currentStep, isPlaying, speakStep, isEnabled, toggleEnabled]);
+
+  // Sync isTalking state with global state
+  useEffect(() => {
+    onTalkingChange?.(activeState === 'speaking');
+  }, [activeState, onTalkingChange]);
+
   const togglePlay = () => {
     if (isPlaying) {
       setIsPlaying(false);
@@ -82,7 +86,17 @@ export default function SmartTVPlayer({
       clearTimeout(timerRef.current);
       onTalkingChange?.(false);
     } else {
+      if (!isEnabled) {
+        toggleEnabled();
+      }
       setIsPlaying(true);
+    }
+  };
+
+  const selectLanguage = (langMode) => {
+    updateSettings({ languageMode: langMode });
+    setShowLangMenu(false);
+    if (isPlaying) {
       speakStep(currentStep);
     }
   };
@@ -263,6 +277,46 @@ export default function SmartTVPlayer({
 
         {/* Right controls */}
         <div className="flex items-center gap-1">
+           {/* Language Selector Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => { setShowLangMenu(!showLangMenu); setShowSpeedMenu(false); }}
+              className={`p-2 rounded-lg transition-colors ${settings?.languageMode !== 'english' ? 'text-blue-400 bg-blue-500/10' : 'text-slate-450 hover:bg-slate-800'}`}
+              title="Select Teaching Language"
+            >
+              <Globe size={14} />
+            </button>
+            <AnimatePresence>
+              {showLangMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 5 }}
+                  className="absolute bottom-full right-0 mb-2 bg-slate-900 border border-slate-700 rounded-xl p-1 shadow-xl z-50 min-w-[120px]"
+                >
+                  <button
+                    onClick={() => selectLanguage('english')}
+                    className={`block w-full text-left text-xs px-3 py-1.5 rounded-lg transition-colors ${settings?.languageMode === 'english' ? 'bg-blue-605 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
+                  >
+                    🇬🇧 English
+                  </button>
+                  <button
+                    onClick={() => selectLanguage('kannada')}
+                    className={`block w-full text-left text-xs px-3 py-1.5 rounded-lg transition-colors ${settings?.languageMode === 'kannada' ? 'bg-blue-605 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
+                  >
+                    🦚 Kannada
+                  </button>
+                  <button
+                    onClick={() => selectLanguage('mixed')}
+                    className={`block w-full text-left text-xs px-3 py-1.5 rounded-lg transition-colors ${settings?.languageMode === 'mixed' ? 'bg-blue-605 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
+                  >
+                    🔄 Mixed
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           {/* Captions toggle */}
           <button
             onClick={() => setShowCaptions(!showCaptions)}
