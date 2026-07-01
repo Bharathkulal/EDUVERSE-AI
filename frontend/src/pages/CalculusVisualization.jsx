@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, ChevronRight, ChevronLeft, Play, Pause, RotateCcw,
   Settings2, Activity, BrainCircuit, FunctionSquare, Rocket, X,
-  BookOpen, Target, Lightbulb,
+  BookOpen, Target, Lightbulb, ArrowRight
 } from 'lucide-react';
 import CalculusNotebookEngine from '../components/MathEngines/CalculusNotebookEngine';
 import MathBackground from '../components/MathBackground';
@@ -100,14 +100,118 @@ export default function CalculusVisualization() {
 
   // ─── Cards ────────────────────────────────────────────────────────────────
   const CARDS = [
-    { id: 'Gauss Seidel Method',          title: 'Gauss Seidel Method',          desc: 'Solve systems of linear equations iteratively using successive displacement.',                      color: 'from-pink-500 to-rose-600'      },
-    { id: 'Jacobi Method',                title: 'Jacobi Method',                desc: 'Solve systems of linear equations iteratively using simultaneous displacement.',                    color: 'from-indigo-500 to-purple-600'  },
-    { id: 'Regula Falsi Method',          title: 'Regula Falsi Method',          desc: 'Find real roots of nonlinear equations using the false position (chord) method.',                color: 'from-violet-500 to-purple-600'  },
-    { id: 'Iteration Method',             title: 'Iteration Method',             desc: 'Solve f(x)=0 by rewriting as x=φ(x) and repeatedly applying the mapping until convergence.',    color: 'from-cyan-500 to-teal-600'     },
-    { id: 'Newton-Raphson Method',        title: 'Newton-Raphson Method',        desc: 'Find roots of nonlinear equations using tangent lines for quadratic convergence.',               color: 'from-amber-500 to-orange-600'  },
-    { id: 'Lagrange Interpolation',       title: 'Lagrange Interpolation',       desc: 'Estimate f(x) at any point using a polynomial built from known data pairs.',                    color: 'from-sky-500 to-blue-600'       },
-    { id: 'Newton General Interpolation', title: "Newton's General Interpolation", desc: 'Use divided differences to build a polynomial and interpolate at any argument.',              color: 'from-fuchsia-500 to-pink-600'   },
-    { id: 'Fitting Straight Line',        title: 'Fitting Straight Line',        desc: 'Fit a straight line y = a₀ + a₁x to a set of data points using least squares.',                    color: 'from-sky-500 to-teal-600'       },
+    { 
+      id: 'Gauss Seidel Method', 
+      title: 'Gauss Seidel Method', 
+      desc: 'Solve systems of linear equations iteratively using successive displacement.', 
+      status: 'Advanced', 
+      time: '20 mins', 
+      xp: '150 XP', 
+      progress: 40,
+      tags: ['Linear Systems', 'Successive', 'Iterative'],
+      colorTheme: 'rose',
+      btnClass: 'bg-rose-500 hover:bg-rose-600 text-white',
+      badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-400',
+      icon: '📐'
+    },
+    { 
+      id: 'Jacobi Method', 
+      title: 'Jacobi Method', 
+      desc: 'Solve systems of linear equations iteratively using simultaneous displacement.', 
+      status: 'Intermediate', 
+      time: '15 mins', 
+      xp: '100 XP', 
+      progress: 60,
+      tags: ['Linear Systems', 'Simultaneous', 'Iterative'],
+      colorTheme: 'purple',
+      btnClass: 'bg-purple-600 hover:bg-purple-700 text-white',
+      badgeClass: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
+      icon: '🧩'
+    },
+    { 
+      id: 'Regula Falsi Method', 
+      title: 'Regula Falsi Method', 
+      desc: 'Find real roots of nonlinear equations using the false position (chord) method.', 
+      status: 'Intermediate', 
+      time: '15 mins', 
+      xp: '120 XP', 
+      progress: 50,
+      tags: ['Root Finding', 'False Position', 'Brackets'],
+      colorTheme: 'violet',
+      btnClass: 'bg-violet-600 hover:bg-violet-700 text-white',
+      badgeClass: 'bg-violet-500/10 border-violet-500/20 text-violet-400',
+      icon: '🌀'
+    },
+    { 
+      id: 'Iteration Method', 
+      title: 'Iteration Method', 
+      desc: 'Solve f(x)=0 by rewriting as x=φ(x) and repeatedly applying the mapping until convergence.', 
+      status: 'Beginner', 
+      time: '10 mins', 
+      xp: '80 XP', 
+      progress: 90,
+      tags: ['Root Finding', 'x = φ(x)', 'Convergence'],
+      colorTheme: 'teal',
+      btnClass: 'bg-teal-600 hover:bg-teal-700 text-white',
+      badgeClass: 'bg-teal-500/10 border-teal-500/20 text-teal-400',
+      icon: '📊'
+    },
+    { 
+      id: 'Newton-Raphson Method', 
+      title: 'Newton-Raphson Method', 
+      desc: 'Find roots of nonlinear equations using tangent lines for quadratic convergence.', 
+      status: 'Advanced', 
+      time: '15 mins', 
+      xp: '150 XP', 
+      progress: 70,
+      tags: ['Root Finding', 'Tangent Lines', 'Quadratic'],
+      colorTheme: 'amber',
+      btnClass: 'bg-amber-500 hover:bg-amber-600 text-white',
+      badgeClass: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
+      icon: '📐'
+    },
+    { 
+      id: 'Lagrange Interpolation', 
+      title: 'Lagrange Interpolation', 
+      desc: 'Estimate f(x) at any point using a polynomial built from known data pairs.', 
+      status: 'Intermediate', 
+      time: '15 mins', 
+      xp: '100 XP', 
+      progress: 85,
+      tags: ['Interpolation', 'Polynomials', 'Known Pairs'],
+      colorTheme: 'blue',
+      btnClass: 'bg-blue-600 hover:bg-blue-700 text-white',
+      badgeClass: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+      icon: '📈'
+    },
+    { 
+      id: 'Newton General Interpolation', 
+      title: "Newton's General Interpolation", 
+      desc: 'Use divided differences to build a polynomial and interpolate at any argument.', 
+      status: 'Advanced', 
+      time: '20 mins', 
+      xp: '150 XP', 
+      progress: 30,
+      tags: ['Interpolation', 'Divided Diff', 'Unequal spacing'],
+      colorTheme: 'pink',
+      btnClass: 'bg-pink-600 hover:bg-pink-700 text-white',
+      badgeClass: 'bg-pink-500/10 border-pink-500/20 text-pink-400',
+      icon: '🧪'
+    },
+    { 
+      id: 'Fitting Straight Line', 
+      title: 'Fitting Straight Line', 
+      desc: 'Fit a straight line y = a₀ + a₁x to a set of data points using least squares.', 
+      status: 'Beginner', 
+      time: '12 mins', 
+      xp: '90 XP', 
+      progress: 95,
+      tags: ['Least Squares', 'Curve Fitting', 'y = a₀ + a₁x'],
+      colorTheme: 'sky',
+      btnClass: 'bg-sky-500 hover:bg-sky-600 text-white',
+      badgeClass: 'bg-sky-500/10 border-sky-500/20 text-sky-400',
+      icon: '📏'
+    }
   ];
 
   // ─── Formula data per method ──────────────────────────────────────────────
@@ -391,15 +495,8 @@ export default function CalculusVisualization() {
 
         <main className="max-w-7xl mx-auto w-full px-8 py-8 relative z-10">
           <div className="mb-10 text-left">
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-3 flex items-baseline flex-wrap gap-3">
-              <span>
-                <span className="bg-gradient-to-br from-emerald-500 to-teal-500 bg-clip-text text-transparent text-7xl md:text-8xl font-black leading-none" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>C</span>
-                <span className="text-[var(--db-text-main)]">ALCULUS</span>
-              </span>
-              <span>
-                <span className="bg-gradient-to-br from-emerald-500 to-teal-500 bg-clip-text text-transparent text-7xl md:text-8xl font-black leading-none" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>S</span>
-                <span className="text-[var(--db-text-main)]">IMULATOR</span>
-              </span>
+            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-3 text-white">
+              CALCULUS SIMULATOR
             </h1>
             <p className="text-[var(--db-text-secondary)] text-lg mt-1">Select a calculus engine to solve limits, derivatives, and integrals live.</p>
           </div>
@@ -413,26 +510,87 @@ export default function CalculusVisualization() {
                 transition={{ delay: index * 0.08, type: 'spring', stiffness: 100 }}
                 whileHover={{ y: -8, scale: 1.02 }}
                 onClick={() => handleCardClick(card.id)}
-                className="relative rounded-2xl cursor-pointer group overflow-hidden border border-[var(--db-card-border)] bg-[var(--db-card-bg)] hover:bg-[var(--db-card-bg-elevated)] hover:border-emerald-500/40 transition-all duration-300 shadow-md"
+                className="relative rounded-[24px] cursor-pointer group overflow-hidden border border-[var(--db-card-border)] bg-[var(--db-card-bg)] hover:bg-[var(--db-card-bg-elevated)] transition-all duration-300 shadow-md p-6 flex flex-col justify-between min-h-[380px]"
               >
-                <div className={`h-1 w-full bg-gradient-to-r ${card.color}`} />
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(16, 185, 129, 0.08) 0%, transparent 70%)' }} />
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-5">
-                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border bg-emerald-500/15 text-emerald-500 border-emerald-500/30">
-                      ONLINE
-                    </span>
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)]">
-                      <span className="text-lg">∫</span>
+                {/* Top border highlight */}
+                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-${card.colorTheme === 'amber' ? 'amber-500' : card.colorTheme === 'emerald' ? 'emerald-500' : card.colorTheme}-500/40 to-transparent`} />
+
+                <div className="space-y-4">
+                  {/* Top Row: Icon and Method Number + Title */}
+                  <div className="flex gap-4 items-start text-left">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${card.badgeClass}`}>
+                      <span className="text-xl">{card.icon}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase tracking-widest font-extrabold text-slate-400">
+                        METHOD {index + 1}
+                      </span>
+                      <h3 className="text-base font-bold text-white mt-0.5 group-hover:text-emerald-400 transition-colors">
+                        {card.title}
+                      </h3>
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold text-[var(--db-text-main)] mb-2 group-hover:text-emerald-500 transition-colors duration-300">{card.title}</h3>
-                  <p className="text-[var(--db-text-secondary)] text-sm leading-relaxed mb-6">{card.desc}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-emerald-500 text-xs font-bold tracking-wide group-hover:text-emerald-400 transition-colors">Launch Simulator</span>
-                    <button className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold rounded-lg transition-all shadow-md shadow-emerald-500/20 group-hover:shadow-emerald-500/40">GO</button>
+
+                  {/* Description */}
+                  <p className="text-slate-400 text-xs leading-relaxed text-left line-clamp-2">
+                    {card.desc}
+                  </p>
+
+                  {/* Tag Pills */}
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {card.tags.map((tag, idx) => (
+                      <span key={idx} className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-700/50 bg-slate-800/40 text-slate-300">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Difficulty, Time, XP row */}
+                  <div className="flex items-center gap-3 text-[11px] pt-1">
+                    <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] border ${
+                      card.status === 'Beginner' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                      card.status === 'Intermediate' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                      'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                    }`}>
+                      {card.status}
+                    </span>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-slate-400 font-medium font-mono">{card.time}</span>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-emerald-400 font-bold font-mono">{card.xp}</span>
                   </div>
                 </div>
+
+                {/* Progress bar section */}
+                <div className="mt-4 pt-3 border-t border-[var(--db-card-border)] space-y-1.5 text-left">
+                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                    <span>Progress</span>
+                    <span>{card.progress}%</span>
+                  </div>
+                  <div className="w-full bg-slate-800/50 h-1.5 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-500 ${
+                        card.colorTheme === 'blue' ? 'bg-blue-500' :
+                        card.colorTheme === 'cyan' ? 'bg-cyan-500' :
+                        card.colorTheme === 'emerald' ? 'bg-emerald-500' :
+                        card.colorTheme === 'violet' ? 'bg-violet-500' :
+                        card.colorTheme === 'amber' ? 'bg-amber-500' :
+                        card.colorTheme === 'rose' ? 'bg-rose-500' :
+                        card.colorTheme === 'purple' ? 'bg-purple-500' :
+                        card.colorTheme === 'pink' ? 'bg-pink-500' :
+                        'bg-sky-500'
+                      }`}
+                      style={{ width: `${card.progress}%` }} 
+                    />
+                  </div>
+                </div>
+
+                {/* Action button at bottom */}
+                <button className={`w-full py-2.5 mt-5 font-bold rounded-xl text-xs transition duration-200 flex items-center justify-center gap-1.5 ${card.btnClass}`}>
+                  <span>Launch Simulator</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+
               </motion.div>
             ))}
           </div>

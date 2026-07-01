@@ -531,19 +531,8 @@ export default function MathVisualization() {
         <main className="max-w-7xl mx-auto w-full px-8 py-8 relative z-10">
           {/* Title Section */}
           <div className="mb-10 text-left">
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-3 flex items-baseline flex-wrap gap-3">
-              <span>
-                <span className="bg-gradient-to-br from-emerald-500 to-teal-500 bg-clip-text text-transparent text-7xl md:text-8xl font-black leading-none" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>N</span>
-                <span className="text-[var(--db-text-main)]">UMERICAL</span>
-              </span>
-              <span>
-                <span className="bg-gradient-to-br from-emerald-500 to-teal-500 bg-clip-text text-transparent text-7xl md:text-8xl font-black leading-none" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>M</span>
-                <span className="text-[var(--db-text-main)]">ETHODS</span>
-              </span>
-              <span>
-                <span className="bg-gradient-to-br from-emerald-500 to-teal-500 bg-clip-text text-transparent text-7xl md:text-8xl font-black leading-none" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>L</span>
-                <span className="text-[var(--db-text-main)]">AB</span>
-              </span>
+            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-3 text-white">
+              NUMERICAL METHODS LAB
             </h1>
             <p className="text-[var(--db-text-secondary)] text-lg mt-1">Select a mathematical runtime engine to execute your solution live.</p>
           </div>
