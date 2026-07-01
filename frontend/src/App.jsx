@@ -6,6 +6,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import AIChatLayer from './components/AIChatLayer';
 import { useVoiceAssistant } from './context/VoiceContext';
+import toast from 'react-hot-toast';
 
 
 // Authentication & Core pages (fast start)
@@ -96,16 +97,22 @@ const PageLoader = () => (
 
 export default function App() {
   const location = useLocation();
-  const { toggleEnabled } = useVoiceAssistant();
+  const { startListening, toggleEnabled, isEnabled } = useVoiceAssistant();
 
-  // Double-tap anywhere on screen to toggle F.R.I.D.A.Y. voice guide
+  // Double-tap anywhere on screen to toggle voice assistant ON/OFF
   useEffect(() => {
     let lastTap = 0;
     const handleDoubleTap = (e) => {
       const currentTime = new Date().getTime();
       const tapLength = currentTime - lastTap;
       if (tapLength < 300 && tapLength > 0) {
-        toggleEnabled();
+        if (isEnabled) {
+          toggleEnabled();
+          toast.error("🎙️ Voice Assistant Turned OFF");
+        } else {
+          toggleEnabled();
+          toast.success("🎙️ Voice Assistant ON... Ask your doubt!");
+        }
         e.preventDefault();
       }
       lastTap = currentTime;
@@ -118,7 +125,7 @@ export default function App() {
       window.removeEventListener('touchend', handleDoubleTap);
       window.removeEventListener('click', handleDoubleTap);
     };
-  }, [toggleEnabled]);
+  }, [isEnabled, toggleEnabled]);
 
   return (
     <>

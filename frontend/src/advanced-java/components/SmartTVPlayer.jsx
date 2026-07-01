@@ -11,6 +11,7 @@ import {
   ChevronLeft, ChevronRight, Monitor, Type, Clock,
   Mic, MicOff, PictureInPicture2
 } from 'lucide-react';
+import { useVoiceAssistant } from '../../context/VoiceContext';
 
 const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -22,6 +23,7 @@ export default function SmartTVPlayer({
   accentColor = '#3B82F6',
   onTalkingChange,
 }) {
+  const { speak, stopSpeech, activeState, subtitle, settings, getNarrativeText } = useVoiceAssistant();
   const [isPlaying, setIsPlaying]       = useState(false);
   const [showCaptions, setShowCaptions] = useState(true);
   const [speed, setSpeed]               = useState(1);
@@ -35,75 +37,48 @@ export default function SmartTVPlayer({
   const [showSettings, setShowSettings] = useState(false);
 
   const containerRef = useRef(null);
-  const utterRef     = useRef(null);
   const timerRef     = useRef(null);
 
   const script = lesson?.script || [];
   const step   = script[currentStep] || {};
   const progress = totalSteps > 0 ? ((currentStep + 1) / totalSteps) * 100 : 0;
 
-  // Load browser TTS voices
-  useEffect(() => {
-    const loadVoices = () => {
-      const v = window.speechSynthesis?.getVoices() || [];
-      setVoices(v);
-    };
-    loadVoices();
-    window.speechSynthesis?.addEventListener?.('voiceschanged', loadVoices);
-    return () => window.speechSynthesis?.removeEventListener?.('voiceschanged', loadVoices);
-  }, []);
-
   // Auto-advance timer
   useEffect(() => {
-    if (isPlaying && !window.speechSynthesis?.speaking) {
+    if (isPlaying) {
       speakStep(currentStep);
     }
     return () => {
       clearTimeout(timerRef.current);
-      window.speechSynthesis?.cancel();
+      stopSpeech();
     };
-  }, [currentStep]);
+  }, [currentStep, isPlaying, speakStep]);
+
+  // Sync isTalking state with global state
+  useEffect(() => {
+    onTalkingChange?.(activeState === 'speaking');
+  }, [activeState, onTalkingChange]);
 
   const speakStep = useCallback((idx) => {
-    if (!window.speechSynthesis || isMuted) {
-      onTalkingChange?.(false);
-      // Auto advance after pause
-      if (isPlaying) {
-        timerRef.current = setTimeout(() => {
-          if (idx < totalSteps - 1) onStepChange?.(idx + 1);
-          else setIsPlaying(false);
-        }, 4000 / speed);
-      }
-      return;
-    }
-
-    window.speechSynthesis.cancel();
     const text = script[idx]?.text;
     if (!text) return;
 
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = speed;
-    if (voices.length > 0) utter.voice = voices[voiceIdx % voices.length];
-
-    utter.onstart = () => onTalkingChange?.(true);
-    utter.onend = () => {
-      onTalkingChange?.(false);
-      if (isPlaying && idx < totalSteps - 1) {
-        timerRef.current = setTimeout(() => onStepChange?.(idx + 1), 800);
-      } else {
-        setIsPlaying(false);
+    speak(text, {
+      paragraphIdx: idx,
+      onEnd: () => {
+        if (isPlaying && idx < totalSteps - 1) {
+          timerRef.current = setTimeout(() => onStepChange?.(idx + 1), 1200);
+        } else {
+          setIsPlaying(false);
+        }
       }
-    };
-    utter.onerror = () => onTalkingChange?.(false);
-
-    utterRef.current = utter;
-    window.speechSynthesis.speak(utter);
-  }, [speed, voices, voiceIdx, isMuted, isPlaying, totalSteps, onStepChange, onTalkingChange, script]);
+    });
+  }, [isPlaying, totalSteps, onStepChange, speak, script]);
 
   const togglePlay = () => {
     if (isPlaying) {
       setIsPlaying(false);
-      window.speechSynthesis?.cancel();
+      stopSpeech();
       clearTimeout(timerRef.current);
       onTalkingChange?.(false);
     } else {
@@ -113,7 +88,7 @@ export default function SmartTVPlayer({
   };
 
   const goNext = () => {
-    window.speechSynthesis?.cancel();
+    stopSpeech();
     clearTimeout(timerRef.current);
     if (currentStep < totalSteps - 1) onStepChange?.(currentStep + 1);
   };
@@ -203,7 +178,7 @@ export default function SmartTVPlayer({
             className="text-center max-w-xl z-10"
           >
             <p className="text-white text-base md:text-lg leading-relaxed font-medium">
-              {step.text || 'Loading lesson content...'}
+              {getNarrativeText ? getNarrativeText(step.text || 'Loading lesson content...') : (step.text || 'Loading lesson content...')}
             </p>
           </motion.div>
         </AnimatePresence>
@@ -218,7 +193,10 @@ export default function SmartTVPlayer({
             <span
               className="inline-block text-xs bg-black/70 text-slate-300 px-3 py-1.5 rounded-lg max-w-lg backdrop-blur-sm"
             >
-              {step.text?.slice(0, 80)}{step.text?.length > 80 ? '...' : ''}
+              {getNarrativeText ? (() => {
+                const translated = getNarrativeText(step.text || '');
+                return translated.slice(0, 80) + (translated.length > 80 ? '...' : '');
+              })() : (step.text?.slice(0, 80) + (step.text?.length > 80 ? '...' : ''))}
             </span>
           </motion.div>
         )}

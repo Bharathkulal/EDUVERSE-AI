@@ -54,17 +54,18 @@ export const VoiceAssistantProvider = ({ children }) => {
   // Unified settings including new voice teacher parameters
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem('voice_assistant_settings');
-    return saved ? JSON.parse(saved) : {
-      volume: 1,
-      rate: 1.0,
-      pitch: 1.0,
-      provider: 'native',
-      voiceURI: null,
-      autoStart: true,
-      encouragement: true,
-      autoGuidance: true,
-      languageMode: 'mixed', // english, kannada, mixed, auto
-      gender: 'female',      // female, male
+    const parsed = saved ? JSON.parse(saved) : {};
+    return {
+      volume: parsed.volume !== undefined ? parsed.volume : 1,
+      rate: parsed.rate !== undefined ? parsed.rate : 1.0,
+      pitch: parsed.pitch !== undefined ? parsed.pitch : 1.0,
+      provider: 'native', // Force native to guarantee built-in synthesis
+      voiceURI: parsed.voiceURI || null,
+      autoStart: parsed.autoStart !== undefined ? parsed.autoStart : true,
+      encouragement: parsed.encouragement !== undefined ? parsed.encouragement : true,
+      autoGuidance: parsed.autoGuidance !== undefined ? parsed.autoGuidance : true,
+      languageMode: parsed.languageMode || 'mixed', // english, kannada, mixed, auto
+      gender: parsed.gender || 'female',      // female, male
     };
   });
 
@@ -206,6 +207,10 @@ export const VoiceAssistantProvider = ({ children }) => {
         console.error('Speech synthesis error:', err);
         setActiveState('idle');
         setSubtitle('');
+        if (options.onEnd) {
+          // Advance slide step even if speech synthesis is blocked by browser policies
+          options.onEnd();
+        }
       }
     );
   }, [getNarrativeText]);
@@ -451,7 +456,8 @@ Provide a friendly, helpful, and concise response in 1 to 2 sentences. Include m
       currentCodeLine,
       setCurrentCodeLine,
       stats,
-      transcriptHistory
+      transcriptHistory,
+      getNarrativeText
     }}>
       {children}
     </VoiceContext.Provider>

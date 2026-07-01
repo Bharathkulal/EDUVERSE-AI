@@ -83,20 +83,34 @@ class SpeechSynthesisService {
     utterance.rate = config.rate;
     utterance.pitch = config.pitch;
 
-    // Find and set voice
+    // Find and set voice & language lang code
     if (config.voiceURI) {
       const voices = window.speechSynthesis.getVoices();
       const selected = voices.find(v => v.voiceURI === config.voiceURI);
       if (selected) {
         utterance.voice = selected;
+        utterance.lang = selected.lang;
       }
     } else {
-      // Friendly default female voice
       const voices = window.speechSynthesis.getVoices();
+      const hasKannadaVoice = voices.some(v => v.lang.startsWith('kn') || v.name.includes('Kannada'));
+      
+      // Auto-detect based on text range and system capabilities
+      if (cleanText.match(/[\u0c80-\u0cff]/) && hasKannadaVoice) {
+        utterance.lang = 'kn-IN';
+      } else {
+        utterance.lang = 'en-IN'; // Standard fallback
+      }
+      
       const defaultVoice = voices.find(
-        (v) => v.name.includes('Google US English') || v.name.includes('Female') || v.name.includes('Zira') || v.lang.startsWith('en')
+        (v) => v.lang.startsWith(utterance.lang.slice(0, 2)) || v.name.includes('Google US English') || v.name.includes('Female') || v.lang.startsWith('en')
       );
-      if (defaultVoice) utterance.voice = defaultVoice;
+      if (defaultVoice) {
+        utterance.voice = defaultVoice;
+        utterance.lang = defaultVoice.lang; // Force lang code to match the voice to prevent silent errors
+      } else {
+        utterance.lang = 'en-US'; // Absolute safest fallback for all browsers/OS
+      }
     }
 
     utterance.onstart = onStart;
@@ -110,6 +124,7 @@ class SpeechSynthesisService {
     };
 
     this.currentUtterance = utterance;
+    window.speechSynthesis.resume(); // Fix Chrome/Edge speech synthesis pause bug
     window.speechSynthesis.speak(utterance);
   }
 }
