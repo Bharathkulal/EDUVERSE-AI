@@ -11,7 +11,6 @@ import '../pages/DashboardTheme.css';
 const studentNav = [
   { path: '/dashboard', label: 'Dashboard', icon: '⚡' },
   { path: '/chat-learn', label: 'Chat & Learn', icon: '💬' },
-  { path: '/techverse', label: '3D TechVerse', icon: '🔮' },
   { path: '/it-suite', label: 'IT Suite', icon: '🏢' },
   { path: '/subjects', label: 'Learn', icon: '📚' },
   { path: '/practice-hub', label: 'Practice', icon: '🧪' },
