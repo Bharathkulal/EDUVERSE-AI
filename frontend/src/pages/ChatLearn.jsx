@@ -98,7 +98,7 @@ export default function ChatLearn() {
   // Fetch preferences
   const fetchPreferences = async () => {
     try {
-      const res = await api.get('/api/chat-learn/preferences');
+      const res = await api.get('/chat-learn/preferences');
       setPreferences(res.data);
     } catch (e) {
       console.error(e);
@@ -108,7 +108,7 @@ export default function ChatLearn() {
   // Fetch prompt templates
   const fetchPrompts = async () => {
     try {
-      const res = await api.get('/api/chat-learn/prompts');
+      const res = await api.get('/chat-learn/prompts');
       setPromptTemplates(res.data);
     } catch (e) {
       console.error(e);
@@ -118,7 +118,7 @@ export default function ChatLearn() {
   // Fetch ML Recommendations
   const fetchMlAnalytics = async () => {
     try {
-      const res = await api.get('/api/chat-learn/ml-analytics');
+      const res = await api.get('/chat-learn/ml-analytics');
       setMlAnalytics(res.data);
     } catch (e) {
       console.error(e);
@@ -128,7 +128,7 @@ export default function ChatLearn() {
   // Fetch Generated Files
   const fetchGeneratedFiles = async () => {
     try {
-      const res = await api.get('/api/chat-learn/generated-files');
+      const res = await api.get('/chat-learn/generated-files');
       setGeneratedFiles(res.data);
     } catch (e) {
       console.error(e);
@@ -212,7 +212,7 @@ export default function ChatLearn() {
   // Fetch all sessions
   const fetchSessions = async () => {
     try {
-      const res = await api.get('/api/chat-learn/sessions');
+      const res = await api.get('/chat-learn/sessions');
       setSessions(res.data);
       if (res.data.length > 0 && !activeSessionId) {
         selectSession(res.data[0].id);
@@ -229,7 +229,7 @@ export default function ChatLearn() {
     setMessages([]);
     setCurrentStreamingText('');
     try {
-      const res = await api.get(`/api/chat-learn/sessions/${id}/messages`);
+      const res = await api.get(`/chat-learn/sessions/${id}/messages`);
       setMessages(res.data);
     } catch (e) {
       console.error(e);
@@ -240,7 +240,7 @@ export default function ChatLearn() {
   // Create new session
   const createNewChat = async (title = 'New Workspace') => {
     try {
-      const res = await api.post('/api/chat-learn/sessions', { title });
+      const res = await api.post('/chat-learn/sessions', { title });
       setSessions(prev => [res.data, ...prev]);
       setActiveSessionId(res.data.id);
       setMessages([]);
@@ -255,7 +255,7 @@ export default function ChatLearn() {
   // Pin session
   const togglePinSession = async (id, isPinned) => {
     try {
-      const res = await api.put(`/api/chat-learn/sessions/${id}`, { pinned: !isPinned });
+      const res = await api.put(`/chat-learn/sessions/${id}`, { pinned: !isPinned });
       setSessions(prev => prev.map(s => s.id === id ? res.data : s));
       toast.success(isPinned ? 'Unpinned' : 'Pinned chat');
     } catch (e) {
@@ -266,7 +266,7 @@ export default function ChatLearn() {
   // Favorite session
   const toggleFavoriteSession = async (id, isFav) => {
     try {
-      const res = await api.put(`/api/chat-learn/sessions/${id}`, { favorite: !isFav });
+      const res = await api.put(`/chat-learn/sessions/${id}`, { favorite: !isFav });
       setSessions(prev => prev.map(s => s.id === id ? res.data : s));
       toast.success(isFav ? 'Removed from favorites' : 'Added to favorites');
     } catch (e) {
@@ -279,7 +279,7 @@ export default function ChatLearn() {
     e.stopPropagation();
     if (!window.confirm('Delete this conversation?')) return;
     try {
-      await api.delete(`/api/chat-learn/sessions/${id}`);
+      await api.delete(`/chat-learn/sessions/${id}`);
       setSessions(prev => prev.filter(s => s.id !== id));
       if (activeSessionId === id) {
         setActiveSessionId(null);
@@ -295,7 +295,7 @@ export default function ChatLearn() {
   // Save changes to Preferences
   const savePreferences = async (updatedPref) => {
     try {
-      const res = await api.post('/api/chat-learn/preferences', updatedPref);
+      const res = await api.post('/chat-learn/preferences', updatedPref);
       setPreferences(res.data);
       toast.success('AI Settings updated!');
     } catch (e) {
@@ -329,7 +329,7 @@ export default function ChatLearn() {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await api.post('/api/chat-learn/upload', formData, {
+      const res = await api.post('/chat-learn/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setUploadDraft({
@@ -384,7 +384,7 @@ export default function ChatLearn() {
     setCurrentStreamingText('');
 
     try {
-      const res = await api.post(`/api/chat-learn/sessions/${activeSessionId}/messages`, payload);
+      const res = await api.post(`/chat-learn/sessions/${activeSessionId}/messages`, payload);
       
       // Simulate real-time streaming effect
       const textToStream = res.data.assistantMessage.content;
@@ -421,7 +421,7 @@ export default function ChatLearn() {
   const generateMaterial = async (type, label) => {
     try {
       toast.loading(`Generating educational ${label}...`);
-      const res = await api.post('/api/chat-learn/generate-file', {
+      const res = await api.post('/chat-learn/generate-file', {
         name: `${label}.txt`,
         type,
         topic: inputText || 'Computer Networks & Routing Protocols'
