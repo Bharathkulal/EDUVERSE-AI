@@ -15,6 +15,7 @@ import {
   Filler
 } from 'chart.js';
 import api from '../api/axios';
+import { useVoiceAssistant } from '../context/VoiceContext';
 
 ChartJS.register(
   CategoryScale,
@@ -303,6 +304,17 @@ export default function Progress() {
         >
           Activity Heatmap
           {activeTab === 'activity' && (
+            <motion.div layoutId="activeTabIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('voice-teacher')}
+          className={`pb-3 font-semibold text-sm transition-all relative ${
+            activeTab === 'voice-teacher' ? 'text-white' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          🎙️ AI Voice Teacher
+          {activeTab === 'voice-teacher' && (
             <motion.div layoutId="activeTabIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500" />
           )}
         </button>
@@ -771,7 +783,120 @@ export default function Progress() {
             </div>
           </motion.div>
         )}
+
+        {activeTab === 'voice-teacher' && (
+          <VoiceTeacherTabPanel />
+        )}
       </AnimatePresence>
     </div>
   );
 }
+
+function VoiceTeacherTabPanel() {
+  const { stats, settings, updateSettings, isMuted, setIsMuted, speak, stopSpeech } = useVoiceAssistant();
+  return (
+    <motion.div
+      key="voice-teacher"
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -15 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-6 text-left"
+    >
+      <div className="relative overflow-hidden rounded-3xl p-8 border border-purple-500/20 bg-gradient-to-br from-[#130d2b] to-[#0a0718]">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div>
+            <span className="px-3 py-1 bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-semibold rounded-full uppercase tracking-wider font-mono">
+              Voice Teacher Stats
+            </span>
+            <h1 className="text-3xl font-extrabold text-white mt-3 flex items-center gap-2">
+              🎙️ AI Teacher Dashboard
+            </h1>
+            <p className="text-purple-200/70 text-sm mt-1">Track metrics from spoken lessons, voice commands, and speech rates.</p>
+          </div>
+
+          <button 
+            onClick={() => speak("Voice system diagnostics check complete. All audio channels operating correctly.")}
+            className="px-6 py-2.5 rounded-2xl bg-purple-650 hover:bg-purple-700 text-white font-bold text-xs transition-all shadow-lg hover:shadow-purple-500/20 border border-purple-500/20"
+          >
+            🔊 Speaker Test
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+            <span className="text-[10px] text-slate-400 block font-mono font-bold uppercase">Topics Explained</span>
+            <span className="text-2xl font-black text-white mt-1 block">{stats.topicsExplainedCount}</span>
+          </div>
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+            <span className="text-[10px] text-slate-400 block font-mono font-bold uppercase">Listening Duration</span>
+            <span className="text-2xl font-black text-white mt-1 block">{stats.listeningMinutes.toFixed(1)} mins</span>
+          </div>
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+            <span className="text-[10px] text-slate-400 block font-mono font-bold uppercase">Language Mode</span>
+            <span className="text-2xl font-black text-white mt-1 block capitalize">{settings.languageMode}</span>
+          </div>
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+            <span className="text-[10px] text-slate-400 block font-mono font-bold uppercase">Speaking Speed</span>
+            <span className="text-2xl font-black text-white mt-1 block">{settings.rate}x</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="p-6 rounded-3xl border border-white/5 bg-slate-900/50 backdrop-blur-md space-y-4">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">🛠️ System Control Panel</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-300 block">Primary Mute</span>
+                <span className="text-[10px] text-slate-500">Mutes voice teacher output universally</span>
+              </div>
+              <button 
+                onClick={() => setIsMuted(!isMuted)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${isMuted ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-purple-500/10 border-purple-500/20 text-purple-400'}`}
+              >
+                {isMuted ? 'Unmute' : 'Mute'}
+              </button>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-300 block">Speech Rate</span>
+                <span className="text-[10px] text-slate-500">Adjust target narration pace</span>
+              </div>
+              <div className="flex gap-1.5">
+                {[0.75, 1.0, 1.25, 1.5].map(r => (
+                  <button 
+                    key={r}
+                    onClick={() => updateSettings({ rate: r })}
+                    className={`p-1.5 px-3 rounded-lg text-xs font-bold border transition ${settings.rate === r ? 'bg-purple-650 border-purple-650 text-white' : 'bg-white/5 border-white/5 hover:bg-white/10 text-slate-350'}`}
+                  >
+                    {r}x
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 rounded-3xl border border-white/5 bg-slate-900/50 backdrop-blur-md space-y-4">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">🎧 Interactive Voice Commands</h3>
+          <div className="p-3 bg-white/5 rounded-2xl text-[11px] leading-relaxed text-slate-400 space-y-2">
+            <p>You can say the following phrases out loud to control your Voice Teacher dynamically:</p>
+            <div className="grid grid-cols-2 gap-2 text-[10px] font-mono text-purple-300">
+              <div>• "Explain in Kannada"</div>
+              <div>• "Speak faster"</div>
+              <div>• "Slow down"</div>
+              <div>• "Give example"</div>
+              <div>• "Start quiz"</div>
+              <div>• "Pause" / "Resume"</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+

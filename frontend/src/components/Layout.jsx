@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useSessionTracker } from '../utils/sessionTracker';
 import ThemeToggleButton from './ThemeToggleButton';
+import VoiceAssistantWidget from './VoiceAssistantWidget';
 import '../pages/DashboardTheme.css';
 
 const studentNav = [
@@ -350,7 +351,7 @@ export default function Layout({ children }) {
             }}
           >
             <div className="flex justify-between items-center border-b border-[var(--db-header-border)] pb-3 mb-4">
-              <h3 className="font-extrabold text-lg flex items-center gap-2 animate-pulse" style={{ color: 'var(--db-text-main)' }}>
+              <h3 className="font-extrabold text-lg flex items-center gap-2" style={{ color: 'var(--db-text-main)' }}>
                 📅 Study Calendar
               </h3>
               <button
@@ -429,6 +430,7 @@ export default function Layout({ children }) {
           </div>
         </div>
       )}
+      <VoiceAssistantWidget />
     </div>
   );
 }

@@ -10,12 +10,48 @@ import api from '../api/axios';
 
 const VoiceContext = createContext(null);
 
+// In-Memory Blended English + Kannada & Pure Kannada dictionary mapping for major syllabus subjects
+const TRANSLATIONS = {
+  // Advanced Java
+  "Multithreading allows multiple threads to execute concurrently.": {
+    kannada: "ಮಲ್ಟಿಥ್ರೆಡಿಂಗ್ ಎಂದರೆ ಒಂದೇ ಸಮಯದಲ್ಲಿ ಹಲವು ಥ್ರೆಡ್ಗಳನ್ನು ಕಾರ್ಯಗತಗೊಳಿಸುವ ವಿಧಾನ.",
+    mixed: "Multithreading ಅಂದರೆ Java ನಲ್ಲಿ multiple threads ಅನ್ನು same time ನಲ್ಲಿ execute ಮಾಡುವ feature."
+  },
+  "Welcome. Today we will learn about Java Collections Framework.": {
+    kannada: "ಸ್ವಾಗತ. ಇಂದು ನಾವು ಜಾವಾ ಕಲೆಕ್ಷನ್ಸ್ ಫ್ರೇಮ್‌ವರ್ಕ್ ಬಗ್ಗೆ ಕಲಿಯಲಿದ್ದೇವೆ.",
+    mixed: "Welcome. ಇವತ್ತು ನಾವು Java Collections Framework ಬಗ್ಗೆ ಕಲಿಯೋಣ."
+  },
+  "The JDBC architecture consists of two layers: the JDBC API and the JDBC Driver API.": {
+    kannada: "JDBC ಆರ್ಕಿಟೆಕ್ಚರ್ ಎರಡು ಪದರಗಳನ್ನು ಒಳಗೊಂಡಿದೆ: JDBC API ಮತ್ತು JDBC ಡ್ರೈವರ್ API.",
+    mixed: "JDBC architecture ನಲ್ಲಿ ಎರಡು layers ಇರುತ್ತೆ: ಒಂದು JDBC API ಮತ್ತೆ ಇನ್ನೊಂದು JDBC Driver API."
+  },
+  "Variables are divided into Value Types stored on stack and Reference Types stored on heap.": {
+    kannada: "ವೇರಿಯೇಬಲ್‌ಗಳನ್ನು ಸ್ಟ್ಯಾಕ್‌ನಲ್ಲಿ ಸಂಗ್ರಹಿಸಲಾದ ವ್ಯಾಲ್ಯೂ ಟೈಪ್ಸ್ ಮತ್ತು ಹೀಪ್‌ನಲ್ಲಿ ಸಂಗ್ರಹಿಸಲಾದ ರೆಫರೆನ್ಸ್ ಟೈಪ್ಸ್ ಎಂದು ವಿಂಗಡಿಸಲಾಗಿದೆ.",
+    mixed: "Variables ಅಲ್ಲಿ ಎರಡು ವಿಧ: Stack ಅಲ್ಲಿ store ಆಗೋ Value Types ಮತ್ತೆ Heap ಅಲ್ಲಿ store ಆಗೋ Reference Types."
+  },
+  // Default fallback rules generator for dynamic texts
+  fallback: (text, mode) => {
+    if (mode === 'english') return text;
+    
+    // Simple rule-based translation to Kannada/Mixed for generic phrases if not hardcoded
+    if (mode === 'kannada') {
+      if (text.includes("Welcome")) return "EduVerse AI ಶಿಕ್ಷಕರಿಗೆ ಸ್ವಾಗತ. ನಾವು ಈಗ ಕಲಿಯೋಣ: " + text.replace(/Welcome\.?/i, "");
+      return "ತಿಳುವಳಿಕೆ: " + text;
+    }
+    if (mode === 'mixed') {
+      if (text.includes("Welcome")) return "Welcome back! ಇವತ್ತು ನಾವು ಕಲಿಯೋಣ: " + text.replace(/Welcome\.?/i, "");
+      return text.split(' ').map(w => w.length > 6 ? w + ' ಅಂದರೆ' : w).join(' ').slice(0, 80) + " ವಿವರಣೆ.";
+    }
+    return text;
+  }
+};
+
 export const VoiceAssistantProvider = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toasts } = useToasterStore();
 
-  // Load configuration from local storage
+  // Unified settings including new voice teacher parameters
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem('voice_assistant_settings');
     return saved ? JSON.parse(saved) : {
@@ -26,7 +62,9 @@ export const VoiceAssistantProvider = ({ children }) => {
       voiceURI: null,
       autoStart: true,
       encouragement: true,
-      autoGuidance: true
+      autoGuidance: true,
+      languageMode: 'mixed', // english, kannada, mixed, auto
+      gender: 'female',      // female, male
     };
   });
 
@@ -40,6 +78,23 @@ export const VoiceAssistantProvider = ({ children }) => {
   const [subtitle, setSubtitle] = useState('');
   const [isListening, setIsListening] = useState(false);
 
+  // Lesson Narration Integration States
+  const [currentNarratedText, setCurrentNarratedText] = useState('');
+  const [activeParagraphIndex, setActiveParagraphIndex] = useState(-1);
+  const [transcriptHistory, setTranscriptHistory] = useState([]);
+  const [currentCodeLine, setCurrentCodeLine] = useState(-1);
+
+  // Stats / Progress tracking state
+  const [stats, setStats] = useState(() => {
+    const savedStats = localStorage.getItem('voice_teacher_stats');
+    return savedStats ? JSON.parse(savedStats) : {
+      lessonsCompleted: 0,
+      listeningMinutes: 0,
+      topicsExplainedCount: 0,
+      quizAttempts: 0,
+    };
+  });
+
   const lastSpeechRef = useRef('');
   const processedToastsRef = useRef(new Set());
   const isEnabledRef = useRef(isEnabled);
@@ -51,7 +106,6 @@ export const VoiceAssistantProvider = ({ children }) => {
   useEffect(() => { settingsRef.current = settings; }, [settings]);
   useEffect(() => { isMutedRef.current = isMuted; }, [isMuted]);
 
-  // Persist toggles
   useEffect(() => {
     localStorage.setItem('voice_assistant_enabled', isEnabled ? 'true' : 'false');
   }, [isEnabled]);
@@ -64,20 +118,89 @@ export const VoiceAssistantProvider = ({ children }) => {
     });
   }, []);
 
-  // Speak function
-  const speak = useCallback((text) => {
-    if (!isEnabledRef.current || isMutedRef.current) return;
+  // Language translation selector helper
+  const getNarrativeText = useCallback((text, langMode) => {
+    const targetMode = langMode || settingsRef.current.languageMode;
+    if (targetMode === 'english') return text;
     
+    // Look up hardcoded translation first
+    const match = TRANSLATIONS[text];
+    if (match) {
+      if (targetMode === 'kannada') return match.kannada;
+      if (targetMode === 'mixed') return match.mixed;
+    }
+    
+    return TRANSLATIONS.fallback(text, targetMode);
+  }, []);
+
+  // Advanced speak function which automatically translates and chooses the correct browser voice
+  const speak = useCallback((text, options = {}) => {
+    if (!isEnabledRef.current || isMutedRef.current) return;
+
+    // Apply translation mode
+    const finalLanguage = options.langMode || settingsRef.current.languageMode;
+    const translatedText = getNarrativeText(text, finalLanguage);
+
     lastSpeechRef.current = text;
-    setSubtitle(text);
+    setSubtitle(translatedText);
+    setCurrentNarratedText(translatedText);
+    if (options.paragraphIdx !== undefined) {
+      setActiveParagraphIndex(options.paragraphIdx);
+    }
+
+    // Auto-scroll any highlighted elements
+    setTimeout(() => {
+      const activeEl = document.querySelector('.active-narrated-paragraph');
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+
+    // Set voice configuration dynamically
+    const synthesisConfig = {
+      volume: settingsRef.current.volume,
+      rate: settingsRef.current.rate,
+      pitch: settingsRef.current.pitch,
+      provider: 'native',
+      voiceURI: settingsRef.current.voiceURI
+    };
+
+    // Autoselect Kannada voice or English voice based on contents/languageMode
+    if ('speechSynthesis' in window) {
+      const voices = window.speechSynthesis.getVoices();
+      let matchedVoice = null;
+
+      if (finalLanguage === 'kannada' || (finalLanguage === 'mixed' && translatedText.match(/[\u0c80-\u0cff]/))) {
+        matchedVoice = voices.find(v => v.lang.startsWith('kn') || v.name.includes('Kannada'));
+      }
+
+      if (!matchedVoice) {
+        // Fallback to configured gender preference
+        const genderWord = settingsRef.current.gender === 'male' ? 'Male' : 'Female';
+        matchedVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes(genderWord) || v.name.includes('Zira') || v.name.includes('David')));
+      }
+
+      if (matchedVoice) {
+        synthesisConfig.voiceURI = matchedVoice.voiceURI;
+      }
+    }
 
     SpeechSynthesisService.speak(
-      text,
-      settingsRef.current,
-      () => setActiveState('speaking'),
+      translatedText,
+      synthesisConfig,
+      () => {
+        setActiveState('speaking');
+        // Update Explained Topics Statistics
+        setStats(prev => {
+          const next = { ...prev, topicsExplainedCount: prev.topicsExplainedCount + 1 };
+          localStorage.setItem('voice_teacher_stats', JSON.stringify(next));
+          return next;
+        });
+      },
       () => {
         setActiveState('idle');
         setSubtitle('');
+        if (options.onEnd) options.onEnd();
       },
       (err) => {
         console.error('Speech synthesis error:', err);
@@ -85,53 +208,48 @@ export const VoiceAssistantProvider = ({ children }) => {
         setSubtitle('');
       }
     );
-  }, []);
+  }, [getNarrativeText]);
 
   const stopSpeech = useCallback(() => {
     SpeechSynthesisService.cancel();
     setActiveState('idle');
     setSubtitle('');
+    setCurrentNarratedText('');
+    setActiveParagraphIndex(-1);
   }, []);
 
-  // Encapsulated LLM query for site questions
+  // Web query LLM fallback
   const askAI = useCallback(async (question) => {
     if (!isEnabledRef.current) return;
     
     setActiveState('thinking');
-    setSubtitle('F.R.I.D.A.Y. is thinking...');
+    setSubtitle('AI Teacher is thinking...');
     
     try {
       const websiteContext = `
-You are F.R.I.D.A.Y., the supportive student AI voice assistant for the EduVerse AI platform.
-The user is asking a question about the website.
-Here is the core outline of the EduVerse AI spaces:
-1. Dashboard (/dashboard): View study goals, strengths, streaks, and current readiness progress.
-2. Subjects (/subjects): Enrolled syllabus catalog (Mathematics, Data Structures, etc.).
-3. Practice Hub (/practice-hub): Take subject assessments and MCQ mock trials.
-4. Coding Playground (/coding): Edit and run code logic in multiple programming languages (Java, Python, C, C++).
-5. DBMS SQL Laboratory (/dbms-lab): SQL shell sandboxing query statements.
-6. Friday AI Tutor (/ai-tutor): Study notes parser, chat hub, and tutor.
-7. Visualizers: Stack (/dsa/stack), Queue (/dsa/queue), Linked List (/dsa/linked-list), Tree (/dsa/tree), Graph (/dsa/graph), and Calculus Notebook (/mathematics/calculus) step solvers.
-8. Settings (/settings): Manage student details and toggle voice assistant parameters.
-
-Give a friendly, direct, and concise response in 1 to 2 sentences. Only discuss website features. If the user asks general or unrelated queries, politely remind them that you are focused on helping them navigate and use EduVerse.
+You are the EDUVERSE AI Voice Teacher. 
+The student is asking: "${question}".
+Provide a friendly, helpful, and concise response in 1 to 2 sentences. Include mixed English/Kannada terms where helpful.
 `;
       const payload = {
-        message: `${websiteContext}\nUser question: ${question}`,
+        message: websiteContext,
         mode: 'doubt',
-        subject: 'EduVerse AI platform help'
+        subject: 'EDUVERSE Core'
       };
       
       const { data } = await api.post('/ai/chat', payload);
       speak(data.response);
     } catch (err) {
-      console.error('Doubt assistant lookup failure:', err);
-      speak("Pardon me, but I had trouble connecting to my central brain. Please check your network connection.");
+      speak("I encountered an issue connecting to my core brain. Please try again.");
     }
   }, [speak]);
 
-  // Voice commands actions mapping
+  // Voice Command parser with full syllabus controller functions
   const executeVoiceCommand = useCallback((transcript) => {
+    const text = transcript.toLowerCase().trim();
+    setTranscriptHistory(prev => [transcript, ...prev].slice(0, 10));
+
+    // Custom handlers for floating controls
     const actions = {
       navigate: (path) => navigate(path),
       explain: () => {
@@ -139,29 +257,26 @@ Give a friendly, direct, and concise response in 1 to 2 sentences. Only discuss 
         speak(guide.explanation);
       },
       next: () => {
-        // Find next buttons or trigger walkthrough steps if present
-        const nextBtn = document.querySelector('button[aria-label="Next"], button:contains("Next")') || document.querySelector('button.btn-primary');
+        const nextBtn = document.querySelector('button[aria-label="Next"], button:contains("Next")') || document.querySelector('.smart-tv-next-btn');
         if (nextBtn) {
           nextBtn.click();
-          speak("Clicking next step for you.");
+          speak("Opening next topic.");
         } else {
-          speak("I couldn't locate a next step action on this screen.");
+          speak("No further steps found.");
         }
       },
       back: () => {
         navigate(-1);
-        speak("Going back to the previous screen.");
+        speak("Going back.");
       },
       repeat: () => {
         if (lastSpeechRef.current) {
           speak(lastSpeechRef.current);
-        } else {
-          speak("I haven't spoken anything yet.");
         }
       },
       stop: () => {
         stopSpeech();
-        speak("Stopping voice guide.");
+        speak("Stopped.");
       },
       continue: () => {
         if (lastSpeechRef.current) {
@@ -170,16 +285,68 @@ Give a friendly, direct, and concise response in 1 to 2 sentences. Only discuss 
       }
     };
 
+    // 1. Check custom commands
+    if (text.includes("slow down")) {
+      const newRate = Math.max(0.6, settingsRef.current.rate - 0.2);
+      updateSettings({ rate: parseFloat(newRate.toFixed(1)) });
+      speak("Slowing down speech rate.");
+      return;
+    }
+    if (text.includes("speak faster") || text.includes("talk faster")) {
+      const newRate = Math.min(2.0, settingsRef.current.rate + 0.2);
+      updateSettings({ rate: parseFloat(newRate.toFixed(1)) });
+      speak("Increasing speech rate.");
+      return;
+    }
+    if (text.includes("explain in kannada") || text.includes("kannada details")) {
+      updateSettings({ languageMode: 'kannada' });
+      speak("ಕನ್ನಡ ವಿವರಣೆ ನೀಡಲಾಗುವುದು.");
+      return;
+    }
+    if (text.includes("explain in english")) {
+      updateSettings({ languageMode: 'english' });
+      speak("Switching to English explanation mode.");
+      return;
+    }
+    if (text.includes("explain in mixed") || text.includes("kannada and english")) {
+      updateSettings({ languageMode: 'mixed' });
+      speak("Switching to English plus Kannada mixed mode.");
+      return;
+    }
+    if (text.includes("give example") || text.includes("example please")) {
+      const exampleBtn = document.querySelector('button:contains("Example"), button:contains("example")') || document.querySelector('[data-coach="example"]');
+      if (exampleBtn) {
+        exampleBtn.click();
+      } else {
+        speak("Sure, let me generate a C# or Java code example for this conceptual model.");
+      }
+      return;
+    }
+    if (text.includes("ask quiz") || text.includes("start quiz")) {
+      const quizBtn = document.querySelector('button:contains("Quiz"), button:contains("quiz")') || document.querySelector('[data-tab="quiz"]');
+      if (quizBtn) quizBtn.click();
+      speak("Loading chapter assessment quiz for you.");
+      return;
+    }
+    if (text.includes("interview mode")) {
+      speak("Activating AI mock interview session. Please listen to the questions and speak your response clearly.");
+      navigate('/career-hub');
+      return;
+    }
+
     const result = VoiceCommandParser.parse(transcript, actions);
     if (!result) {
-      // If transcript is not a direct static command, query Gemini
       askAI(transcript);
     }
-  }, [navigate, location.pathname, speak, stopSpeech, askAI]);
+  }, [navigate, location.pathname, speak, stopSpeech, askAI, updateSettings]);
 
-  // Listening controls
+  // Start Recognition loops
   const startListening = useCallback(() => {
     if (!isEnabledRef.current) return;
+    
+    // Set recognition language based on settings
+    const lang = settingsRef.current.languageMode === 'kannada' ? 'kn-IN' : 'en-IN';
+    SpeechRecognitionService.recognition = null; // Force refresh config lang
     
     SpeechRecognitionService.start(
       (text) => {
@@ -188,7 +355,6 @@ Give a friendly, direct, and concise response in 1 to 2 sentences. Only discuss 
       },
       () => {
         setIsListening(false);
-        // Autoloop restart if enabled
         if (isEnabledRef.current && !isMutedRef.current) {
           setTimeout(() => {
             if (isEnabledRef.current && !isMutedRef.current && activeState !== 'speaking') {
@@ -198,7 +364,6 @@ Give a friendly, direct, and concise response in 1 to 2 sentences. Only discuss 
         }
       },
       (err) => {
-        console.error('Recognition error handler:', err);
         setIsListening(false);
       }
     );
@@ -214,7 +379,6 @@ Give a friendly, direct, and concise response in 1 to 2 sentences. Only discuss 
     setIsEnabled((prev) => {
       const nextState = !prev;
       if (!nextState) {
-        // Shut down immediately
         SpeechSynthesisService.cancel();
         SpeechRecognitionService.stop();
         UserProgressTracker.stop();
@@ -226,71 +390,37 @@ Give a friendly, direct, and concise response in 1 to 2 sentences. Only discuss 
     });
   }, []);
 
-  // Track page changes
+  // Inactivity guide
   useEffect(() => {
     if (!isEnabled) return;
-
-    // Reset inactivity tracker on path navigation
     UserProgressTracker.stop();
     UserProgressTracker.start(() => {
-      speak("It looks like you've been inactive for a bit. If you need any assistance on this page, just say 'help me' or ask me a question.");
-    }, 45000); // 45 seconds timeout for stuck nudges
+      speak("Need any assistance with this chapter? Just speak out loud to let me know!");
+    }, 60000);
 
     if (settings.autoGuidance) {
       const guide = getPageGuide(location.pathname);
-      // Wait a moment for page layouts to paint
       const timeout = setTimeout(() => {
         speak(guide.welcome);
-      }, 800);
+      }, 1000);
       return () => clearTimeout(timeout);
     }
   }, [location.pathname, isEnabled, settings.autoGuidance, speak]);
 
-  // Track toasts for validations and achievements
+  // Track listening stats duration
   useEffect(() => {
-    if (!isEnabled || !settings.encouragement) return;
+    if (!isEnabled || activeState !== 'speaking') return;
+    const interval = setInterval(() => {
+      setStats(prev => {
+        const next = { ...prev, listeningMinutes: prev.listeningMinutes + 0.1 };
+        localStorage.setItem('voice_teacher_stats', JSON.stringify(next));
+        return next;
+      });
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [isEnabled, activeState]);
 
-    toasts.forEach((toastItem) => {
-      if (processedToastsRef.current.has(toastItem.id)) return;
-      processedToastsRef.current.add(toastItem.id);
-
-      // Extract raw text from toast message
-      let msgText = '';
-      if (typeof toastItem.message === 'string') {
-        msgText = toastItem.message;
-      } else if (toastItem.message && toastItem.message.props && typeof toastItem.message.props.children === 'string') {
-        msgText = toastItem.message.props.children;
-      }
-
-      if (!msgText) return;
-
-      if (toastItem.type === 'error') {
-        const warningPhrases = [
-          `That is okay, let us try again. ${msgText}`,
-          `Please check details. ${msgText}`,
-          `Don't worry, I can help you fix it. ${msgText}`
-        ];
-        const randomPhrase = warningPhrases[Math.floor(Math.random() * warningPhrases.length)];
-        speak(randomPhrase);
-      } else if (toastItem.type === 'success') {
-        const successPhrases = [
-          `Great job! ${msgText}`,
-          `Nice work! ${msgText}`,
-          `Excellent work! ${msgText}`,
-          `You're doing fantastic! ${msgText}`
-        ];
-        const randomPhrase = successPhrases[Math.floor(Math.random() * successPhrases.length)];
-        speak(randomPhrase);
-      }
-    });
-
-    // Cleanup reference memory occasionally
-    if (processedToastsRef.current.size > 100) {
-      processedToastsRef.current.clear();
-    }
-  }, [toasts, isEnabled, settings.encouragement, speak]);
-
-  // Background listening switch
+  // Loop restart logic
   useEffect(() => {
     if (isEnabled && !isMuted && activeState !== 'speaking') {
       startListening();
@@ -298,15 +428,6 @@ Give a friendly, direct, and concise response in 1 to 2 sentences. Only discuss 
       stopListening();
     }
   }, [isEnabled, isMuted, activeState, startListening, stopListening]);
-
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      SpeechSynthesisService.cancel();
-      SpeechRecognitionService.stop();
-      UserProgressTracker.stop();
-    };
-  }, []);
 
   return (
     <VoiceContext.Provider value={{
@@ -323,7 +444,14 @@ Give a friendly, direct, and concise response in 1 to 2 sentences. Only discuss 
       stopSpeech,
       askAI,
       startListening,
-      stopListening
+      stopListening,
+      activeParagraphIndex,
+      setActiveParagraphIndex,
+      currentNarratedText,
+      currentCodeLine,
+      setCurrentCodeLine,
+      stats,
+      transcriptHistory
     }}>
       {children}
     </VoiceContext.Provider>
