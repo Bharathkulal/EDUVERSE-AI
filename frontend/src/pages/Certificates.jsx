@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api/axios';
 import { Award, ShieldAlert, Download, Share2, Printer, ExternalLink, BookOpen, Clock, Lock, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 export default function Certificates() {
+  const { user } = useAuth();
   const [certs, setCerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCert, setSelectedCert] = useState(null);
@@ -228,7 +230,7 @@ export default function Certificates() {
                     <p className="text-xs italic text-slate-600">This is proudly presented to</p>
                     
                     <h3 className="text-3xl font-bold text-violet-800" style={{ fontFamily: "'Clicker Script', cursive, Georgia, serif" }}>
-                      {selectedCert.studentName}
+                      {user?.name || selectedCert.studentName}
                     </h3>
                     
                     <div className="w-48 h-[1px] bg-amber-500/40 mx-auto" />
@@ -410,6 +412,38 @@ export default function Certificates() {
           }
           .premium-dark-page .text-amber-400 {
             color: #FBBF24 !important;
+          }
+
+          /* Ensure light-theme certificate retains dark text on-screen despite global dark-mode styles */
+          #print-certificate h2 {
+            color: #1e293b !important;
+          }
+          #print-certificate h3 {
+            color: #5b21b6 !important;
+          }
+          #print-certificate h4 {
+            color: #312e81 !important;
+          }
+          #print-certificate span, #print-certificate p, #print-certificate div {
+            color: #1e293b !important;
+          }
+          #print-certificate .text-slate-900 {
+            color: #0f172a !important;
+          }
+          #print-certificate .text-slate-500 {
+            color: #64748b !important;
+          }
+          #print-certificate .text-slate-650, #print-certificate .text-slate-600 {
+            color: #475569 !important;
+          }
+          #print-certificate .text-amber-400 {
+            color: #fbbf24 !important;
+          }
+          #print-certificate .text-white {
+            color: #ffffff !important;
+          }
+          #print-certificate .bg-slate-900 {
+            background-color: #0f172a !important;
           }
         }
         @media print {
