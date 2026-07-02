@@ -691,20 +691,20 @@ export default function TechVerse() {
   };
 
   return (
-    <div className="techverse-dark-theme-wrapper min-h-[calc(100vh-80px)] bg-[#070B19] text-slate-100 font-sans flex flex-col justify-between overflow-x-hidden">
+    <div className={`min-h-[calc(100vh-80px)] ${bgMain} ${textMain} font-sans flex flex-col justify-between overflow-x-hidden transition-colors duration-300`}>
       
       {/* 3D TECHVERSE HUD HEADER */}
-      <header className="px-6 py-4 bg-[#090D1E] border-b border-blue-900/30 flex flex-col md:flex-row items-center justify-between gap-4 sticky top-0 z-20 backdrop-blur-md bg-opacity-95">
+      <header className={`px-6 py-4 ${headerBg} flex flex-col md:flex-row items-center justify-between gap-4 sticky top-0 z-20 backdrop-blur-md bg-opacity-95 transition-colors duration-300`}>
         <div className="flex items-center gap-3">
           <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center font-black shadow-lg shadow-blue-500/20 text-white">🔮</div>
           <div>
             <span className="text-[9px] uppercase tracking-widest text-indigo-400 font-extrabold flex items-center gap-1.5">
               <Sparkles size={11} className="text-blue-400 animate-pulse" /> Interactive Computer Engineering Laboratory
             </span>
-            <h1 className="text-lg font-black text-white leading-none">EduVerse 3D TechVerse</h1>
+            <h1 className={`text-lg font-black ${titleColor} leading-none`}>EduVerse 3D TechVerse</h1>
           </div>
         </div>
-
+ 
         {/* Intelligent Synonym Search & Suggestion Bar */}
         <div className="relative flex items-center gap-2 max-w-lg w-full">
           <div className="relative flex-1">
@@ -717,7 +717,7 @@ export default function TechVerse() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
               placeholder="Search components (e.g. RAM, GPU, CPU, LED, OS, Router...)"
-              className="w-full bg-[#0E1630] border border-blue-900/30 focus:border-blue-500 text-slate-100 text-xs rounded-xl py-2.5 pl-9 pr-4 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all font-semibold"
+              className={`w-full ${innerBg} border ${cardBorder} focus:border-blue-500 ${textMain} text-xs rounded-xl py-2.5 pl-9 pr-4 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all font-semibold`}
             />
             {/* Auto-complete Suggestions popup */}
             <AnimatePresence>
@@ -726,16 +726,16 @@ export default function TechVerse() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
-                  className="absolute left-0 right-0 mt-2 bg-[#090D1E] border border-blue-900/50 rounded-xl overflow-hidden shadow-2xl z-30 divide-y divide-blue-950/40"
+                  className={`absolute left-0 right-0 mt-2 ${cardBg} border ${isDarkMode ? 'border-blue-900/50' : 'border-slate-200'} rounded-xl overflow-hidden shadow-2xl z-30 divide-y ${dividerBorder}`}
                 >
                   {suggestions.map((item) => (
                     <button 
                       key={item.name}
                       onClick={() => handleSearch(item.name)}
-                      className="w-full text-left px-4 py-2 hover:bg-blue-950/40 text-xs font-bold transition flex items-center justify-between"
+                      className={`w-full text-left px-4 py-2 ${isDarkMode ? 'hover:bg-blue-950/40 text-slate-200' : 'hover:bg-slate-50 text-slate-700'} text-xs font-bold transition flex items-center justify-between`}
                     >
                       <span>{item.name}</span>
-                      <span className="text-[8px] uppercase bg-blue-900/20 text-blue-400 px-2 py-0.5 rounded-full font-mono">{item.category}</span>
+                      <span className={`text-[8px] uppercase ${isDarkMode ? 'bg-blue-900/20 text-blue-400' : 'bg-blue-50 text-blue-650'} px-2 py-0.5 rounded-full font-mono`}>{item.category}</span>
                     </button>
                   ))}
                 </motion.div>
@@ -747,7 +747,9 @@ export default function TechVerse() {
             className={`p-2.5 rounded-xl border transition flex items-center justify-center cursor-pointer ${
               isVoiceListening 
                 ? 'bg-red-500 border-red-400 text-white animate-pulse' 
-                : 'bg-[#0E1630] border-blue-900/30 text-blue-400 hover:bg-blue-950/40'
+                : isDarkMode
+                  ? 'bg-[#0E1630] border-blue-900/30 text-blue-400 hover:bg-blue-950/40'
+                  : 'bg-white border-slate-200 text-slate-650 hover:bg-slate-50'
             }`}
             title="Voice Search Activation"
           >
@@ -755,7 +757,7 @@ export default function TechVerse() {
           </button>
         </div>
       </header>
-
+ 
       {/* DASHBOARD OR VIEWER RENDER BLOCK */}
       {!activeModelKey ? (
         
@@ -763,12 +765,12 @@ export default function TechVerse() {
         <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 space-y-10">
           
           {/* Welcome Banner */}
-          <div className="relative rounded-3xl bg-gradient-to-r from-blue-950/50 via-indigo-950/30 to-[#090D1E] p-8 border border-blue-900/30 overflow-hidden shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="absolute top-0 right-0 w-72 h-72 bg-blue-500/5 rounded-full blur-[90px] pointer-events-none" />
+          <div className={`relative rounded-3xl ${welcomeBannerBg} p-8 overflow-hidden shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8`}>
+            {isDarkMode && <div className="absolute top-0 right-0 w-72 h-72 bg-blue-500/5 rounded-full blur-[90px] pointer-events-none" />}
             <div className="space-y-4 max-w-xl text-center md:text-left">
-              <span className="text-[9px] uppercase font-black tracking-widest text-indigo-400 bg-indigo-950/40 border border-indigo-900/30 px-3.5 py-1 rounded-full">Interactive Computer Architecture Laboratory</span>
-              <h2 className="text-2xl md:text-3xl font-black text-white leading-tight">Deconstruct Hardware & Software Architectures in Interactive 3D</h2>
-              <p className="text-xs text-slate-400 leading-relaxed font-medium">
+              <span className={`text-[9px] uppercase font-black tracking-widest ${categoryPill} px-3.5 py-1 rounded-full`}>Interactive Computer Architecture Laboratory</span>
+              <h2 className={`text-2xl md:text-3xl font-black ${titleColor} leading-tight`}>Deconstruct Hardware & Software Architectures in Interactive 3D</h2>
+              <p className={`text-xs ${textMuted} leading-relaxed font-medium`}>
                 Deconstruct core logic nodes, study full technical specifications, execute exploded assembly reviews, and chat with AI tutors to master engineering.
               </p>
               <div className="flex gap-3 pt-2 justify-center md:justify-start">
@@ -780,45 +782,45 @@ export default function TechVerse() {
                 </button>
                 <button 
                   onClick={() => handleSearch('RAM')}
-                  className="px-5 py-2.5 bg-blue-950/50 border border-blue-900/30 text-blue-400 font-bold rounded-xl text-xs hover:bg-blue-900/40 transition cursor-pointer"
+                  className={`px-5 py-2.5 ${secondaryBtn} font-bold rounded-xl text-xs transition cursor-pointer`}
                 >
                   Explore DDR5 RAM
                 </button>
               </div>
             </div>
             {/* Visual 3D Orbit Spinner */}
-            <div className="w-48 h-48 rounded-full border border-dashed border-indigo-500/20 flex items-center justify-center relative animate-spin-slow">
-              <div className="w-36 h-36 rounded-full border border-dashed border-blue-500/30 flex items-center justify-center">
+            <div className={`w-48 h-48 rounded-full border border-dashed ${isDarkMode ? 'border-indigo-500/20' : 'border-indigo-500/30'} flex items-center justify-center relative animate-spin-slow`}>
+              <div className={`w-36 h-36 rounded-full border border-dashed ${isDarkMode ? 'border-blue-500/30' : 'border-blue-500/40'} flex items-center justify-center`}>
                 <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-700 flex items-center justify-center font-black text-2xl text-white shadow-2xl">🔮</div>
               </div>
             </div>
           </div>
-
+ 
           {/* Quick Categories cards grid */}
           <div className="space-y-4 text-left">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+            <h3 className={`text-xs font-bold ${textMuted} uppercase tracking-widest flex items-center gap-2`}>
               <Layout size={14} className="text-indigo-400" /> Explore Tech categories
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div onClick={() => handleSearch('CPU')} className="p-5 bg-[#090D1E] border border-blue-900/20 hover:border-blue-500 rounded-2xl cursor-pointer group transition duration-300">
+              <div onClick={() => handleSearch('CPU')} className={`p-5 ${cardBg} border ${cardBorder} hover:border-blue-500 rounded-2xl cursor-pointer group transition duration-300 ${!isDarkMode ? 'shadow-sm' : ''}`}>
                 <div className="text-3xl mb-3 group-hover:scale-110 transition duration-300">🖥️</div>
-                <h4 className="font-bold text-sm text-white">Computer Hardware</h4>
-                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">CPU, DDR5 RAM, Motherboard, PCIe Expansion cards, ROM chipsets...</p>
+                <h4 className={`font-bold text-sm ${titleColor}`}>Computer Hardware</h4>
+                <p className={`text-[10px] ${textMuted} mt-1 leading-relaxed`}>CPU, DDR5 RAM, Motherboard, PCIe Expansion cards, ROM chipsets...</p>
               </div>
-              <div onClick={() => handleSearch('Router')} className="p-5 bg-[#090D1E] border border-blue-900/20 hover:border-blue-500 rounded-2xl cursor-pointer group transition duration-300">
+              <div onClick={() => handleSearch('Router')} className={`p-5 ${cardBg} border ${cardBorder} hover:border-blue-500 rounded-2xl cursor-pointer group transition duration-300 ${!isDarkMode ? 'shadow-sm' : ''}`}>
                 <div className="text-3xl mb-3 group-hover:scale-110 transition duration-300">🌐</div>
-                <h4 className="font-bold text-sm text-white">Networking Devices</h4>
-                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">Dual-band Routers, Gigabit Switches, patch configurations...</p>
+                <h4 className={`font-bold text-sm ${titleColor}`}>Networking Devices</h4>
+                <p className={`text-[10px] ${textMuted} mt-1 leading-relaxed`}>Dual-band Routers, Gigabit Switches, patch configurations...</p>
               </div>
-              <div onClick={() => handleSearch('LED')} className="p-5 bg-[#090D1E] border border-blue-900/20 hover:border-blue-500 rounded-2xl cursor-pointer group transition duration-300">
+              <div onClick={() => handleSearch('LED')} className={`p-5 ${cardBg} border ${cardBorder} hover:border-blue-500 rounded-2xl cursor-pointer group transition duration-300 ${!isDarkMode ? 'shadow-sm' : ''}`}>
                 <div className="text-3xl mb-3 group-hover:scale-110 transition duration-300">⚡</div>
-                <h4 className="font-bold text-sm text-white">Electronics & IoT</h4>
-                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">LED diodes, film resistors, electrolytic capacitors, Arduino Uno boards...</p>
+                <h4 className={`font-bold text-sm ${titleColor}`}>Electronics & IoT</h4>
+                <p className={`text-[10px] ${textMuted} mt-1 leading-relaxed`}>LED diodes, film resistors, electrolytic capacitors, Arduino Uno boards...</p>
               </div>
-              <div onClick={() => handleSearch('OS')} className="p-5 bg-[#090D1E] border border-blue-900/20 hover:border-blue-500 rounded-2xl cursor-pointer group transition duration-300">
+              <div onClick={() => handleSearch('OS')} className={`p-5 ${cardBg} border ${cardBorder} hover:border-blue-500 rounded-2xl cursor-pointer group transition duration-300 ${!isDarkMode ? 'shadow-sm' : ''}`}>
                 <div className="text-3xl mb-3 group-hover:scale-110 transition duration-300">⚙️</div>
-                <h4 className="font-bold text-sm text-white">Software Architecture</h4>
-                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">Monolithic OS kernels, blockchain ledger blocks, neural layers...</p>
+                <h4 className={`font-bold text-sm ${titleColor}`}>Software Architecture</h4>
+                <p className={`text-[10px] ${textMuted} mt-1 leading-relaxed`}>Monolithic OS kernels, blockchain ledger blocks, neural layers...</p>
               </div>
             </div>
           </div>
@@ -827,8 +829,8 @@ export default function TechVerse() {
           <div className="grid lg:grid-cols-3 gap-6 text-left">
             
             {/* Library Showcase */}
-            <div className="lg:col-span-2 bg-[#090D1E] border border-blue-900/20 rounded-2xl p-5 space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Featured Interactive Models</h3>
+            <div className={`lg:col-span-2 ${cardBg} border ${cardBorder} rounded-2xl p-5 space-y-4 ${!isDarkMode ? 'shadow-sm' : ''}`}>
+              <h3 className={`text-xs font-bold uppercase tracking-wider ${textMuted}`}>Featured Interactive Models</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {Object.keys(MODELS_DATA).map((key) => {
                   const m = MODELS_DATA[key];
@@ -836,21 +838,21 @@ export default function TechVerse() {
                     <div 
                       key={key}
                       onClick={() => handleSearch(key)}
-                      className="p-3.5 bg-blue-950/10 border border-blue-900/20 hover:border-blue-500 rounded-xl cursor-pointer transition flex flex-col justify-between"
+                      className={`p-3.5 ${isDarkMode ? 'bg-blue-950/10 border-blue-900/20' : 'bg-slate-50 border-slate-200'} hover:border-blue-500 rounded-xl cursor-pointer transition flex flex-col justify-between`}
                     >
-                      <span className="text-[8px] uppercase tracking-wider bg-blue-900/30 text-blue-400 px-2 py-0.5 rounded-md font-bold self-start">{m.category}</span>
+                      <span className={`text-[8px] uppercase tracking-wider ${isDarkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-50 text-blue-600'} px-2 py-0.5 rounded-md font-bold self-start`}>{m.category}</span>
                       <div className="mt-3">
-                        <h4 className="text-xs font-bold text-white line-clamp-1">{m.name}</h4>
-                        <p className="text-[9px] text-slate-400 line-clamp-1 mt-0.5 font-medium">{m.description}</p>
+                        <h4 className={`text-xs font-bold ${titleColor} line-clamp-1`}>{m.name}</h4>
+                        <p className={`text-[9px] ${textMuted} line-clamp-1 mt-0.5 font-medium`}>{m.description}</p>
                       </div>
                     </div>
                   );
                 })}
               </div>
             </div>
-
+ 
             {/* Searches panel */}
-            <div className="bg-[#090D1E] border border-blue-900/20 rounded-2xl p-5 space-y-5 flex flex-col justify-between">
+            <div className={`${cardBg} border ${cardBorder} rounded-2xl p-5 space-y-5 flex flex-col justify-between ${!isDarkMode ? 'shadow-sm' : ''}`}>
               <div className="space-y-2">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-400">Popular Searches</h4>
                 <div className="flex flex-wrap gap-1.5">
@@ -858,22 +860,22 @@ export default function TechVerse() {
                     <button 
                       key={q} 
                       onClick={() => handleSearch(q)}
-                      className="text-[9px] font-bold px-2.5 py-1.5 bg-blue-950/30 hover:bg-blue-900/30 text-blue-300 border border-blue-900/20 rounded-lg transition"
+                      className={`text-[9px] font-bold px-2.5 py-1.5 ${isDarkMode ? 'bg-blue-950/30 hover:bg-blue-900/30 text-blue-300 border-blue-900/20' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'} rounded-lg transition`}
                     >
                       {q}
                     </button>
                   ))}
                 </div>
               </div>
-
-              <div className="space-y-2 pt-4 border-t border-blue-950/45">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Recently Viewed</h4>
+ 
+              <div className={`space-y-2 pt-4 border-t ${dividerBorder}`}>
+                <h4 className={`text-xs font-bold uppercase tracking-wider ${textMuted}`}>Recently Viewed</h4>
                 <div className="space-y-1">
                   {recentSearches.map((q, idx) => (
                     <button 
                       key={q + idx} 
                       onClick={() => handleSearch(q)}
-                      className="w-full text-left px-2 py-1 hover:bg-blue-950/20 rounded-lg text-xs font-semibold text-slate-300 transition flex items-center gap-2"
+                      className={`w-full text-left px-2 py-1 ${isDarkMode ? 'hover:bg-blue-950/20 text-slate-300' : 'hover:bg-slate-50 text-slate-700'} rounded-lg text-xs font-semibold transition flex items-center gap-2`}
                     >
                       <span>⏱️</span> {q}
                     </button>
@@ -881,7 +883,7 @@ export default function TechVerse() {
                 </div>
               </div>
             </div>
-
+ 
           </div>
         </main>
       ) : (
@@ -890,7 +892,7 @@ export default function TechVerse() {
         <main className="flex-1 w-full p-4 overflow-hidden flex flex-col lg:flex-row gap-4 h-[calc(100vh-170px)]">
           
           {/* VIEWPORT CONTROLLER & CANVAS DRAWABLE area */}
-          <div ref={viewportWrapperRef} className="flex-1 bg-[#090D1E] border border-blue-900/30 rounded-2xl relative overflow-hidden flex flex-col shadow-2xl">
+          <div ref={viewportWrapperRef} className={`flex-1 ${cardBg} border ${isDarkMode ? 'border-blue-900/30' : 'border-slate-200'} rounded-2xl relative overflow-hidden flex flex-col shadow-2xl`}>
             <canvas 
               ref={canvasRef}
               width={800}
@@ -905,11 +907,11 @@ export default function TechVerse() {
             />
 
             {/* Performance status & details badge overlay */}
-            <div className="absolute top-4 left-4 flex items-center gap-3 bg-[#080D1F]/90 border border-blue-900/20 px-3.5 py-1.5 rounded-full z-10 font-mono text-[9px] text-slate-400">
+            <div className={`absolute top-4 left-4 flex items-center gap-3 ${viewportOverlay} px-3.5 py-1.5 rounded-full z-10 font-mono text-[9px]`}>
               <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> FPS: {fps}</span>
-              <span className="text-blue-950">|</span>
+              <span className={isDarkMode ? 'text-blue-950' : 'text-slate-300'}>|</span>
               <span className="flex items-center gap-1.5">LOD: {lodLevel}</span>
-              <span className="text-blue-950">|</span>
+              <span className={isDarkMode ? 'text-blue-950' : 'text-slate-300'}>|</span>
               <span className="flex items-center gap-1.5">Auto-Rotate: {autoRotate ? 'ON' : 'OFF'}</span>
             </div>
 
@@ -918,7 +920,7 @@ export default function TechVerse() {
               {/* Reset View */}
               <button 
                 onClick={resetView} 
-                className="p-2.5 bg-[#080D1F]/90 border border-blue-900/20 hover:border-blue-400 text-blue-400 rounded-xl transition"
+                className={`p-2.5 rounded-xl border transition ${isDarkMode ? 'bg-[#080D1F]/90 border-blue-900/20 text-blue-400 hover:border-blue-400' : 'bg-white border-slate-200 text-slate-600 hover:border-blue-400 shadow-sm'}`}
                 title="Reset Camera & Viewport"
               >
                 <RotateCw size={14} />
@@ -927,7 +929,7 @@ export default function TechVerse() {
               {/* Wireframe toggle */}
               <button 
                 onClick={() => setRenderMode(prev => prev === 'wireframe' ? 'pbr' : 'wireframe')} 
-                className={`p-2.5 border rounded-xl transition ${renderMode === 'wireframe' ? 'bg-blue-600 border-blue-400 text-white' : 'bg-[#080D1F]/90 border-blue-900/20 text-blue-400'}`}
+                className={`p-2.5 border rounded-xl transition ${renderMode === 'wireframe' ? 'bg-blue-600 border-blue-400 text-white' : (isDarkMode ? 'bg-[#080D1F]/90 border-blue-900/20 text-blue-400 hover:border-blue-400' : 'bg-white border-slate-200 text-slate-650 hover:border-blue-400 shadow-sm')}`}
                 title="Wireframe Skeleton View"
               >
                 <Layers size={14} />
@@ -936,7 +938,7 @@ export default function TechVerse() {
               {/* Translucent view */}
               <button 
                 onClick={() => setRenderMode(prev => prev === 'transparent' ? 'pbr' : 'transparent')} 
-                className={`p-2.5 border rounded-xl transition ${renderMode === 'transparent' ? 'bg-blue-600 border-blue-400 text-white' : 'bg-[#080D1F]/90 border-blue-900/20 text-blue-400'}`}
+                className={`p-2.5 border rounded-xl transition ${renderMode === 'transparent' ? 'bg-blue-600 border-blue-400 text-white' : (isDarkMode ? 'bg-[#080D1F]/90 border-blue-900/20 text-blue-400 hover:border-blue-400' : 'bg-white border-slate-200 text-slate-650 hover:border-blue-400 shadow-sm')}`}
                 title="Glass Translucent View"
               >
                 <Volume2 size={14} className="rotate-90" />
@@ -945,7 +947,7 @@ export default function TechVerse() {
               {/* Auto rotate toggle */}
               <button 
                 onClick={() => setAutoRotate(!autoRotate)} 
-                className={`p-2.5 border rounded-xl transition ${autoRotate ? 'bg-blue-600 border-blue-400 text-white' : 'bg-[#080D1F]/90 border-blue-900/20 text-blue-400'}`}
+                className={`p-2.5 border rounded-xl transition ${autoRotate ? 'bg-blue-600 border-blue-400 text-white' : (isDarkMode ? 'bg-[#080D1F]/90 border-blue-900/20 text-blue-400 hover:border-blue-400' : 'bg-white border-slate-200 text-slate-650 hover:border-blue-400 shadow-sm')}`}
                 title="Auto Rotate Rotation"
               >
                 <RefreshCw size={14} className={autoRotate ? 'animate-spin' : ''} />
@@ -958,7 +960,7 @@ export default function TechVerse() {
                   setMeasuredPoints([]);
                   setMeasuredDistance(null);
                 }} 
-                className={`p-2.5 border rounded-xl transition ${measurementMode ? 'bg-red-500 border-red-400 text-white' : 'bg-[#080D1F]/90 border-blue-900/20 text-blue-400'}`}
+                className={`p-2.5 border rounded-xl transition ${measurementMode ? 'bg-red-500 border-red-400 text-white' : (isDarkMode ? 'bg-[#080D1F]/90 border-blue-900/20 text-blue-400 hover:border-blue-400' : 'bg-white border-slate-200 text-slate-650 hover:border-blue-400 shadow-sm')}`}
                 title="Measurement Caliper"
               >
                 📏
@@ -967,7 +969,7 @@ export default function TechVerse() {
               {/* Toggle Full Screen */}
               <button 
                 onClick={toggleFullScreen}
-                className="p-2.5 bg-[#080D1F]/90 border border-blue-900/20 hover:border-blue-400 text-blue-400 rounded-xl transition"
+                className={`p-2.5 rounded-xl border transition ${isDarkMode ? 'bg-[#080D1F]/90 border-blue-900/20 text-blue-400 hover:border-blue-400' : 'bg-white border-slate-200 text-slate-600 hover:border-blue-400 shadow-sm'}`}
                 title="Toggle Fullscreen View"
               >
                 <Maximize2 size={14} />
@@ -975,17 +977,17 @@ export default function TechVerse() {
             </div>
 
             {/* Orbit Hint banner overlay */}
-            <div className="absolute bottom-4 left-4 text-[8px] font-mono text-slate-400 bg-[#080D1F]/70 px-3 py-1 rounded-md pointer-events-none">
+            <div className={`absolute bottom-4 left-4 text-[8px] font-mono ${textMuted} ${isDarkMode ? 'bg-[#080D1F]/70' : 'bg-white/90 border border-slate-100 shadow-sm'} px-3 py-1 rounded-md pointer-events-none`}>
               Left Click + Drag: Rotate | Right Click + Drag: Pan | Scroll wheel: Zoom | Click parts to highlight
             </div>
 
             {/* Dual Slider adjust controls */}
-            <div className="p-4 bg-[#090D1E] border-t border-blue-900/20 grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+            <div className={`p-4 ${cardBg} border-t ${cardBorder} grid grid-cols-1 md:grid-cols-2 gap-4 text-left transition-colors duration-300`}>
               {/* Exploded assembly slider */}
               <div className="space-y-1">
-                <div className="flex justify-between text-[9px] font-bold text-slate-400">
+                <div className={`flex justify-between text-[9px] font-bold ${textMuted}`}>
                   <span className="flex items-center gap-1.5">🔧 EXPLODED ASSEMBLY VIEW</span>
-                  <span className="font-mono text-blue-400">{(explodedScale * 100).toFixed(0)}%</span>
+                  <span className="font-mono text-blue-500">{(explodedScale * 100).toFixed(0)}%</span>
                 </div>
                 <input 
                   type="range"
@@ -1000,9 +1002,9 @@ export default function TechVerse() {
 
               {/* Cross-section cut coordinate */}
               <div className="space-y-1">
-                <div className="flex justify-between text-[9px] font-bold text-slate-400">
+                <div className={`flex justify-between text-[9px] font-bold ${textMuted}`}>
                   <span className="flex items-center gap-1.5">✂️ CROSS-SECTION CUT PLANE</span>
-                  <span className="font-mono text-blue-400">X = {crossSectionSlice.toFixed(1)}</span>
+                  <span className="font-mono text-blue-500">X = {crossSectionSlice.toFixed(1)}</span>
                 </div>
                 <input 
                   type="range"
@@ -1018,12 +1020,12 @@ export default function TechVerse() {
           </div>
 
           {/* RIGHT SIDEBAR PANEL - DETAILED LECTURES & AI CHAT */}
-          <div className="w-full lg:w-[420px] shrink-0 bg-[#090D1E] border border-blue-900/30 rounded-2xl p-5 flex flex-col justify-between overflow-y-auto custom-sidebar-scroll shadow-2xl text-left">
+          <div className={`w-full lg:w-[420px] shrink-0 ${cardBg} border ${cardBorder} rounded-2xl p-5 flex flex-col justify-between overflow-y-auto custom-sidebar-scroll shadow-2xl text-left transition-colors duration-300`}>
             
             {/* Subject card title */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-[9px] uppercase bg-indigo-950 text-indigo-400 border border-indigo-900/30 px-3 py-0.5 rounded-full font-black">
+                <span className={`text-[9px] uppercase ${categoryPill} px-3 py-0.5 rounded-full font-black`}>
                   {MODELS_DATA[activeModelKey].category}
                 </span>
                 <button 
@@ -1031,18 +1033,18 @@ export default function TechVerse() {
                     setActiveModelKey(null);
                     window.speechSynthesis.cancel();
                   }}
-                  className="text-xs text-slate-400 hover:text-white transition font-bold"
+                  className={`text-xs ${textMuted} ${isDarkMode ? 'hover:text-white' : 'hover:text-slate-900'} transition font-bold`}
                 >
                   ← Home
                 </button>
               </div>
               <div>
-                <h2 className="text-lg font-black text-white">{MODELS_DATA[activeModelKey].name}</h2>
-                <p className="text-xs text-slate-400 leading-relaxed mt-1 font-medium">{MODELS_DATA[activeModelKey].description}</p>
+                <h2 className={`text-lg font-black ${titleColor}`}>{MODELS_DATA[activeModelKey].name}</h2>
+                <p className={`text-xs ${textMuted} leading-relaxed mt-1 font-medium`}>{MODELS_DATA[activeModelKey].description}</p>
               </div>
-
+ 
               {/* Dynamic educational tabs list */}
-              <div className="flex flex-wrap bg-[#0E1630] border border-blue-900/20 p-1 rounded-xl gap-1 text-[9px] font-bold">
+              <div className={`flex flex-wrap ${innerBg} border ${isDarkMode ? 'border-blue-900/20' : 'border-slate-200'} p-1 rounded-xl gap-1 text-[9px] font-bold`}>
                 {['overview', 'working', 'structure', 'guide', 'quiz', 'flashcards'].map((tab) => (
                   <button
                     key={tab}
@@ -1050,7 +1052,7 @@ export default function TechVerse() {
                     className={`flex-1 py-2 text-center rounded-lg transition-all capitalize ${
                       learningTab === tab 
                         ? 'bg-blue-600 text-white shadow-md' 
-                        : 'text-slate-400 hover:text-white'
+                        : tabText
                     }`}
                   >
                     {getTranslatedLabel(tab)}
@@ -1058,12 +1060,12 @@ export default function TechVerse() {
                 ))}
               </div>
             </div>
-
+ 
             {/* TAB CONTENT HOUSER CONTAINER */}
             <div className="flex-1 py-4 text-left overflow-y-auto max-h-[35vh] custom-sidebar-scroll">
               
               {/* Translate widget */}
-              <div className="flex items-center gap-1.5 pb-2.5 mb-3 border-b border-blue-950/45">
+              <div className={`flex items-center gap-1.5 pb-2.5 mb-3 border-b ${dividerBorder}`}>
                 <Languages size={12} className="text-indigo-400 animate-pulse" />
                 <span className="text-[8px] uppercase font-black text-slate-500">TRANSLATION ENGINE:</span>
                 <div className="flex gap-1">
@@ -1071,59 +1073,57 @@ export default function TechVerse() {
                     <button 
                       key={langCode}
                       onClick={() => setActiveLang(langCode)}
-                      className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded transition ${activeLang === langCode ? 'bg-indigo-900 text-white' : 'text-slate-500 hover:text-white'}`}
+                      className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded transition ${activeLang === langCode ? (isDarkMode ? 'bg-indigo-900 text-white' : 'bg-indigo-600 text-white') : (isDarkMode ? 'text-slate-500 hover:text-white' : 'text-slate-500 hover:text-slate-800')}`}
                     >
                       {langCode.toUpperCase()}
                     </button>
                   ))}
                 </div>
               </div>
-
+ 
               {/* A. OVERVIEW DETAILS */}
               {learningTab === 'overview' && (
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <h4 className="text-[9px] uppercase font-bold text-indigo-400">{getTranslatedLabel('specs')}</h4>
-                    <p className="text-xs font-mono font-bold bg-[#0D152D] border border-blue-900/10 p-2.5 rounded-lg text-blue-300 leading-normal">
+                    <p className={`text-xs font-mono font-bold ${isDarkMode ? 'bg-[#0D152D] text-blue-300 border border-blue-900/10' : 'bg-blue-50/50 text-blue-700 border border-blue-100'} p-2.5 rounded-lg leading-normal`}>
                       {MODELS_DATA[activeModelKey].specifications}
                     </p>
                   </div>
                   <div className="space-y-1">
                     <h4 className="text-[9px] uppercase font-bold text-slate-400">{getTranslatedLabel('history')}</h4>
-                    <p className="text-xs text-slate-300 leading-relaxed font-semibold">
+                    <p className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-650'} leading-relaxed font-semibold`}>
                       {MODELS_DATA[activeModelKey].history}
                     </p>
                   </div>
                 </div>
               )}
-
+ 
               {/* B. WORKING PRINCIPLE */}
               {learningTab === 'working' && (
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <h4 className="text-[9px] uppercase font-bold text-indigo-400">WORKING MECHANISMS</h4>
-                    <p className="text-xs text-slate-300 leading-relaxed font-semibold">
+                    <p className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-650'} leading-relaxed font-semibold`}>
                       {MODELS_DATA[activeModelKey].workingPrinciple}
                     </p>
                   </div>
                   <div className="grid grid-cols-1 gap-2 pt-2">
-                    <div className="p-3 bg-emerald-950/15 border border-emerald-900/20 rounded-xl">
+                    <div className={`p-3 ${isDarkMode ? 'bg-emerald-950/15 border border-emerald-900/20' : 'bg-emerald-50/50 border border-emerald-100'} rounded-xl`}>
                       <span className="text-[9px] font-bold text-emerald-400 block mb-0.5">👍 ADVANTAGES</span>
-                      <p className="text-[11px] text-slate-300 leading-relaxed font-medium">{MODELS_DATA[activeModelKey].advantages}</p>
+                      <p className={`text-[11px] ${isDarkMode ? 'text-slate-300' : 'text-emerald-800'} leading-relaxed font-medium`}>{MODELS_DATA[activeModelKey].advantages}</p>
                     </div>
-                    <div className="p-3 bg-red-950/15 border border-red-900/20 rounded-xl">
+                    <div className={`p-3 ${isDarkMode ? 'bg-red-950/15 border border-red-900/20' : 'bg-red-50/50 border border-red-100'} rounded-xl`}>
                       <span className="text-[9px] font-bold text-red-400 block mb-0.5">👎 DISADVANTAGES</span>
-                      <p className="text-[11px] text-slate-300 leading-relaxed font-medium">{MODELS_DATA[activeModelKey].disadvantages}</p>
+                      <p className={`text-[11px] ${isDarkMode ? 'text-slate-300' : 'text-red-800'} leading-relaxed font-medium`}>{MODELS_DATA[activeModelKey].disadvantages}</p>
                     </div>
                   </div>
                 </div>
               )}
-
-              {/* C. INTERNAL STRUCTURE DETAILS */}
               {learningTab === 'structure' && (
                 <div className="space-y-3">
-                  <h4 className="text-[9px] uppercase font-bold text-slate-400">STRUCTURE HOTSPOTS ({MODELS_DATA[activeModelKey].parts?.length || 0})</h4>
-                  <p className="text-[10px] text-slate-400 mb-2 leading-relaxed">Hover and click parts inside the 3D viewport canvas or click items below to run narration checks.</p>
+                  <h4 className={`text-[9px] uppercase font-bold ${textMuted}`}>STRUCTURE HOTSPOTS ({MODELS_DATA[activeModelKey].parts?.length || 0})</h4>
+                  <p className={`text-[10px] ${textMuted} mb-2 leading-relaxed`}>Hover and click parts inside the 3D viewport canvas or click items below to run narration checks.</p>
                   <div className="space-y-2">
                     {MODELS_DATA[activeModelKey].parts?.map((p, idx) => (
                       <div 
@@ -1134,41 +1134,41 @@ export default function TechVerse() {
                         }}
                         className={`p-3 rounded-xl border transition cursor-pointer ${
                           selectedPartIndex === idx 
-                            ? 'bg-blue-950/20 border-blue-500 shadow-md' 
-                            : 'bg-blue-950/5 border-blue-900/10 hover:border-blue-900/30'
+                            ? (isDarkMode ? 'bg-blue-950/20 border-blue-500 shadow-md' : 'bg-blue-50 border-blue-400 shadow-sm') 
+                            : (isDarkMode ? 'bg-blue-950/5 border-blue-900/10 hover:border-blue-900/30' : 'bg-slate-50 border-slate-100 hover:border-slate-350')
                         }`}
                       >
-                        <h5 className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <h5 className={`text-xs font-bold ${titleColor} flex items-center gap-1.5`}>
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span> {p.name}
                         </h5>
-                        <p className="text-[10px] text-slate-400 mt-1 leading-relaxed font-medium">{p.desc}</p>
+                        <p className={`text-[10px] ${textMuted} mt-1 leading-relaxed font-medium`}>{p.desc}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-
+ 
               {/* D. REPAIR GUIDE */}
               {learningTab === 'guide' && (
                 <div className="space-y-3">
                   <h4 className="text-[9px] uppercase font-bold text-indigo-400">TROUBLESHOOTING & REPAIR</h4>
-                  <p className="text-xs text-slate-300 leading-relaxed font-semibold">
+                  <p className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-650'} leading-relaxed font-semibold`}>
                     {MODELS_DATA[activeModelKey].repairGuide}
                   </p>
                 </div>
               )}
-
+ 
               {/* E. QUIZ MODULE */}
               {learningTab === 'quiz' && (
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center pb-2 border-b border-blue-950/45">
-                    <span className="text-[9px] font-bold uppercase text-slate-500">Module Quiz Challenge</span>
+                  <div className={`flex justify-between items-center pb-2 border-b ${dividerBorder}`}>
+                    <span className={`text-[9px] font-bold uppercase ${textMuted}`}>Module Quiz Challenge</span>
                     <span className="text-[10px] font-mono text-blue-400 font-bold">Score: {quizScore}/{activeQuizList.length}</span>
                   </div>
-
+ 
                   {activeQuizList.length > 0 ? (
                     <div className="space-y-3">
-                      <p className="text-xs font-bold text-white leading-relaxed">
+                      <p className={`text-xs font-bold ${titleColor} leading-relaxed`}>
                         {activeQuizList[quizIndex]?.q}
                       </p>
                       <div className="space-y-2">
@@ -1179,11 +1179,11 @@ export default function TechVerse() {
                             className={`w-full text-left p-3 rounded-xl text-xs font-semibold border transition ${
                               quizAnswered
                                 ? idx === activeQuizList[quizIndex].a
-                                  ? 'bg-emerald-950/20 border-emerald-500 text-emerald-300'
+                                  ? (isDarkMode ? 'bg-emerald-950/20 border-emerald-500 text-emerald-300' : 'bg-emerald-50 border-emerald-400 text-emerald-800')
                                   : selectedAnswer === idx
-                                    ? 'bg-red-950/20 border-red-500 text-red-300'
-                                    : 'bg-[#0E1630] border-blue-900/10 text-slate-500'
-                                : 'bg-[#0E1630] border-blue-900/20 hover:border-blue-400 text-slate-200'
+                                    ? (isDarkMode ? 'bg-red-950/20 border-red-500 text-red-300' : 'bg-red-50 border-red-400 text-red-800')
+                                    : (isDarkMode ? 'bg-[#0E1630] border-blue-900/10 text-slate-500' : 'bg-slate-50 border-slate-100 text-slate-450')
+                                : (isDarkMode ? 'bg-[#0E1630] border-blue-900/20 hover:border-blue-400 text-slate-200' : 'bg-slate-50 border-slate-200 hover:border-blue-400 text-slate-700')
                             }`}
                           >
                             <span className="font-bold mr-2 text-[9px]">{String.fromCharCode(65 + idx)}.</span>
@@ -1191,7 +1191,7 @@ export default function TechVerse() {
                           </button>
                         ))}
                       </div>
-
+ 
                       {quizAnswered && (
                         <button
                           onClick={() => {
@@ -1214,42 +1214,42 @@ export default function TechVerse() {
               {/* F. FLASHCARDS */}
               {learningTab === 'flashcards' && (
                 <div className="space-y-4">
-                  <h4 className="text-[9px] uppercase font-bold text-slate-400">STUDY FLASHCARDS</h4>
+                  <h4 className={`text-[9px] uppercase font-bold ${textMuted}`}>STUDY FLASHCARDS</h4>
                   {MODELS_DATA[activeModelKey].flashcards?.map((card, idx) => (
-                    <div key={idx} className="p-4 bg-blue-950/10 border border-blue-900/20 rounded-xl space-y-2">
+                    <div key={idx} className={`p-4 ${isDarkMode ? 'bg-blue-950/10 border border-blue-900/20' : 'bg-slate-50 border border-slate-200'} rounded-xl space-y-2`}>
                       <span className="text-[8px] uppercase font-mono text-indigo-400">Question {idx + 1}</span>
-                      <p className="text-xs font-bold text-white">{card.q}</p>
-                      <div className="pt-2 border-t border-blue-950/45">
+                      <p className={`text-xs font-bold ${titleColor}`}>{card.q}</p>
+                      <div className={`pt-2 border-t ${dividerBorder}`}>
                         <span className="text-[8px] uppercase font-mono text-emerald-400">Answer</span>
-                        <p className="text-[11px] text-slate-300 font-semibold">{card.a}</p>
+                        <p className={`text-[11px] ${isDarkMode ? 'text-slate-300' : 'text-slate-650'} font-semibold`}>{card.a}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
+ 
             {/* AI TUTOR WIDGET CHAT INTERACTION */}
-            <div className="border-t border-blue-950/45 pt-4 mt-auto">
-              <div className="bg-[#080C19]/60 border border-blue-900/15 p-3 rounded-xl space-y-2 mb-3 max-h-[140px] overflow-y-auto custom-sidebar-scroll">
+            <div className={`border-t ${dividerBorder} pt-4 mt-auto`}>
+              <div className={`p-3 rounded-xl space-y-2 mb-3 max-h-[140px] overflow-y-auto custom-sidebar-scroll ${isDarkMode ? 'bg-[#080C19]/60 border border-blue-900/15' : 'bg-slate-50 border border-slate-150'}`}>
                 {aiChatLog.map((log, index) => (
-                  <div key={index} className={`text-xs leading-relaxed font-semibold flex items-start gap-1.5 ${log.role === 'tutor' ? 'text-blue-300' : 'text-slate-300'}`}>
+                  <div key={index} className={`text-xs leading-relaxed font-semibold flex items-start gap-1.5 ${log.role === 'tutor' ? (isDarkMode ? 'text-blue-300' : 'text-blue-650') : (isDarkMode ? 'text-slate-300' : 'text-slate-700')}`}>
                     <span>{log.role === 'tutor' ? '🤖' : '👤'}</span>
                     <p>{log.text}</p>
                   </div>
                 ))}
                 {aiLoading && (
-                  <div className="text-[9px] text-slate-500 font-mono animate-pulse">AI Tutor is generating answer...</div>
+                  <div className="text-[9px] text-slate-550 font-mono animate-pulse">AI Tutor is generating answer...</div>
                 )}
               </div>
-
+ 
               <form onSubmit={handleAiQuestion} className="flex gap-2">
                 <input 
                   type="text" 
                   value={aiChatQuery}
                   onChange={(e) => setAiChatQuery(e.target.value)}
                   placeholder="Ask AI Tutor details about this component..."
-                  className="flex-1 bg-[#0E1630] border border-blue-900/30 focus:border-blue-500 text-slate-100 text-xs rounded-xl px-3 py-2.5 focus:outline-none transition font-semibold"
+                  className={`flex-1 ${innerBg} border ${cardBorder} focus:border-blue-500 ${textMain} text-xs rounded-xl px-3 py-2.5 focus:outline-none transition font-semibold`}
                 />
                 <button 
                   type="submit"
@@ -1263,9 +1263,9 @@ export default function TechVerse() {
           </div>
         </main>
       )}
-
+ 
       {/* 3D ENGINE BAR STATUS FOOTER */}
-      <footer className="px-6 py-2.5 bg-[#050814] border-t border-blue-950/30 flex justify-between text-[9px] text-slate-500 font-mono">
+      <footer className={`px-6 py-2.5 ${isDarkMode ? 'bg-[#050814] border-t border-blue-950/30' : 'bg-white border-t border-slate-200'} flex justify-between text-[9px] text-slate-500 font-mono transition-colors duration-300`}>
         <span>EduVerse 3D Engine • WebGL Shader v2.0</span>
         <span>Keyboard Navigation • High Contrast • Screen Reader</span>
       </footer>
