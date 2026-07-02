@@ -5,95 +5,6 @@ import './OnlineCompiler.css';
 
 // ─── Language configurations ─────────────────────────────────────────────────
 const LANG_CONFIG = {
-  python: {
-    name: 'Python',
-    pistonLang: 'python',
-    pistonVersion: '3.10.0',
-    color: '#3B82F6',
-    dotColor: '#60a5fa',
-    fileExt: '.py',
-    template: `# Python Program
-# Write your code here and click Run ▶
-`,
-    bgProgram: `def greet(name):
-    return f"Hello, {name}!"
-
-print(greet("EduVerse"))
-
-# Try: arithmetic, loops, functions, classes
-numbers = [1, 2, 3, 4, 5]
-total = sum(numbers)
-print(f"Sum of {numbers} = {total}")
-`
-  },
-  java: {
-    name: 'Java',
-    pistonLang: 'java',
-    pistonVersion: '15.0.2',
-    color: '#F97316',
-    dotColor: '#fb923c',
-    fileExt: '.java',
-    template: `// Java Program
-// Write your code below and click Run ▶
-`,
-    bgProgram: `public class Main {
-    public static void main(String[] args) {
-        System.out.println("Hello from EduVerse!");
-        
-        // Example: loop
-        for (int i = 1; i <= 5; i++) {
-            System.out.println("Count: " + i);
-        }
-        
-        // Example: method call
-        System.out.println("Square of 7 = " + square(7));
-    }
-    
-    static int square(int n) {
-        return n * n;
-    }
-}
-`
-  },
-  'advanced java': {
-    name: 'Advanced Java',
-    pistonLang: 'java',
-    pistonVersion: '15.0.2',
-    color: '#8B5CF6',
-    dotColor: '#a78bfa',
-    fileExt: '.java',
-    template: `// Advanced Java — Collections & OOP
-// Write your code below and click Run ▶
-`,
-    bgProgram: `import java.util.*;
-import java.util.stream.*;
-
-public class Main {
-    // Generic Stack implementation
-    static class Stack<T> {
-        private List<T> data = new ArrayList<>();
-        public void push(T item) { data.add(item); }
-        public T pop() { return data.isEmpty() ? null : data.remove(data.size()-1); }
-        public String toString() { return data.toString(); }
-    }
-
-    public static void main(String[] args) {
-        // Streams & Lambdas
-        List<Integer> nums = Arrays.asList(1,2,3,4,5,6,7,8,9,10);
-        int sumOfEvens = nums.stream()
-            .filter(n -> n % 2 == 0)
-            .mapToInt(Integer::intValue).sum();
-        System.out.println("Sum of even numbers: " + sumOfEvens);
-
-        // Generic Stack
-        Stack<String> s = new Stack<>();
-        s.push("Java"); s.push("OOP"); s.push("Streams");
-        System.out.println("Stack: " + s);
-        System.out.println("Popped: " + s.pop());
-    }
-}
-`
-  },
   dbms: {
     name: 'DBMS / SQL',
     pistonLang: 'sqlite3',
@@ -191,56 +102,6 @@ function localSimulate(language, code) {
     } else {
       stdoutLines.push("Query executed successfully. 0 rows affected.");
     }
-  } else if (cleanLang === 'python') {
-    if (code.includes('greet("EduVerse")')) {
-      stdoutLines.push("Hello, EduVerse!");
-      stdoutLines.push("Sum of [1, 2, 3, 4, 5] = 15");
-    } else {
-      const printRegex = /print\((.*)\)/g;
-      let match;
-      while ((match = printRegex.exec(code)) !== null) {
-        let val = match[1].trim();
-        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-          stdoutLines.push(val.substring(1, val.length - 1));
-        } else if (val.startsWith('f"') || val.startsWith("f'")) {
-          let inner = val.substring(2, val.length - 1);
-          inner = inner.replace(/\{([^}]+)\}/g, (m, g) => {
-            if (g === 'name') return 'EduVerse';
-            if (g === 'numbers') return '[1, 2, 3, 4, 5]';
-            if (g === 'total') return '15';
-            return '';
-          });
-          stdoutLines.push(inner);
-        } else {
-          stdoutLines.push(val);
-        }
-      }
-    }
-  } else if (cleanLang === 'java') {
-    if (code.includes('System.out.println("Hello from EduVerse!");') || code.includes('Hello from EduVerse!')) {
-      stdoutLines.push("Hello from EduVerse!");
-      stdoutLines.push("Count: 1");
-      stdoutLines.push("Count: 2");
-      stdoutLines.push("Count: 3");
-      stdoutLines.push("Count: 4");
-      stdoutLines.push("Count: 5");
-      stdoutLines.push("Square of 7 = 49");
-    } else if (code.includes('Sum of even numbers:')) {
-      stdoutLines.push("Sum of even numbers: 30");
-      stdoutLines.push("Stack: [Java, OOP, Streams]");
-      stdoutLines.push("Popped: Streams");
-    } else {
-      const sysoutRegex = /System\.out\.println\((.*)\)/g;
-      let match;
-      while ((match = sysoutRegex.exec(code)) !== null) {
-        let val = match[1].trim();
-        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-          stdoutLines.push(val.substring(1, val.length - 1));
-        } else {
-          stdoutLines.push(val);
-        }
-      }
-    }
   } else if (cleanLang === 'csharp' || cleanLang === 'cs') {
     if (code.includes('Console.WriteLine("Hello from EduVerse C#!");') || code.includes('Hello from EduVerse C#!')) {
       stdoutLines.push("Hello from EduVerse C#!");
@@ -319,9 +180,9 @@ const isClean = (code) => {
 };
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function OnlineCompiler({ language = 'python', title, subtitle }) {
+export default function OnlineCompiler({ language = 'dbms', title, subtitle }) {
   const langKey = language.toLowerCase();
-  const cfg = LANG_CONFIG[langKey] || LANG_CONFIG.python;
+  const cfg = LANG_CONFIG[langKey] || LANG_CONFIG.dbms;
 
   const [code, setCode] = useState(cfg.template);
   const [output, setOutput] = useState([]);

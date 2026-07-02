@@ -138,58 +138,6 @@ function runLocalInterpreter(language, code) {
     } else {
       stdoutLines.push("Query executed successfully. 0 rows affected.");
     }
-  } else if (cleanLang === 'python') {
-    if (code.includes('greet("EduVerse")')) {
-      stdoutLines.push("Hello, EduVerse!");
-      stdoutLines.push("Sum of [1, 2, 3, 4, 5] = 15");
-    } else {
-      const printRegex = /print\((.*)\)/g;
-      let match;
-      while ((match = printRegex.exec(code)) !== null) {
-        let val = match[1].trim();
-        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-          stdoutLines.push(val.substring(1, val.length - 1));
-        } else if (val.startsWith('f"') || val.startsWith("f'")) {
-          let inner = val.substring(2, val.length - 1);
-          inner = inner.replace(/\{([^}]+)\}/g, (m, g) => {
-            if (g === 'name') return 'EduVerse';
-            if (g === 'numbers') return '[1, 2, 3, 4, 5]';
-            if (g === 'total') return '15';
-            return '';
-          });
-          stdoutLines.push(inner);
-        } else {
-          stdoutLines.push(val);
-        }
-      }
-    }
-  } else if (cleanLang === 'java') {
-    if (code.includes('System.out.println')) {
-      if (code.includes('System.out.println("Hello from EduVerse!");') || code.includes('Hello from EduVerse!')) {
-        stdoutLines.push("Hello from EduVerse!");
-        stdoutLines.push("Count: 1");
-        stdoutLines.push("Count: 2");
-        stdoutLines.push("Count: 3");
-        stdoutLines.push("Count: 4");
-        stdoutLines.push("Count: 5");
-        stdoutLines.push("Square of 7 = 49");
-      } else if (code.includes('Sum of even numbers:')) {
-        stdoutLines.push("Sum of even numbers: 30");
-        stdoutLines.push("Stack: [Java, OOP, Streams]");
-        stdoutLines.push("Popped: Streams");
-      } else {
-        const sysoutRegex = /System\.out\.println\((.*)\)/g;
-        let match;
-        while ((match = sysoutRegex.exec(code)) !== null) {
-          let val = match[1].trim();
-          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-            stdoutLines.push(val.substring(1, val.length - 1));
-          } else {
-            stdoutLines.push(val);
-          }
-        }
-      }
-    }
   } else if (cleanLang === 'csharp' || cleanLang === 'cs') {
     if (code.includes('Console.WriteLine("Hello from EduVerse C#!");') || code.includes('Hello from EduVerse C#!')) {
       stdoutLines.push("Hello from EduVerse C#!");
@@ -372,17 +320,7 @@ router.post('/autocorrect', authenticate, async (req, res) => {
       // Clean up common typos in the code based on language
       let cleaned = code;
       const lowerLang = language.toLowerCase();
-      if (lowerLang.includes('python')) {
-        // Python mock auto-correct
-        cleaned = code
-          .replace(/print\s+(".*?"|'.*?')/g, 'print($1)') // python2 to python3 print
-          .replace(/greet\(\)/g, 'greet("EduVerse")');
-      } else if (lowerLang.includes('java')) {
-        // Java mock auto-correct
-        cleaned = code
-          .replace(/System\.out\.print\s+/g, 'System.out.println')
-          .replace(/public\s+class\s+Main\s*\{/i, 'public class Main {\n    // Fixed by AI\n');
-      } else if (lowerLang.includes('c#') || lowerLang.includes('csharp')) {
+      if (lowerLang.includes('c#') || lowerLang.includes('csharp')) {
         // C# mock auto-correct
         cleaned = code.replace(/Console\.Write\s+/g, 'Console.WriteLine');
       }
