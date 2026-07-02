@@ -45,6 +45,7 @@ class SpeechSynthesisService {
     const rate = settings.rate !== undefined ? settings.rate : 1;
     const pitch = settings.pitch !== undefined ? settings.pitch : 1;
     const voiceURI = settings.voiceURI || null;
+    const forceLanguage = settings.forceLanguage || null;
 
     if (provider !== 'native' && CloudVoiceProviders[provider]) {
       onStart();
@@ -55,12 +56,12 @@ class SpeechSynthesisService {
         console.error(`${provider} TTS failed:`, err);
         onError(err);
         // Fallback to native on failure
-        this.speakNative(text, { volume, rate, pitch, voiceURI }, onStart, onEnd, onError);
+        this.speakNative(text, { volume, rate, pitch, voiceURI, forceLanguage }, onStart, onEnd, onError);
       }
       return;
     }
 
-    this.speakNative(text, { volume, rate, pitch, voiceURI }, onStart, onEnd, onError);
+    this.speakNative(text, { volume, rate, pitch, voiceURI, forceLanguage }, onStart, onEnd, onError);
   }
 
   speakNative(text, config, onStart, onEnd, onError) {
@@ -91,25 +92,31 @@ class SpeechSynthesisService {
         utterance.voice = selected;
         utterance.lang = selected.lang;
       }
+    } else if (config.forceLanguage) {
+      utterance.lang = config.forceLanguage;
+      const voices = window.speechSynthesis.getVoices();
+      const matchingVoice = voices.find(v => v.lang.startsWith(config.forceLanguage.slice(0, 2)) || v.name.toLowerCase().includes('kannada'));
+      if (matchingVoice) {
+        utterance.voice = matchingVoice;
+      }
     } else {
       const voices = window.speechSynthesis.getVoices();
-      const hasKannadaVoice = voices.some(v => v.lang.startsWith('kn') || v.name.includes('Kannada'));
       
-      // Auto-detect based on text range and system capabilities
-      if (cleanText.match(/[\u0c80-\u0cff]/) && hasKannadaVoice) {
+      // Auto-detect based on text range
+      if (cleanText.match(/[\u0c80-\u0cff]/)) {
         utterance.lang = 'kn-IN';
       } else {
         utterance.lang = 'en-IN'; // Standard fallback
       }
       
       const defaultVoice = voices.find(
-        (v) => v.lang.startsWith(utterance.lang.slice(0, 2)) || v.name.includes('Google US English') || v.name.includes('Female') || v.lang.startsWith('en')
+        (v) => v.lang.startsWith(utterance.lang.slice(0, 2)) || v.name.toLowerCase().includes('kannada')
       );
       if (defaultVoice) {
         utterance.voice = defaultVoice;
         utterance.lang = defaultVoice.lang; // Force lang code to match the voice to prevent silent errors
-      } else {
-        utterance.lang = 'en-US'; // Absolute safest fallback for all browsers/OS
+      } else if (!cleanText.match(/[\u0c80-\u0cff]/)) {
+        utterance.lang = 'en-US'; // Absolute safest fallback for English only
       }
     }
 

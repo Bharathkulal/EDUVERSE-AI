@@ -172,18 +172,24 @@ export const VoiceAssistantProvider = ({ children }) => {
       const voices = window.speechSynthesis.getVoices();
       let matchedVoice = null;
 
-      if (finalLanguage === 'kannada' || (finalLanguage === 'mixed' && translatedText.match(/[\u0c80-\u0cff]/))) {
-        matchedVoice = voices.find(v => v.lang.startsWith('kn') || v.name.includes('Kannada'));
-      }
+      const needsKannada = finalLanguage === 'kannada' || (finalLanguage === 'mixed' && (translatedText.match(/[\u0c80-\u0cff]/) || text.match(/[\u0c80-\u0cff]/)));
 
-      if (!matchedVoice) {
-        // Fallback to configured gender preference
+      if (needsKannada) {
+        matchedVoice = voices.find(v => v.lang.startsWith('kn') || v.name.toLowerCase().includes('kannada'));
+        if (matchedVoice) {
+          synthesisConfig.voiceURI = matchedVoice.voiceURI;
+        } else {
+          // If no Kannada voice exists locally, don't pass English voiceURI. Force language to kn-IN so browser uses its fallback.
+          synthesisConfig.voiceURI = null;
+          synthesisConfig.forceLanguage = 'kn-IN';
+        }
+      } else {
+        // Fallback to configured gender preference for English
         const genderWord = settingsRef.current.gender === 'male' ? 'Male' : 'Female';
         matchedVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes(genderWord) || v.name.includes('Zira') || v.name.includes('David')));
-      }
-
-      if (matchedVoice) {
-        synthesisConfig.voiceURI = matchedVoice.voiceURI;
+        if (matchedVoice) {
+          synthesisConfig.voiceURI = matchedVoice.voiceURI;
+        }
       }
     }
 
