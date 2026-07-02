@@ -198,7 +198,11 @@ export default function ITSuiteDashboard() {
       toast.error('Please restore this document from the recycle bin to edit.');
       return;
     }
-    navigate(`/it-suite/${doc.type}/${doc.id}`);
+    if (doc.type === 'pdf' || doc.type === 'photo-to-pdf') {
+      navigate(`/it-suite/photo-to-pdf?id=${doc.id}`);
+    } else {
+      navigate(`/it-suite/${doc.type}/${doc.id}`);
+    }
   };
 
   // Templates list

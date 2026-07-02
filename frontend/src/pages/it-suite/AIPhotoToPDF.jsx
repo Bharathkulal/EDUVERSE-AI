@@ -64,6 +64,47 @@ export default function AIPhotoToPDF() {
     fetchHistory();
   }, []);
 
+  // Load document by ID from query params if specified
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const docId = params.get('id');
+    if (docId) {
+      const loadDoc = async () => {
+        setIsProcessing(true);
+        setProcessStatus('Loading document configuration...');
+        try {
+          const res = await api.get(`/it-suite/documents/${docId}`);
+          const doc = res.data;
+          
+          let parsed = {};
+          try {
+            parsed = JSON.parse(doc.content);
+          } catch(e) {}
+
+          setMetadata({
+            title: doc.name.replace(/\.pdf$/i, ''),
+            author: doc.author || 'EduVerse AI User',
+            keywords: doc.tags || ''
+          });
+
+          if (parsed.ocr) {
+            setOcrOutputText(parsed.ocr);
+            setActiveTab('ocr');
+            toast.success('Extracted text loaded into OCR console!');
+          } else {
+            toast.success('Document loaded successfully!');
+          }
+        } catch (err) {
+          toast.error('Failed to retrieve document metadata from cloud storage.');
+        } finally {
+          setIsProcessing(false);
+          setProcessStatus('');
+        }
+      };
+      loadDoc();
+    }
+  }, []);
+
   // Listen to paste events
   useEffect(() => {
     const handlePaste = (e) => {
