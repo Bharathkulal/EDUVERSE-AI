@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -62,6 +62,20 @@ export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [calendarDate, setCalendarDate] = useState(new Date());
+
+  const navRef = useRef(null);
+
+  // Restore sidebar scroll position on navigation
+  useEffect(() => {
+    const savedScroll = sessionStorage.getItem('sidebar-scroll');
+    if (savedScroll && navRef.current) {
+      navRef.current.scrollTop = parseInt(savedScroll, 10);
+    }
+  }, [location.pathname]);
+
+  const handleSidebarScroll = (e) => {
+    sessionStorage.setItem('sidebar-scroll', e.currentTarget.scrollTop);
+  };
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -132,7 +146,11 @@ export default function Layout({ children }) {
             </div>
 
             {/* Navigation Links */}
-            <nav className="db-nav-list flex-1 overflow-y-auto pr-1 my-2 space-y-1 custom-sidebar-scroll">
+            <nav 
+              ref={navRef}
+              onScroll={handleSidebarScroll}
+              className="db-nav-list flex-1 overflow-y-auto pr-1 my-2 space-y-1 custom-sidebar-scroll"
+            >
               {navItems.map((item) => {
                 const isActive = item.path && (location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path + '/')));
 
