@@ -68,7 +68,7 @@ export default function TypewriterStep({ text, onComplete, isActive, speed = 1, 
   const renderText = showFullText ? text : displayedText;
 
   return (
-    <div className={`relative whitespace-pre-wrap ${isMath ? 'font-mono text-[15px] leading-relaxed text-emerald-900 bg-emerald-50/60 p-4 rounded-xl border border-emerald-200/60 shadow-sm' : 'text-slate-700 text-[15px] leading-relaxed'}`}>
+    <div className={`relative whitespace-pre-wrap ${isMath ? 'font-mono text-[15px] leading-relaxed text-emerald-800 dark:text-emerald-300 bg-emerald-50/40 dark:bg-emerald-950/20 p-4 rounded-xl border border-emerald-200/40 dark:border-emerald-900/30 shadow-sm' : 'text-[var(--db-text-main)] text-[15px] leading-relaxed'}`}>
       <span>{renderText}</span>
       {isActive && !isComplete && (
         <motion.span

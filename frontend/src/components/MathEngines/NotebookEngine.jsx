@@ -621,23 +621,23 @@ export default function NotebookEngine({
       if (playbackState === 'PLAYING' && !stepComplete) {
         handleTypingComplete();
       }
-    }, 1000);
+    }, getDuration(1000));
 
     return (
-      <div className="overflow-x-auto w-full border border-slate-200 rounded-xl bg-white shadow-sm mt-3">
+      <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
         <table className="w-full text-center border-collapse text-xs font-mono">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
+            <tr className="bg-[var(--db-card-bg-elevated)] border-b border-[var(--db-card-border)]">
               {cols.map((colHeader, idx) => (
-                <th key={idx} className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600" dangerouslySetInnerHTML={{ __html: colHeader }} />
+                <th key={idx} className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-[var(--db-text-secondary)]" dangerouslySetInnerHTML={{ __html: colHeader }} />
               ))}
             </tr>
           </thead>
           <tbody>
             {grid.map((row, rIdx) => (
-              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/10'} border-b border-slate-100 hover:bg-slate-50/50 transition`}>
+              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-[var(--db-card-bg)]' : 'bg-[var(--db-card-bg-elevated)]/40'} border-b border-[var(--db-card-border)]/50 hover:bg-[var(--db-card-bg-elevated)]/80 transition`}>
                 {row.map((val, cIdx) => (
-                  <td key={cIdx} className="py-1 px-3 border-r border-slate-200 font-semibold text-slate-700 h-8 min-w-[70px]">
+                  <td key={cIdx} className="py-1 px-3 border-r border-[var(--db-card-border)] font-semibold text-[var(--db-text-main)] h-8 min-w-[70px]">
                     {val}
                   </td>
                 ))}
@@ -651,27 +651,34 @@ export default function NotebookEngine({
 
   // ─── Bisection convergence table ─────────────────────────────────────────
   const renderBisGrid = (history) => {
+    // Call onComplete when table renders
+    setTimeout(() => {
+      if (playbackState === 'PLAYING' && !stepComplete) {
+        handleTypingComplete();
+      }
+    }, getDuration(1000));
+
     if (!history || history.length === 0) return null;
     return (
-      <div className="overflow-x-auto w-full border border-slate-200 rounded-xl bg-white shadow-sm mt-3">
+      <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
         <table className="w-full text-center border-collapse text-xs font-mono">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
+            <tr className="bg-[var(--db-card-bg-elevated)] border-b border-[var(--db-card-border)]">
               {['Iter', 'a', 'b', 'x = (a+b)/2', 'f(a)', 'f(x)', 'Sign Check'].map((h, i) => (
-                <th key={i} className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-600 whitespace-nowrap">{h}</th>
+                <th key={i} className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-[var(--db-text-secondary)] whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {history.map((row, rIdx) => (
-              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'} border-b border-slate-100 hover:bg-emerald-50/30 transition`}>
-                <td className="py-1.5 px-3 border-r border-slate-200 font-bold text-emerald-600">{row.iter}</td>
-                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-700">{row.a}</td>
-                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-700">{row.b}</td>
-                <td className="py-1.5 px-3 border-r border-slate-200 font-bold text-blue-600">{row.x}</td>
-                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-600">{row.fa}</td>
-                <td className="py-1.5 px-3 border-r border-slate-200 text-slate-600">{row.fx}</td>
-                <td className={`py-1.5 px-3 border-r border-slate-200 font-bold ${row.sign === 'Root!' ? 'text-emerald-600' : 'text-amber-600'}`}>{row.sign}</td>
+              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-[var(--db-card-bg)]' : 'bg-[var(--db-card-bg-elevated)]/40'} border-b border-[var(--db-card-border)]/50 hover:bg-[var(--db-card-bg-elevated)]/80 transition`}>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] font-bold text-emerald-500">{row.iter}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] text-[var(--db-text-secondary)]">{row.a}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] text-[var(--db-text-secondary)]">{row.b}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] font-bold text-blue-500">{row.x}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] text-[var(--db-text-secondary)]">{row.fa}</td>
+                <td className="py-1.5 px-3 border-r border-[var(--db-card-border)] text-[var(--db-text-secondary)]">{row.fx}</td>
+                <td className={`py-1.5 px-3 border-r border-[var(--db-card-border)] font-bold ${row.sign === 'Root!' ? 'text-emerald-500' : 'text-amber-500'}`}>{row.sign}</td>
               </tr>
             ))}
           </tbody>
@@ -741,13 +748,13 @@ export default function NotebookEngine({
 
               {/* Step content card */}
               {step.type === 'diffTable' ? (
-                <div className="bg-white p-6 rounded-2xl border-l-4 border-emerald-400 shadow-md">
-                  <span className="text-xs font-bold text-slate-500 font-sans">Constructed Difference Grid:</span>
+                <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-emerald-500 border-y border-r border-[var(--db-card-border)]/50 shadow-md">
+                  <span className="text-xs font-bold text-[var(--db-text-secondary)] font-sans">Constructed Difference Grid:</span>
                   {renderDiffGrid(step.xVals, step.yVals, step.diffs, step.operatorSymbol)}
                 </div>
               ) : step.type === 'bisTable' ? (
-                <div className="bg-white p-6 rounded-2xl border-l-4 border-emerald-400 shadow-md">
-                  <span className="text-xs font-bold text-slate-500 font-sans">Bisection Convergence iterations Table:</span>
+                <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-emerald-500 border-y border-r border-[var(--db-card-border)]/50 shadow-md">
+                  <span className="text-xs font-bold text-[var(--db-text-secondary)] font-sans">Bisection Convergence iterations Table:</span>
                   {renderBisGrid(step.history)}
                 </div>
               ) : step.type === 'result' ? (
@@ -765,7 +772,7 @@ export default function NotebookEngine({
                   </div>
                 </div>
               ) : step.type === 'header' ? (
-                <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-3">
+                <div className="bg-gradient-to-br from-[var(--db-card-bg-elevated)] to-[var(--db-card-bg)] p-6 rounded-2xl border border-[var(--db-card-border)] shadow-sm flex flex-col gap-3">
                   <TypewriterStep
                     text={step.content}
                     isActive={isCurrent && playbackState === 'PLAYING' && !stepComplete}
@@ -775,19 +782,19 @@ export default function NotebookEngine({
                     onComplete={handleTypingComplete}
                   />
                   {step.isNewton && (
-                    <div className="overflow-x-auto w-full border border-slate-200 rounded-xl bg-white shadow-sm mt-2">
+                    <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-2">
                       <table className="w-full text-center border-collapse text-xs font-sans">
                         <tbody>
-                          <tr className="border-b border-slate-200">
-                            <td className="py-2.5 px-3 bg-slate-50 border-r border-slate-200 font-bold text-slate-600 min-w-[120px] text-left">{step.xLabel}</td>
+                          <tr className="border-b border-[var(--db-card-border)]">
+                            <td className="py-2.5 px-3 bg-[var(--db-card-bg-elevated)] border-r border-[var(--db-card-border)] font-bold text-[var(--db-text-secondary)] min-w-[120px] text-left">{step.xLabel}</td>
                             {step.xVals.map((val, idx) => (
-                              <td key={idx} className="py-2.5 px-3 border-r border-slate-200 font-semibold text-slate-800">{val}</td>
+                              <td key={idx} className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-semibold text-[var(--db-text-main)]">{val}</td>
                             ))}
                           </tr>
                           <tr>
-                            <td className="py-2.5 px-3 bg-slate-50 border-r border-slate-200 font-bold text-slate-600 min-w-[120px] text-left">{step.yLabel}</td>
+                            <td className="py-2.5 px-3 bg-[var(--db-card-bg-elevated)] border-r border-[var(--db-card-border)] font-bold text-[var(--db-text-secondary)] min-w-[120px] text-left">{step.yLabel}</td>
                             {step.yVals.map((val, idx) => (
-                              <td key={idx} className="py-2.5 px-3 border-r border-slate-200 font-semibold text-slate-800">{val}</td>
+                              <td key={idx} className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-semibold text-[var(--db-text-main)]">{val}</td>
                             ))}
                           </tr>
                         </tbody>
@@ -796,7 +803,7 @@ export default function NotebookEngine({
                   )}
                 </div>
               ) : (
-                <div className="bg-white p-6 rounded-2xl border-l-4 border-emerald-400 shadow-md">
+                <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-emerald-500 border-y border-r border-[var(--db-card-border)]/50 shadow-md">
                   <TypewriterStep
                     text={step.content}
                     isActive={isCurrent && playbackState === 'PLAYING' && !stepComplete}

@@ -1322,7 +1322,7 @@ export default function CalculusNotebookEngine({
       if (playbackState === 'PLAYING' && !stepComplete) {
         handleTypingComplete();
       }
-    }, 1000);
+    }, getDuration(1000));
 
     return (
       <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
@@ -1375,7 +1375,7 @@ export default function CalculusNotebookEngine({
   const renderRfGrid = (history) => {
     setTimeout(() => {
       if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
-    }, 1000);
+    }, getDuration(1000));
     return (
       <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
         <table className="w-full text-center border-collapse text-xs font-mono">
@@ -1407,7 +1407,7 @@ export default function CalculusNotebookEngine({
   const renderIterGrid = (history) => {
     setTimeout(() => {
       if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
-    }, 1000);
+    }, getDuration(1000));
     return (
       <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
         <table className="w-full text-center border-collapse text-xs font-mono">
@@ -1435,7 +1435,7 @@ export default function CalculusNotebookEngine({
   const renderNrGrid = (history) => {
     setTimeout(() => {
       if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
-    }, 1000);
+    }, getDuration(1000));
     return (
       <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
         <table className="w-full text-center border-collapse text-xs font-mono">
@@ -1466,7 +1466,7 @@ export default function CalculusNotebookEngine({
   const renderLagrangeGrid = (points, targetX, terms, interpolatedValue) => {
     setTimeout(() => {
       if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
-    }, 1000);
+    }, getDuration(1000));
     return (
       <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
         <table className="w-full text-center border-collapse text-xs font-mono">
@@ -1502,7 +1502,7 @@ export default function CalculusNotebookEngine({
   const renderNewtonGenGrid = (x, py, n) => {
     setTimeout(() => {
       if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
-    }, 1000);
+    }, getDuration(1000));
 
     const headers = ['x', 'y = f(x)'];
     for (let i = 1; i < n; i++) {
@@ -1559,7 +1559,7 @@ export default function CalculusNotebookEngine({
       if (playbackState === 'PLAYING' && !stepComplete) {
         handleTypingComplete();
       }
-    }, 1000);
+    }, getDuration(1000));
 
     return (
       <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
@@ -1612,7 +1612,7 @@ export default function CalculusNotebookEngine({
   const renderFslGrid = (rows, sums, xLabel, yLabel) => {
     setTimeout(() => {
       if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
-    }, 1000);
+    }, getDuration(1000));
 
     return (
       <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
