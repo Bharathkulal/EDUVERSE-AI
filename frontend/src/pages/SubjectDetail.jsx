@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import CSharpHub from '../csharp/CSharpHub';
@@ -273,7 +273,10 @@ export default function SubjectDetail() {
   const [activeTopic, setActiveTopic] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeView, setActiveView] = useState('hub'); // 'hub', 'theory', 'practical'
+  const location = useLocation();
+  const [activeView, setActiveView] = useState(() => {
+    return location.state?.activeView || 'hub';
+  });
 
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 300], [0, 100]);
@@ -317,8 +320,8 @@ export default function SubjectDetail() {
 
   useEffect(() => {
     fetchSubject();
-    setActiveView('hub');
-  }, [id]);
+    setActiveView(location.state?.activeView || 'hub');
+  }, [id, location.state?.activeView]);
 
   const markComplete = async (topicId) => {
     try {

@@ -479,13 +479,13 @@ export default function CalculusVisualization() {
         {/* Header breadcrumb */}
         <header className="h-16 flex items-center justify-between px-8 relative z-20 bg-[var(--db-card-bg)]/30 border-b border-[var(--db-card-border)] backdrop-blur-sm">
           <div className="flex items-center">
-            <button onClick={() => navigate('/subjects/math-proto')} className="mr-4 p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-full transition">
+            <button onClick={() => navigate('/subjects/math-proto', { state: { activeView: 'practical' } })} className="mr-4 p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-full transition">
               <ArrowLeft className="w-5 h-5 text-[var(--db-text-main)]" />
             </button>
             <div className="flex items-center text-sm font-medium text-[var(--db-text-muted)] gap-2">
               <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span> <ChevronRight className="w-4 h-4" />
               <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects')}>Subjects</span> <ChevronRight className="w-4 h-4" />
-              <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects/math-proto')}>Mathematics</span> <ChevronRight className="w-4 h-4" />
+              <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects/math-proto', { state: { activeView: 'practical' } })}>Mathematics</span> <ChevronRight className="w-4 h-4" />
               <span className="text-emerald-500 font-bold">Calculus Simulator</span>
             </div>
           </div>
@@ -755,7 +755,7 @@ export default function CalculusVisualization() {
           <div className="flex items-center text-sm font-medium text-[var(--db-text-muted)] gap-2">
             <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span> <ChevronRight className="w-4 h-4" />
             <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects')}>Subjects</span> <ChevronRight className="w-4 h-4" />
-            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects/math-proto')}>Mathematics</span> <ChevronRight className="w-4 h-4" />
+            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects/math-proto', { state: { activeView: 'practical' } })}>Mathematics</span> <ChevronRight className="w-4 h-4" />
             <span className="text-emerald-500 font-bold">{selectedMethod}</span>
           </div>
         </div>
