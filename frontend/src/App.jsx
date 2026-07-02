@@ -101,33 +101,7 @@ export default function App() {
   const location = useLocation();
   const { startListening, toggleEnabled, isEnabled } = useVoiceAssistant();
 
-  // Double-tap anywhere on screen to toggle voice assistant ON/OFF
-  useEffect(() => {
-    let lastTap = 0;
-    const handleDoubleTap = (e) => {
-      const currentTime = new Date().getTime();
-      const tapLength = currentTime - lastTap;
-      if (tapLength < 300 && tapLength > 0) {
-        if (isEnabled) {
-          toggleEnabled();
-          toast.error("🎙️ Voice Assistant Turned OFF");
-        } else {
-          toggleEnabled();
-          toast.success("🎙️ Voice Assistant ON... Ask your doubt!");
-        }
-        e.preventDefault();
-      }
-      lastTap = currentTime;
-    };
 
-    window.addEventListener('touchend', handleDoubleTap, { passive: false });
-    window.addEventListener('click', handleDoubleTap);
-
-    return () => {
-      window.removeEventListener('touchend', handleDoubleTap);
-      window.removeEventListener('click', handleDoubleTap);
-    };
-  }, [isEnabled, toggleEnabled]);
 
   return (
     <>

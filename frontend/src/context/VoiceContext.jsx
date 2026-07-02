@@ -403,9 +403,9 @@ Provide a friendly, helpful, and concise response in 1 to 2 sentences. Include m
         setActiveState('idle');
         setSubtitle('');
         setIsListening(false);
-        toast.success('Voice Assistant Disabled', { id: 'voice-toast', icon: '📴' });
+        toast.error("🎙️ Voice Assistant Turned OFF", { id: 'voice-toast' });
       } else {
-        toast.success('Voice Assistant Enabled! Ask a question or say a command.', { id: 'voice-toast', icon: '🎙️' });
+        toast.success("🎙️ Voice Assistant ON... Ask your doubt!", { id: 'voice-toast' });
       }
       return nextState;
     });
