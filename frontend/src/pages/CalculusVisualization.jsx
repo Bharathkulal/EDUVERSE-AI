@@ -98,7 +98,6 @@ export default function CalculusVisualization() {
     { id: 'ng3', label: 'f(x)=sin(x): (0°,30°,60°,90°) → find f(45°)' },
   ];
 
-  // ─── Cards ────────────────────────────────────────────────────────────────
   const CARDS = [
     { 
       id: 'Gauss Seidel Method', 
@@ -111,7 +110,7 @@ export default function CalculusVisualization() {
       tags: ['Linear Systems', 'Successive', 'Iterative'],
       colorTheme: 'rose',
       btnClass: 'bg-rose-500 hover:bg-rose-600 text-white',
-      badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-400',
+      badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400',
       icon: '📐'
     },
     { 
@@ -125,7 +124,7 @@ export default function CalculusVisualization() {
       tags: ['Linear Systems', 'Simultaneous', 'Iterative'],
       colorTheme: 'purple',
       btnClass: 'bg-purple-600 hover:bg-purple-700 text-white',
-      badgeClass: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
+      badgeClass: 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400',
       icon: '🧩'
     },
     { 
@@ -139,7 +138,7 @@ export default function CalculusVisualization() {
       tags: ['Root Finding', 'False Position', 'Brackets'],
       colorTheme: 'violet',
       btnClass: 'bg-violet-600 hover:bg-violet-700 text-white',
-      badgeClass: 'bg-violet-500/10 border-violet-500/20 text-violet-400',
+      badgeClass: 'bg-violet-500/10 border-violet-500/20 text-violet-600 dark:text-violet-400',
       icon: '🌀'
     },
     { 
@@ -153,7 +152,7 @@ export default function CalculusVisualization() {
       tags: ['Root Finding', 'x = φ(x)', 'Convergence'],
       colorTheme: 'teal',
       btnClass: 'bg-teal-600 hover:bg-teal-700 text-white',
-      badgeClass: 'bg-teal-500/10 border-teal-500/20 text-teal-400',
+      badgeClass: 'bg-teal-500/10 border-teal-500/20 text-teal-650 dark:text-teal-400',
       icon: '📊'
     },
     { 
@@ -167,7 +166,7 @@ export default function CalculusVisualization() {
       tags: ['Root Finding', 'Tangent Lines', 'Quadratic'],
       colorTheme: 'amber',
       btnClass: 'bg-amber-500 hover:bg-amber-600 text-white',
-      badgeClass: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
+      badgeClass: 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400',
       icon: '📐'
     },
     { 
@@ -181,7 +180,7 @@ export default function CalculusVisualization() {
       tags: ['Interpolation', 'Polynomials', 'Known Pairs'],
       colorTheme: 'blue',
       btnClass: 'bg-blue-600 hover:bg-blue-700 text-white',
-      badgeClass: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+      badgeClass: 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400',
       icon: '📈'
     },
     { 
@@ -195,7 +194,7 @@ export default function CalculusVisualization() {
       tags: ['Interpolation', 'Divided Diff', 'Unequal spacing'],
       colorTheme: 'pink',
       btnClass: 'bg-pink-600 hover:bg-pink-700 text-white',
-      badgeClass: 'bg-pink-500/10 border-pink-500/20 text-pink-400',
+      badgeClass: 'bg-pink-500/10 border-pink-500/20 text-pink-600 dark:text-pink-400',
       icon: '🧪'
     },
     { 
@@ -209,7 +208,7 @@ export default function CalculusVisualization() {
       tags: ['Least Squares', 'Curve Fitting', 'y = a₀ + a₁x'],
       colorTheme: 'sky',
       btnClass: 'bg-sky-500 hover:bg-sky-600 text-white',
-      badgeClass: 'bg-sky-500/10 border-sky-500/20 text-sky-400',
+      badgeClass: 'bg-sky-500/10 border-sky-500/20 text-sky-600 dark:text-sky-400',
       icon: '📏'
     }
   ];
@@ -495,7 +494,7 @@ export default function CalculusVisualization() {
 
         <main className="max-w-7xl mx-auto w-full px-8 py-8 relative z-10">
           <div className="mb-10 text-left">
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-3 text-white">
+            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-3 text-[var(--db-text-main)]">
               CALCULUS SIMULATOR
             </h1>
             <p className="text-[var(--db-text-secondary)] text-lg mt-1">Select a calculus engine to solve limits, derivatives, and integrals live.</p>
@@ -522,24 +521,24 @@ export default function CalculusVisualization() {
                       <span className="text-xl">{card.icon}</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[9px] uppercase tracking-widest font-extrabold text-slate-400">
+                      <span className="text-[9px] uppercase tracking-widest font-extrabold text-[var(--db-text-muted)]">
                         METHOD {index + 1}
                       </span>
-                      <h3 className="text-base font-bold text-white mt-0.5 group-hover:text-emerald-400 transition-colors">
+                      <h3 className="text-base font-bold text-[var(--db-text-main)] mt-0.5 group-hover:text-emerald-500 transition-colors">
                         {card.title}
                       </h3>
                     </div>
                   </div>
 
                   {/* Description */}
-                  <p className="text-slate-400 text-xs leading-relaxed text-left line-clamp-2">
+                  <p className="text-[var(--db-text-secondary)] text-xs leading-relaxed text-left line-clamp-2">
                     {card.desc}
                   </p>
 
                   {/* Tag Pills */}
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {card.tags.map((tag, idx) => (
-                      <span key={idx} className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-700/50 bg-slate-800/40 text-slate-300">
+                      <span key={idx} className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-[var(--db-card-border)] bg-[var(--db-card-bg-elevated)] text-[var(--db-text-secondary)]">
                         {tag}
                       </span>
                     ))}
@@ -548,26 +547,26 @@ export default function CalculusVisualization() {
                   {/* Difficulty, Time, XP row */}
                   <div className="flex items-center gap-3 text-[11px] pt-1">
                     <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] border ${
-                      card.status === 'Beginner' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-                      card.status === 'Intermediate' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
-                      'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                      card.status === 'Beginner' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' :
+                      card.status === 'Intermediate' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400' :
+                      'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
                     }`}>
                       {card.status}
                     </span>
-                    <span className="text-slate-500">•</span>
-                    <span className="text-slate-400 font-medium font-mono">{card.time}</span>
-                    <span className="text-slate-500">•</span>
-                    <span className="text-emerald-400 font-bold font-mono">{card.xp}</span>
+                    <span className="text-[var(--db-text-muted)]">•</span>
+                    <span className="text-[var(--db-text-secondary)] font-medium font-mono">{card.time}</span>
+                    <span className="text-[var(--db-text-muted)]">•</span>
+                    <span className="text-emerald-555 dark:text-emerald-400 font-bold font-mono">{card.xp}</span>
                   </div>
                 </div>
 
                 {/* Progress bar section */}
                 <div className="mt-4 pt-3 border-t border-[var(--db-card-border)] space-y-1.5 text-left">
-                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                  <div className="flex items-center justify-between text-[10px] font-bold text-[var(--db-text-muted)]">
                     <span>Progress</span>
                     <span>{card.progress}%</span>
                   </div>
-                  <div className="w-full bg-slate-800/50 h-1.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-slate-200 dark:bg-slate-800/50 h-1.5 rounded-full overflow-hidden">
                     <div 
                       className={`h-full transition-all duration-500 ${
                         card.colorTheme === 'blue' ? 'bg-blue-500' :

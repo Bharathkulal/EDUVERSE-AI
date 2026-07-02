@@ -135,7 +135,7 @@ export default function MathVisualization() {
       tags: ['Root Finding', 'Interval Halving', 'f(a)·f(b) < 0'],
       colorTheme: 'blue',
       btnClass: 'bg-blue-600 hover:bg-blue-700 text-white',
-      badgeClass: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+      badgeClass: 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400',
       icon: '📐'
     },
     { 
@@ -149,7 +149,7 @@ export default function MathVisualization() {
       tags: ['Equal Intervals', 'Forward Diff', 'Backward Diff'],
       colorTheme: 'cyan',
       btnClass: 'bg-cyan-600 hover:bg-cyan-700 text-white',
-      badgeClass: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
+      badgeClass: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-600 dark:text-cyan-400',
       icon: '📈'
     },
     { 
@@ -163,7 +163,7 @@ export default function MathVisualization() {
       tags: ['First Derivative', 'Second Derivative', 'Table Diff'],
       colorTheme: 'emerald',
       btnClass: 'bg-emerald-600 hover:bg-emerald-700 text-white',
-      badgeClass: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+      badgeClass: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
       icon: '📊'
     },
     { 
@@ -177,7 +177,7 @@ export default function MathVisualization() {
       tags: ['Integration', 'Linear Segments', 'Area Approx'],
       colorTheme: 'violet',
       btnClass: 'bg-violet-600 hover:bg-violet-700 text-white',
-      badgeClass: 'bg-violet-500/10 border-violet-500/20 text-violet-400',
+      badgeClass: 'bg-violet-500/10 border-violet-500/20 text-violet-600 dark:text-violet-400',
       icon: '〰️'
     },
     { 
@@ -191,7 +191,7 @@ export default function MathVisualization() {
       tags: ['Integration', 'Quadratic', 'Even n'],
       colorTheme: 'amber',
       btnClass: 'bg-amber-500 hover:bg-amber-600 text-white',
-      badgeClass: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
+      badgeClass: 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400',
       icon: '📐'
     },
     { 
@@ -205,7 +205,7 @@ export default function MathVisualization() {
       tags: ['Integration', 'Cubic', 'Multiple of 3'],
       colorTheme: 'rose',
       btnClass: 'bg-rose-500 hover:bg-rose-600 text-white',
-      badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-400',
+      badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400',
       icon: '🌀'
     },
     { 
@@ -219,7 +219,7 @@ export default function MathVisualization() {
       tags: ['ODE Solver', '4th Order', 'Single Step'],
       colorTheme: 'sky',
       btnClass: 'bg-sky-500 hover:bg-sky-600 text-white',
-      badgeClass: 'bg-sky-500/10 border-sky-500/20 text-sky-400',
+      badgeClass: 'bg-sky-500/10 border-sky-500/20 text-sky-600 dark:text-sky-400',
       icon: '🧪'
     }
   ];
@@ -531,7 +531,7 @@ export default function MathVisualization() {
         <main className="max-w-7xl mx-auto w-full px-8 py-8 relative z-10">
           {/* Title Section */}
           <div className="mb-10 text-left">
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-3 text-white">
+            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-3 text-[var(--db-text-main)]">
               NUMERICAL METHODS LAB
             </h1>
             <p className="text-[var(--db-text-secondary)] text-lg mt-1">Select a mathematical runtime engine to execute your solution live.</p>
@@ -559,24 +559,24 @@ export default function MathVisualization() {
                       <span className="text-xl">{card.icon}</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[9px] uppercase tracking-widest font-extrabold text-slate-400">
+                      <span className="text-[9px] uppercase tracking-widest font-extrabold text-[var(--db-text-muted)]">
                         METHOD {index + 1}
                       </span>
-                      <h3 className="text-base font-bold text-white mt-0.5 group-hover:text-emerald-400 transition-colors">
+                      <h3 className="text-base font-bold text-[var(--db-text-main)] mt-0.5 group-hover:text-emerald-450 transition-colors">
                         {card.title}
                       </h3>
                     </div>
                   </div>
 
                   {/* Description */}
-                  <p className="text-slate-400 text-xs leading-relaxed text-left line-clamp-2">
+                  <p className="text-[var(--db-text-secondary)] text-xs leading-relaxed text-left line-clamp-2">
                     {card.desc}
                   </p>
 
                   {/* Tag Pills */}
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {card.tags.map((tag, idx) => (
-                      <span key={idx} className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-700/50 bg-slate-800/40 text-slate-300">
+                      <span key={idx} className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-[var(--db-card-border)] bg-[var(--db-card-bg-elevated)] text-[var(--db-text-secondary)]">
                         {tag}
                       </span>
                     ))}
@@ -585,26 +585,26 @@ export default function MathVisualization() {
                   {/* Difficulty, Time, XP row */}
                   <div className="flex items-center gap-3 text-[11px] pt-1">
                     <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] border ${
-                      card.status === 'Beginner' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-                      card.status === 'Intermediate' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
-                      'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                      card.status === 'Beginner' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' :
+                      card.status === 'Intermediate' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400' :
+                      'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
                     }`}>
                       {card.status}
                     </span>
-                    <span className="text-slate-500">•</span>
-                    <span className="text-slate-400 font-medium font-mono">{card.time}</span>
-                    <span className="text-slate-500">•</span>
-                    <span className="text-emerald-400 font-bold font-mono">{card.xp}</span>
+                    <span className="text-[var(--db-text-muted)]">•</span>
+                    <span className="text-[var(--db-text-secondary)] font-medium font-mono">{card.time}</span>
+                    <span className="text-[var(--db-text-muted)]">•</span>
+                    <span className="text-emerald-555 dark:text-emerald-400 font-bold font-mono">{card.xp}</span>
                   </div>
                 </div>
 
                 {/* Progress bar section */}
                 <div className="mt-4 pt-3 border-t border-[var(--db-card-border)] space-y-1.5 text-left">
-                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                  <div className="flex items-center justify-between text-[10px] font-bold text-[var(--db-text-muted)]">
                     <span>Progress</span>
                     <span>{card.progress}%</span>
                   </div>
-                  <div className="w-full bg-slate-800/50 h-1.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-slate-200 dark:bg-slate-800/50 h-1.5 rounded-full overflow-hidden">
                     <div 
                       className={`h-full transition-all duration-500 ${
                         card.colorTheme === 'blue' ? 'bg-blue-500' :
