@@ -177,16 +177,11 @@ export default function Layout({ children }) {
             </div>
 
             {/* Footer Profile Detail */}
-            <div className="db-sidebar-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', width: '100%' }}>
+            <div className="db-sidebar-footer" style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
               <div className="flex items-center gap-2 text-[var(--db-text-muted)] text-[11px] font-bold leading-normal pr-2">
                 <Mic className="w-4 h-4 text-purple-500 animate-pulse flex-shrink-0" />
                 <span>Double tap on screen for Voice Agent</span>
               </div>
-              <button onClick={handleLogout} className="db-settings-btn" title="Sign Out">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
             </div>
           </div>
         </div>
