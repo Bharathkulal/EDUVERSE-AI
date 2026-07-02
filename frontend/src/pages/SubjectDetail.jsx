@@ -644,7 +644,9 @@ export default function SubjectDetail() {
 
     if (activeView === 'practical') {
       return (
-        <div className="relative w-full h-full min-h-screen overflow-y-auto bg-[#070313] pb-20">
+        <div className={`relative w-full h-full min-h-screen overflow-y-auto pb-20 transition-colors ${
+          isDark ? 'bg-[#070313]' : 'bg-[#F8FAFC]'
+        }`}>
           <button 
             onClick={() => setActiveView('hub')}
             className={`absolute top-4 left-4 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
@@ -659,10 +661,10 @@ export default function SubjectDetail() {
           
           <div className="pt-20 w-full flex flex-col px-6">
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <h2 className={`text-xl font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-850'}`}>
                 🔮 Integrated 3D TechVerse Sandbox
               </h2>
-              <p className="text-xs text-slate-400 font-medium">
+              <p className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                 Inspect physical components, CPU register flow, and trace custom memory architectures interactively.
               </p>
             </div>

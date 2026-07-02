@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../context/ThemeContext';
 import { 
   ArrowLeft, Play, Pause, SkipForward, RotateCcw, 
   BookOpen, HelpCircle, CheckCircle, ChevronDown, 
@@ -196,6 +197,7 @@ const COMPUTER_ARCH_NOTES = `📘 COMPUTER ARCHITECTURE — COMPLETE STUDY NOTES
 
 export default function FocVisualization() {
   const navigate = useNavigate();
+  const { isDarkMode: isDark } = useTheme();
   
   // App states
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -660,7 +662,7 @@ export default function FocVisualization() {
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] w-full overflow-hidden bg-[#FAFAFA] text-black flex flex-col font-sans select-none relative foc-dark-theme">
+    <div className={`h-[calc(100vh-64px)] w-full overflow-hidden bg-[#FAFAFA] text-black flex flex-col font-sans select-none relative ${isDark ? 'foc-dark-theme' : ''}`}>
       <style>{`
         .foc-dark-theme {
           background-color: #070313 !important;

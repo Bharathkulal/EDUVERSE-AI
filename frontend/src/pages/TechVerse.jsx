@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { MODELS_DATA, getSuggestions, resolveModelKey, TECH_COLORS } from '../data/techverseModels';
+import { useTheme } from '../context/ThemeContext';
 
 // ============================================================================
 // 3D PROCEDURAL GEOMETRY GENERATORS
