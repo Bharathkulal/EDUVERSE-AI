@@ -5,37 +5,27 @@ const { decrypt } = require('../utils/crypto');
 
 // Helper to decrypt keys securely
 const getProviderConfig = async (providerName) => {
+  const envMap = {
+    gemini: 'GEMINI_API_KEY',
+    openrouter: 'OPENROUTER_API_KEY',
+    groq: 'GROQ_API_KEY',
+    together: 'TOGETHER_API_KEY',
+    deepgram: 'DEEPGRAM_API_KEY',
+    elevenlabs: 'ELEVENLABS_API_KEY',
+    assemblyai: 'ASSEMBLYAI_API_KEY',
+    azure_speech: 'AZURE_SPEECH_KEY',
+    openai: 'OPENAI_API_KEY',
+    anthropic: 'ANTHROPIC_API_KEY'
+  };
+  const envVar = envMap[providerName];
+  const key = envVar ? process.env[envVar] || '' : '';
+
   const result = await db.query(
-    'SELECT api_key, model_name, priority, disabled, status FROM api_configurations WHERE provider = $1',
+    'SELECT model_name, priority, disabled FROM api_configurations WHERE provider = $1',
     [providerName]
   );
   if (result.rows.length > 0) {
     const row = result.rows[0];
-    let key = '';
-    if (row.api_key) {
-      try {
-        key = decrypt(row.api_key);
-      } catch (err) {
-        console.error(`Failed to decrypt key for ${providerName}:`, err.message);
-      }
-    }
-    // Env fallback if empty in DB
-    if (!key) {
-      const envMap = {
-        gemini: 'GEMINI_API_KEY',
-        openrouter: 'OPENROUTER_API_KEY',
-        groq: 'GROQ_API_KEY',
-        together: 'TOGETHER_API_KEY',
-        deepgram: 'DEEPGRAM_API_KEY',
-        elevenlabs: 'ELEVENLABS_API_KEY',
-        assemblyai: 'ASSEMBLYAI_API_KEY',
-        azure_speech: 'AZURE_SPEECH_KEY',
-        openai: 'OPENAI_API_KEY',
-        anthropic: 'ANTHROPIC_API_KEY'
-      };
-      const envVar = envMap[providerName];
-      key = envVar ? process.env[envVar] || '' : '';
-    }
     return {
       provider: providerName,
       key,
@@ -44,7 +34,13 @@ const getProviderConfig = async (providerName) => {
       priority: row.priority
     };
   }
-  return null;
+  return {
+    provider: providerName,
+    key,
+    modelName: '',
+    disabled: false,
+    priority: 1
+  };
 };
 
 // Fetch active providers ordered by priority

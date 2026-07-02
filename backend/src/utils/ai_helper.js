@@ -17,21 +17,14 @@ const generateContentWithFailover = async (prompt, enableSearch = false) => {
   
   // Decrypt saved DB keys
   for (const row of result.rows) {
-    let key = '';
-    if (row.api_key) {
-      key = decrypt(row.api_key);
-    }
-    // Fallback to env key if not configured in DB
-    if (!key) {
-      const envMap = {
-        gemini: 'GEMINI_API_KEY',
-        openrouter: 'OPENROUTER_API_KEY',
-        groq: 'GROQ_API_KEY',
-        together: 'TOGETHER_API_KEY',
-      };
-      const envVar = envMap[row.provider];
-      key = envVar ? process.env[envVar] || '' : '';
-    }
+    const envMap = {
+      gemini: 'GEMINI_API_KEY',
+      openrouter: 'OPENROUTER_API_KEY',
+      groq: 'GROQ_API_KEY',
+      together: 'TOGETHER_API_KEY',
+    };
+    const envVar = envMap[row.provider];
+    const key = envVar ? process.env[envVar] || '' : '';
     
     if (key) {
       providers.push({ provider: row.provider, key });

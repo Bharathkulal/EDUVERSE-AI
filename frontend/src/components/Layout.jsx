@@ -35,7 +35,6 @@ const adminNav = [
   { path: '/admin/dataset', label: 'Dataset', icon: '📁' },
   { path: '/admin/ml', label: 'ML Training', icon: '⚙️' },
   { path: '/question-bank', label: 'Question Bank', icon: '❓' },
-  { path: '/admin/api-settings', label: 'API Settings', icon: '🔑' },
   { path: '/admin/logs', label: 'Logs', icon: '📋' },
   { path: '/admin/analytics', label: 'Analytics', icon: '📈' },
   { path: '/admin/alerts', label: 'Alerts', icon: '🚨' },
@@ -49,7 +48,7 @@ const TOP_LEVEL_PATHS = [
   '/progress', '/certificates', '/study-report', '/ml-analytics', '/ai-profile', '/question-bank',
   '/voice-assistant', '/settings', '/community', '/career-hub', '/it-suite', '/techverse', '/chat-learn',
   '/admin', '/admin/students', '/admin/content', '/admin/quizzes',
-  '/admin/dataset', '/admin/ml', '/admin/questions', '/admin/api-settings',
+  '/admin/dataset', '/admin/ml', '/admin/questions',
   '/admin/logs', '/admin/analytics', '/admin/alerts',
 ];
 

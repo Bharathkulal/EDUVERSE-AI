@@ -33,16 +33,6 @@ const upload = multer({
 
 // Helper: Securely fetch Gemini API key for multimodal requests
 const getGeminiKey = async () => {
-  const result = await db.query(
-    "SELECT api_key FROM api_configurations WHERE provider = 'gemini' AND disabled = false"
-  );
-  if (result.rows.length > 0 && result.rows[0].api_key) {
-    try {
-      return decrypt(result.rows[0].api_key);
-    } catch (e) {
-      console.error('Error decrypting Gemini API key:', e.message);
-    }
-  }
   return process.env.GEMINI_API_KEY || null;
 };
 
