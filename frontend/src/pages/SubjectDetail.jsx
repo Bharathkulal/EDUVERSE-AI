@@ -7,8 +7,8 @@ import DBMSHub from '../dbms/DBMSHub';
 import DBMSLab from '../components/DBMSLab';
 import DSALab from '../components/DSALab';
 import WebDevLab from '../components/WebDevLab';
-import OnlineCompiler from '../components/OnlineCompiler';
 import PythonCoursePage from '../python/PythonCoursePage';
+import PythonPracticalLab from '../python/PythonPracticalLab';
 import JavaHub from '../advanced-java/JavaHub';
 import CoreJavaHub from '../core-java/CoreJavaHub';
 import WebDevHub from '../web-dev/WebDevHub';
@@ -225,70 +225,44 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
         </motion.div>
 
         {/* RIGHT CARD: PRACTICAL LAB */}
-        {subjectName !== 'Python' ? (
-          <motion.div
-            whileHover={{ y: -8, scale: 1.02 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-            className="relative group cursor-pointer p-[1px] rounded-3xl overflow-hidden"
-            onClick={() => onSelectView('practical')}
-          >
-            <div className={`absolute inset-0 bg-gradient-to-b ${meta.accentTo}/40 to-transparent opacity-50 group-hover:opacity-100 transition duration-300 pointer-events-none`} />
-            <div className={`relative p-8 rounded-3.5xl flex flex-col justify-between h-full border min-h-[360px] ${
-              isDark ? 'bg-[#120e2a]/90 border-white/5' : 'bg-white border-slate-200 shadow-md group-hover:shadow-lg transition-shadow'
-            }`}>
-              <div className="space-y-6 text-left">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl ${
-                  isDark ? 'bg-purple-500/10 border border-purple-500/20 text-purple-400' : 'bg-purple-50 border border-purple-100 text-purple-600'
-                }`}>
-                  💻
-                </div>
-                <div>
-                  <h2 className={`text-2xl font-black group-hover:text-purple-500 transition ${isDark ? 'text-white' : 'text-slate-800'}`}>Practical Lab</h2>
-                  <p className={`text-xs mt-2 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                    {meta.labDesc}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2 pt-2">
-                  {meta.labPills.map((feat, idx) => (
-                    <span key={idx} className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
-                      isDark ? 'bg-purple-500/10 border border-purple-500/20 text-purple-300' : 'bg-purple-50 border border-purple-100 text-purple-600'
-                    }`}>
-                      {feat}
-                    </span>
-                  ))}
-                </div>
+        <motion.div
+          whileHover={{ y: -8, scale: 1.02 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+          className="relative group cursor-pointer p-[1px] rounded-3xl overflow-hidden"
+          onClick={() => onSelectView('practical')}
+        >
+          <div className={`absolute inset-0 bg-gradient-to-b ${meta.accentTo}/40 to-transparent opacity-50 group-hover:opacity-100 transition duration-300 pointer-events-none`} />
+          <div className={`relative p-8 rounded-3.5xl flex flex-col justify-between h-full border min-h-[360px] ${
+            isDark ? 'bg-[#120e2a]/90 border-white/5' : 'bg-white border-slate-200 shadow-md group-hover:shadow-lg transition-shadow'
+          }`}>
+            <div className="space-y-6 text-left">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl ${
+                isDark ? 'bg-purple-500/10 border border-purple-500/20 text-purple-400' : 'bg-purple-50 border border-purple-100 text-purple-600'
+              }`}>
+                💻
               </div>
-
-              <button className="w-full py-3 bg-purple-600 hover:bg-purple-750 text-white text-xs font-bold rounded-xl transition duration-300 mt-8 flex items-center justify-center gap-2 group-hover:gap-3">
-                Enter Practical Lab <ArrowRight size={14} />
-              </button>
-            </div>
-          </motion.div>
-        ) : (
-          <div className="relative p-[1px] rounded-3xl overflow-hidden opacity-50 cursor-not-allowed">
-            <div className={`relative p-8 rounded-3.5xl flex flex-col justify-between h-full border min-h-[360px] ${
-              isDark ? 'bg-[#120e2a]/90 border-white/5' : 'bg-white border-slate-200 shadow-md'
-            }`}>
-              <div className="space-y-6 text-left">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl ${
-                  isDark ? 'bg-purple-500/10 border border-purple-500/20 text-purple-400' : 'bg-purple-50 border border-purple-100 text-purple-600'
-                }`}>
-                  💻
-                </div>
-                <div>
-                  <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>Practical Lab</h2>
-                  <p className={`text-xs mt-2 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                    Practical compiler sandbox is disabled for this subject.
-                  </p>
-                </div>
+              <div>
+                <h2 className={`text-2xl font-black group-hover:text-purple-500 transition ${isDark ? 'text-white' : 'text-slate-800'}`}>Practical Lab</h2>
+                <p className={`text-xs mt-2 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                  {meta.labDesc}
+                </p>
               </div>
-
-              <button disabled className="w-full py-3 bg-slate-500 text-white text-xs font-bold rounded-xl transition duration-300 mt-8 flex items-center justify-center gap-2 cursor-not-allowed">
-                Lab Disabled
-              </button>
+              <div className="flex flex-wrap gap-2 pt-2">
+                {meta.labPills.map((feat, idx) => (
+                  <span key={idx} className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
+                    isDark ? 'bg-purple-500/10 border border-purple-500/20 text-purple-300' : 'bg-purple-50 border border-purple-100 text-purple-600'
+                  }`}>
+                    {feat}
+                  </span>
+                ))}
+              </div>
             </div>
+
+            <button className="w-full py-3 bg-purple-600 hover:bg-purple-750 text-white text-xs font-bold rounded-xl transition duration-300 mt-8 flex items-center justify-center gap-2 group-hover:gap-3">
+              Enter Practical Lab <ArrowRight size={14} />
+            </button>
           </div>
-        )}
+        </motion.div>
 
       </div>
     </div>
@@ -490,7 +464,9 @@ export default function SubjectDetail() {
       );
     }
 
-
+    if (activeView === 'practical') {
+      return <PythonPracticalLab onBack={() => setActiveView('hub')} />;
+    }
   }
 
   // Web Development gets the interactive premium platform
