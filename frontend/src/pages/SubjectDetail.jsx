@@ -11,6 +11,8 @@ import WebDevLab from '../components/WebDevLab';
 import OnlineCompiler from '../components/OnlineCompiler';
 import PythonCoursePage from '../python/PythonCoursePage';
 import JavaHub from '../advanced-java/JavaHub';
+import CoreJavaHub from '../core-java/CoreJavaHub';
+import WebDevHub from '../web-dev/WebDevHub';
 import FocVisualization from './FocVisualization';
 import TechVerse from './TechVerse';
 import { motion, useScroll, useTransform } from 'framer-motion';
@@ -487,42 +489,32 @@ export default function SubjectDetail() {
     }
   }
 
-  // Web Development gets the interactive lab experience
+  // Web Development gets the interactive premium platform
   if (subject.subject_name === 'Web Development') {
-    if (activeView === 'hub') {
-      return (
-        <SubjectHub
-          subjectName="Web Development"
-          description={subject.description}
-          isDark={isDark}
-          onSelectView={setActiveView}
-        />
-      );
-    }
-
-    if (activeView === 'theory') {
-      return renderTheoryTopics();
-    }
-
-    if (activeView === 'practical') {
-      return (
-        <div className="relative">
-          <button 
-            onClick={() => setActiveView('hub')}
-            className={`absolute top-4 left-4 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
-              isDark 
-                ? 'bg-[#120e2a] hover:bg-[#1a143b] text-white border-purple-500/20' 
-                : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-sm'
-            }`}
-          >
-            ← Back to Hub
-          </button>
-          <div className="pt-16">
-            <WebDevLab />
+    return (
+      <div>
+        {isCompleted && (
+          <div className="mb-6 p-6 rounded-2xl bg-gradient-to-r from-blue-500/20 via-indigo-600/10 to-transparent border border-blue-500/30 backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg shadow-blue-900/10 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30 text-blue-400">
+                <span className="text-2xl">🏆</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-blue-200">Congratulations! Subject Completed</h3>
+                <p className="text-sm text-slate-300">You have successfully mastered all topics in this subject. Your official certificate is ready!</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => navigate('/certificates')}
+              className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-750 text-slate-900 font-bold rounded-xl transition duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-blue-500/20 whitespace-nowrap text-sm flex items-center gap-2"
+            >
+              🎓 Claim Certificate
+            </button>
           </div>
-        </div>
-      );
-    }
+        )}
+        <WebDevHub />
+      </div>
+    );
   }
 
   // DBMS gets the premium AI-powered learning platform
@@ -581,68 +573,32 @@ export default function SubjectDetail() {
     );
   }
 
-  // Core Java gets the interactive lab experience
+  // Core Java gets the interactive premium platform
   if (subject.subject_name === 'Java') {
-    if (activeView === 'hub') {
-      return (
-        <div>
-          {isCompleted && (
-            <div className="mb-6 p-6 rounded-2xl bg-gradient-to-r from-amber-500/20 via-orange-600/10 to-transparent border border-amber-500/30 backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg shadow-amber-900/10 text-white">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-500/30 text-amber-400">
-                  <span className="text-2xl">🏆</span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-amber-200">Congratulations! Subject Completed</h3>
-                  <p className="text-sm text-slate-300">You have successfully mastered all topics in this subject. Your official certificate is ready!</p>
-                </div>
+    return (
+      <div>
+        {isCompleted && (
+          <div className="mb-6 p-6 rounded-2xl bg-gradient-to-r from-amber-500/20 via-orange-600/10 to-transparent border border-amber-500/30 backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg shadow-amber-900/10 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-500/30 text-amber-400">
+                <span className="text-2xl">🏆</span>
               </div>
-              <button 
-                onClick={() => navigate('/certificates')}
-                className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-900 font-bold rounded-xl transition duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-amber-500/20 whitespace-nowrap text-sm flex items-center gap-2"
-              >
-                🎓 Claim Certificate
-              </button>
+              <div>
+                <h3 className="text-lg font-bold text-amber-200">Congratulations! Subject Completed</h3>
+                <p className="text-sm text-slate-300">You have successfully mastered all topics in this subject. Your official certificate is ready!</p>
+              </div>
             </div>
-          )}
-          <SubjectHub
-            subjectName="Java"
-            description={subject.description}
-            isDark={isDark}
-            onSelectView={setActiveView}
-          />
-        </div>
-      );
-    }
-
-    if (activeView === 'theory') {
-      return renderTheoryTopics();
-    }
-
-    if (activeView === 'practical') {
-      return (
-        <div className="relative">
-          <button 
-            onClick={() => setActiveView('hub')}
-            className={`absolute top-4 left-4 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
-              isDark 
-                ? 'bg-[#120e2a] hover:bg-[#1a143b] text-white border-purple-500/20' 
-                : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-sm'
-            }`}
-          >
-            ← Back to Hub
-          </button>
-          <div className="pt-16">
-            <JavaLab subjectName={subject.subject_name} />
-            <OnlineCompiler
-              language="java"
-              title={`${subject.subject_name} Online Compiler`}
-              subtitle="Write, compile, and run Java programs directly in your browser."
-            />
+            <button 
+              onClick={() => navigate('/certificates')}
+              className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-900 font-bold rounded-xl transition duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-amber-500/20 whitespace-nowrap text-sm flex items-center gap-2"
+            >
+              🎓 Claim Certificate
+            </button>
           </div>
-        </div>
-      );
-    }
+        )}
+        <CoreJavaHub />
+      </div>
+    );
   }
 
   // C# gets the interactive lab experience

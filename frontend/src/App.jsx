@@ -46,6 +46,10 @@ const CareerHub = lazy(() => import('./pages/CareerHub'));
 const PythonLessonPage = lazy(() => import('./python/PythonLessonPage'));
 // Advanced Java AI Learning Platform
 const JavaLessonPage = lazy(() => import('./advanced-java/JavaLessonPage'));
+// Core Java AI Learning Platform
+const CoreJavaLessonPage = lazy(() => import('./core-java/CoreJavaLessonPage'));
+// Web Dev AI Learning Platform
+const WebDevLessonPage = lazy(() => import('./web-dev/WebDevLessonPage'));
 
 // IT Suite pages
 const ITSuiteDashboard = lazy(() => import('./pages/it-suite/ITSuiteDashboard'));
@@ -161,6 +165,12 @@ export default function App() {
 
             {/* Python AI Learning Platform */}
             <Route path="/python/course/:lessonSlug" element={<ProtectedRoute><Layout><PythonLessonPage /></Layout></ProtectedRoute>} />
+
+            {/* Core Java AI Learning Platform */}
+            <Route path="/core-java/course/:lessonSlug" element={<ProtectedRoute><Layout><CoreJavaLessonPage /></Layout></ProtectedRoute>} />
+
+            {/* Web Dev AI Learning Platform */}
+            <Route path="/web-dev/course/:lessonSlug" element={<ProtectedRoute><Layout><WebDevLessonPage /></Layout></ProtectedRoute>} />
 
             {/* Advanced Java AI Learning Platform */}
             <Route path="/advanced-java/course/:lessonSlug" element={<ProtectedRoute><Layout><JavaLessonPage /></Layout></ProtectedRoute>} />
