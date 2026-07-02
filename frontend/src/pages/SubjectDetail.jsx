@@ -39,10 +39,10 @@ const SUBJECT_HUB_METADATA = {
     level: 'Level 2 — Explorer',
     xp: '700 XP',
     completion: 25,
-    theoryDesc: 'Study JVM architecture, OOP principles, data types, control flow, collections, and exceptions.',
-    theoryPills: ['JVM Theory', 'OOP Pillars', 'Java API Docs', 'Quizzes', 'Self-Assessment'],
-    labDesc: 'Practice Java programming, implement custom classes, and run unit test logic in the lab.',
-    labPills: ['Java 15 Compiler', 'Interactive Workspace', 'Syntax Highlighter', 'Unit Testers', 'Input Terminal']
+    theoryDesc: 'Learn Core Java programming: variables, data types, Java operations (arithmetic, logical, bitwise), control flow, methods, arrays, OOP, exceptions, and collections.',
+    theoryPills: ['Java Operations', 'Variables & Data Types', 'Control Flow', 'OOP Pillars', 'Exceptions', 'Collections Framework', 'File Handling'],
+    labDesc: 'Practice Core Java operations, compile code, build classes, execute loops, and catch exceptions in the interactive lab.',
+    labPills: ['Java Operations Compiler', 'Operators Sandbox', 'OOP Constructor Labs', 'Exception Handlers', 'Collections Tester', 'Interactive Console']
   },
   'DBMS': {
     icon: '🗄️',
@@ -585,12 +585,33 @@ export default function SubjectDetail() {
   if (subject.subject_name === 'Java') {
     if (activeView === 'hub') {
       return (
-        <SubjectHub
-          subjectName="Java"
-          description={subject.description}
-          isDark={isDark}
-          onSelectView={setActiveView}
-        />
+        <div>
+          {isCompleted && (
+            <div className="mb-6 p-6 rounded-2xl bg-gradient-to-r from-amber-500/20 via-orange-600/10 to-transparent border border-amber-500/30 backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg shadow-amber-900/10 text-white">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-500/30 text-amber-400">
+                  <span className="text-2xl">🏆</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-amber-200">Congratulations! Subject Completed</h3>
+                  <p className="text-sm text-slate-300">You have successfully mastered all topics in this subject. Your official certificate is ready!</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => navigate('/certificates')}
+                className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-900 font-bold rounded-xl transition duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-amber-500/20 whitespace-nowrap text-sm flex items-center gap-2"
+              >
+                🎓 Claim Certificate
+              </button>
+            </div>
+          )}
+          <SubjectHub
+            subjectName="Java"
+            description={subject.description}
+            isDark={isDark}
+            onSelectView={setActiveView}
+          />
+        </div>
       );
     }
 
