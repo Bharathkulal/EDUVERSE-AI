@@ -493,10 +493,19 @@ export default function CalculusVisualization() {
         </header>
 
         <main className="max-w-7xl mx-auto w-full px-8 py-8 relative z-10">
-          <div className="mb-10 text-left">
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-3 text-[var(--db-text-main)]">
-              CALCULUS SIMULATOR
-            </h1>
+          <div className="mb-10 text-left flex flex-col gap-2">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => navigate('/subjects/math-proto', { state: { activeView: 'practical' } })}
+                className="p-3 bg-[var(--db-card-bg)] hover:bg-[var(--db-btn-secondary-hover)] border border-[var(--db-card-border)] rounded-2xl transition shadow-sm text-[var(--db-text-main)] flex items-center justify-center"
+                title="Back to Mathematics Lab"
+              >
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+              <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-[var(--db-text-main)]">
+                CALCULUS SIMULATOR
+              </h1>
+            </div>
             <p className="text-[var(--db-text-secondary)] text-lg mt-1">Select a calculus engine to solve limits, derivatives, and integrals live.</p>
           </div>
 
