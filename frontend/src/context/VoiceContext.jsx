@@ -101,6 +101,7 @@ export const VoiceAssistantProvider = ({ children }) => {
   const isEnabledRef = useRef(isEnabled);
   const settingsRef = useRef(settings);
   const isMutedRef = useRef(isMuted);
+  const lastToggleTimeRef = useRef(0);
 
   // Sync refs to avoid dependency re-renders in callbacks
   useEffect(() => { isEnabledRef.current = isEnabled; }, [isEnabled]);
@@ -387,6 +388,12 @@ Provide a friendly, helpful, and concise response in 1 to 2 sentences. Include m
   }, []);
 
   const toggleEnabled = useCallback(() => {
+    const now = Date.now();
+    if (now - lastToggleTimeRef.current < 500) {
+      return;
+    }
+    lastToggleTimeRef.current = now;
+
     setIsEnabled((prev) => {
       const nextState = !prev;
       if (!nextState) {
@@ -468,12 +475,10 @@ Provide a friendly, helpful, and concise response in 1 to 2 sentences. Include m
       toggleEnabled();
     };
 
-    document.addEventListener('click', handleDoubleTap);
     document.addEventListener('touchend', handleDoubleTap);
     document.addEventListener('dblclick', handleDblClick);
 
     return () => {
-      document.removeEventListener('click', handleDoubleTap);
       document.removeEventListener('touchend', handleDoubleTap);
       document.removeEventListener('dblclick', handleDblClick);
     };
