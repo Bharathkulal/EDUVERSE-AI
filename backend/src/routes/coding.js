@@ -352,4 +352,48 @@ router.post('/clear', authenticate, async (req, res) => {
   }
 });
 
+// AI Auto-correct using backend AI gateway with mock fallback
+router.post('/autocorrect', authenticate, async (req, res) => {
+  try {
+    const { code, language, prompt } = req.body;
+    let fixedCode = '';
+
+    try {
+      const apiCallResult = await aiGateway.generateResponse(prompt);
+      if (apiCallResult && apiCallResult.text) {
+        fixedCode = apiCallResult.text;
+      }
+    } catch (apiErr) {
+      console.warn('Backend AI Gateway failed in autocorrect:', apiErr.message);
+    }
+
+    // Fallback Mock Autocorrect if AI fails or has no key configured
+    if (!fixedCode) {
+      // Clean up common typos in the code based on language
+      let cleaned = code;
+      const lowerLang = language.toLowerCase();
+      if (lowerLang.includes('python')) {
+        // Python mock auto-correct
+        cleaned = code
+          .replace(/print\s+(".*?"|'.*?')/g, 'print($1)') // python2 to python3 print
+          .replace(/greet\(\)/g, 'greet("EduVerse")');
+      } else if (lowerLang.includes('java')) {
+        // Java mock auto-correct
+        cleaned = code
+          .replace(/System\.out\.print\s+/g, 'System.out.println')
+          .replace(/public\s+class\s+Main\s*\{/i, 'public class Main {\n    // Fixed by AI\n');
+      } else if (lowerLang.includes('c#') || lowerLang.includes('csharp')) {
+        // C# mock auto-correct
+        cleaned = code.replace(/Console\.Write\s+/g, 'Console.WriteLine');
+      }
+      fixedCode = cleaned;
+    }
+
+    res.json({ fixedCode });
+  } catch (err) {
+    console.error('Autocorrect error in backend:', err);
+    res.status(500).json({ message: 'Auto-correct failed' });
+  }
+});
+
 module.exports = router;

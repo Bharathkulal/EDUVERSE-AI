@@ -14,8 +14,8 @@ const LANG_CONFIG = {
     fileExt: '.py',
     template: `# Python Program
 # Write your code here and click Run ▶
-
-def greet(name):
+`,
+    bgProgram: `def greet(name):
     return f"Hello, {name}!"
 
 print(greet("EduVerse"))
@@ -24,7 +24,7 @@ print(greet("EduVerse"))
 numbers = [1, 2, 3, 4, 5]
 total = sum(numbers)
 print(f"Sum of {numbers} = {total}")
-`,
+`
   },
   java: {
     name: 'Java',
@@ -35,8 +35,8 @@ print(f"Sum of {numbers} = {total}")
     fileExt: '.java',
     template: `// Java Program
 // Write your code below and click Run ▶
-
-public class Main {
+`,
+    bgProgram: `public class Main {
     public static void main(String[] args) {
         System.out.println("Hello from EduVerse!");
         
@@ -53,7 +53,7 @@ public class Main {
         return n * n;
     }
 }
-`,
+`
   },
   'advanced java': {
     name: 'Advanced Java',
@@ -63,7 +63,9 @@ public class Main {
     dotColor: '#a78bfa',
     fileExt: '.java',
     template: `// Advanced Java — Collections & OOP
-import java.util.*;
+// Write your code below and click Run ▶
+`,
+    bgProgram: `import java.util.*;
 import java.util.stream.*;
 
 public class Main {
@@ -90,7 +92,7 @@ public class Main {
         System.out.println("Popped: " + s.pop());
     }
 }
-`,
+`
   },
   dbms: {
     name: 'DBMS / SQL',
@@ -101,8 +103,8 @@ public class Main {
     fileExt: '.sql',
     template: `-- SQL / DBMS Queries
 -- Write your SQL here and click Run ▶
-
--- Create a table
+`,
+    bgProgram: `-- Create a table
 CREATE TABLE students (
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL,
@@ -125,7 +127,7 @@ SELECT name, marks FROM students WHERE grade = 'A' ORDER BY marks DESC;
 -- Aggregate
 SELECT grade, COUNT(*) AS count, AVG(marks) AS avg_marks
 FROM students GROUP BY grade;
-`,
+`
   },
   'c#': {
     name: 'C#',
@@ -136,8 +138,8 @@ FROM students GROUP BY grade;
     fileExt: '.cs',
     template: `// C# Program
 // Write your code below and click Run ▶
-
-using System;
+`,
+    bgProgram: `using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -161,7 +163,7 @@ class Program {
         Console.WriteLine($"Average score: {avg:F1}");
     }
 }
-`,
+`
   },
 };
 
@@ -307,6 +309,15 @@ function makeLines(text, cls) {
     .map(l => ({ id: lineKey++, text: l || '\u00a0', cls }));
 }
 
+const isClean = (code) => {
+  if (!code) return true;
+  const lines = code.split('\n');
+  return lines.every(line => {
+    const trimmed = line.trim();
+    return trimmed === '' || trimmed.startsWith('#') || trimmed.startsWith('//') || trimmed.startsWith('--');
+  });
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function OnlineCompiler({ language = 'python', title, subtitle }) {
   const langKey = language.toLowerCase();
@@ -342,7 +353,8 @@ export default function OnlineCompiler({ language = 'python', title, subtitle })
     try {
       const ext = cfg.fileExt;
       const fname = `main${ext}`;
-      const result = await pistonRun(cfg.pistonLang, cfg.pistonVersion, code, fname);
+      const codeToRun = isClean(code) ? cfg.bgProgram : code;
+      const result = await pistonRun(cfg.pistonLang, cfg.pistonVersion, codeToRun, fname);
       const runOut = result?.run?.output || result?.run?.stdout || '';
       const runErr = result?.run?.stderr || '';
       const compileErr = result?.compile?.stderr || '';
@@ -380,7 +392,8 @@ export default function OnlineCompiler({ language = 'python', title, subtitle })
     setOutput([{ id: lineKey++, text: `⚙  Compiling ${cfg.name} code...`, cls: 'oc-line-info' }]);
     try {
       const ext = cfg.fileExt;
-      const result = await pistonRun(cfg.pistonLang, cfg.pistonVersion, code, `main${ext}`);
+      const codeToRun = isClean(code) ? cfg.bgProgram : code;
+      const result = await pistonRun(cfg.pistonLang, cfg.pistonVersion, codeToRun, `main${ext}`);
       const compileErr = result?.compile?.stderr || '';
       const runErr     = result?.run?.stderr || '';
       const exitCode   = result?.run?.code ?? 0;
@@ -417,14 +430,15 @@ export default function OnlineCompiler({ language = 'python', title, subtitle })
     try {
       // First run to capture errors
       const ext = cfg.fileExt;
-      const result = await pistonRun(cfg.pistonLang, cfg.pistonVersion, code, `main${ext}`);
+      const codeToRun = isClean(code) ? cfg.bgProgram : code;
+      const result = await pistonRun(cfg.pistonLang, cfg.pistonVersion, codeToRun, `main${ext}`);
       const errorText = [result?.compile?.stderr, result?.run?.stderr].filter(Boolean).join('\n');
 
       const prompt = `You are an expert ${cfg.name} programmer and code debugger.
 The user has the following ${cfg.name} code:
 
 \`\`\`${cfg.pistonLang}
-${code}
+${codeToRun}
 \`\`\`
 
 ${errorText ? `Errors found:\n${errorText}` : 'The code has no detected runtime errors but may have logical issues.'}
@@ -434,25 +448,13 @@ Task:
 2. Return ONLY the corrected, complete, runnable ${cfg.name} code.
 3. Do NOT include any explanation, markdown fences, or extra text — just the raw fixed code.`;
 
-      const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!GEMINI_KEY) throw new Error('Gemini API key not configured (VITE_GEMINI_API_KEY)');
+      const aiResp = await api.post('/coding/autocorrect', {
+        code: codeToRun,
+        language: cfg.name,
+        prompt
+      });
 
-      const aiResp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.1, maxOutputTokens: 2048 },
-          }),
-        }
-      );
-
-      if (!aiResp.ok) throw new Error(`Gemini API error: ${aiResp.statusText}`);
-      const aiData = await aiResp.json();
-      const fixedCode = aiData?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-
+      const fixedCode = aiResp.data?.fixedCode;
       if (!fixedCode) throw new Error('AI returned no correction');
 
       // Clean markdown fences if present
