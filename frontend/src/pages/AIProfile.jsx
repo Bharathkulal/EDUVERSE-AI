@@ -4,7 +4,8 @@ import toast from 'react-hot-toast';
 import { 
   User, Mail, Phone, BookOpen, Award, Flame, Brain, BarChart2, Shield, Calendar, 
   Map, Sparkles, Settings, FileText, Download, Share2, Eye, Key, Bell, Check, Laptop,
-  Cpu, Code2, LineChart, CheckCircle2, ChevronRight, UploadCloud, EyeOff, Lock
+  Cpu, Code2, LineChart, CheckCircle2, ChevronRight, UploadCloud, EyeOff, Lock,
+  Clock, Briefcase, RefreshCw
 } from 'lucide-react';
 import { 
   AreaChart, Area, BarChart, Bar, RadarChart, PolarGrid, PolarAngleAxis, 
@@ -20,7 +21,7 @@ export default function AIProfile() {
   const { user: authUser, logout } = useAuth();
   
   // API Data States
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState({});
   const [predictions, setPredictions] = useState(null);
   const [dashData, setDashData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -212,7 +213,7 @@ export default function AIProfile() {
               <span className="text-xs bg-blue-500/10 border border-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-mono font-bold">Student</span>
             </h2>
             <p className="text-xs text-slate-400 font-mono flex items-center gap-1.5 justify-center sm:justify-start">
-              <Mail className="w-3.5 h-3.5 text-slate-500" /> {profile.email || authUser?.email || 'student@eduverse.ai'}
+              <Mail className="w-3.5 h-3.5 text-slate-500" /> {profile?.email || authUser?.email || 'student@eduverse.ai'}
             </p>
             <p className="text-xs text-slate-400 font-mono flex items-center gap-1.5 justify-center sm:justify-start">
               <Phone className="w-3.5 h-3.5 text-slate-500" /> {editForm.phone_number || '+91 XXXXX XXXXX'}
@@ -485,7 +486,7 @@ export default function AIProfile() {
 
               <div className="space-y-4">
                 {[
-                  { event: 'Enrolled in Syllabus Catalog', detail: `${profile.course} Semester ${profile.semester}`, time: 'Just Now', icon: '📚', color: 'bg-blue-500/10 text-blue-400' },
+                  { event: 'Enrolled in Syllabus Catalog', detail: `${profile?.course || ''} Semester ${profile?.semester || ''}`, time: 'Just Now', icon: '📚', color: 'bg-blue-500/10 text-blue-400' },
                   { event: 'Aced Module Evaluation Quiz', detail: `Score achieved: ${Math.round(avgQuizScore)}%`, time: '1 Day Ago', icon: '🏆', color: 'bg-emerald-500/10 text-emerald-400' },
                   { event: 'Synchronized Onboarding Telemetry', detail: 'Completed AI performance diagnostic survey', time: '3 Days Ago', icon: '🧠', color: 'bg-purple-500/10 text-purple-400' },
                 ].map((item, idx) => (
