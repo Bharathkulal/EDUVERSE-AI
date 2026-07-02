@@ -87,6 +87,25 @@ const makeCylinder = (radius, height, segments, color, name, offset = [0, 0, 0])
 
 export default function TechVerse() {
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
+
+  // Theme styling helper constants
+  const bgMain = isDarkMode ? 'bg-[#070B19]' : 'bg-[#F8FAFC]';
+  const textMain = isDarkMode ? 'text-slate-100' : 'text-slate-800';
+  const textMuted = isDarkMode ? 'text-slate-400' : 'text-slate-500';
+  const cardBg = isDarkMode ? 'bg-[#090D1E]' : 'bg-white';
+  const cardBorder = isDarkMode ? 'border-blue-900/20' : 'border-slate-200';
+  const innerBg = isDarkMode ? 'bg-[#0E1630]' : 'bg-slate-50';
+  const innerBorder = isDarkMode ? 'border-blue-900/10' : 'border-slate-100';
+  const headerBg = isDarkMode ? 'bg-[#090D1E] border-b border-blue-900/30' : 'bg-white border-b border-slate-200';
+  const dividerBorder = isDarkMode ? 'border-blue-950/45' : 'border-slate-100';
+  const titleColor = isDarkMode ? 'text-white' : 'text-slate-900';
+  const categoryPill = isDarkMode ? 'bg-indigo-950/40 text-indigo-400 border border-indigo-900/30' : 'bg-indigo-50 text-indigo-650 border border-indigo-100';
+  const welcomeBannerBg = isDarkMode ? 'bg-gradient-to-r from-blue-950/50 via-indigo-950/30 to-[#090D1E] border-blue-900/30' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-slate-200/60 shadow-sm';
+  const secondaryBtn = isDarkMode ? 'bg-blue-950/50 border border-blue-900/30 text-blue-400 hover:bg-blue-900/40' : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100';
+  const viewportOverlay = isDarkMode ? 'bg-[#080D1F]/90 border border-blue-900/20 text-slate-400' : 'bg-white/95 border border-slate-200 text-slate-650 shadow-sm';
+  const tabText = isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800';
+  const textWhite = isDarkMode ? 'text-white' : 'text-slate-900';
 
   // Search Engine States
   const [searchQuery, setSearchQuery] = useState('');
@@ -338,11 +357,11 @@ export default function TechVerse() {
     const height = canvas.height;
 
     // Clear viewport with deep tech gradient background
-    ctx.fillStyle = '#080D1F';
+    ctx.fillStyle = isDarkMode ? '#080D1F' : '#F1F5F9';
     ctx.fillRect(0, 0, width, height);
 
     // Draw coordinate alignment overlay grid
-    ctx.strokeStyle = '#121C37';
+    ctx.strokeStyle = isDarkMode ? '#121C37' : '#E2E8F0';
     ctx.lineWidth = 1;
     for (let x = 0; x < width; x += 50) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
@@ -520,7 +539,7 @@ export default function TechVerse() {
             ctx.stroke();
 
             ctx.setLineDash([]);
-            ctx.fillStyle = '#FFFFFF';
+            ctx.fillStyle = isDarkMode ? '#FFFFFF' : '#040815';
             ctx.font = 'bold 10px monospace';
             ctx.fillText(`${measuredDistance} mm`, (startProj.x + endProj.x)/2 + 10, (startProj.y + endProj.y)/2);
           }
@@ -672,7 +691,7 @@ export default function TechVerse() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#070B19] text-slate-100 font-sans flex flex-col justify-between overflow-x-hidden">
+    <div className="techverse-dark-theme-wrapper min-h-[calc(100vh-80px)] bg-[#070B19] text-slate-100 font-sans flex flex-col justify-between overflow-x-hidden">
       
       {/* 3D TECHVERSE HUD HEADER */}
       <header className="px-6 py-4 bg-[#090D1E] border-b border-blue-900/30 flex flex-col md:flex-row items-center justify-between gap-4 sticky top-0 z-20 backdrop-blur-md bg-opacity-95">

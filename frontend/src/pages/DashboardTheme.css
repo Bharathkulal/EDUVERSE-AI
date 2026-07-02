@@ -1799,6 +1799,176 @@
   }
 }
 
+/* ====================================================
+   TECHVERSE DARK THEME ISOLATION OVERRIDES
+   Protects the dark-themed TechVerse visualizer sandbox from
+   global light-theme text, background, input, and button color leakage.
+   ==================================================== */
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper,
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper {
+  background-color: #070B19 !important;
+  color: #cbd5e1 !important;
+}
+
+/* Force light text color on dark backgrounds inside TechVerse */
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper .text-white,
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper .text-white {
+  color: #ffffff !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper .text-slate-100,
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper .text-slate-100 {
+  color: #f1f5f9 !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper .text-slate-200,
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper .text-slate-200 {
+  color: #e2e8f0 !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper .text-slate-300,
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper .text-slate-400,
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper .text-slate-500,
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Force original colors on Lucide icons or colored text */
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-indigo-400"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-indigo-400"] {
+  color: #818cf8 !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-blue-400"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-blue-400"] {
+  color: #60a5fa !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-purple-400"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-purple-400"] {
+  color: #c084fc !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-indigo-200"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-indigo-200"] {
+  color: #c7d2fe !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-indigo-300"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-indigo-300"] {
+  color: #a5b4fc !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-violet-200"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-violet-200"] {
+  color: #ddd6fe !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-violet-300"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-violet-300"] {
+  color: #c4b5fd !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-purple-200"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-purple-200"] {
+  color: #e9d5ff !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-purple-300"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-purple-300"] {
+  color: #d8b4fe !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-blue-300"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-blue-300"] {
+  color: #93c5fd !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-cyan-400"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-cyan-400"] {
+  color: #22d3ee !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-cyan-300"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-cyan-300"] {
+  color: #67e8f9 !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-emerald-400"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-emerald-400"] {
+  color: #34d399 !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-emerald-300"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-emerald-300"] {
+  color: #6ee7b7 !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-amber-400"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-amber-400"] {
+  color: #fbbf24 !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-amber-300"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-amber-300"] {
+  color: #fde047 !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-red-400"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-red-400"] {
+  color: #f87171 !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-rose-400"],
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper [class*="text-rose-400"] {
+  color: #fb7185 !important;
+}
+
+/* Force dark input forms & textareas inside TechVerse */
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper input,
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper input,
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper textarea,
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper textarea {
+  background-color: #0E1630 !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  color: #f1f5f9 !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper input::placeholder,
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper input::placeholder,
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper textarea::placeholder,
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper textarea::placeholder {
+  color: #64748b !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper input:focus,
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 1px #3b82f6 !important;
+}
+
+/* Force dark buttons & borders to prevent light theme gray buttons */
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper button.border,
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper button.border {
+  border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+.techverse-dark-theme-wrapper.techverse-dark-theme-wrapper button.bg-red-500,
+.db-page-wrapper .techverse-dark-theme-wrapper.techverse-dark-theme-wrapper button.bg-red-500 {
+  background-color: #ef4444 !important;
+  border-color: #f87171 !important;
+  color: #ffffff !important;
+}
+
+
 
 
 
