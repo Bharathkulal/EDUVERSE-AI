@@ -56,6 +56,7 @@ const ITSuiteDashboard = lazy(() => import('./pages/it-suite/ITSuiteDashboard'))
 const WordEditor = lazy(() => import('./pages/it-suite/WordEditor'));
 const ExcelSpreadsheet = lazy(() => import('./pages/it-suite/ExcelSpreadsheet'));
 const SlidesEditor = lazy(() => import('./pages/it-suite/SlidesEditor'));
+const AIPhotoToPDF = lazy(() => import('./pages/it-suite/AIPhotoToPDF'));
 
 // Lazy Loaded DSA/Math Visualizer Pages
 const StackVisualization = lazy(() => import('./pages/StackVisualization'));
@@ -180,6 +181,7 @@ export default function App() {
             <Route path="/it-suite/word/:id" element={<ProtectedRoute><Layout><WordEditor /></Layout></ProtectedRoute>} />
             <Route path="/it-suite/excel/:id" element={<ProtectedRoute><Layout><ExcelSpreadsheet /></Layout></ProtectedRoute>} />
             <Route path="/it-suite/slides/:id" element={<ProtectedRoute><Layout><SlidesEditor /></Layout></ProtectedRoute>} />
+            <Route path="/it-suite/photo-to-pdf" element={<ProtectedRoute><Layout><AIPhotoToPDF /></Layout></ProtectedRoute>} />
 
             {/* DSA index route — redirect to first visualizer */}
             <Route path="/dsa" element={<Navigate to="/dsa/stack" replace />} />
