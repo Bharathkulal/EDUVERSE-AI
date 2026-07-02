@@ -13,6 +13,7 @@ import PythonCoursePage from '../python/PythonCoursePage';
 import JavaHub from '../advanced-java/JavaHub';
 import CoreJavaHub from '../core-java/CoreJavaHub';
 import WebDevHub from '../web-dev/WebDevHub';
+import MathHub from '../math/MathHub';
 import FocVisualization from './FocVisualization';
 import TechVerse from './TechVerse';
 import { motion, useScroll, useTransform } from 'framer-motion';
@@ -829,19 +830,12 @@ export default function SubjectDetail() {
 
   // --- NEW FRAMER MOTION MATHEMATICS PROTOTYPE ---
   if (subject.subject_name === 'Mathematics') {
-    if (activeView === 'hub') {
+    if (activeView === 'hub' || activeView === 'theory') {
       return (
-        <SubjectHub
-          subjectName="Mathematics"
-          description={subject.description}
-          isDark={isDark}
-          onSelectView={setActiveView}
+        <MathHub 
+          onSelectView={setActiveView} 
         />
       );
-    }
-
-    if (activeView === 'theory') {
-      return renderTheoryTopics();
     }
 
     if (activeView === 'practical') {
