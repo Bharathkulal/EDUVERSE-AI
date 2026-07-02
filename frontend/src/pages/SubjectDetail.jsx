@@ -18,6 +18,7 @@ import TechVerse from './TechVerse';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Layers, List, GitCommit, GitMerge, Share2, PlayCircle, CheckCircle2, ArrowLeft, ArrowRight, Trophy } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import LearningHubBackground from '../components/LearningHubBackground';
 
 const SUBJECT_HUB_METADATA = {
   'Python': {
@@ -132,13 +133,8 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
     <div className={`min-h-[85vh] flex flex-col justify-center items-center font-sans p-6 relative overflow-hidden transition-colors duration-300 ${
       isDark ? 'bg-[#070313] text-slate-100' : 'bg-slate-50/50 text-slate-900'
     }`}>
-      {/* Background Glows */}
-      {isDark && (
-        <>
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
-        </>
-      )}
+      {/* Background patterns */}
+      <LearningHubBackground isDark={isDark} />
 
       {/* TOP SECTION */}
       <motion.div 
