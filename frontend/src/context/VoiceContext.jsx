@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useToasterStore } from 'react-hot-toast';
+import toast, { useToasterStore } from 'react-hot-toast';
 import SpeechSynthesisService from '../services/voice/SpeechSynthesisService';
 import SpeechRecognitionService from '../services/voice/SpeechRecognitionService';
 import PageGuideService, { getPageGuide } from '../services/voice/PageGuideService';
@@ -396,6 +396,9 @@ Provide a friendly, helpful, and concise response in 1 to 2 sentences. Include m
         setActiveState('idle');
         setSubtitle('');
         setIsListening(false);
+        toast.success('Voice Assistant Disabled', { id: 'voice-toast', icon: '📴' });
+      } else {
+        toast.success('Voice Assistant Enabled! Ask a question or say a command.', { id: 'voice-toast', icon: '🎙️' });
       }
       return nextState;
     });
@@ -439,6 +442,42 @@ Provide a friendly, helpful, and concise response in 1 to 2 sentences. Include m
       stopListening();
     }
   }, [isEnabled, isMuted, activeState, startListening, stopListening]);
+
+  // Double-tap on screen gesture listener to toggle voice assistant
+  useEffect(() => {
+    let lastTap = 0;
+    const handleDoubleTap = (e) => {
+      const targetTag = e.target.tagName.toLowerCase();
+      if (['input', 'textarea', 'select', 'button', 'a'].includes(targetTag) || e.target.closest('button') || e.target.closest('a')) {
+        return;
+      }
+
+      const now = Date.now();
+      const DOUBLE_TAP_DELAY = 300;
+      if (now - lastTap < DOUBLE_TAP_DELAY) {
+        toggleEnabled();
+      }
+      lastTap = now;
+    };
+
+    const handleDblClick = (e) => {
+      const targetTag = e.target.tagName.toLowerCase();
+      if (['input', 'textarea', 'select', 'button', 'a'].includes(targetTag) || e.target.closest('button') || e.target.closest('a')) {
+        return;
+      }
+      toggleEnabled();
+    };
+
+    document.addEventListener('click', handleDoubleTap);
+    document.addEventListener('touchend', handleDoubleTap);
+    document.addEventListener('dblclick', handleDblClick);
+
+    return () => {
+      document.removeEventListener('click', handleDoubleTap);
+      document.removeEventListener('touchend', handleDoubleTap);
+      document.removeEventListener('dblclick', handleDblClick);
+    };
+  }, [toggleEnabled]);
 
   return (
     <VoiceContext.Provider value={{

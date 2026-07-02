@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useSessionTracker } from '../utils/sessionTracker';
 import ThemeToggleButton from './ThemeToggleButton';
 import VoiceAssistantWidget from './VoiceAssistantWidget';
+import { Mic } from 'lucide-react';
 import '../pages/DashboardTheme.css';
 
 const studentNav = [
@@ -176,15 +177,10 @@ export default function Layout({ children }) {
             </div>
 
             {/* Footer Profile Detail */}
-            <div className="db-sidebar-footer">
-              <div className="db-profile-info">
-                <div className="db-profile-avatar">
-                  {getInitials(user?.name)}
-                </div>
-                <div className="db-profile-details">
-                  <span className="db-profile-name">{user?.name || 'User Profile'}</span>
-                  <span className="db-profile-email">{user?.email || 'user@eduverse.ai'}</span>
-                </div>
+            <div className="db-sidebar-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', width: '100%' }}>
+              <div className="flex items-center gap-2 text-[var(--db-text-muted)] text-[11px] font-bold leading-normal pr-2">
+                <Mic className="w-4 h-4 text-purple-500 animate-pulse flex-shrink-0" />
+                <span>Double tap on screen for Voice Agent</span>
               </div>
               <button onClick={handleLogout} className="db-settings-btn" title="Sign Out">
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
