@@ -9,6 +9,7 @@ import {
   Download, Share2, ShieldCheck, Mail, Globe
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import WatchDemoModal from '../components/WatchDemoModal';
 import toast from 'react-hot-toast';
 import logoImg from '../assets/logo.png';
 import studentImg from '../assets/image.png';
@@ -141,6 +142,7 @@ export default function LandingPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const [scrolled, setScrolled] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
 
   const { login, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
@@ -350,7 +352,7 @@ export default function LandingPage() {
                 <button onClick={() => setDrawerOpen(true)} className="btn-primary rounded-2xl px-6 py-3.5 text-xs font-bold inline-flex items-center gap-2">
                   Start Learning <ArrowRight size={14} />
                 </button>
-                <button onClick={() => navigate('/dashboard')} className="btn-ghost rounded-2xl px-6 py-3.5 text-xs font-bold inline-flex items-center gap-2">
+                <button onClick={() => setDemoOpen(true)} className="btn-ghost rounded-2xl px-6 py-3.5 text-xs font-bold inline-flex items-center gap-2">
                   <PlayCircle size={14} /> Watch Demo
                 </button>
               </div>
@@ -1317,6 +1319,7 @@ export default function LandingPage() {
         </div>
       </footer>
 
+      <WatchDemoModal isOpen={demoOpen} onClose={() => setDemoOpen(false)} />
     </div>
   );
 }
