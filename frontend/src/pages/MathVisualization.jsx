@@ -7,6 +7,7 @@ import {
   Layers, BookOpen, Target, Lightbulb, Zap, ArrowRight
 } from 'lucide-react';
 import NotebookEngine from '../components/MathEngines/NotebookEngine';
+import MatrixMultiplicationEngine from '../components/MathEngines/MatrixMultiplicationEngine';
 import MathBackground from '../components/MathBackground';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggleButton from '../components/ThemeToggleButton';
@@ -60,6 +61,9 @@ export default function MathVisualization() {
   const [rkY0, setRkY0] = useState('2');
   const [rkH, setRkH] = useState('0.1');
   const [rkSteps, setRkSteps] = useState('1');
+
+  // Matrix Multiplication States
+  const [matMulQuestionId, setMatMulQuestionId] = useState('mm_q5');
 
   // Execution Control State
   const [playbackState, setPlaybackState] = useState('IDLE');
@@ -199,6 +203,28 @@ export default function MathVisualization() {
     }
   ];
 
+  // Matrix Multiplication Questions (from photo)
+  const MATRIX_MUL_QUESTIONS = [
+    {
+      id: 'mm_q5',
+      label: 'Q5: A = [[0,1],[1,0]], Find A² (Photo Q5)',
+      question: 'Given A = [[0,1],[1,0]], find A² = A × A using Matrix Multiplication.',
+      type: 'square',
+      matA: [[0,1],[1,0]],
+      matB: [[0,1],[1,0]],
+      description: 'A is a permutation matrix. Compute A² = A × A.'
+    },
+    {
+      id: 'mm_q6',
+      label: 'Q6: A = [[1,0],[0,0]], B = [[0,0],[1,1]], Find AB (Photo Q6)',
+      question: 'Given A = [[1,0],[0,0]] and B = [[0,0],[1,1]], find the product AB using Matrix Multiplication.',
+      type: 'product',
+      matA: [[1,0],[0,0]],
+      matB: [[0,0],[1,1]],
+      description: 'A is an idempotent matrix. Compute the product AB.'
+    }
+  ];
+
   const CARDS = [
     { 
       id: 'Bisection Method', 
@@ -297,6 +323,20 @@ export default function MathVisualization() {
       btnClass: 'bg-sky-500 hover:bg-sky-600 text-white',
       badgeClass: 'bg-sky-500/10 border-sky-500/20 text-sky-600 dark:text-sky-400',
       icon: '🧪'
+    },
+    { 
+      id: 'Matrix Multiplication', 
+      title: 'Matrix Multiplication', 
+      desc: 'Compute products of matrices element-by-element using row-column dot product operations.', 
+      status: 'Intermediate', 
+      time: '15 mins', 
+      xp: '120 XP', 
+      progress: 55,
+      tags: ['Linear Algebra', 'Dot Product', 'Row × Column'],
+      colorTheme: 'indigo',
+      btnClass: 'bg-indigo-500 hover:bg-indigo-600 text-white',
+      badgeClass: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-600 dark:text-indigo-400',
+      icon: '🔢'
     }
   ];
 
@@ -459,6 +499,37 @@ export default function MathVisualization() {
         },
       ]
     },
+    'Matrix Multiplication': {
+      features: [
+        { icon: BookOpen, title: 'Row × Column Rule', desc: 'Each entry C[i][j] is the dot product of row i of A with column j of B.' },
+        { icon: Target, title: 'Dimension Requirement', desc: 'A (m×n) × B (n×p) → C (m×p). Inner dimensions must match.' },
+        { icon: Lightbulb, title: 'Photo Problems', desc: 'Q5: Find A² for permutation matrix. Q6: Find AB for idempotent matrices.' },
+      ],
+      formulas: [
+        {
+          title: 'Matrix Multiplication Formula',
+          formula: 'C[i][j] = \u03A3 A[i][k] \u00B7 B[k][j]  (k = 1 to n)',
+          variables: [
+            { sym: 'A', def: 'm \u00D7 n matrix (left operand)' },
+            { sym: 'B', def: 'n \u00D7 p matrix (right operand)' },
+            { sym: 'C', def: 'm \u00D7 p result matrix' },
+            { sym: 'i', def: 'Row index of result matrix C' },
+            { sym: 'j', def: 'Column index of result matrix C' },
+            { sym: 'k', def: 'Summation index running from 1 to n' },
+          ]
+        },
+        {
+          title: '2\u00D72 Matrix Multiplication (Expanded)',
+          formula: '[[a,b],[c,d]] \u00D7 [[e,f],[g,h]] = [[ae+bg, af+bh],[ce+dg, cf+dh]]',
+          variables: [
+            { sym: 'C[1][1]', def: 'a\u00B7e + b\u00B7g  (Row 1 \u00B7 Col 1)' },
+            { sym: 'C[1][2]', def: 'a\u00B7f + b\u00B7h  (Row 1 \u00B7 Col 2)' },
+            { sym: 'C[2][1]', def: 'c\u00B7e + d\u00B7g  (Row 2 \u00B7 Col 1)' },
+            { sym: 'C[2][2]', def: 'c\u00B7f + d\u00B7h  (Row 2 \u00B7 Col 2)' },
+          ]
+        },
+      ]
+    },
   };
 
   const activeFunction = PREDEFINED_FUNCTIONS.find(f => f.id === funcId);
@@ -467,6 +538,7 @@ export default function MathVisualization() {
   const activeSimpson13Question = SIMPSON_13_QUESTIONS.find(q => q.id === simpson13ProblemId);
   const activeSimpson38Question = SIMPSON_38_QUESTIONS.find(q => q.id === simpson38ProblemId);
   const activeRKQuestion = RK_QUESTIONS.find(q => q.id === rkProblemId);
+  const activeMatMulQuestion = MATRIX_MUL_QUESTIONS.find(q => q.id === matMulQuestionId);
 
   // Engine Event Handlers
   const handleExplanationUpdate = (text) => {
@@ -605,6 +677,16 @@ export default function MathVisualization() {
           onFinish={handleExecutionFinished}
         />
       );
+    } else if (selectedMethod === 'Matrix Multiplication') {
+      return (
+        <MatrixMultiplicationEngine
+          question={activeMatMulQuestion}
+          playbackState={playbackState}
+          speed={speed}
+          onExplain={handleExplanationUpdate}
+          onFinish={handleExecutionFinished}
+        />
+      );
     }
     
     return (
@@ -649,6 +731,8 @@ export default function MathVisualization() {
         return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${ (parseFloat(rkX0) + parseInt(rkSteps) * parseFloat(rkH)).toFixed(2) }) in ${rkSteps} step(s) of h = ${rkH} using RK4.`;
       }
       return activeRKQuestion?.question || '';
+    } else if (selectedMethod === 'Matrix Multiplication') {
+      return activeMatMulQuestion?.question || 'Compute matrix product using row × column dot product rule.';
     }
     return `Solving math system using ${selectedMethod}.`;
   };
@@ -1283,6 +1367,50 @@ export default function MathVisualization() {
                       </div>
                     </div>
                   </>
+                )}
+              </>
+            ) : selectedMethod === 'Matrix Multiplication' ? (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Problem</label>
+                  <select 
+                    value={matMulQuestionId}
+                    onChange={(e) => { setMatMulQuestionId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-indigo-500 outline-none text-[var(--db-text-main)]"
+                  >
+                    {MATRIX_MUL_QUESTIONS.map(q => (
+                      <option key={q.id} value={q.id}>{q.label}</option>
+                    ))}
+                  </select>
+                </div>
+                {activeMatMulQuestion && (
+                  <div className="rounded-xl p-4 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] space-y-3">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-indigo-500">Matrix Preview</p>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <div className="text-center">
+                        <p className="text-[9px] text-[var(--db-text-muted)] mb-1 font-bold">Matrix A</p>
+                        <div className="font-mono text-xs text-[var(--db-text-main)] border border-[var(--db-card-border)] rounded-lg p-2 bg-[var(--db-card-bg)]">
+                          {activeMatMulQuestion.matA.map((row, i) => (
+                            <div key={i} className="flex gap-2">
+                              {row.map((v, j) => <span key={j} className="w-4 text-center">{v}</span>)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <span className="text-[var(--db-text-muted)] font-bold text-lg">×</span>
+                      <div className="text-center">
+                        <p className="text-[9px] text-[var(--db-text-muted)] mb-1 font-bold">Matrix B</p>
+                        <div className="font-mono text-xs text-[var(--db-text-main)] border border-[var(--db-card-border)] rounded-lg p-2 bg-[var(--db-card-bg)]">
+                          {activeMatMulQuestion.matB.map((row, i) => (
+                            <div key={i} className="flex gap-2">
+                              {row.map((v, j) => <span key={j} className="w-4 text-center">{v}</span>)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-[var(--db-text-muted)] leading-relaxed">{activeMatMulQuestion.description}</p>
+                  </div>
                 )}
               </>
             ) : null}
