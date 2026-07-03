@@ -1,324 +1,308 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, RotateCcw, Save, Trash2, BookOpen, AlertCircle, CheckCircle, 
-  XCircle, ChevronLeft, ChevronRight, HelpCircle, ArrowLeft, Terminal,
+  XCircle, ChevronLeft, ChevronRight, HelpCircle, ArrowLeft, Terminal as TerminalIcon,
   Code2, Check, FileCode, CheckSquare, ChevronDown, Folder, File, 
-  Plus, FolderPlus, Settings, Download, MoreVertical, Send, RefreshCw, 
-  Cpu, FileText, Minimize2, Maximize2, Sparkles, AlertTriangle, Eye, CornerDownRight
+  Plus, FolderPlus, Settings as SettingsIcon, Download, MoreVertical, Send, RefreshCw, 
+  Cpu, FileText, Minimize2, Maximize2, Sparkles, AlertTriangle, Eye, CornerDownRight,
+  GitBranch, GitCommit, GitPullRequest, Search, FileUp, FolderUp, Globe, Settings, 
+  Copy, Clipboard, Info, BookOpenCheck, ExternalLink, Lightbulb, Grid, Columns, ListFilter, Trash
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Editor from '@monaco-editor/react';
 import { useTheme } from '../context/ThemeContext';
 
-// Mock coding tasks database containing 10+ exercises per subject/language
-const CODING_TASKS = {
-  'Java': [
-    {
-      id: 'java-t1',
-      title: 'Find Sum of All Elements',
-      topic: 'Arrays',
-      difficulty: 'Easy',
-      desc: 'Write a method `sumArray(int[] arr)` that returns the sum of all integers in the array.',
-      sampleInput: 'arr = [1, 2, 3, 4]',
-      sampleOutput: '10',
-      hint: 'Use a simple for loop or enhanced for loop to accumulate values.',
-      starterCode: `public class Solution {\n    public int sumArray(int[] arr) {\n        int sum = 0;\n        for (int num : arr) {\n            sum += num;\n        }\n        return sum;\n    }\n}`,
-      testCases: [{ input: '[1,2,3,4]', expected: '10' }]
-    },
-    {
-      id: 'java-t2',
-      title: 'Find Average of Elements',
-      topic: 'Arrays',
-      difficulty: 'Easy',
-      desc: 'Write a method `avgArray(int[] arr)` that returns the average value as a double.',
-      sampleInput: 'arr = [1, 2, 3, 4]',
-      sampleOutput: '2.5',
-      hint: 'Accumulate the sum first, then divide by the array length casting to double.',
-      starterCode: `public class Solution {\n    public double avgArray(int[] arr) {\n        double sum = 0;\n        for (int num : arr) sum += num;\n        return sum / arr.length;\n    }\n}`,
-      testCases: [{ input: '[1,2,3,4]', expected: '2.5' }]
-    },
-    {
-      id: 'java-t3',
-      title: 'Find Maximum Element',
-      topic: 'Arrays',
-      difficulty: 'Easy',
-      desc: 'Write a method `findMax(int[] arr)` that returns the largest integer in the array.',
-      sampleInput: 'arr = [5, 2, 9, 1]',
-      sampleOutput: '9',
-      hint: 'Initialize max to the first element and update whenever a larger value is found.',
-      starterCode: `public class Solution {\n    public int findMax(int[] arr) {\n        int max = arr[0];\n        for (int num : arr) {\n            if (num > max) max = num;\n        }\n        return max;\n    }\n}`,
-      testCases: [{ input: '[5,2,9,1]', expected: '9' }]
-    },
-    {
-      id: 'java-t4',
-      title: 'Find Minimum Element',
-      topic: 'Arrays',
-      difficulty: 'Easy',
-      desc: 'Write a method `findMin(int[] arr)` that returns the smallest integer in the array.',
-      sampleInput: 'arr = [5, 2, 9, 1]',
-      sampleOutput: '1',
-      hint: 'Initialize min to the first element and update whenever a smaller value is found.',
-      starterCode: `public class Solution {\n    public int findMin(int[] arr) {\n        int min = arr[0];\n        for (int num : arr) {\n            if (num < min) min = num;\n        }\n        return min;\n    }\n}`,
-      testCases: [{ input: '[5,2,9,1]', expected: '1' }]
-    },
-    {
-      id: 'java-t5',
-      title: 'Find Second Largest',
-      topic: 'Arrays',
-      difficulty: 'Medium',
-      desc: 'Write a method `findSecondLargest(int[] arr)` that returns the second largest value in the array.',
-      sampleInput: 'arr = [12, 35, 1, 10, 34]',
-      sampleOutput: '34',
-      hint: 'Track both max and secondMax as you scan the elements.',
-      starterCode: `public class Solution {\n    public int findSecondLargest(int[] arr) {\n        int max = Integer.MIN_VALUE, second = Integer.MIN_VALUE;\n        for (int num : arr) {\n            if (num > max) {\n                second = max;\n                max = num;\n            } else if (num > second && num != max) {\n                second = num;\n            }\n        }\n        return second;\n    }\n}`,
-      testCases: [{ input: '[12,35,1,10,34]', expected: '34' }]
-    },
-    {
-      id: 'java-t6',
-      title: 'Reverse the Array',
-      topic: 'Arrays',
-      difficulty: 'Medium',
-      desc: 'Write a method `reverse(int[] arr)` that returns a new array with elements in reversed order.',
-      sampleInput: 'arr = [1, 2, 3]',
-      sampleOutput: '[3, 2, 1]',
-      hint: 'Iterate from length-1 down to 0, inserting elements into a new array.',
-      starterCode: `public class Solution {\n    public int[] reverse(int[] arr) {\n        int[] rev = new int[arr.length];\n        for (int i = 0; i < arr.length; i++) {\n            rev[i] = arr[arr.length - 1 - i];\n        }\n        return rev;\n    }\n}`,
-      testCases: [{ input: '[1,2,3]', expected: '[3,2,1]' }]
-    },
-    {
-      id: 'java-t7',
-      title: 'Sort the Array',
-      topic: 'Arrays',
-      difficulty: 'Medium',
-      desc: 'Write a method `sort(int[] arr)` that returns a sorted copy of the array.',
-      sampleInput: 'arr = [3, 1, 2]',
-      sampleOutput: '[1, 2, 3]',
-      hint: 'You can use Arrays.sort() after cloning the array.',
-      starterCode: `import java.util.Arrays;\npublic class Solution {\n    public int[] sort(int[] arr) {\n        int[] copy = arr.clone();\n        Arrays.sort(copy);\n        return copy;\n    }\n}`,
-      testCases: [{ input: '[3,1,2]', expected: '[1,2,3]' }]
-    },
-    {
-      id: 'java-t8',
-      title: 'Linear Search',
-      topic: 'Arrays',
-      difficulty: 'Easy',
-      desc: 'Write a method `search(int[] arr, int target)` that returns the 0-based index of target, or -1 if not found.',
-      sampleInput: 'arr = [4, 2, 8], target = 2',
-      sampleOutput: '1',
-      hint: 'Iterate through the array. If arr[i] == target, return index i immediately.',
-      starterCode: `public class Solution {\n    public int search(int[] arr, int target) {\n        for (int i = 0; i < arr.length; i++) {\n            if (arr[i] == target) return i;\n        }\n        return -1;\n    }\n}`,
-      testCases: [{ input: '[4,2,8], target=2', expected: '1' }]
-    },
-    {
-      id: 'java-t9',
-      title: 'Count Even and Odd',
-      topic: 'Arrays',
-      difficulty: 'Easy',
-      desc: 'Write a method `countEvenOdd(int[] arr)` that returns an array where index 0 is even count and index 1 is odd count.',
-      sampleInput: 'arr = [1, 2, 3, 4, 5]',
-      sampleOutput: '[2, 3]',
-      hint: 'Check if num % 2 == 0 to increment even count, else increment odd count.',
-      starterCode: `public class Solution {\n    public int[] countEvenOdd(int[] arr) {\n        int evens = 0, odds = 0;\n        for (int num : arr) {\n            if (num % 2 == 0) evens++;\n            else odds++;\n        }\n        return new int[]{evens, odds};\n    }\n}`,
-      testCases: [{ input: '[1,2,3,4,5]', expected: '[2,3]' }]
-    },
-    {
-      id: 'java-t10',
-      title: 'Count Element Frequency',
-      topic: 'Arrays',
-      difficulty: 'Medium',
-      desc: 'Write a method `frequency(int[] arr, int target)` that returns the number of occurrences of target.',
-      sampleInput: 'arr = [1, 2, 2, 3], target = 2',
-      sampleOutput: '2',
-      hint: 'Iterate and increment a counter variable whenever element matches target.',
-      starterCode: `public class Solution {\n    public int frequency(int[] arr, int target) {\n        int count = 0;\n        for (int num : arr) {\n            if (num == target) count++;\n        }\n        return count;\n    }\n}`,
-      testCases: [{ input: '[1,2,2,3], target=2', expected: '2' }]
-    }
-  ],
-  'Python': [
-    {
-      id: 'py-t1',
-      title: 'Sum of Digits',
-      topic: 'Basic Math',
-      difficulty: 'Easy',
-      desc: 'Write a function `sum_digits(n)` that returns the sum of all digits of a positive integer.',
-      sampleInput: 'n = 123',
-      sampleOutput: '6',
-      hint: 'Extract digits using modulo 10 and division, or cast to string and sum characters.',
-      starterCode: `def sum_digits(n):\n    return sum(int(d) for d in str(n))`,
-      testCases: [{ input: '123', expected: '6' }]
-    },
-    {
-      id: 'py-t2',
-      title: 'Reverse a Number',
-      topic: 'Basic Math',
-      difficulty: 'Easy',
-      desc: 'Write a function `reverse_num(n)` that returns the digits reversed as an integer.',
-      sampleInput: 'n = 123',
-      sampleOutput: '321',
-      hint: 'Cast to string, reverse using slice [::-1], then cast back to integer.',
-      starterCode: `def reverse_num(n):\n    return int(str(n)[::-1])`,
-      testCases: [{ input: '123', expected: '321' }]
-    },
-    {
-      id: 'py-t3',
-      title: 'Check Prime Number',
-      topic: 'Basic Math',
-      difficulty: 'Medium',
-      desc: 'Write a function `is_prime(n)` that returns True if n is prime, else False.',
-      sampleInput: 'n = 7',
-      sampleOutput: 'True',
-      hint: 'Check divisibility from 2 up to the square root of n.',
-      starterCode: `def is_prime(n):\n    if n <= 1: return False\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0: return False\n    return True`,
-      testCases: [{ input: '7', expected: 'True' }]
-    }
-  ]
-};
-
 export default function Coding() {
   const { isDarkMode } = useTheme();
-  const [selectedLanguage, setSelectedLanguage] = useState('Java');
-  const [tasks, setTasks] = useState(CODING_TASKS['Java'] || []);
-  const [selectedTask, setSelectedTopic] = useState(null);
+
+  // IDE core state
+  const [activeProject, setActiveProject] = useState(null); // 'project-initialized' or null (for welcome screen)
+  const [recentProjects, setRecentProjects] = useState(['BinaryTreeVisualizer', 'EduVerseChatAPI', 'ReactCompilerSandbox']);
+  const [viewState, setViewState] = useState('workspace'); // 'workspace' or 'welcome'
   
-  // Editor States
-  const [code, setCode] = useState('');
-  const [consoleOutput, setConsoleOutput] = useState('');
-  const [consoleStatus, setConsoleStatus] = useState('Ready'); // Ready, Running, Success, Error
-  const [testResults, setTestResults] = useState([]); // Array of { input, expected, actual, passed }
-  const [unsaved, setUnsaved] = useState(false);
-  const [theme, setTheme] = useState(isDarkMode ? 'vs-dark' : 'light');
+  // Left Sidebar panel selection: explorer, search, git, settings, analysis
+  const [activeSidebarTab, setActiveSidebarTab] = useState('explorer');
 
-  // Synchronize dynamic editor theme with global layout theme context
-  useEffect(() => {
-    setTheme(isDarkMode ? 'vs-dark' : 'light');
-  }, [isDarkMode]);
-
-  // Layout Widths & Heights
-  const [explorerWidth, setExplorerWidth] = useState(250);
-  const [bottomHeight, setBottomHeight] = useState(220);
-  const [aiPanelWidth, setAiPanelWidth] = useState(340);
-  const [aiPanelCollapsed, setAiPanelCollapsed] = useState(false);
-  const [explorerCollapsed, setExplorerCollapsed] = useState(false);
-
-  // Tab State
-  const [openTabs, setOpenTabs] = useState([]);
-  const [activeTab, setActiveTab] = useState('');
-
-  // Explorer Files Tree
+  // File explorer tree state
   const [files, setFiles] = useState([]);
-  const [expandedFolders, setExpandedFolders] = useState({ 'project': true, 'src': true, 'test-cases': true });
+  const [expandedFolders, setExpandedFolders] = useState({ 'root': true, 'src': true });
+  const [clipboard, setClipboard] = useState(null); // { file, action: 'copy'|'cut' }
+  const [explorerSearch, setExplorerSearch] = useState('');
+  const [sortBy, setSortBy] = useState('name'); // 'name' | 'type'
+
+  // Tab & Split editor states
+  const [openTabsLeft, setOpenTabsLeft] = useState([]);
+  const [activeTabLeft, setActiveTabLeft] = useState('');
+  const [openTabsRight, setOpenTabsRight] = useState([]);
+  const [activeTabRight, setActiveTabRight] = useState('');
+  const [isSplit, setIsSplit] = useState(false);
+  const [splitOrientation, setSplitOrientation] = useState('vertical'); // 'vertical' | 'horizontal'
+
+  // Code editor settings
+  const [editorFontSize, setEditorFontSize] = useState(14);
+  const [editorWordWrap, setEditorWordWrap] = useState('on');
+  const [editorMinimap, setEditorMinimap] = useState(true);
+  const [theme, setTheme] = useState(isDarkMode ? 'vs-dark' : 'light');
 
   // Terminal & Bottom Panel Tab
   const [activeBottomTab, setActiveBottomTab] = useState('Terminal');
+  const [consoleOutput, setConsoleOutput] = useState('');
+  const [consoleStatus, setConsoleStatus] = useState('Ready'); // Ready, Running, Success, Error
+  const [compileStage, setCompileStage] = useState(''); // 'syntax', 'compiling', 'running', 'done'
+  const [testResults, setTestResults] = useState([]);
+  const [diagnostics, setDiagnostics] = useState([]); // List of compiler errors
+  const [selectedDiagnostic, setSelectedDiagnostic] = useState(null); // For AI Quick Fix modal/card
 
-  // AI Assistant Chat state
+  // Git Source Control State
+  const [gitStatus, setGitStatus] = useState({ staged: [], unstaged: [] });
+  const [gitBranch, setGitBranch] = useState('main');
+  const [commitMessage, setCommitMessage] = useState('');
+  const [gitHistory, setGitHistory] = useState([
+    { id: '1', hash: '8f2a1b3', message: 'Initial commit with project template', author: 'Friday AI' }
+  ]);
+  const [showDiff, setShowDiff] = useState(false);
+  const [diffFile, setDiffFile] = useState(null);
+
+  // AI Assistant Drawer State
+  const [aiPanelCollapsed, setAiPanelCollapsed] = useState(false);
   const [aiMessages, setAiMessages] = useState([
-    { role: 'assistant', text: 'Hello! I am your EduVerse AI Coding Mentor. How can I help you optimize or debug your code today?' }
+    { role: 'assistant', text: "Welcome to EduVerse Studio! I am Friday, your AI Programming Guide. You can write your custom code, debug compiler errors in real time, or link your GitHub repository. Let's start building!" }
   ]);
   const [aiInput, setAiInput] = useState('');
   const [aiTyping, setAiTyping] = useState(false);
 
-  // Cursor/Editor details for Status Bar
+  // Settings & Configuration Modal
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [autosave, setAutosave] = useState(true);
+
+  // Active cursor position
   const [cursorPos, setCursorPos] = useState({ ln: 1, col: 1 });
 
-  // Settings Modal State
-  const [showSettings, setShowSettings] = useState(false);
-  const [editorFontSize, setEditorFontSize] = useState(14);
-  const [editorWordWrap, setEditorWordWrap] = useState('on');
-  const [editorMinimap, setEditorMinimap] = useState(true);
+  // Resizable panel dimensions
+  const [explorerWidth, setExplorerWidth] = useState(240);
+  const [aiPanelWidth, setAiPanelWidth] = useState(300);
+  const [bottomHeight, setBottomHeight] = useState(180);
+  const [unsaved, setUnsaved] = useState(false);
 
-  // Lobby/Editor state
-  const [viewState, setViewState] = useState('lobby'); // lobby, workspace
-  const [completedTasks, setCompletedTasks] = useState({}); // { taskId: true }
+  // Resize mouse events handlers
+  const startResizeLeft = (e) => {
+    e.preventDefault();
+    const handleMouseMove = (moveEvent) => {
+      const newWidth = Math.max(160, Math.min(450, moveEvent.clientX - 48));
+      setExplorerWidth(newWidth);
+    };
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
 
-  const editorRef = useRef(null);
+  const startResizeRight = (e) => {
+    e.preventDefault();
+    const handleMouseMove = (moveEvent) => {
+      const newWidth = Math.max(200, Math.min(500, window.innerWidth - moveEvent.clientX));
+      setAiPanelWidth(newWidth);
+    };
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
 
-  // Load language tasks
+  const startResizeBottom = (e) => {
+    e.preventDefault();
+    const handleMouseMove = (moveEvent) => {
+      const newHeight = Math.max(80, Math.min(450, window.innerHeight - moveEvent.clientY - 24));
+      setBottomHeight(newHeight);
+    };
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleEditorDidMount = (editor, monaco) => {
+    editor.onDidChangeCursorPosition((e) => {
+      setCursorPos({ ln: e.position.lineNumber, col: e.position.column });
+    });
+  };
+
+  const selectedLanguage = (activeTabLeft && activeTabLeft.endsWith('.java')) ? 'Java' : (activeTabLeft && activeTabLeft.endsWith('.py')) ? 'Python' : 'Plaintext';
+
+  // Sync Monaco editor theme with global layout isDarkMode
   useEffect(() => {
-    setTasks(CODING_TASKS[selectedLanguage] || CODING_TASKS['Java']);
-    setSelectedTopic(null);
-  }, [selectedLanguage]);
+    setTheme(isDarkMode ? 'vs-dark' : 'light');
+  }, [isDarkMode]);
 
-  // Synchronize workspace files on Task Selection
-  useEffect(() => {
-    if (selectedTask) {
-      const ext = selectedLanguage === 'Python' ? '.py' : selectedLanguage === 'C' ? '.c' : selectedLanguage === 'C#' ? '.cs' : '.java';
-      const mainName = `Solution${ext}`;
-      
-      const projectFiles = [
-        { id: '1', name: mainName, type: 'file', path: 'src/' + mainName, parent: 'src', content: selectedTask.starterCode },
-        { id: '2', name: `Main${ext}`, type: 'file', path: 'src/Main' + ext, parent: 'src', content: `// Driver code for task\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Running task...");\n    }\n}` },
-        { id: '3', name: `Helper${ext}`, type: 'file', path: 'src/Helper' + ext, parent: 'src', content: `// Helper methods` },
-        { id: '4', name: 'input.txt', type: 'file', path: 'Test Cases/input.txt', parent: 'test-cases', content: selectedTask.sampleInput },
-        { id: '5', name: 'output.txt', type: 'file', path: 'Test Cases/output.txt', parent: 'test-cases', content: selectedTask.sampleOutput },
-        { id: '6', name: 'README.md', type: 'file', path: 'README.md', parent: 'root', content: `# ${selectedTask.title}\n\n**Topic**: ${selectedTask.topic}\n**Difficulty**: ${selectedTask.difficulty}\n\n## Description\n${selectedTask.desc}\n\n## Sample Input\n\`\`\`\n${selectedTask.sampleInput}\n\`\`\`\n\n## Sample Output\n\`\`\`\n${selectedTask.sampleOutput}\n\`\`\`` },
-        { id: '7', name: 'Notes.md', type: 'file', path: 'Notes.md', parent: 'root', content: `// Personal notes about ${selectedTask.title}\n` }
-      ];
-      setFiles(projectFiles);
-      setCode(selectedTask.starterCode);
-      setConsoleOutput('');
-      setConsoleStatus('Ready');
-      setTestResults([]);
+  // Initial welcome setup or project template
+  const handleCreateNewProject = (name = 'MyEduProject') => {
+    const initialFiles = [
+      { id: '1', name: 'Solution.java', type: 'file', path: 'src/Solution.java', parent: 'src', content: `public class Solution {\n    public static void main(String[] args) {\n        // Write your java logic here\n        System.out.println("Hello from EduVerse Studio!");\n    }\n}` },
+      { id: '2', name: 'README.md', type: 'file', path: 'README.md', parent: 'root', content: `# ${name}\n\nWelcome to your browser-based IDE workspace!\n\n## Getting Started\n1. Open \`src/Solution.java\`\n2. Click the **Run** button on the header toolbar.\n3. Chat with Friday AI to get instant code explanations.` },
+      { id: '3', name: 'input.txt', type: 'file', path: 'src/input.txt', parent: 'src', content: 'Sample input data...' },
+      { id: '4', name: 'output.txt', type: 'file', path: 'src/output.txt', parent: 'src', content: '' }
+    ];
+    setFiles(initialFiles);
+    setOpenTabsLeft(['Solution.java', 'README.md']);
+    setActiveTabLeft('Solution.java');
+    setActiveProject(name);
+    setGitStatus({ staged: [], unstaged: ['Solution.java', 'README.md'] });
+    toast.success(`Project ${name} created successfully!`);
+  };
 
-      // Setup tabs
-      setOpenTabs([mainName, 'README.md']);
-      setActiveTab(mainName);
-      setUnsaved(false);
-    }
-  }, [selectedTask]);
+  const handleImportProject = () => {
+    handleCreateNewProject('ImportedProject');
+    toast.success('Successfully imported project artifacts.');
+  };
 
-  // Handle Tab Switch
-  const handleTabClick = (fileName) => {
-    setActiveTab(fileName);
+  const handleCloneRepo = () => {
+    const url = prompt("Enter Git repository URL:");
+    if (!url) return;
+    handleCreateNewProject('ClonedRepository');
+    setGitBranch('main');
+    toast.success('Cloned repository into workspace.');
+  };
+
+  // Switch tabs & sync Monaco content
+  const handleTabClick = (fileName, splitSide = 'left') => {
     const file = files.find(f => f.name === fileName);
-    if (file) {
-      setCode(file.content);
+    if (!file) return;
+
+    if (splitSide === 'left') {
+      setActiveTabLeft(fileName);
+    } else {
+      setActiveTabRight(fileName);
     }
   };
 
-  const handleCloseTab = (e, fileName) => {
+  const handleCloseTab = (e, fileName, splitSide = 'left') => {
     e.stopPropagation();
-    const updated = openTabs.filter(t => t !== fileName);
-    setOpenTabs(updated);
-    if (activeTab === fileName && updated.length > 0) {
-      handleTabClick(updated[updated.length - 1]);
+    if (splitSide === 'left') {
+      const updated = openTabsLeft.filter(t => t !== fileName);
+      setOpenTabsLeft(updated);
+      if (activeTabLeft === fileName && updated.length > 0) {
+        handleTabClick(updated[updated.length - 1], 'left');
+      }
+    } else {
+      const updated = openTabsRight.filter(t => t !== fileName);
+      setOpenTabsRight(updated);
+      if (activeTabRight === fileName && updated.length > 0) {
+        handleTabClick(updated[updated.length - 1], 'right');
+      }
     }
   };
 
-  // Run Code logic
-  const handleRunCode = () => {
-    if (!code.trim()) {
-      toast.error('Code editor is empty!');
+  // Monaco code editing sync
+  const getActiveCode = (side = 'left') => {
+    const activeName = side === 'left' ? activeTabLeft : activeTabRight;
+    const file = files.find(f => f.name === activeName);
+    return file ? file.content : '';
+  };
+
+  const setActiveCode = (newVal, side = 'left') => {
+    const activeName = side === 'left' ? activeTabLeft : activeTabRight;
+    setFiles(prev => prev.map(f => f.name === activeName ? { ...f, content: newVal } : f));
+
+    // Register Git modified status
+    if (activeName && !gitStatus.unstaged.includes(activeName)) {
+      setGitStatus(prev => ({ ...prev, unstaged: [...prev.unstaged, activeName] }));
+    }
+
+    // Diagnostics simulation: scan for typos on the fly
+    if (activeName && activeName.endsWith('.java')) {
+      const issues = [];
+      if (!newVal.includes(';')) {
+        issues.push({
+          line: 4,
+          severity: 'error',
+          message: 'Missing semicolon \';\' at the end of the statement.',
+          title: 'Syntax Error: Semicolon Expected',
+          reason: 'Java requires every standalone statement to end with a semicolon.',
+          solution: 'Add a \';\' at the end of line 4.',
+          example: 'System.out.println("Hello");',
+          fixTime: '15 seconds',
+          difficulty: 'Easy'
+        });
+      }
+      if (newVal.includes('Solution') && !newVal.includes('class Solution')) {
+        issues.push({
+          line: 1,
+          severity: 'warning',
+          message: 'Class name must match file name.',
+          title: 'File mismatch warning',
+          reason: 'Java class naming rules require public classes to match the container filename.',
+          solution: 'Rename the class declaration to Solution.',
+          example: 'public class Solution {}',
+          fixTime: '30 seconds',
+          difficulty: 'Medium'
+        });
+      }
+      setDiagnostics(issues);
+    }
+  };
+
+  // Compile and run code workflow
+  const handleCompileAndRun = () => {
+    const currentCode = getActiveCode('left');
+    if (!currentCode.trim()) {
+      toast.error('No code available to compile!');
       return;
     }
+
+    // Block run if we have critical errors
+    const criticalError = diagnostics.find(d => d.severity === 'error');
+    if (criticalError) {
+      toast.error(`Compilation Blocked: Please fix the compiler error on line ${criticalError.line} first!`);
+      setActiveBottomTab('Problems');
+      setSelectedDiagnostic(criticalError);
+      return;
+    }
+
     setActiveBottomTab('Terminal');
     setConsoleStatus('Running');
-    setConsoleOutput('Compiling code...\nLinking dependencies...\nRunning unit test cases...\n');
-    
-    setTimeout(() => {
-      const results = selectedTask.testCases.map(tc => {
-        return {
-          input: tc.input,
-          expected: tc.expected,
-          actual: tc.expected, 
-          passed: true
-        };
-      });
+    setCompileStage('syntax');
+    setConsoleOutput('Checking code syntax rules...\n');
 
-      setTestResults(results);
-      setConsoleStatus('Success');
-      setConsoleOutput(prev => prev + `\n✔ Compilation Successful!\n✔ All test cases passed.\nRuntime: 85 ms\nMemory: 20 MB\nStatus: 200 OK`);
-      toast.success('Code executed successfully!');
-    }, 1200);
+    setTimeout(() => {
+      setCompileStage('compiling');
+      setConsoleOutput(prev => prev + '⚙ Compiler: generating Java bytecode Solution.class...\n');
+      
+      setTimeout(() => {
+        setCompileStage('running');
+        setConsoleOutput(prev => prev + '▶ JVM: executing Solution.class Solution.main()...\n');
+
+        setTimeout(() => {
+          setCompileStage('done');
+          setConsoleStatus('Success');
+          setConsoleOutput(prev => prev + `\n--------------------------------\nHello from EduVerse Studio!\n\nExecution Time: 45 ms\nMemory Usage: 18.2 MB\nDiagnostics: 0 syntax issues found.\nCode Quality Score: 96%\nReadability Score: 92%\nPerformance Score: 98%\n--------------------------------\n`);
+          toast.success('Project compiled and executed successfully!');
+        }, 1000);
+      }, 1000);
+    }, 1000);
   };
 
-  const handleResetCode = () => {
-    if (window.confirm('Reset code to default template? Your unsaved changes will be lost.')) {
-      setCode(selectedTask.starterCode);
-      setUnsaved(false);
-      toast.success('Editor reset successfully');
+  // One-click AI Auto Correct Fix Application
+  const handleApplyQuickFix = (issue) => {
+    const currentCode = getActiveCode('left');
+    let fixedCode = currentCode;
+
+    if (issue.title.includes('Semicolon')) {
+      fixedCode = currentCode.replace('System.out.println("Hello from EduVerse Studio!")', 'System.out.println("Hello from EduVerse Studio!");');
+    } else if (issue.title.includes('mismatch')) {
+      fixedCode = currentCode.replace(/class\s+\w+/, 'class Solution');
     }
+
+    setActiveCode(fixedCode, 'left');
+    setDiagnostics(prev => prev.filter(d => d.title !== issue.title));
+    setSelectedDiagnostic(null);
+    toast.success('AI Quick Fix applied successfully!');
   };
 
   const handleSaveDraft = () => {
@@ -326,241 +310,165 @@ export default function Coding() {
     toast.success('Draft saved successfully!');
   };
 
-  const handleMarkComplete = () => {
-    setCompletedTasks(prev => ({ ...prev, [selectedTask.id]: true }));
-    toast.success('Task marked as complete!');
+  // Local File Explorer Helpers
+  const handleCreateFile = () => {
+    const name = prompt("Enter new file name:");
+    if (!name) return;
+    const newFile = { id: Date.now().toString(), name, type: 'file', path: `src/${name}`, parent: 'src', content: '// New Code File\n' };
+    setFiles(prev => [...prev, newFile]);
+    setOpenTabsLeft(prev => [...prev, name]);
+    setActiveTabLeft(name);
+    toast.success(`Created file ${name}`);
   };
 
-  // Draggable panels sizing handlers
-  const startResizeLeft = (e) => {
-    const startX = e.clientX;
-    const startWidth = explorerWidth;
-    const doDrag = (moveEvent) => {
-      const newWidth = startWidth + (moveEvent.clientX - startX);
-      if (newWidth > 120 && newWidth < 450) {
-        setExplorerWidth(newWidth);
-      }
-    };
-    const stopDrag = () => {
-      document.removeEventListener('mousemove', doDrag);
-      document.removeEventListener('mouseup', stopDrag);
-    };
-    document.addEventListener('mousemove', doDrag);
-    document.addEventListener('mouseup', stopDrag);
+  const handleCreateFolder = () => {
+    const name = prompt("Enter new folder name:");
+    if (!name) return;
+    setExpandedFolders(prev => ({ ...prev, [name.toLowerCase()]: true }));
+    toast.success(`Created folder ${name}`);
   };
 
-  const startResizeBottom = (e) => {
-    const startY = e.clientY;
-    const startHeight = bottomHeight;
-    const doDrag = (moveEvent) => {
-      const newHeight = startHeight - (moveEvent.clientY - startY);
-      if (newHeight > 100 && newHeight < 600) {
-        setBottomHeight(newHeight);
-      }
-    };
-    const stopDrag = () => {
-      document.removeEventListener('mousemove', doDrag);
-      document.removeEventListener('mouseup', stopDrag);
-    };
-    document.addEventListener('mousemove', doDrag);
-    document.addEventListener('mouseup', stopDrag);
+  const handleDeleteFile = (fileName) => {
+    if (confirm(`Are you sure you want to delete ${fileName}?`)) {
+      setFiles(prev => prev.filter(f => f.name !== fileName));
+      setOpenTabsLeft(prev => prev.filter(t => t !== fileName));
+      setOpenTabsRight(prev => prev.filter(t => t !== fileName));
+      toast.success(`Deleted file ${fileName}`);
+    }
   };
 
-  const startResizeRight = (e) => {
-    const startX = e.clientX;
-    const startWidth = aiPanelWidth;
-    const doDrag = (moveEvent) => {
-      const newWidth = startWidth - (moveEvent.clientX - startX);
-      if (newWidth > 200 && newWidth < 600) {
-        setAiPanelWidth(newWidth);
-      }
-    };
-    const stopDrag = () => {
-      document.removeEventListener('mousemove', doDrag);
-      document.removeEventListener('mouseup', stopDrag);
-    };
-    document.addEventListener('mousemove', doDrag);
-    document.addEventListener('mouseup', stopDrag);
-  };
-
-  // AI Prompts
-  const handleAiPrompt = (action) => {
-    setAiTyping(true);
-    setAiMessages(prev => [...prev, { role: 'user', text: `${action} this code.` }]);
-    
-    setTimeout(() => {
-      setAiTyping(false);
-      let response = '';
-      if (action === 'Explain Code') {
-        response = `Here is the explanation for your current code:\n1. It defines a method that iterates through the input parameters.\n2. The code optimizes operations by processing items in linear time O(n).\n3. It handles corner cases gracefully.`;
-      } else if (action === 'Find Bug') {
-        response = `✨ Code review check: 0 errors detected. Your logic matches the task constraints perfectly!`;
-      } else {
-        response = `Here is the AI optimization suggestions:\n- Time Complexity: O(n)\n- Space Complexity: O(1)\n- Consider using built-in methods for cleaner syntax.`;
-      }
-      setAiMessages(prev => [...prev, { role: 'assistant', text: response }]);
-    }, 1500);
-  };
-
+  // AI assistant prompts
   const handleSendAiMessage = () => {
     if (!aiInput.trim()) return;
     const text = aiInput;
     setAiMessages(prev => [...prev, { role: 'user', text }]);
     setAiInput('');
     setAiTyping(true);
-    
+
     setTimeout(() => {
       setAiTyping(false);
-      setAiMessages(prev => [...prev, { role: 'assistant', text: `Here is the helper analysis for your query. Let's trace it down step by step...` }]);
+      setAiMessages(prev => [...prev, { role: 'assistant', text: `I scanned Solution.java. Your current code is clean. Let's walk through how to optimize the loop complexity from O(n) to O(1) if you want.` }]);
     }, 1200);
   };
 
-  const getDifficultyColor = (diff) => {
-    if (diff === 'Easy') return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-    if (diff === 'Medium') return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
-    return 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+  const handleAiCommand = (cmd) => {
+    setAiTyping(true);
+    setAiMessages(prev => [...prev, { role: 'user', text: `${cmd} current file.` }]);
+
+    setTimeout(() => {
+      setAiTyping(false);
+      setAiMessages(prev => [...prev, { 
+        role: 'assistant', 
+        text: `Here is the AI review for Solution.java:\n\n1. **Complexity**: Time O(1) | Space O(1).\n2. **Security**: Zero SQL Injection vulnerability risks.\n3. **Refactoring recommendation**: Keep static helper variables final to reduce garbage collect overhead.` 
+      }]);
+    }, 1500);
   };
 
-  // Explorer Tree helpers
-  const handleFileClick = (f) => {
-    if (f.type === 'file') {
-      if (!openTabs.includes(f.name)) {
-        setOpenTabs([...openTabs, f.name]);
-      }
-      handleTabClick(f.name);
-    }
-  };
-
-  const handleAddNewFile = () => {
-    const name = prompt("Enter file name:");
-    if (!name) return;
-    const ext = name.split('.').pop();
-    const newF = { id: Date.now().toString(), name, type: 'file', path: 'src/' + name, parent: 'src', content: `// New ${ext} file\n` };
-    setFiles([...files, newF]);
-    setOpenTabs([...openTabs, name]);
-    setActiveTab(name);
-    setCode(newF.content);
-  };
-
-  const handleAddNewFolder = () => {
-    const name = prompt("Enter folder name:");
-    if (!name) return;
-    setExpandedFolders(prev => ({ ...prev, [name.toLowerCase()]: true }));
-    toast.success(`Folder ${name} created`);
-  };
-
-  // Editor onmount setup
-  const handleEditorDidMount = (editor, monaco) => {
-    editorRef.current = editor;
-    editor.onDidChangeCursorPosition(e => {
-      setCursorPos({ ln: e.position.lineNumber, col: e.position.column });
-    });
-  };
-
-  // Define active color palette classes based on Theme Context
+  // Theme-based class definitions
   const bgClass = isDarkMode ? 'bg-[#0B1220] text-slate-200' : 'bg-slate-50 text-slate-800';
-  const sidebarClass = isDarkMode ? 'bg-[#0F172A]' : 'bg-slate-100';
-  const panelHeaderClass = isDarkMode ? 'bg-[#0F172A] border-white/5' : 'bg-slate-200 border-slate-350';
-  const borderClass = isDarkMode ? 'border-white/5' : 'border-slate-300';
-  const textMutedClass = isDarkMode ? 'text-slate-400' : 'text-slate-600';
+  const sidebarClass = isDarkMode ? 'bg-[#0F172A] border-white/5' : 'bg-slate-100 border-slate-300';
+  const borderClass = isDarkMode ? 'border-white/5' : 'border-slate-250';
+  const panelHeaderClass = isDarkMode ? 'bg-[#0F172A] border-white/5' : 'bg-slate-200 border-slate-300';
+  const textMutedClass = isDarkMode ? 'text-slate-400' : 'text-slate-500';
   const consoleBgClass = isDarkMode ? 'bg-[#111827]' : 'bg-white';
   const buttonBgClass = isDarkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600 text-slate-300' : 'bg-slate-200 border-slate-300 hover:bg-slate-300 text-slate-700';
 
   return (
     <div className={`w-full h-full flex flex-col relative overflow-hidden ${bgClass}`}>
-      {/* Background neon glows */}
-      {isDarkMode && (
-        <>
-          <div className="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] bg-[#6366F1]/10 rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-[#8B5CF6]/10 rounded-full blur-[120px] pointer-events-none" />
-        </>
-      )}
 
-      {/* ───── LOBBY / TASK LIST VIEW ───── */}
-      {viewState === 'lobby' && (
-        <div className="lobby-panel flex-1 flex flex-col justify-start p-6 overflow-y-auto">
-          {/* Top Header Bar */}
-          <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-5 mb-5 mt-2 ${borderClass}`}>
-            <div>
-              <h1 className="lobby-title font-extrabold text-2xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#2563EB] to-[#8B5CF6]">Coding Practice Workspace</h1>
-              <p className={`${textMutedClass} text-xs mt-1`}>Select an algorithm task to load the premium development environment.</p>
+      {/* ─── CASE A: WELCOME HOME SCREEN STATE ─── */}
+      {!activeProject && (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center select-none relative">
+          <div className="absolute inset-0 bg-[#8B5CF6]/5 rounded-full blur-[160px] max-w-lg mx-auto pointer-events-none" />
+          
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#2563EB] to-[#8B5CF6] text-white flex items-center justify-center font-bold text-3xl shadow-xl mb-6">
+            E
+          </div>
+
+          <h1 className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#2563EB] via-[#8B5CF6] to-[#6366F1]">
+            Welcome to EduVerse AI Studio
+          </h1>
+          <p className={`text-sm mt-2 max-w-md ${textMutedClass}`}>
+            A professional browser-based IDE workspace integrated with Friday AI code coaching, local files integration, and visual DSA analysis.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10 max-w-lg w-full">
+            <div className={`p-5 rounded-2xl border text-left cursor-pointer transition-all ${
+              isDarkMode ? 'bg-[#0F172A] border-white/5 hover:border-[#8B5CF6]/50' : 'bg-white border-slate-200 hover:border-[#8B5CF6]'
+            }`} onClick={() => handleCreateNewProject('EduVerse_Demo')}>
+              <h3 className="font-extrabold text-sm text-[#2563EB]">Start Coding</h3>
+              <p className={`text-[11px] mt-1 ${textMutedClass}`}>Initialize a completely empty project directory.</p>
+              <div className="flex flex-col gap-2 mt-4 text-xs font-semibold text-slate-400">
+                <span 
+                  onClick={(e) => { e.stopPropagation(); handleCreateNewProject('EduVerse_Demo'); handleCreateFile(); }}
+                  className="flex items-center gap-2 hover:text-white cursor-pointer"
+                >
+                  <Plus size={14} /> New File
+                </span>
+                <span 
+                  onClick={(e) => { e.stopPropagation(); handleCreateNewProject('EduVerse_Demo'); handleCreateFolder(); }}
+                  className="flex items-center gap-2 hover:text-white cursor-pointer"
+                >
+                  <FolderPlus size={14} /> New Folder
+                </span>
+              </div>
             </div>
 
-            {/* Language Selection */}
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col">
-                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-1">Select Language</span>
-                <select 
-                  value={selectedLanguage} 
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
-                  className={`bg-slate-900 border rounded-xl px-4 py-2 text-xs font-semibold text-white focus:outline-none focus:border-[#2563EB] cursor-pointer ${borderClass}`}
-                >
-                  <option value="Java">Java</option>
-                  <option value="Python">Python</option>
-                </select>
+            <div className={`p-5 rounded-2xl border text-left cursor-pointer transition-all ${
+              isDarkMode ? 'bg-[#0F172A] border-white/5 hover:border-[#8B5CF6]/50' : 'bg-white border-slate-200 hover:border-[#8B5CF6]'
+            }`}>
+              <h3 className="font-extrabold text-sm text-[#8B5CF6]">Import & Connect</h3>
+              <p className={`text-[11px] mt-1 ${textMutedClass}`}>Clone from GitHub or open your system local directories.</p>
+              <div className="flex flex-col gap-2 mt-4 text-xs font-semibold text-slate-400">
+                <span className="flex items-center gap-2 hover:text-white" onClick={handleCloneRepo}><GitBranch size={14} /> Clone Repository</span>
+                <span className="flex items-center gap-2 hover:text-white" onClick={handleImportProject}><Folder size={14} /> Open Local Folder</span>
               </div>
             </div>
           </div>
 
-          {/* Grid Task Explorer */}
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tasks.map(task => {
-              const isCompleted = completedTasks[task.id];
-              return (
-                <div
-                  key={task.id}
-                  onClick={() => { setSelectedTopic(task); setViewState('workspace'); }}
-                  className={`quiz-card-item p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
-                    isDarkMode ? 'border-white/5 bg-slate-900/40 hover:border-white/10 hover:bg-slate-900/60' : 'border-slate-200 bg-white hover:border-slate-350 hover:bg-slate-50 shadow-sm'
+          {/* Recent projects */}
+          <div className="mt-10 w-full max-w-md text-left">
+            <span className={`text-[10px] uppercase font-bold tracking-wider ${textMutedClass}`}>Recent Workspace Projects</span>
+            <div className="space-y-2 mt-3">
+              {recentProjects.map(proj => (
+                <div 
+                  key={proj}
+                  onClick={() => handleCreateNewProject(proj)}
+                  className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                    isDarkMode ? 'bg-slate-900/40 border-white/5 hover:bg-slate-900/80 text-slate-300' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
                   }`}
                 >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${getDifficultyColor(task.difficulty)}`}>
-                        {task.difficulty}
-                      </span>
-                      {isCompleted && (
-                        <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-0.5">
-                          <CheckCircle size={12} /> Solved
-                        </span>
-                      )}
-                    </div>
-                    <h3 className={`font-extrabold text-sm ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}>{task.title}</h3>
-                    <p className={`text-[11px] mt-2 line-clamp-2 ${textMutedClass}`}>{task.desc}</p>
-                  </div>
-
-                  <div className={`flex items-center justify-between mt-5 pt-3 border-t text-[10px] ${borderClass}`}>
-                    <span className="font-bold uppercase tracking-wider">{task.topic}</span>
-                    <span className="text-[#2563EB] font-bold">Open IDE →</span>
-                  </div>
+                  <span className="text-xs font-bold font-mono">{proj}</span>
+                  <span className="text-[10px] text-slate-500">2 hours ago</span>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
+
         </div>
       )}
 
-      {/* ───── FULL PREMIUM IDE WORKSPACE ───── */}
-      {viewState === 'workspace' && selectedTask && (
-        <div className="workspace-panel flex-1 flex flex-col justify-between overflow-hidden relative select-none">
+      {/* ─── CASE B: ACTIVE IDE WORKSPACE STATE ─── */}
+      {activeProject && (
+        <div className="flex-1 flex flex-col justify-between overflow-hidden relative">
           
-          {/* Top IDE Navbar Bar */}
-          <div className={`flex flex-row items-center justify-between px-4 py-2 border-b ${sidebarClass} ${borderClass}`}>
+          {/* Top Main Toolbar */}
+          <div className={`flex flex-row items-center justify-between px-4 py-2 border-b ${sidebarClass}`}>
             <div className="flex items-center gap-3">
               <button 
-                onClick={() => setViewState('lobby')} 
+                onClick={() => setActiveProject(null)} 
                 className={`exit-btn p-1.5 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${buttonBgClass}`}
               >
                 <ArrowLeft size={14} />
               </button>
               <div className="flex items-center gap-2">
-                <span className={`text-xs font-bold ${textMutedClass}`}>EduVerse Studio</span>
-                <span className={`text-xs ${textMutedClass}`}>/</span>
-                <span className={`text-xs font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{selectedTask.title}</span>
+                <span className="text-xs text-[#8B5CF6] font-bold">EduVerse Studio</span>
+                <span className="text-xs text-slate-500">/</span>
+                <span className={`text-xs font-bold ${isDarkMode ? 'text-slate-350' : 'text-slate-700'}`}>{activeProject}</span>
               </div>
             </div>
 
-            {/* Friday Chatbot Button positioned in the middle spacer */}
+            {/* Friday AI chatbot toggle button in the middle spacer */}
             <div className="hidden md:flex items-center justify-center flex-grow mx-4">
               <button 
                 onClick={() => setAiPanelCollapsed(!aiPanelCollapsed)}
@@ -576,249 +484,357 @@ export default function Coding() {
               </button>
             </div>
 
-            {/* Run & Action Controls */}
+            {/* Header Action Run & Settings Buttons */}
             <div className="flex items-center gap-2">
               <button 
-                onClick={handleRunCode}
-                className="px-3 py-1.5 rounded-lg bg-[#22C55E] hover:bg-[#16A34A] text-slate-950 font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-md shadow-[#22C55E]/15"
+                onClick={handleCompileAndRun}
+                className="px-3.5 py-1.5 rounded-lg bg-[#22C55E] hover:bg-[#16A34A] text-slate-950 font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-md shadow-[#22C55E]/15"
               >
-                <Play size={12} fill="currentColor" /> Run
+                <Play size={12} fill="currentColor" /> Run Code
               </button>
               <button 
-                onClick={handleMarkComplete}
-                className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-md shadow-[#8B5CF6]/15"
-              >
-                <CheckSquare size={12} /> Submit
-              </button>
-              <button 
-                onClick={handleResetCode}
+                onClick={() => setIsSplit(!isSplit)}
                 className={`p-1.5 rounded-lg border cursor-pointer ${buttonBgClass}`}
-                title="Reset Code"
+                title="Split Editor layout"
               >
-                <RotateCcw size={14} />
+                <Columns size={14} />
               </button>
               <button 
                 onClick={handleSaveDraft}
                 className={`p-1.5 rounded-lg border cursor-pointer ${buttonBgClass}`}
-                title="Save Draft"
+                title="Save directly to disk"
               >
                 <Save size={14} />
               </button>
               <button 
-                onClick={() => setShowSettings(true)}
+                onClick={() => setShowSettingsModal(true)}
                 className={`p-1.5 rounded-lg border cursor-pointer ${buttonBgClass}`}
-                title="Editor Settings"
+                title="Workspace settings"
               >
-                <Settings size={14} />
+                <SettingsIcon size={14} />
               </button>
             </div>
           </div>
 
-          {/* Main IDE Layout */}
-          <div className="flex-1 flex flex-row items-stretch overflow-hidden min-h-0 relative">
+          {/* Core IDE panels */}
+          <div className="flex-grow flex flex-row items-stretch overflow-hidden min-h-0 relative">
             
-            {/* 1. Left Sidebar: File Explorer */}
-            {!explorerCollapsed && (
-              <div 
-                style={{ width: `${explorerWidth}px` }} 
-                className={`flex flex-col border-r flex-shrink-0 select-none min-h-0 overflow-y-auto ${sidebarClass} ${borderClass}`}
-              >
-                <div className={`flex items-center justify-between px-3 py-2 border-b ${borderClass}`}>
-                  <span className={`text-[10px] uppercase font-bold tracking-wider ${textMutedClass}`}>Explorer</span>
-                  <div className="flex items-center gap-1.5">
-                    <button onClick={handleAddNewFile} title="New File" className="text-slate-400 hover:text-slate-600 p-0.5"><Plus size={13} /></button>
-                    <button onClick={handleAddNewFolder} title="New Folder" className="text-slate-400 hover:text-slate-600 p-0.5"><FolderPlus size={13} /></button>
-                  </div>
-                </div>
-
-                <div className="p-2 space-y-1 text-xs">
-                  {/* ROOT */}
-                  <div className={`flex items-center gap-1.5 font-bold px-1.5 py-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                    <ChevronDown size={14} />
-                    <Folder size={14} className="text-[#2563EB]" />
-                    <span>Project</span>
-                  </div>
-
-                  {/* SRC FOLDER */}
-                  <div className="pl-3">
-                    <div 
-                      onClick={() => setExpandedFolders(p => ({ ...p, src: !p.src }))} 
-                      className={`flex items-center gap-1.5 cursor-pointer px-1.5 py-0.5 rounded ${textMutedClass}`}
-                    >
-                      <ChevronDown size={12} className={`transition-transform ${expandedFolders.src ? '' : '-rotate-90'}`} />
-                      <Folder size={12} className="text-[#8B5CF6]" />
-                      <span>src</span>
-                    </div>
-
-                    {expandedFolders.src && (
-                      <div className={`pl-4 space-y-0.5 border-l ml-2 mt-1 ${borderClass}`}>
-                        {files.filter(f => f.parent === 'src').map(f => (
-                          <div 
-                            key={f.id}
-                            onClick={() => handleFileClick(f)}
-                            className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer transition-colors ${
-                              activeTab === f.name 
-                                ? 'bg-[#2563EB]/15 text-[#2563EB] font-bold' 
-                                : `${textMutedClass} hover:bg-white/5`
-                            }`}
-                          >
-                            <File size={12} />
-                            <span>{f.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* TEST CASES FOLDER */}
-                  <div className="pl-3">
-                    <div 
-                      onClick={() => setExpandedFolders(p => ({ ...p, 'test-cases': !p['test-cases'] }))} 
-                      className={`flex items-center gap-1.5 cursor-pointer px-1.5 py-0.5 rounded ${textMutedClass}`}
-                    >
-                      <ChevronDown size={12} className={`transition-transform ${expandedFolders['test-cases'] ? '' : '-rotate-90'}`} />
-                      <Folder size={12} className="text-[#22C55E]" />
-                      <span>Test Cases</span>
-                    </div>
-
-                    {expandedFolders['test-cases'] && (
-                      <div className={`pl-4 space-y-0.5 border-l ml-2 mt-1 ${borderClass}`}>
-                        {files.filter(f => f.parent === 'test-cases').map(f => (
-                          <div 
-                            key={f.id}
-                            onClick={() => handleFileClick(f)}
-                            className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer transition-colors ${
-                              activeTab === f.name 
-                                ? 'bg-[#2563EB]/15 text-[#2563EB] font-bold' 
-                                : `${textMutedClass} hover:bg-white/5`
-                            }`}
-                          >
-                            <FileText size={12} />
-                            <span>{f.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* ROOT LEVEL FILES */}
-                  <div className="pl-4 space-y-0.5 mt-1">
-                    {files.filter(f => f.parent === 'root').map(f => (
-                      <div 
-                        key={f.id}
-                        onClick={() => handleFileClick(f)}
-                        className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer transition-colors ${
-                          activeTab === f.name 
-                            ? 'bg-[#2563EB]/15 text-[#2563EB] font-bold' 
-                            : `${textMutedClass} hover:bg-white/5`
-                        }`}
-                      >
-                        <FileText size={12} />
-                        <span>{f.name}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                </div>
-              </div>
-            )}
-
-            {/* Left Resizer bar */}
-            {!explorerCollapsed && (
-              <div 
-                className={`w-1 cursor-col-resize hover:bg-[#2563EB] active:bg-[#2563EB] transition-colors flex-shrink-0 z-30 ${isDarkMode ? 'bg-white/5' : 'bg-slate-300'}`} 
-                onMouseDown={startResizeLeft}
-              />
-            )}
-
-            {/* Center Area: Tabs + Monaco Editor + Bottom Panel */}
-            <div className="flex-1 flex flex-col items-stretch overflow-hidden min-w-0">
-              
-              {/* Top Tab Bar */}
-              <div className={`flex flex-row items-center border-b overflow-x-auto scrollbar-none flex-shrink-0 select-none ${bgClass} ${borderClass}`}>
-                {openTabs.map(tabName => (
-                  <div 
-                    key={tabName}
-                    onClick={() => handleTabClick(tabName)}
-                    className={`flex items-center gap-2 px-4 py-2 border-r text-xs cursor-pointer transition-all ${borderClass} ${
-                      activeTab === tabName 
-                        ? `${consoleBgClass} text-[#2563EB] border-t-2 border-t-[#2563EB] font-bold` 
-                        : 'text-slate-500 hover:bg-[#111827]/10 hover:text-slate-700'
+            {/* Left Tiny Activity Bar */}
+            <div className={`w-12 border-r flex flex-col justify-between items-center py-4 select-none ${sidebarClass}`}>
+              <div className="flex flex-col gap-5 items-center w-full">
+                {['explorer', 'search', 'git', 'analysis'].map(tab => (
+                  <button 
+                    key={tab}
+                    onClick={() => setActiveSidebarTab(tab)}
+                    className={`p-2 rounded-xl transition-all relative ${
+                      activeSidebarTab === tab ? 'bg-[#2563EB]/15 text-[#2563EB]' : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
-                    <span>{tabName}</span>
-                    {unsaved && activeTab === tabName && (
-                      <span className="w-2 h-2 rounded-full bg-[#8B5CF6] block" />
-                    )}
-                    <button 
-                      onClick={(e) => handleCloseTab(e, tabName)}
-                      className="text-slate-500 hover:text-red-500 rounded p-0.5"
-                    >
-                      <XCircle size={10} />
-                    </button>
-                  </div>
+                    {tab === 'explorer' && <FileText size={20} />}
+                    {tab === 'search' && <Search size={20} />}
+                    {tab === 'git' && <GitBranch size={20} />}
+                    {tab === 'analysis' && <Cpu size={20} />}
+                  </button>
                 ))}
               </div>
+            </div>
 
-              {/* Monaco Code Editor Workspace */}
-              <div className="flex-1 relative min-h-0">
-                <Editor
-                  height="100%"
-                  language={selectedLanguage.toLowerCase() === 'python' ? 'python' : 'java'}
-                  theme={theme}
-                  value={code}
-                  onChange={(val) => { setCode(val || ''); setUnsaved(true); }}
-                  onMount={handleEditorDidMount}
-                  options={{
-                    fontSize: editorFontSize,
-                    minimap: { enabled: editorMinimap },
-                    wordWrap: editorWordWrap,
-                    automaticLayout: true,
-                    tabSize: 4
-                  }}
-                />
+            {/* Resizable Left Panel view content */}
+            <div 
+              style={{ width: `${explorerWidth}px` }} 
+              className={`flex flex-col border-r flex-shrink-0 min-h-0 overflow-y-auto select-none ${sidebarClass}`}
+            >
+              
+              {/* Explorer tab view */}
+              {activeSidebarTab === 'explorer' && (
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">File Tree Explorer</span>
+                    <div className="flex items-center gap-1.5">
+                      <button onClick={handleCreateFile} className="text-slate-400 hover:text-white p-0.5"><Plus size={13} /></button>
+                      <button onClick={handleCreateFolder} className="text-slate-400 hover:text-white p-0.5"><FolderPlus size={13} /></button>
+                    </div>
+                  </div>
+
+                  <div className="p-2 space-y-1 text-xs">
+                    {/* Project root folder */}
+                    <div className={`flex items-center gap-1.5 font-bold px-1.5 py-1 ${isDarkMode ? 'text-slate-350' : 'text-slate-700'}`}>
+                      <ChevronDown size={14} />
+                      <Folder size={14} className="text-[#2563EB]" />
+                      <span>{activeProject}</span>
+                    </div>
+
+                    <div className="pl-3 space-y-1.5">
+                      {/* Src Folder */}
+                      <div onClick={() => setExpandedFolders(p => ({ ...p, src: !p.src }))} className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 cursor-pointer">
+                        <ChevronDown size={12} className={`transition-transform ${expandedFolders.src ? '' : '-rotate-90'}`} />
+                        <Folder size={12} className="text-[#8B5CF6]" />
+                        <span>src</span>
+                      </div>
+
+                      {expandedFolders.src && (
+                        <div className="pl-4 space-y-1 border-l border-white/5 ml-2 mt-1">
+                          {files.map(f => (
+                            <div 
+                              key={f.id} 
+                              onClick={() => handleTabClick(f.name, 'left')}
+                              className={`flex items-center justify-between group px-2 py-1 rounded cursor-pointer ${
+                                activeTabLeft === f.name ? 'bg-[#2563EB]/15 text-[#60A5FA]' : 'text-slate-400 hover:bg-white/5'
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5">
+                                <FileCode size={12} />
+                                <span>{f.name}</span>
+                              </div>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleDeleteFile(f.name); }}
+                                className="opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity"
+                              >
+                                <Trash size={10} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Search Project files */}
+              {activeSidebarTab === 'search' && (
+                <div className="p-3 space-y-4">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Search Workspace</span>
+                  <input 
+                    type="text" 
+                    placeholder="Search query in project..." 
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg p-2 text-xs focus:outline-none focus:border-[#8B5CF6] text-white"
+                  />
+                  <div className="text-xs text-slate-500">No search query entered. Enter a keyword to scan lines.</div>
+                </div>
+              )}
+
+              {/* Source Control git status panel */}
+              {activeSidebarTab === 'git' && (
+                <div className="p-3 flex flex-col h-full justify-between">
+                  <div className="space-y-4">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Git Source Control</span>
+                    
+                    <div className="p-3 bg-slate-900/40 border border-white/5 rounded-xl text-xs space-y-2">
+                      <div className="flex items-center justify-between text-[11px] text-slate-400">
+                        <span>Current Branch:</span>
+                        <span className="text-purple-400 font-bold flex items-center gap-1"><GitBranch size={12} /> {gitBranch}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-500">Unstaged Changes: {gitStatus.unstaged.length} files</div>
+                    </div>
+
+                    <div className="space-y-1">
+                      {gitStatus.unstaged.map(f => (
+                        <div key={f} className="flex items-center justify-between text-xs p-1.5 bg-slate-900/20 rounded border border-white/5">
+                          <span className="font-mono text-slate-350">{f}</span>
+                          <span className="text-amber-400 text-[10px] font-bold">Modified</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <textarea
+                      value={commitMessage}
+                      onChange={(e) => setCommitMessage(e.target.value)}
+                      placeholder="Commit message..."
+                      className="w-full h-16 bg-slate-900 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-[#8B5CF6]"
+                    />
+                    
+                    <button 
+                      onClick={() => {
+                        if (!commitMessage.trim()) return;
+                        setGitHistory([{ id: Date.now().toString(), hash: 'a12b3c', message: commitMessage, author: 'Friday AI' }, ...gitHistory]);
+                        setCommitMessage('');
+                        setGitStatus({ staged: [], unstaged: [] });
+                        toast.success('Successfully committed code changes.');
+                      }}
+                      className="w-full py-1.5 rounded bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold text-xs"
+                    >
+                      Commit to {gitBranch}
+                    </button>
+                  </div>
+
+                  <div className="border-t border-white/5 pt-3">
+                    <span className="text-[10px] text-slate-500 uppercase block mb-2">Commit logs</span>
+                    <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
+                      {gitHistory.map(g => (
+                        <div key={g.id} className="p-2 rounded bg-slate-900/60 border border-white/5 text-[10px]">
+                          <div className="flex justify-between font-mono text-slate-400 font-bold">
+                            <span>{g.hash}</span>
+                            <span>{g.author}</span>
+                          </div>
+                          <p className="text-slate-300 mt-1 truncate">{g.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* Project Health analysis tab */}
+              {activeSidebarTab === 'analysis' && (
+                <div className="p-3 space-y-4">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Project Quality Analysis</span>
+                  <div className="p-3 bg-white/5 rounded-xl border border-white/5 text-xs space-y-3">
+                    <div>
+                      <div className="text-slate-400">Project Health Score</div>
+                      <div className="text-xl font-black text-emerald-400">94 / 100</div>
+                    </div>
+                    <div className="h-[2px] bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-400 w-[94%]" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400">
+                      <div>Unused Files: 0</div>
+                      <div>Dead Methods: 1</div>
+                      <div>Duplicate Code: 0%</div>
+                      <div>Documentation: 80%</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* Left resizer handle bar */}
+            <div className={`w-1 cursor-col-resize hover:bg-[#2563EB] active:bg-[#2563EB] transition-colors flex-shrink-0 z-35 ${isDarkMode ? 'bg-white/5' : 'bg-slate-300'}`} 
+              onMouseDown={startResizeLeft}
+            />
+
+            {/* Center Area: Tabs + split Monaco Editor + bottom panel workspace */}
+            <div className="flex-grow flex flex-col items-stretch overflow-hidden min-w-0">
+              
+              {/* Tab navigation headers */}
+              <div className={`flex flex-row items-center justify-between border-b ${consoleBgClass} ${borderClass}`}>
+                <div className="flex flex-row items-center overflow-x-auto scrollbar-none">
+                  {openTabsLeft.map(tabName => (
+                    <div 
+                      key={tabName}
+                      onClick={() => handleTabClick(tabName, 'left')}
+                      className={`flex items-center gap-2 px-4 py-2 border-r text-xs cursor-pointer transition-all ${borderClass} ${
+                        activeTabLeft === tabName 
+                          ? `${bgClass} text-[#2563EB] border-t-2 border-t-[#2563EB] font-bold` 
+                          : `${textMutedClass} hover:bg-white/5`
+                      }`}
+                    >
+                      <FileCode size={12} />
+                      <span>{tabName}</span>
+                      <button onClick={(e) => handleCloseTab(e, tabName, 'left')} className="text-slate-500 hover:text-red-500 rounded p-0.5"><XCircle size={10} /></button>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Bottom Resizer bar */}
-              <div 
-                className={`h-1 cursor-row-resize hover:bg-[#2563EB] active:bg-[#2563EB] transition-colors flex-shrink-0 z-30 ${isDarkMode ? 'bg-white/5' : 'bg-slate-300'}`} 
+              {/* Split screen content layout */}
+              <div className={`flex-1 flex min-h-0 ${splitOrientation === 'horizontal' ? 'flex-col' : 'flex-row'}`}>
+                {/* Left Editor */}
+                <div className="flex-1 bg-[#111827] relative min-h-0">
+                  <Editor
+                    height="100%"
+                    language={(activeTabLeft && activeTabLeft.endsWith('.md')) ? 'markdown' : (activeTabLeft && activeTabLeft.endsWith('.txt')) ? 'plaintext' : 'java'}
+                    theme={theme}
+                    value={getActiveCode('left')}
+                    onChange={(val) => setActiveCode(val || '', 'left')}
+                    onMount={handleEditorDidMount}
+                    options={{
+                      fontSize: editorFontSize,
+                      minimap: { enabled: editorMinimap },
+                      wordWrap: editorWordWrap,
+                      automaticLayout: true,
+                      tabSize: 4
+                    }}
+                  />
+
+                  {/* Monaco Diagnostics Light Bulb overlay warning */}
+                  {diagnostics.length > 0 && (
+                    <div className="absolute top-4 right-4 z-40 bg-amber-500/10 border border-amber-500/20 backdrop-blur-md rounded-xl p-3 max-w-xs text-xs space-y-2">
+                      <div className="flex items-center gap-1.5 text-amber-400 font-bold">
+                        <Lightbulb size={14} className="animate-bounce" />
+                        <span>Friday AI Quick Fix</span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-normal">{diagnostics[0].message}</p>
+                      <button 
+                        onClick={() => handleApplyQuickFix(diagnostics[0])}
+                        className="px-3 py-1 bg-amber-500 text-slate-950 font-bold text-[10px] rounded hover:bg-amber-450 transition-colors"
+                      >
+                        Apply Fix
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Split editor view if toggled */}
+                {isSplit && (
+                  <>
+                    <div className={`cursor-resize bg-slate-700 ${splitOrientation === 'horizontal' ? 'h-1' : 'w-1'}`} />
+                    <div className="flex-1 bg-[#111827] relative min-h-0">
+                      <Editor
+                        height="100%"
+                        language="java"
+                        theme={theme}
+                        value="// Split Screen Secondary File View..."
+                        options={{
+                          fontSize: editorFontSize,
+                          minimap: { enabled: false },
+                          wordWrap: editorWordWrap,
+                          automaticLayout: true
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Bottom Drag handle */}
+              <div className={`h-1 cursor-row-resize hover:bg-[#2563EB] active:bg-[#2563EB] transition-colors flex-shrink-0 z-35 ${isDarkMode ? 'bg-white/5' : 'bg-slate-300'}`} 
                 onMouseDown={startResizeBottom}
               />
 
-              {/* Bottom Panel */}
+              {/* Bottom Terminal Output tabs panel */}
               <div 
                 style={{ height: `${bottomHeight}px` }} 
                 className={`flex flex-col border-t flex-shrink-0 min-h-0 ${consoleBgClass} ${borderClass}`}
               >
                 <div className={`flex items-center justify-between border-b px-4 flex-shrink-0 ${panelHeaderClass}`}>
                   <div className="flex flex-row items-center gap-4 text-xs">
-                    {['Terminal', 'Output', 'Test Cases', 'Problems', 'Debug Console'].map(t => (
+                    {['Terminal', 'Output', 'Problems', 'Debug Console', 'Test Cases'].map(tab => (
                       <button 
-                        key={t}
-                        onClick={() => setActiveBottomTab(t)}
+                        key={tab}
+                        onClick={() => setActiveBottomTab(tab)}
                         className={`py-2 px-1 font-bold transition-all relative ${
-                          activeBottomTab === t 
+                          activeBottomTab === tab 
                             ? `${isDarkMode ? 'text-white' : 'text-slate-900'} border-b-2 border-b-[#2563EB]` 
                             : `${textMutedClass} hover:text-slate-700`
                         }`}
                       >
-                        {t}
+                        {tab}
+                        {tab === 'Problems' && diagnostics.length > 0 && (
+                          <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[9px]">{diagnostics.length}</span>
+                        )}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="flex-1 p-3 overflow-y-auto font-mono text-xs select-text">
+                <div className="flex-grow p-3 overflow-y-auto font-mono text-xs select-text">
+                  
                   {activeBottomTab === 'Terminal' && (
-                    <div className="space-y-1 text-[#22C55E]">
+                    <div className="space-y-1">
                       {consoleStatus === 'Running' ? (
-                        <div className="flex items-center gap-2 text-amber-500">
-                          <RefreshCw size={14} className="animate-spin" />
-                          <span>Compiling code and linking artifacts...</span>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-amber-400">
+                            <RefreshCw size={14} className="animate-spin" />
+                            <span>Stage: {compileStage.toUpperCase()} analysis in progress...</span>
+                          </div>
+                          <pre className="text-slate-500">{consoleOutput}</pre>
                         </div>
                       ) : (
-                        <pre className={`whitespace-pre-wrap leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                          {consoleOutput || '$ Ready to run tests. Press "Run" above.'}
+                        <pre className={`whitespace-pre-wrap leading-relaxed ${isDarkMode ? 'text-slate-350' : 'text-slate-700'}`}>
+                          {consoleOutput || '$ Ready to compile. Press "Run Code" button.'}
                         </pre>
                       )}
                     </div>
@@ -827,166 +843,175 @@ export default function Coding() {
                   {activeBottomTab === 'Output' && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className={`font-bold uppercase tracking-wider text-[10px] ${textMutedClass}`}>Execution Result</span>
-                        <span className={`px-2.5 py-0.5 rounded font-black text-[10px] ${
-                          consoleStatus === 'Success' ? 'bg-[#22C55E]/15 text-[#22C55E]' : 'bg-[#EF4444]/15 text-[#EF4444]'
-                        }`}>
-                          {consoleStatus === 'Success' ? 'Accepted' : 'Idle'}
-                        </span>
+                        <span className="text-[10px] text-slate-500 uppercase">Execution Result</span>
+                        <span className="px-2 py-0.5 bg-emerald-500/15 text-emerald-400 rounded text-[10px] font-bold">Passed</span>
                       </div>
-                      <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 p-3 rounded-lg ${isDarkMode ? 'bg-white/5 text-slate-300' : 'bg-slate-100 text-slate-700'}`}>
-                        <div>
-                          <div className="text-[10px] text-slate-500 uppercase">Runtime</div>
-                          <div className="font-bold text-sm">85 ms</div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] text-slate-500 uppercase">Memory</div>
-                          <div className="font-bold text-sm">20 MB</div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] text-slate-500 uppercase">Language</div>
-                          <div className="font-bold text-sm">{selectedLanguage}</div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] text-slate-500 uppercase">Test Cases</div>
-                          <div className="font-bold text-sm">All Passed</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeBottomTab === 'Test Cases' && (
-                    <div className="space-y-2">
-                      <span className="text-[10px] text-slate-500 uppercase block">Sample Test Cases</span>
-                      {testResults.map((tr, idx) => (
-                        <div key={idx} className={`flex items-center justify-between p-2 rounded-lg border ${isDarkMode ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-200'}`}>
-                          <div className="flex items-center gap-2">
-                            <span className="text-slate-400 font-bold">Case {idx + 1}</span>
-                            <span className={`${textMutedClass} text-[10px]`}>Input: {tr.input}</span>
-                          </div>
-                          <span className={`font-bold flex items-center gap-0.5 text-xs ${tr.passed ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-                            {tr.passed ? <Check size={12} /> : <XCircle size={12} />} Passed
-                          </span>
-                        </div>
-                      ))}
+                      <pre className="text-slate-400 text-[11px]">Compile version: OpenJDK 17.0.2\nOutput matches expected test logs.</pre>
                     </div>
                   )}
 
                   {activeBottomTab === 'Problems' && (
-                    <div className="space-y-2 text-slate-400">
-                      <span className={`text-xs font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Workspace Diagnostic Errors (0)</span>
-                      <p className={`text-[11px] ${textMutedClass}`}>No syntax or compiler diagnostics errors detected in your code solution.</p>
+                    <div className="space-y-2">
+                      {diagnostics.length === 0 ? (
+                        <span className="text-slate-500">No compiler diagnostics issues detected. Ready!</span>
+                      ) : (
+                        <div className="space-y-2">
+                          {diagnostics.map((d, idx) => (
+                            <div 
+                              key={idx} 
+                              onClick={() => setSelectedDiagnostic(d)}
+                              className="p-2.5 rounded-xl border border-red-500/10 bg-red-500/5 hover:border-red-500/40 transition-colors cursor-pointer flex items-center justify-between"
+                            >
+                              <div className="flex items-center gap-2 text-red-400">
+                                <AlertTriangle size={14} />
+                                <span className="font-bold">Line {d.line}:</span>
+                                <span>{d.message}</span>
+                              </div>
+                              <span className="text-[#8B5CF6] text-[10px] font-black hover:underline">AI Error Explanation →</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 
                   {activeBottomTab === 'Debug Console' && (
-                    <pre className="text-slate-500 whitespace-pre-wrap leading-relaxed">
-                      $ debugger connected successfully to localhost:5005
-                    </pre>
+                    <span className="text-slate-500">$ debugger active...</span>
                   )}
+
+                  {activeBottomTab === 'Test Cases' && (
+                    <div className="p-2 bg-slate-900/20 border border-white/5 rounded-lg text-slate-400">
+                      <span>Standard Input/Output files present in Explorer:</span>
+                      <pre className="mt-2 text-slate-500">input.txt -> Sample input data...\noutput.txt -> [Write values here]</pre>
+                    </div>
+                  )}
+
                 </div>
               </div>
+
             </div>
 
-            {/* Right Resizer bar */}
+            {/* Right side AI Drawer Panel */}
             {!aiPanelCollapsed && (
-              <div 
-                className={`w-1 cursor-col-resize hover:bg-[#8B5CF6] active:bg-[#8B5CF6] transition-colors flex-shrink-0 z-30 ${isDarkMode ? 'bg-white/5' : 'bg-slate-300'}`} 
-                onMouseDown={startResizeRight}
-              />
-            )}
-
-            {/* 3. Right: Collapsible AI Assistant Drawer */}
-            {!aiPanelCollapsed && (
-              <div 
-                style={{ width: `${aiPanelWidth}px` }} 
-                className={`flex flex-col border-l flex-shrink-0 select-none min-h-0 ${sidebarClass} ${borderClass}`}
-              >
-                <div className={`flex items-center justify-between px-3 py-2 border-b ${panelHeaderClass}`}>
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles size={14} className="text-[#8B5CF6]" />
-                    <span className={`text-[10px] uppercase font-bold tracking-wider ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>AI Assistant</span>
-                  </div>
-                  <button 
-                    onClick={() => setAiPanelCollapsed(true)} 
-                    className="text-slate-400 hover:text-slate-600 p-0.5"
-                    title="Hide AI panel"
-                  >
-                    <Minimize2 size={13} />
-                  </button>
-                </div>
-
-                {/* AI Prompts Toolbar */}
-                <div className={`grid grid-cols-3 gap-1 p-2 border-b ${borderClass} ${isDarkMode ? 'bg-slate-900/20' : 'bg-slate-200/50'}`}>
-                  {['Explain Code', 'Find Bug', 'Optimize Code'].map(action => (
-                    <button
-                      key={action}
-                      onClick={() => handleAiPrompt(action)}
-                      className={`px-1 py-1 text-[9px] border rounded transition-all font-semibold ${
-                        isDarkMode 
-                          ? 'bg-slate-800 border-white/5 hover:bg-slate-750 text-slate-200' 
-                          : 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700 shadow-sm'
-                      }`}
-                    >
-                      {action}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Chat Message Box */}
-                <div className="flex-1 p-3 overflow-y-auto space-y-3 font-sans text-xs">
-                  {aiMessages.map((msg, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`p-2.5 rounded-xl border ${
-                        msg.role === 'assistant' 
-                          ? `${consoleBgClass} ${borderClass} ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}` 
-                          : 'bg-[#8B5CF6]/10 border-[#8B5CF6]/20 text-[#8B5CF6] ml-4 font-semibold'
-                      }`}
-                    >
-                      <div className="font-bold text-[9px] uppercase tracking-wider text-slate-500 mb-1">
-                        {msg.role === 'assistant' ? 'AI Mentor' : 'You'}
+              <>
+                <div className={`w-1 cursor-col-resize hover:bg-[#8B5CF6] active:bg-[#8B5CF6] transition-colors flex-shrink-0 z-35 ${isDarkMode ? 'bg-white/5' : 'bg-slate-300'}`} 
+                  onMouseDown={startResizeRight}
+                />
+                
+                <div 
+                  style={{ width: `${aiPanelWidth}px` }} 
+                  className={`flex flex-col border-l flex-shrink-0 select-none min-h-0 ${sidebarClass}`}
+                >
+                  
+                  {/* AI diagnostic helper widget if selected */}
+                  {selectedDiagnostic && (
+                    <div className="p-3 border-b border-red-500/10 bg-red-500/5 space-y-2">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-red-400 font-bold flex items-center gap-1"><AlertTriangle size={12} /> Diagnostic Helper</span>
+                        <button onClick={() => setSelectedDiagnostic(null)} className="text-slate-400 hover:text-white text-[10px]">✕</button>
                       </div>
-                      <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
-                    </div>
-                  ))}
+                      <h4 className="text-xs font-bold text-white mt-1">{selectedDiagnostic.title}</h4>
+                      <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">{selectedDiagnostic.reason}</p>
+                      
+                      <div className="bg-slate-950 p-2 rounded border border-white/5 font-mono text-[10px] text-slate-400 mt-2">
+                        {selectedDiagnostic.solution}
+                      </div>
 
-                  {aiTyping && (
-                    <div className={`flex items-center gap-1.5 italic text-[11px] p-2 rounded-xl border ${borderClass} ${consoleBgClass} ${textMutedClass}`}>
-                      <RefreshCw size={12} className="animate-spin text-[#8B5CF6]" />
-                      <span>Thinking...</span>
+                      <div className="flex items-center justify-between text-[9px] text-slate-500 mt-2">
+                        <span>Fix Time: {selectedDiagnostic.fixTime}</span>
+                        <span>Level: {selectedDiagnostic.difficulty}</span>
+                      </div>
+
+                      <button 
+                        onClick={() => handleApplyQuickFix(selectedDiagnostic)}
+                        className="w-full py-1.5 mt-2 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-black text-xs rounded-lg shadow"
+                      >
+                        Apply Fix Preview
+                      </button>
                     </div>
                   )}
-                </div>
 
-                {/* Input Control */}
-                <div className={`p-3 border-t flex items-center gap-2 ${sidebarClass} ${borderClass}`}>
-                  <input
-                    type="text"
-                    value={aiInput}
-                    onChange={(e) => setAiInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSendAiMessage()}
-                    placeholder="Ask AI assistant..."
-                    className={`flex-1 border rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-[#8B5CF6] ${
-                      isDarkMode ? 'bg-slate-900 border-white/10 text-white' : 'bg-white border-slate-300 text-slate-800'
-                    }`}
-                  />
-                  <button 
-                    onClick={handleSendAiMessage}
-                    className="p-2 rounded-lg bg-[#8B5CF6] text-white hover:bg-[#7C3AED]"
-                  >
-                    <Send size={12} />
-                  </button>
+                  <div className={`flex items-center justify-between px-3 py-2 border-b ${panelHeaderClass}`}>
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles size={14} className="text-[#8B5CF6]" />
+                      <span className={`text-[10px] uppercase font-bold tracking-wider ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Friday AI Mentor</span>
+                    </div>
+                    <button onClick={() => setAiPanelCollapsed(true)} className="text-slate-400 hover:text-white p-0.5"><Minimize2 size={13} /></button>
+                  </div>
+
+                  {/* AI Quick Prompts List */}
+                  <div className="grid grid-cols-2 gap-1.5 p-3 border-b border-white/5">
+                    {['Explain Code', 'Find Bug', 'Optimize Code', 'Complexity'].map(action => (
+                      <button
+                        key={action}
+                        onClick={() => handleAiCommand(action)}
+                        className={`px-2 py-1 text-[10px] border rounded transition-all font-semibold ${
+                          isDarkMode 
+                            ? 'bg-slate-800 border-white/5 hover:bg-slate-750 text-slate-200' 
+                            : 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700 shadow-sm'
+                        }`}
+                      >
+                        {action}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Chat message content list */}
+                  <div className="flex-grow p-3 overflow-y-auto space-y-3 font-sans text-xs">
+                    {aiMessages.map((msg, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`p-2.5 rounded-xl border ${
+                          msg.role === 'assistant' 
+                            ? `${consoleBgClass} ${borderClass} ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}` 
+                            : 'bg-[#8B5CF6]/10 border-[#8B5CF6]/20 text-[#8B5CF6] ml-4 font-semibold'
+                        }`}
+                      >
+                        <div className="font-bold text-[9px] uppercase tracking-wider text-slate-500 mb-1">
+                          {msg.role === 'assistant' ? 'Friday AI' : 'You'}
+                        </div>
+                        <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                      </div>
+                    ))}
+
+                    {aiTyping && (
+                      <div className={`flex items-center gap-1.5 italic text-[11px] p-2 rounded-xl border ${borderClass} ${consoleBgClass} ${textMutedClass}`}>
+                        <RefreshCw size={12} className="animate-spin text-[#8B5CF6]" />
+                        <span>Friday is analyzing...</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* AI input text box */}
+                  <div className={`p-3 border-t flex items-center gap-2 ${sidebarClass} ${borderClass}`}>
+                    <input
+                      type="text"
+                      value={aiInput}
+                      onChange={(e) => setAiInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSendAiMessage()}
+                      placeholder="Ask Friday AI..."
+                      className={`flex-1 border rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-[#8B5CF6] ${
+                        isDarkMode ? 'bg-slate-900 border-white/10 text-white' : 'bg-white border-slate-300 text-slate-800'
+                      }`}
+                    />
+                    <button 
+                      onClick={handleSendAiMessage}
+                      className="p-2 rounded-lg bg-[#8B5CF6] text-white hover:bg-[#7C3AED]"
+                    >
+                      <Send size={12} />
+                    </button>
+                  </div>
+
                 </div>
-              </div>
+              </>
             )}
 
-            {/* AI Toggle Button if Collapsed */}
+            {/* Floating button to trigger panel if collapsed */}
             {aiPanelCollapsed && (
               <button 
                 onClick={() => setAiPanelCollapsed(false)}
-                className="absolute right-4 top-4 z-40 p-2.5 rounded-full bg-[#8B5CF6] text-white hover:bg-[#7C3AED] shadow-lg flex items-center justify-center"
-                title="Open AI panel"
+                className="absolute right-4 top-4 z-40 p-2.5 rounded-full bg-[#8B5CF6] text-white hover:bg-[#7C3AED] shadow-lg flex items-center justify-center cursor-pointer"
+                title="Open Friday AI panel"
               >
                 <Sparkles size={16} />
               </button>
@@ -994,13 +1019,18 @@ export default function Coding() {
 
           </div>
 
-          {/* Bottom Status Bar */}
+          {/* Bottom Status bar indicators */}
           <div className={`h-6 flex items-center justify-between px-3 border-t text-[10px] select-none ${sidebarClass} ${borderClass} ${textMutedClass}`}>
             <div className="flex items-center gap-3">
               <span className="text-[#22C55E] flex items-center gap-1 font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" /> Ready
+                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" /> Running local
               </span>
-              <span>Git: <strong className="font-bold">main</strong></span>
+              <span>Git: <strong className="font-bold">{gitBranch}</strong></span>
+              {diagnostics.length > 0 && (
+                <span className="text-red-400 font-bold flex items-center gap-0.5">
+                  <AlertTriangle size={10} /> {diagnostics.length}
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-4">
@@ -1014,12 +1044,12 @@ export default function Coding() {
         </div>
       )}
 
-      {/* Settings Modal */}
-      {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className={`w-80 border rounded-2xl p-5 shadow-xl ${isDarkMode ? 'bg-[#0F172A] border-white/10' : 'bg-white border-slate-200 text-slate-800'}`}>
+      {/* Settings Modal config options */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className={`w-full max-w-sm border rounded-2xl p-5 shadow-xl ${isDarkMode ? 'bg-[#0F172A] border-white/10' : 'bg-white border-slate-200 text-slate-800'}`}>
             <h3 className="text-sm font-bold mb-4 flex items-center gap-1.5">
-              <Settings size={16} /> Editor Configuration
+              <SettingsIcon size={16} /> EduVerse Studio Settings
             </h3>
             <div className="space-y-4 text-xs">
               <div>
@@ -1049,7 +1079,17 @@ export default function Coding() {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className={textMutedClass}>Enable Minimap</span>
+                <span className={textMutedClass}>Autosave drafts</span>
+                <input 
+                  type="checkbox" 
+                  checked={autosave} 
+                  onChange={(e) => setAutosave(e.target.checked)}
+                  className="rounded bg-slate-900 border-white/10 text-[#2563EB] focus:ring-0" 
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className={textMutedClass}>Monaco Editor Minimap</span>
                 <input 
                   type="checkbox" 
                   checked={editorMinimap} 
@@ -1057,24 +1097,12 @@ export default function Coding() {
                   className="rounded bg-slate-900 border-white/10 text-[#2563EB] focus:ring-0" 
                 />
               </div>
-
-              <div className="flex items-center justify-between">
-                <span className={textMutedClass}>Editor Theme</span>
-                <select 
-                  value={theme} 
-                  onChange={(e) => setTheme(e.target.value)}
-                  className={`border rounded-lg p-1.5 ${isDarkMode ? 'bg-slate-900 border-white/10 text-white' : 'bg-slate-50 border-slate-300 text-slate-800'}`}
-                >
-                  <option value="vs-dark">VS Dark</option>
-                  <option value="light">VS Light</option>
-                </select>
-              </div>
             </div>
             <button 
-              onClick={() => setShowSettings(false)}
+              onClick={() => setShowSettingsModal(false)}
               className={`mt-6 w-full py-2 border rounded-xl font-bold text-xs ${isDarkMode ? 'bg-slate-800 hover:bg-slate-750 border-white/5 text-slate-200' : 'bg-slate-200 hover:bg-slate-300 border-slate-300 text-slate-700'}`}
             >
-              Close Settings
+              Close settings
             </button>
           </div>
         </div>
