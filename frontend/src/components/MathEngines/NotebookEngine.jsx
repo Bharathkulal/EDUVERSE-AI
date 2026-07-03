@@ -555,41 +555,140 @@ export default function NotebookEngine({
         const y_next = y_start + (k1 + 2 * k2 + 2 * k3 + k4) / 6;
         const x_next = x_start + h_val;
 
-        // Adjust display formula strings based on the ODE function
-        let f1Str = "", f2Str = "", f3Str = "", f4Str = "";
+        // ── helpers to build detailed substitution strings ──────────────────
+        const x2 = x_start + h_val / 2;
+        const x4 = x_start + h_val;
+        const yk2arg = y_start + k1 / 2;
+        const yk3arg = y_start + k2 / 2;
+        const yk4arg = y_start + k3;
+
+        // f-value strings (the inner substitution, ODE-specific)
+        let fv1, fv2, fv3, fv4;
+        let subLine1, subLine2, subLine3, subLine4; // intermediate "= a op b" line
         if (odeLabel.includes("y - x")) {
-          f1Str = `${y_start.toFixed(5)} - ${x_start.toFixed(5)}`;
-          f2Str = `(${(y_start + k1/2).toFixed(5)}) - (${(x_start + h_val/2).toFixed(5)})`;
-          f3Str = `(${(y_start + k2/2).toFixed(5)}) - (${(x_start + h_val/2).toFixed(5)})`;
-          f4Str = `(${(y_start + k3).toFixed(5)}) - (${(x_start + h_val).toFixed(5)})`;
+          fv1 = `${y_start.toFixed(4)} - ${x_start.toFixed(4)}`;
+          fv2 = `${yk2arg.toFixed(4)} - ${x2.toFixed(4)}`;
+          fv3 = `${yk3arg.toFixed(4)} - ${x2.toFixed(4)}`;
+          fv4 = `${yk4arg.toFixed(4)} - ${x4.toFixed(4)}`;
+          subLine1 = `= ${h_val} × (${y_start.toFixed(4)} - ${x_start.toFixed(4)})`;
+          subLine2 = `= ${h_val} × f(${x2.toFixed(4)}, ${yk2arg.toFixed(4)})\n           = ${h_val} × (${yk2arg.toFixed(4)} - ${x2.toFixed(4)})`;
+          subLine3 = `= ${h_val} × f(${x2.toFixed(4)}, ${yk3arg.toFixed(4)})\n           = ${h_val} × (${yk3arg.toFixed(4)} - ${x2.toFixed(4)})`;
+          subLine4 = `= ${h_val} × f(${x4.toFixed(4)}, ${yk4arg.toFixed(4)})\n           = ${h_val} × (${yk4arg.toFixed(4)} - ${x4.toFixed(4)})`;
         } else if (odeLabel.includes("x + y")) {
-          f1Str = `${x_start.toFixed(5)} + ${y_start.toFixed(5)}`;
-          f2Str = `(${(x_start + h_val/2).toFixed(5)}) + (${(y_start + k1/2).toFixed(5)})`;
-          f3Str = `(${(x_start + h_val/2).toFixed(5)}) + (${(y_start + k2/2).toFixed(5)})`;
-          f4Str = `(${(x_start + h_val).toFixed(5)}) + (${(y_start + k3).toFixed(5)})`;
+          fv1 = `${x_start.toFixed(4)} + ${y_start.toFixed(4)}`;
+          fv2 = `${x2.toFixed(4)} + ${yk2arg.toFixed(4)}`;
+          fv3 = `${x2.toFixed(4)} + ${yk3arg.toFixed(4)}`;
+          fv4 = `${x4.toFixed(4)} + ${yk4arg.toFixed(4)}`;
+          subLine1 = `= ${h_val} × (${x_start.toFixed(4)} + ${y_start.toFixed(4)})`;
+          subLine2 = `= ${h_val} × f(${x2.toFixed(4)}, ${yk2arg.toFixed(4)})\n           = ${h_val} × (${x2.toFixed(4)} + ${yk2arg.toFixed(4)})`;
+          subLine3 = `= ${h_val} × f(${x2.toFixed(4)}, ${yk3arg.toFixed(4)})\n           = ${h_val} × (${x2.toFixed(4)} + ${yk3arg.toFixed(4)})`;
+          subLine4 = `= ${h_val} × f(${x4.toFixed(4)}, ${yk4arg.toFixed(4)})\n           = ${h_val} × (${x4.toFixed(4)} + ${yk4arg.toFixed(4)})`;
+        } else if (odeLabel.includes("-2xy")) {
+          fv1 = `-2 × ${x_start.toFixed(4)} × ${y_start.toFixed(4)}`;
+          fv2 = `-2 × ${x2.toFixed(4)} × ${yk2arg.toFixed(4)}`;
+          fv3 = `-2 × ${x2.toFixed(4)} × ${yk3arg.toFixed(4)}`;
+          fv4 = `-2 × ${x4.toFixed(4)} × ${yk4arg.toFixed(4)}`;
+          subLine1 = `= ${h_val} × (-2 × ${x_start.toFixed(4)} × ${y_start.toFixed(4)})`;
+          subLine2 = `= ${h_val} × f(${x2.toFixed(4)}, ${yk2arg.toFixed(4)})\n           = ${h_val} × (-2 × ${x2.toFixed(4)} × ${yk2arg.toFixed(4)})`;
+          subLine3 = `= ${h_val} × f(${x2.toFixed(4)}, ${yk3arg.toFixed(4)})\n           = ${h_val} × (-2 × ${x2.toFixed(4)} × ${yk3arg.toFixed(4)})`;
+          subLine4 = `= ${h_val} × f(${x4.toFixed(4)}, ${yk4arg.toFixed(4)})\n           = ${h_val} × (-2 × ${x4.toFixed(4)} × ${yk4arg.toFixed(4)})`;
         } else {
-          f1Str = `f(${x_start.toFixed(3)}, ${y_start.toFixed(3)})`;
-          f2Str = `f(${(x_start + h_val/2).toFixed(3)}, ${(y_start + k1/2).toFixed(3)})`;
-          f3Str = `f(${(x_start + h_val/2).toFixed(3)}, ${(y_start + k2/2).toFixed(3)})`;
-          f4Str = `f(${(x_start + h_val).toFixed(3)}, ${(y_start + k3).toFixed(3)})`;
+          fv1 = `${y_start.toFixed(4)} + ${(x_start**2).toFixed(4)}`;
+          fv2 = `${yk2arg.toFixed(4)} + ${(x2**2).toFixed(4)}`;
+          fv3 = `${yk3arg.toFixed(4)} + ${(x2**2).toFixed(4)}`;
+          fv4 = `${yk4arg.toFixed(4)} + ${(x4**2).toFixed(4)}`;
+          subLine1 = `= ${h_val} × (${y_start.toFixed(4)} + ${(x_start**2).toFixed(4)})`;
+          subLine2 = `= ${h_val} × f(${x2.toFixed(4)}, ${yk2arg.toFixed(4)})\n           = ${h_val} × (${yk2arg.toFixed(4)} + ${(x2**2).toFixed(4)})`;
+          subLine3 = `= ${h_val} × f(${x2.toFixed(4)}, ${yk3arg.toFixed(4)})\n           = ${h_val} × (${yk3arg.toFixed(4)} + ${(x2**2).toFixed(4)})`;
+          subLine4 = `= ${h_val} × f(${x4.toFixed(4)}, ${yk4arg.toFixed(4)})\n           = ${h_val} × (${yk4arg.toFixed(4)} + ${(x4**2).toFixed(4)})`;
         }
 
-        let stepStr = `STEP ${s}: INTERVAL [${x_start.toFixed(2)}, ${x_next.toFixed(2)}]\n`;
-        stepStr += `Current coordinates: x = ${x_start.toFixed(2)}, y = ${y_start.toFixed(5)}\n\n`;
-        stepStr += `k₁ = h · f(x, y) = ${h_val} · [${f1Str}] = ${k1.toFixed(5)}\n`;
-        stepStr += `k₂ = h · f(x + h/2, y + k₁/2) = ${h_val} · [${f2Str}] = ${k2.toFixed(5)}\n`;
-        stepStr += `k₃ = h · f(x + h/2, y + k₂/2) = ${h_val} · [${f3Str}] = ${k3.toFixed(5)}\n`;
-        stepStr += `k₄ = h · f(x + h, y + k₃) = ${h_val} · [${f4Str}] = ${k4.toFixed(5)}\n\n`;
-        stepStr += `y_next = y + (1/6) · (k₁ + 2k₂ + 2k₃ + k₄)\n`;
-        stepStr += `       = ${y_start.toFixed(5)} + (1/6) · (${k1.toFixed(5)} + 2·(${k2.toFixed(5)}) + 2·(${k3.toFixed(5)}) + ${k4.toFixed(5)})\n`;
-        stepStr += `       = ${y_start.toFixed(5)} + (1/6) · ${(k1 + 2*k2 + 2*k3 + k4).toFixed(5)}\n`;
-        stepStr += `       = ${y_next.toFixed(6)}`;
-
+        // ── Stage header card ────────────────────────────────────────────────
         sequence.push({
           type: 'math',
-          title: `RK4 STEP ${s} COMPUTATION`,
-          content: stepStr,
-          explanation: `In step ${s}, we compute the four RK4 increments (k₁, k₂, k₃, k₄) representing weighted slope approximations, then compute the next value y = ${y_next.toFixed(5)} at x = ${x_next.toFixed(2)}.`
+          title: `STAGE ${s} — INITIAL VALUES`,
+          content: `Step ${s}: Compute y at x = ${x_next.toFixed(4)}\n\n` +
+                   `  x₀ = ${x_start.toFixed(4)}\n` +
+                   `  y₀ = ${y_start.toFixed(4)}\n` +
+                   `  h  = ${h_val}\n\n` +
+                   `  f(x, y) = ${odeLabel.split('=')[1]?.trim() || odeLabel}`,
+          explanation: `Stage ${s}: We begin with x₀ = ${x_start.toFixed(4)} and y₀ = ${y_start.toFixed(4)}. We will evaluate four slope estimates k₁, k₂, k₃, k₄.`
+        });
+
+        // ── k₁ card ──────────────────────────────────────────────────────────
+        sequence.push({
+          type: 'math',
+          title: `STAGE ${s} — k₁ COMPUTATION`,
+          content: `k₁ = h · f(x₀, y₀)\n` +
+                   `   = ${h_val} × f(${x_start.toFixed(4)}, ${y_start.toFixed(4)})\n` +
+                   `   ${subLine1}\n` +
+                   `   = ${h_val} × ${(k1 / h_val).toFixed(4)}\n\n` +
+                   `   ┌─────────────────────┐\n` +
+                   `   │  k₁ = ${k1.toFixed(5)}       │\n` +
+                   `   └─────────────────────┘`,
+          explanation: `k₁ is the slope at the start of the interval. Here k₁ = ${k1.toFixed(5)}.`
+        });
+
+        // ── k₂ card ──────────────────────────────────────────────────────────
+        sequence.push({
+          type: 'math',
+          title: `STAGE ${s} — k₂ COMPUTATION`,
+          content: `k₂ = h · f(x₀ + h/2, y₀ + k₁/2)\n` +
+                   `   = ${h_val} × f(${x_start.toFixed(4)} + ${(h_val/2).toFixed(4)}, ${y_start.toFixed(4)} + ${(k1/2).toFixed(4)})\n` +
+                   `   ${subLine2}\n` +
+                   `   = ${h_val} × ${(k2 / h_val).toFixed(4)}\n\n` +
+                   `   ┌─────────────────────┐\n` +
+                   `   │  k₂ = ${k2.toFixed(5)}       │\n` +
+                   `   └─────────────────────┘`,
+          explanation: `k₂ uses the midpoint x₀+h/2 = ${x2.toFixed(4)} with the k₁-corrected y value. k₂ = ${k2.toFixed(5)}.`
+        });
+
+        // ── k₃ card ──────────────────────────────────────────────────────────
+        sequence.push({
+          type: 'math',
+          title: `STAGE ${s} — k₃ COMPUTATION`,
+          content: `k₃ = h · f(x₀ + h/2, y₀ + k₂/2)\n` +
+                   `   = ${h_val} × f(${x_start.toFixed(4)} + ${(h_val/2).toFixed(4)}, ${y_start.toFixed(4)} + ${(k2/2).toFixed(4)})\n` +
+                   `   ${subLine3}\n` +
+                   `   = ${h_val} × ${(k3 / h_val).toFixed(4)}\n\n` +
+                   `   ┌─────────────────────┐\n` +
+                   `   │  k₃ = ${k3.toFixed(5)}       │\n` +
+                   `   └─────────────────────┘`,
+          explanation: `k₃ again uses the midpoint but with the k₂-corrected y. k₃ = ${k3.toFixed(5)}.`
+        });
+
+        // ── k₄ card ──────────────────────────────────────────────────────────
+        sequence.push({
+          type: 'math',
+          title: `STAGE ${s} — k₄ COMPUTATION`,
+          content: `k₄ = h · f(x₀ + h, y₀ + k₃)\n` +
+                   `   = ${h_val} × f(${x_start.toFixed(4)} + ${h_val}, ${y_start.toFixed(4)} + ${k3.toFixed(4)})\n` +
+                   `   ${subLine4}\n` +
+                   `   = ${h_val} × ${(k4 / h_val).toFixed(4)}\n\n` +
+                   `   ┌─────────────────────┐\n` +
+                   `   │  k₄ = ${k4.toFixed(5)}       │\n` +
+                   `   └─────────────────────┘`,
+          explanation: `k₄ is the slope at the end of the interval with a k₃-corrected y. k₄ = ${k4.toFixed(5)}.`
+        });
+
+        // ── y_next card ──────────────────────────────────────────────────────
+        const weighted = k1 + 2*k2 + 2*k3 + k4;
+        sequence.push({
+          type: 'math',
+          title: `STAGE ${s} — COMPUTE y${s}`,
+          content: `y${s} = y₀ + (1/6)(k₁ + 2k₂ + 2k₃ + k₄)\n\n` +
+                   `     k₁         = ${k1.toFixed(5)}\n` +
+                   `     2 × k₂     = 2 × ${k2.toFixed(5)} = ${(2*k2).toFixed(5)}\n` +
+                   `     2 × k₃     = 2 × ${k3.toFixed(5)} = ${(2*k3).toFixed(5)}\n` +
+                   `     k₄         = ${k4.toFixed(5)}\n` +
+                   `     ──────────────────────────────────\n` +
+                   `     Sum         = ${weighted.toFixed(5)}\n\n` +
+                   `y${s} = ${y_start.toFixed(5)} + (1/6) × ${weighted.toFixed(5)}\n` +
+                   `     = ${y_start.toFixed(5)} + ${(weighted/6).toFixed(5)}\n\n` +
+                   `   ╔═══════════════════════════╗\n` +
+                   `   ║  y(${x_next.toFixed(2)}) ≈ ${y_next.toFixed(5)}     ║\n` +
+                   `   ╚═══════════════════════════╝`,
+          explanation: `Weighted combination: y${s} = ${y_start.toFixed(5)} + (1/6)(${k1.toFixed(5)} + 2×${k2.toFixed(5)} + 2×${k3.toFixed(5)} + ${k4.toFixed(5)}) = ${y_next.toFixed(5)}.`
         });
 
         currentX = x_next;
