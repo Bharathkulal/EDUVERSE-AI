@@ -4,7 +4,7 @@ import TypewriterStep from './TypewriterStep';
 
 export default function NotebookEngine({ 
   func, a, b, n, method, playbackState, speed, onExplain, onFinish, dataset, targetX, direction,
-  bisectionProblemId, bisectionIterations, rkX0, rkY0, rkH, rkSteps, rkFuncId
+  bisectionProblemId, bisectionIterations, rkX0, rkY0, rkH, rkSteps, rkFuncId, matMulQuestion
 }) {
   const [activeStepIndex, setActiveStepIndex] = useState(-1);
   const [stepComplete, setStepComplete] = useState(false);
@@ -1036,8 +1036,113 @@ export default function NotebookEngine({
       });
     }
 
+    else if (method === 'Matrix Multiplication') {
+      const q = matMulQuestion;
+      if (!q) return sequence;
+
+      const A = q.matA;
+      const B = q.matB;
+      const isSquare = q.type === 'square';
+      const label = isSquare ? 'A\u00B2' : 'AB';
+      const Blabel = isSquare ? 'A' : 'B';
+
+      // Helper: format 2x2 matrix as text block
+      const fmtMat = (M, name) => {
+        const r0 = `[ ${M[0][0]}  ${M[0][1]} ]`;
+        const r1 = `[ ${M[1][0]}  ${M[1][1]} ]`;
+        return `${name} = ${r0}\n${' '.repeat(name.length + 3)}${r1}`;
+      };
+
+      // Compute result
+      const C = [
+        [A[0][0]*B[0][0] + A[0][1]*B[1][0],  A[0][0]*B[0][1] + A[0][1]*B[1][1]],
+        [A[1][0]*B[0][0] + A[1][1]*B[1][0],  A[1][0]*B[0][1] + A[1][1]*B[1][1]]
+      ];
+
+      // Step 0 — Problem Statement
+      const problemText =
+        `${isSquare ? `Given: A = [ ${A[0][0]}  ${A[0][1]} ]    Find: ${label} = A \u00D7 A\n       ${' '.repeat(8)}[ ${A[1][0]}  ${A[1][1]} ]`
+          : `Given: A = [ ${A[0][0]}  ${A[0][1]} ]    ${fmtMat(B, Blabel)}\n       ${' '.repeat(8)}[ ${A[1][0]}  ${A[1][1]} ]`}\n\nFind: ${label} = A \u00D7 ${Blabel}\n\nFormula: C[i][j] = \u03A3 A[i][k] \u00D7 ${Blabel}[k][j]   (k = 1 to 2)`;
+
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content: problemText,
+        explanation: `We are given ${isSquare ? 'matrix A and must compute A\u00B2 = A \u00D7 A' : 'matrices A and B and must compute their product AB'}. We apply the row \u00D7 column dot product rule.`
+      });
+
+      // Step 1 — Write out the multiplication
+      const writeText =
+        `A \u00D7 ${Blabel} = [ ${A[0][0]}  ${A[0][1]} ]   [ ${B[0][0]}  ${B[0][1]} ]\n` +
+        `${' '.repeat(8)}[ ${A[1][0]}  ${A[1][1]} ] \u00D7 [ ${B[1][0]}  ${B[1][1]} ]\n\n` +
+        `Result C is a 2\u00D72 matrix.\nWe compute each element C[i][j] using:\n  C[i][j] = (Row i of A) \u00B7 (Column j of ${Blabel})`;
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 1: SET UP THE MULTIPLICATION',
+        content: writeText,
+        explanation: 'Write both matrices side by side. The result matrix C has the same number of rows as A and same columns as B.'
+      });
+
+      // Steps 2-5 — one step per element (all 4 cells)
+      const cellLabels = [[1,1],[1,2],[2,1],[2,2]];
+      cellLabels.forEach(([ri, ci], k) => {
+        const i = ri - 1, j = ci - 1;
+        const rowA = [A[i][0], A[i][1]];
+        const colB = [B[0][j], B[1][j]];
+        const products = rowA.map((v, idx) => `(${v} \u00D7 ${colB[idx]})`);
+        const sums    = rowA.map((v, idx) =>  v * colB[idx]);
+        const total   = sums.reduce((acc, v) => acc + v, 0);
+
+        const cellText =
+          `C[${ri}][${ci}] = Row ${ri} of A  \u00B7  Col ${ci} of ${Blabel}\n\n` +
+          `     Row ${ri} of A : [ ${rowA[0]}  ${rowA[1]} ]\n` +
+          `     Col ${ci} of ${Blabel} : [ ${colB[0]}  ${colB[1]} ]\n\n` +
+          `C[${ri}][${ci}] = ${products.join(' + ')}\n` +
+          `       = ${sums[0]} + ${sums[1]}\n` +
+          `       = ${total}`;
+
+        sequence.push({
+          type: 'math',
+          title: `STEP ${k + 2}: COMPUTE C[${ri}][${ci}]`,
+          content: cellText,
+          explanation: `C[${ri}][${ci}] is the dot product of Row ${ri} of A with Column ${ci} of ${Blabel}: ${products.join(' + ')} = ${sums[0]} + ${sums[1]} = ${total}.`
+        });
+      });
+
+      // Step 6 — Assembled result
+      const assembleText =
+        `Substituting all computed values:\n\n` +
+        `${label} = A \u00D7 ${Blabel}\n\n` +
+        `   = [ ${C[0][0]}  ${C[0][1]} ]\n` +
+        `     [ ${C[1][0]}  ${C[1][1]} ]`;
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 6: ASSEMBLE THE RESULT MATRIX',
+        content: assembleText,
+        explanation: `Placing all four computed values into the result matrix gives us ${label}.`
+      });
+
+      // Step 7 — Final answer with interpretation
+      const isIdentity = C[0][0]===1 && C[0][1]===0 && C[1][0]===0 && C[1][1]===1;
+      const isZero     = C[0][0]===0 && C[0][1]===0 && C[1][0]===0 && C[1][1]===0;
+      const note = isIdentity
+        ? `\n\u2234 A\u00B2 = I  (Identity Matrix)\n   A is an Involutory Matrix (A\u00B2 = I)`
+        : isZero
+        ? `\n\u2234 AB = O  (Zero Matrix)\n   Note: AB = 0 even though A \u2260 0 and B \u2260 0`
+        : '';
+
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: `${label} = [ ${C[0][0]}  ${C[0][1]} ]\n${' '.repeat(label.length + 3)}[ ${C[1][0]}  ${C[1][1]} ]${note}`,
+        explanation: `The product ${label} has been computed. ${isIdentity ? 'The result is the Identity Matrix — A is involutory.' : isZero ? 'The result is the Zero Matrix — AB = 0 despite A and B being non-zero.' : 'Matrix multiplication complete.'}`
+      });
+    }
+
     return sequence;
-  }, [func, a, b, n, method, dataset, targetX, direction, bisectionProblemId, bisectionIterations, rkX0, rkY0, rkH, rkSteps, rkFuncId]);
+  }, [func, a, b, n, method, dataset, targetX, direction, bisectionProblemId, bisectionIterations, rkX0, rkY0, rkH, rkSteps, rkFuncId, matMulQuestion]);
 
   // Reset on IDLE
   useEffect(() => {
@@ -1270,7 +1375,7 @@ export default function NotebookEngine({
                     onComplete={handleTypingComplete}
                   />
                   <div className="mt-4 text-emerald-200 text-sm font-medium">
-                    {method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : 'Numerical interpolation/differentiation complete.'}
+                    {method === 'Matrix Multiplication' ? 'Linear Algebra · Matrix multiplication complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : 'Numerical interpolation/differentiation complete.'}
                   </div>
                 </div>
               ) : step.type === 'header' ? (

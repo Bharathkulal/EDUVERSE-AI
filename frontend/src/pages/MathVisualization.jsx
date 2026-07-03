@@ -7,7 +7,6 @@ import {
   Layers, BookOpen, Target, Lightbulb, Zap, ArrowRight
 } from 'lucide-react';
 import NotebookEngine from '../components/MathEngines/NotebookEngine';
-import MatrixMultiplicationEngine from '../components/MathEngines/MatrixMultiplicationEngine';
 import MathBackground from '../components/MathBackground';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggleButton from '../components/ThemeToggleButton';
@@ -679,8 +678,9 @@ export default function MathVisualization() {
       );
     } else if (selectedMethod === 'Matrix Multiplication') {
       return (
-        <MatrixMultiplicationEngine
-          question={activeMatMulQuestion}
+        <NotebookEngine
+          matMulQuestion={activeMatMulQuestion}
+          method={selectedMethod}
           playbackState={playbackState}
           speed={speed}
           onExplain={handleExplanationUpdate}
