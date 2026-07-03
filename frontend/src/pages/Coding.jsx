@@ -12,6 +12,7 @@ import {
 import toast from 'react-hot-toast';
 import Editor from '@monaco-editor/react';
 import { useTheme } from '../context/ThemeContext';
+import heroCharacter from '../assets/hero_character.png';
 
 export default function Coding() {
   const { isDarkMode } = useTheme();
@@ -381,8 +382,8 @@ export default function Coding() {
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center select-none relative">
           <div className="absolute inset-0 bg-[#8B5CF6]/5 rounded-full blur-[160px] max-w-lg mx-auto pointer-events-none" />
           
-          <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#2563EB] to-[#8B5CF6] text-white flex items-center justify-center font-bold text-3xl shadow-xl mb-6">
-            E
+          <div className="relative mb-6 w-36 h-36 flex items-center justify-center">
+            <img src={heroCharacter} alt="EduVerse Hero" className="w-full h-full object-contain drop-shadow-2xl" />
           </div>
 
           <h1 className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#2563EB] via-[#8B5CF6] to-[#6366F1]">

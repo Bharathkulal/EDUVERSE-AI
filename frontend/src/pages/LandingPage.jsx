@@ -12,7 +12,7 @@ import { useAuth } from '../context/AuthContext';
 import WatchDemoModal from '../components/WatchDemoModal';
 import toast from 'react-hot-toast';
 import logoImg from '../assets/logo.png';
-import studentImg from '../assets/image.png';
+import studentImg from '../assets/hero_character.png';
 import './LandingPage.css';
 
 // Lenis smooth scroll implementation
