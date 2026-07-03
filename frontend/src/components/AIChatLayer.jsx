@@ -82,7 +82,7 @@ export default function AIChatLayer() {
       {/* Floating Action Button */}
       {!isOpen && (
         <motion.button
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center text-white shadow-xl cursor-pointer"
+          className={`fixed right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center text-white shadow-xl cursor-pointer ${location.pathname === '/coding' ? 'bottom-24' : 'bottom-6'}`}
           style={{
             background: 'linear-gradient(135deg, #3B82F6, #6366F1, #8B5CF6)',
             boxShadow: '0 8px 32px rgba(99, 102, 241, 0.4)'

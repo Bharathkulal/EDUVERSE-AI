@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Editor from '@monaco-editor/react';
+import { useTheme } from '../context/ThemeContext';
 
 // Mock coding tasks database containing 10+ exercises per subject/language
 const CODING_TASKS = {
@@ -175,6 +176,7 @@ const CODING_TASKS = {
 };
 
 export default function Coding() {
+  const { isDarkMode } = useTheme();
   const [selectedLanguage, setSelectedLanguage] = useState('Java');
   const [tasks, setTasks] = useState(CODING_TASKS['Java'] || []);
   const [selectedTask, setSelectedTopic] = useState(null);
@@ -185,7 +187,12 @@ export default function Coding() {
   const [consoleStatus, setConsoleStatus] = useState('Ready'); // Ready, Running, Success, Error
   const [testResults, setTestResults] = useState([]); // Array of { input, expected, actual, passed }
   const [unsaved, setUnsaved] = useState(false);
-  const [theme, setTheme] = useState('vs-dark');
+  const [theme, setTheme] = useState(isDarkMode ? 'vs-dark' : 'light');
+
+  // Synchronize dynamic editor theme with global layout theme context
+  useEffect(() => {
+    setTheme(isDarkMode ? 'vs-dark' : 'light');
+  }, [isDarkMode]);
 
   // Layout Widths & Heights
   const [explorerWidth, setExplorerWidth] = useState(250);
@@ -197,9 +204,6 @@ export default function Coding() {
   // Tab State
   const [openTabs, setOpenTabs] = useState([]);
   const [activeTab, setActiveTab] = useState('');
-
-  // Right-click context menus
-  const [contextMenu, setContextMenu] = useState(null); // { x, y, type, target }
 
   // Explorer Files Tree
   const [files, setFiles] = useState([]);
@@ -453,20 +457,33 @@ export default function Coding() {
     });
   };
 
+  // Define active color palette classes based on Theme Context
+  const bgClass = isDarkMode ? 'bg-[#0B1220] text-slate-200' : 'bg-slate-50 text-slate-800';
+  const sidebarClass = isDarkMode ? 'bg-[#0F172A]' : 'bg-slate-100';
+  const panelHeaderClass = isDarkMode ? 'bg-[#0F172A] border-white/5' : 'bg-slate-200 border-slate-350';
+  const borderClass = isDarkMode ? 'border-white/5' : 'border-slate-300';
+  const textMutedClass = isDarkMode ? 'text-slate-400' : 'text-slate-600';
+  const consoleBgClass = isDarkMode ? 'bg-[#111827]' : 'bg-white';
+  const buttonBgClass = isDarkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600 text-slate-300' : 'bg-slate-200 border-slate-300 hover:bg-slate-300 text-slate-700';
+
   return (
-    <div className="quiz-arena-container h-full flex flex-col relative overflow-hidden bg-[#0B1220] text-slate-200">
+    <div className={`w-full h-full flex flex-col relative overflow-hidden ${bgClass}`}>
       {/* Background neon glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] bg-[#6366F1]/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-[#8B5CF6]/10 rounded-full blur-[120px] pointer-events-none" />
+      {isDarkMode && (
+        <>
+          <div className="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] bg-[#6366F1]/10 rounded-full blur-[120px] pointer-events-none" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-[#8B5CF6]/10 rounded-full blur-[120px] pointer-events-none" />
+        </>
+      )}
 
       {/* ───── LOBBY / TASK LIST VIEW ───── */}
       {viewState === 'lobby' && (
         <div className="lobby-panel flex-1 flex flex-col justify-start p-6 overflow-y-auto">
           {/* Top Header Bar */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/5 pb-5 mb-5 mt-2">
+          <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-5 mb-5 mt-2 ${borderClass}`}>
             <div>
               <h1 className="lobby-title font-extrabold text-2xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#2563EB] to-[#8B5CF6]">Coding Practice Workspace</h1>
-              <p className="text-slate-400 text-xs mt-1">Select an algorithm task to load the premium development environment.</p>
+              <p className={`${textMutedClass} text-xs mt-1`}>Select an algorithm task to load the premium development environment.</p>
             </div>
 
             {/* Language Selection */}
@@ -476,7 +493,7 @@ export default function Coding() {
                 <select 
                   value={selectedLanguage} 
                   onChange={(e) => setSelectedLanguage(e.target.value)}
-                  className="bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-xs font-semibold text-white focus:outline-none focus:border-[#2563EB] cursor-pointer"
+                  className={`bg-slate-900 border rounded-xl px-4 py-2 text-xs font-semibold text-white focus:outline-none focus:border-[#2563EB] cursor-pointer ${borderClass}`}
                 >
                   <option value="Java">Java</option>
                   <option value="Python">Python</option>
@@ -493,7 +510,9 @@ export default function Coding() {
                 <div
                   key={task.id}
                   onClick={() => { setSelectedTopic(task); setViewState('workspace'); }}
-                  className="quiz-card-item p-5 rounded-2xl border border-white/5 bg-slate-900/40 hover:border-white/10 hover:bg-slate-900/60 transition-all cursor-pointer flex flex-col justify-between"
+                  className={`quiz-card-item p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                    isDarkMode ? 'border-white/5 bg-slate-900/40 hover:border-white/10 hover:bg-slate-900/60' : 'border-slate-200 bg-white hover:border-slate-350 hover:bg-slate-50 shadow-sm'
+                  }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-3">
@@ -506,12 +525,12 @@ export default function Coding() {
                         </span>
                       )}
                     </div>
-                    <h3 className="font-extrabold text-sm text-slate-100">{task.title}</h3>
-                    <p className="text-[11px] text-slate-400 mt-2 line-clamp-2">{task.desc}</p>
+                    <h3 className={`font-extrabold text-sm ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}>{task.title}</h3>
+                    <p className={`text-[11px] mt-2 line-clamp-2 ${textMutedClass}`}>{task.desc}</p>
                   </div>
 
-                  <div className="flex items-center justify-between mt-5 pt-3 border-t border-t-white/5 text-[10px] text-slate-500">
-                    <span className="font-bold text-slate-400 uppercase tracking-wider">{task.topic}</span>
+                  <div className={`flex items-center justify-between mt-5 pt-3 border-t text-[10px] ${borderClass}`}>
+                    <span className="font-bold uppercase tracking-wider">{task.topic}</span>
                     <span className="text-[#2563EB] font-bold">Open IDE →</span>
                   </div>
                 </div>
@@ -526,19 +545,35 @@ export default function Coding() {
         <div className="workspace-panel flex-1 flex flex-col justify-between overflow-hidden relative select-none">
           
           {/* Top IDE Navbar Bar */}
-          <div className="flex flex-row items-center justify-between px-4 py-2 border-b border-white/5 bg-[#0F172A]">
+          <div className={`flex flex-row items-center justify-between px-4 py-2 border-b ${sidebarClass} ${borderClass}`}>
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => setViewState('lobby')} 
-                className="exit-btn p-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+                className={`exit-btn p-1.5 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${buttonBgClass}`}
               >
                 <ArrowLeft size={14} />
               </button>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 font-bold">EduVerse Studio</span>
-                <span className="text-xs text-slate-600">/</span>
-                <span className="text-xs text-slate-300 font-bold">{selectedTask.title}</span>
+                <span className={`text-xs font-bold ${textMutedClass}`}>EduVerse Studio</span>
+                <span className={`text-xs ${textMutedClass}`}>/</span>
+                <span className={`text-xs font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{selectedTask.title}</span>
               </div>
+            </div>
+
+            {/* Friday Chatbot Button positioned in the middle spacer */}
+            <div className="hidden md:flex items-center justify-center flex-grow mx-4">
+              <button 
+                onClick={() => setAiPanelCollapsed(!aiPanelCollapsed)}
+                className={`px-4 py-1.5 rounded-full border transition-all flex items-center gap-2 font-black text-xs cursor-pointer ${
+                  isDarkMode 
+                    ? 'bg-[#111827]/60 border-purple-500/30 hover:border-purple-500/80 text-purple-300 hover:text-white shadow-md shadow-purple-500/5' 
+                    : 'bg-white border-purple-500/40 hover:bg-purple-50/50 text-[#8B5CF6] hover:text-[#7C3AED] shadow-sm'
+                }`}
+              >
+                <Sparkles size={13} className="text-[#8B5CF6] animate-pulse" />
+                <span>Friday AI Chatbot</span>
+                <span className={`w-1.5 h-1.5 rounded-full ${aiPanelCollapsed ? 'bg-slate-400' : 'bg-[#22C55E] animate-pulse'}`} />
+              </button>
             </div>
 
             {/* Run & Action Controls */}
@@ -557,21 +592,21 @@ export default function Coding() {
               </button>
               <button 
                 onClick={handleResetCode}
-                className="p-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-slate-600 text-slate-300 cursor-pointer"
+                className={`p-1.5 rounded-lg border cursor-pointer ${buttonBgClass}`}
                 title="Reset Code"
               >
                 <RotateCcw size={14} />
               </button>
               <button 
                 onClick={handleSaveDraft}
-                className="p-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-slate-600 text-slate-300 cursor-pointer"
+                className={`p-1.5 rounded-lg border cursor-pointer ${buttonBgClass}`}
                 title="Save Draft"
               >
                 <Save size={14} />
               </button>
               <button 
                 onClick={() => setShowSettings(true)}
-                className="p-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-slate-600 text-slate-300 cursor-pointer"
+                className={`p-1.5 rounded-lg border cursor-pointer ${buttonBgClass}`}
                 title="Editor Settings"
               >
                 <Settings size={14} />
@@ -586,19 +621,19 @@ export default function Coding() {
             {!explorerCollapsed && (
               <div 
                 style={{ width: `${explorerWidth}px` }} 
-                className="flex flex-col border-r border-white/5 bg-[#0F172A] flex-shrink-0 select-none min-h-0 overflow-y-auto"
+                className={`flex flex-col border-r flex-shrink-0 select-none min-h-0 overflow-y-auto ${sidebarClass} ${borderClass}`}
               >
-                <div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Explorer</span>
+                <div className={`flex items-center justify-between px-3 py-2 border-b ${borderClass}`}>
+                  <span className={`text-[10px] uppercase font-bold tracking-wider ${textMutedClass}`}>Explorer</span>
                   <div className="flex items-center gap-1.5">
-                    <button onClick={handleAddNewFile} title="New File" className="text-slate-400 hover:text-white p-0.5"><Plus size={13} /></button>
-                    <button onClick={handleAddNewFolder} title="New Folder" className="text-slate-400 hover:text-white p-0.5"><FolderPlus size={13} /></button>
+                    <button onClick={handleAddNewFile} title="New File" className="text-slate-400 hover:text-slate-600 p-0.5"><Plus size={13} /></button>
+                    <button onClick={handleAddNewFolder} title="New Folder" className="text-slate-400 hover:text-slate-600 p-0.5"><FolderPlus size={13} /></button>
                   </div>
                 </div>
 
                 <div className="p-2 space-y-1 text-xs">
                   {/* ROOT */}
-                  <div className="flex items-center gap-1.5 text-slate-300 font-bold px-1.5 py-1">
+                  <div className={`flex items-center gap-1.5 font-bold px-1.5 py-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                     <ChevronDown size={14} />
                     <Folder size={14} className="text-[#2563EB]" />
                     <span>Project</span>
@@ -608,7 +643,7 @@ export default function Coding() {
                   <div className="pl-3">
                     <div 
                       onClick={() => setExpandedFolders(p => ({ ...p, src: !p.src }))} 
-                      className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 cursor-pointer px-1.5 py-0.5 rounded"
+                      className={`flex items-center gap-1.5 cursor-pointer px-1.5 py-0.5 rounded ${textMutedClass}`}
                     >
                       <ChevronDown size={12} className={`transition-transform ${expandedFolders.src ? '' : '-rotate-90'}`} />
                       <Folder size={12} className="text-[#8B5CF6]" />
@@ -616,13 +651,15 @@ export default function Coding() {
                     </div>
 
                     {expandedFolders.src && (
-                      <div className="pl-4 space-y-0.5 border-l border-white/5 ml-2 mt-1">
+                      <div className={`pl-4 space-y-0.5 border-l ml-2 mt-1 ${borderClass}`}>
                         {files.filter(f => f.parent === 'src').map(f => (
                           <div 
                             key={f.id}
                             onClick={() => handleFileClick(f)}
                             className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer transition-colors ${
-                              activeTab === f.name ? 'bg-[#2563EB]/25 text-[#60A5FA] font-bold' : 'text-slate-400 hover:bg-white/5'
+                              activeTab === f.name 
+                                ? 'bg-[#2563EB]/15 text-[#2563EB] font-bold' 
+                                : `${textMutedClass} hover:bg-white/5`
                             }`}
                           >
                             <File size={12} />
@@ -637,7 +674,7 @@ export default function Coding() {
                   <div className="pl-3">
                     <div 
                       onClick={() => setExpandedFolders(p => ({ ...p, 'test-cases': !p['test-cases'] }))} 
-                      className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 cursor-pointer px-1.5 py-0.5 rounded"
+                      className={`flex items-center gap-1.5 cursor-pointer px-1.5 py-0.5 rounded ${textMutedClass}`}
                     >
                       <ChevronDown size={12} className={`transition-transform ${expandedFolders['test-cases'] ? '' : '-rotate-90'}`} />
                       <Folder size={12} className="text-[#22C55E]" />
@@ -645,13 +682,15 @@ export default function Coding() {
                     </div>
 
                     {expandedFolders['test-cases'] && (
-                      <div className="pl-4 space-y-0.5 border-l border-white/5 ml-2 mt-1">
+                      <div className={`pl-4 space-y-0.5 border-l ml-2 mt-1 ${borderClass}`}>
                         {files.filter(f => f.parent === 'test-cases').map(f => (
                           <div 
                             key={f.id}
                             onClick={() => handleFileClick(f)}
                             className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer transition-colors ${
-                              activeTab === f.name ? 'bg-[#2563EB]/25 text-[#60A5FA] font-bold' : 'text-slate-400 hover:bg-white/5'
+                              activeTab === f.name 
+                                ? 'bg-[#2563EB]/15 text-[#2563EB] font-bold' 
+                                : `${textMutedClass} hover:bg-white/5`
                             }`}
                           >
                             <FileText size={12} />
@@ -669,7 +708,9 @@ export default function Coding() {
                         key={f.id}
                         onClick={() => handleFileClick(f)}
                         className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer transition-colors ${
-                          activeTab === f.name ? 'bg-[#2563EB]/25 text-[#60A5FA] font-bold' : 'text-slate-400 hover:bg-white/5'
+                          activeTab === f.name 
+                            ? 'bg-[#2563EB]/15 text-[#2563EB] font-bold' 
+                            : `${textMutedClass} hover:bg-white/5`
                         }`}
                       >
                         <FileText size={12} />
@@ -685,7 +726,7 @@ export default function Coding() {
             {/* Left Resizer bar */}
             {!explorerCollapsed && (
               <div 
-                className="w-1 cursor-col-resize hover:bg-[#2563EB] active:bg-[#2563EB] transition-colors bg-white/5 flex-shrink-0 z-30" 
+                className={`w-1 cursor-col-resize hover:bg-[#2563EB] active:bg-[#2563EB] transition-colors flex-shrink-0 z-30 ${isDarkMode ? 'bg-white/5' : 'bg-slate-300'}`} 
                 onMouseDown={startResizeLeft}
               />
             )}
@@ -694,15 +735,15 @@ export default function Coding() {
             <div className="flex-1 flex flex-col items-stretch overflow-hidden min-w-0">
               
               {/* Top Tab Bar */}
-              <div className="flex flex-row items-center border-b border-white/5 bg-[#0B1220] overflow-x-auto scrollbar-none flex-shrink-0 select-none">
+              <div className={`flex flex-row items-center border-b overflow-x-auto scrollbar-none flex-shrink-0 select-none ${bgClass} ${borderClass}`}>
                 {openTabs.map(tabName => (
                   <div 
                     key={tabName}
                     onClick={() => handleTabClick(tabName)}
-                    className={`flex items-center gap-2 px-4 py-2 border-r border-white/5 text-xs cursor-pointer transition-all ${
+                    className={`flex items-center gap-2 px-4 py-2 border-r text-xs cursor-pointer transition-all ${borderClass} ${
                       activeTab === tabName 
-                        ? 'bg-[#111827] text-white border-t-2 border-t-[#2563EB]' 
-                        : 'text-slate-500 hover:bg-[#111827]/40 hover:text-slate-300'
+                        ? `${consoleBgClass} text-[#2563EB] border-t-2 border-t-[#2563EB] font-bold` 
+                        : 'text-slate-500 hover:bg-[#111827]/10 hover:text-slate-700'
                     }`}
                   >
                     <span>{tabName}</span>
@@ -711,7 +752,7 @@ export default function Coding() {
                     )}
                     <button 
                       onClick={(e) => handleCloseTab(e, tabName)}
-                      className="text-slate-500 hover:text-white rounded p-0.5"
+                      className="text-slate-500 hover:text-red-500 rounded p-0.5"
                     >
                       <XCircle size={10} />
                     </button>
@@ -720,7 +761,7 @@ export default function Coding() {
               </div>
 
               {/* Monaco Code Editor Workspace */}
-              <div className="flex-1 bg-[#111827] relative min-h-0">
+              <div className="flex-1 relative min-h-0">
                 <Editor
                   height="100%"
                   language={selectedLanguage.toLowerCase() === 'python' ? 'python' : 'java'}
@@ -740,23 +781,25 @@ export default function Coding() {
 
               {/* Bottom Resizer bar */}
               <div 
-                className="h-1 cursor-row-resize hover:bg-[#2563EB] active:bg-[#2563EB] transition-colors bg-white/5 flex-shrink-0 z-30" 
+                className={`h-1 cursor-row-resize hover:bg-[#2563EB] active:bg-[#2563EB] transition-colors flex-shrink-0 z-30 ${isDarkMode ? 'bg-white/5' : 'bg-slate-300'}`} 
                 onMouseDown={startResizeBottom}
               />
 
               {/* Bottom Panel */}
               <div 
                 style={{ height: `${bottomHeight}px` }} 
-                className="flex flex-col bg-[#111827] border-t border-white/5 flex-shrink-0 min-h-0"
+                className={`flex flex-col border-t flex-shrink-0 min-h-0 ${consoleBgClass} ${borderClass}`}
               >
-                <div className="flex items-center justify-between border-b border-white/5 px-4 bg-[#0F172A] flex-shrink-0">
+                <div className={`flex items-center justify-between border-b px-4 flex-shrink-0 ${panelHeaderClass}`}>
                   <div className="flex flex-row items-center gap-4 text-xs">
                     {['Terminal', 'Output', 'Test Cases', 'Problems', 'Debug Console'].map(t => (
                       <button 
                         key={t}
                         onClick={() => setActiveBottomTab(t)}
                         className={`py-2 px-1 font-bold transition-all relative ${
-                          activeBottomTab === t ? 'text-white border-b-2 border-b-[#2563EB]' : 'text-slate-400 hover:text-slate-200'
+                          activeBottomTab === t 
+                            ? `${isDarkMode ? 'text-white' : 'text-slate-900'} border-b-2 border-b-[#2563EB]` 
+                            : `${textMutedClass} hover:text-slate-700`
                         }`}
                       >
                         {t}
@@ -769,12 +812,12 @@ export default function Coding() {
                   {activeBottomTab === 'Terminal' && (
                     <div className="space-y-1 text-[#22C55E]">
                       {consoleStatus === 'Running' ? (
-                        <div className="flex items-center gap-2 text-amber-400">
+                        <div className="flex items-center gap-2 text-amber-500">
                           <RefreshCw size={14} className="animate-spin" />
                           <span>Compiling code and linking artifacts...</span>
                         </div>
                       ) : (
-                        <pre className="whitespace-pre-wrap leading-relaxed text-slate-300">
+                        <pre className={`whitespace-pre-wrap leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                           {consoleOutput || '$ Ready to run tests. Press "Run" above.'}
                         </pre>
                       )}
@@ -784,14 +827,14 @@ export default function Coding() {
                   {activeBottomTab === 'Output' && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Execution Result</span>
+                        <span className={`font-bold uppercase tracking-wider text-[10px] ${textMutedClass}`}>Execution Result</span>
                         <span className={`px-2.5 py-0.5 rounded font-black text-[10px] ${
                           consoleStatus === 'Success' ? 'bg-[#22C55E]/15 text-[#22C55E]' : 'bg-[#EF4444]/15 text-[#EF4444]'
                         }`}>
                           {consoleStatus === 'Success' ? 'Accepted' : 'Idle'}
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white/5 p-3 rounded-lg text-slate-300">
+                      <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 p-3 rounded-lg ${isDarkMode ? 'bg-white/5 text-slate-300' : 'bg-slate-100 text-slate-700'}`}>
                         <div>
                           <div className="text-[10px] text-slate-500 uppercase">Runtime</div>
                           <div className="font-bold text-sm">85 ms</div>
@@ -816,10 +859,10 @@ export default function Coding() {
                     <div className="space-y-2">
                       <span className="text-[10px] text-slate-500 uppercase block">Sample Test Cases</span>
                       {testResults.map((tr, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
+                        <div key={idx} className={`flex items-center justify-between p-2 rounded-lg border ${isDarkMode ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-200'}`}>
                           <div className="flex items-center gap-2">
                             <span className="text-slate-400 font-bold">Case {idx + 1}</span>
-                            <span className="text-slate-500 text-[10px]">Input: {tr.input}</span>
+                            <span className={`${textMutedClass} text-[10px]`}>Input: {tr.input}</span>
                           </div>
                           <span className={`font-bold flex items-center gap-0.5 text-xs ${tr.passed ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
                             {tr.passed ? <Check size={12} /> : <XCircle size={12} />} Passed
@@ -831,8 +874,8 @@ export default function Coding() {
 
                   {activeBottomTab === 'Problems' && (
                     <div className="space-y-2 text-slate-400">
-                      <span className="text-xs font-bold text-slate-300">Workspace Diagnostic Errors (0)</span>
-                      <p className="text-[11px] text-slate-500">No syntax or compiler diagnostics errors detected in your code solution.</p>
+                      <span className={`text-xs font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Workspace Diagnostic Errors (0)</span>
+                      <p className={`text-[11px] ${textMutedClass}`}>No syntax or compiler diagnostics errors detected in your code solution.</p>
                     </div>
                   )}
 
@@ -848,7 +891,7 @@ export default function Coding() {
             {/* Right Resizer bar */}
             {!aiPanelCollapsed && (
               <div 
-                className="w-1 cursor-col-resize hover:bg-[#8B5CF6] active:bg-[#8B5CF6] transition-colors bg-white/5 flex-shrink-0 z-30" 
+                className={`w-1 cursor-col-resize hover:bg-[#8B5CF6] active:bg-[#8B5CF6] transition-colors flex-shrink-0 z-30 ${isDarkMode ? 'bg-white/5' : 'bg-slate-300'}`} 
                 onMouseDown={startResizeRight}
               />
             )}
@@ -857,16 +900,16 @@ export default function Coding() {
             {!aiPanelCollapsed && (
               <div 
                 style={{ width: `${aiPanelWidth}px` }} 
-                className="flex flex-col border-l border-white/5 bg-[#0F172A] flex-shrink-0 select-none min-h-0"
+                className={`flex flex-col border-l flex-shrink-0 select-none min-h-0 ${sidebarClass} ${borderClass}`}
               >
-                <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-[#0F172A]">
+                <div className={`flex items-center justify-between px-3 py-2 border-b ${panelHeaderClass}`}>
                   <div className="flex items-center gap-1.5">
                     <Sparkles size={14} className="text-[#8B5CF6]" />
-                    <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">AI Assistant</span>
+                    <span className={`text-[10px] uppercase font-bold tracking-wider ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>AI Assistant</span>
                   </div>
                   <button 
                     onClick={() => setAiPanelCollapsed(true)} 
-                    className="text-slate-400 hover:text-white p-0.5"
+                    className="text-slate-400 hover:text-slate-600 p-0.5"
                     title="Hide AI panel"
                   >
                     <Minimize2 size={13} />
@@ -874,12 +917,16 @@ export default function Coding() {
                 </div>
 
                 {/* AI Prompts Toolbar */}
-                <div className="grid grid-cols-2 gap-1.5 p-3 border-b border-white/5 bg-slate-900/20">
+                <div className={`grid grid-cols-3 gap-1 p-2 border-b ${borderClass} ${isDarkMode ? 'bg-slate-900/20' : 'bg-slate-200/50'}`}>
                   {['Explain Code', 'Find Bug', 'Optimize Code'].map(action => (
                     <button
                       key={action}
                       onClick={() => handleAiPrompt(action)}
-                      className="px-2 py-1 text-[10px] bg-slate-800 hover:bg-slate-750 text-slate-200 border border-white/5 hover:border-white/10 rounded transition-all font-semibold"
+                      className={`px-1 py-1 text-[9px] border rounded transition-all font-semibold ${
+                        isDarkMode 
+                          ? 'bg-slate-800 border-white/5 hover:bg-slate-750 text-slate-200' 
+                          : 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700 shadow-sm'
+                      }`}
                     >
                       {action}
                     </button>
@@ -893,8 +940,8 @@ export default function Coding() {
                       key={idx} 
                       className={`p-2.5 rounded-xl border ${
                         msg.role === 'assistant' 
-                          ? 'bg-[#111827] border-white/5 text-slate-300' 
-                          : 'bg-[#8B5CF6]/10 border-[#8B5CF6]/20 text-[#C084FC] ml-4'
+                          ? `${consoleBgClass} ${borderClass} ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}` 
+                          : 'bg-[#8B5CF6]/10 border-[#8B5CF6]/20 text-[#8B5CF6] ml-4 font-semibold'
                       }`}
                     >
                       <div className="font-bold text-[9px] uppercase tracking-wider text-slate-500 mb-1">
@@ -905,7 +952,7 @@ export default function Coding() {
                   ))}
 
                   {aiTyping && (
-                    <div className="flex items-center gap-1.5 text-slate-400 italic text-[11px] p-2 bg-[#111827] rounded-xl border border-white/5">
+                    <div className={`flex items-center gap-1.5 italic text-[11px] p-2 rounded-xl border ${borderClass} ${consoleBgClass} ${textMutedClass}`}>
                       <RefreshCw size={12} className="animate-spin text-[#8B5CF6]" />
                       <span>Thinking...</span>
                     </div>
@@ -913,14 +960,16 @@ export default function Coding() {
                 </div>
 
                 {/* Input Control */}
-                <div className="p-3 border-t border-white/5 bg-[#0F172A] flex items-center gap-2">
+                <div className={`p-3 border-t flex items-center gap-2 ${sidebarClass} ${borderClass}`}>
                   <input
                     type="text"
                     value={aiInput}
                     onChange={(e) => setAiInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSendAiMessage()}
                     placeholder="Ask AI assistant..."
-                    className="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-[#8B5CF6] text-white"
+                    className={`flex-1 border rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-[#8B5CF6] ${
+                      isDarkMode ? 'bg-slate-900 border-white/10 text-white' : 'bg-white border-slate-300 text-slate-800'
+                    }`}
                   />
                   <button 
                     onClick={handleSendAiMessage}
@@ -946,12 +995,12 @@ export default function Coding() {
           </div>
 
           {/* Bottom Status Bar */}
-          <div className="h-6 flex items-center justify-between px-3 bg-[#0F172A] border-t border-white/5 text-[10px] text-slate-500 select-none">
+          <div className={`h-6 flex items-center justify-between px-3 border-t text-[10px] select-none ${sidebarClass} ${borderClass} ${textMutedClass}`}>
             <div className="flex items-center gap-3">
               <span className="text-[#22C55E] flex items-center gap-1 font-bold">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" /> Ready
               </span>
-              <span>Git: <strong className="text-slate-400 font-bold">main</strong></span>
+              <span>Git: <strong className="font-bold">main</strong></span>
             </div>
 
             <div className="flex items-center gap-4">
@@ -968,17 +1017,17 @@ export default function Coding() {
       {/* Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="w-80 bg-[#0F172A] border border-white/10 rounded-2xl p-5 shadow-xl">
-            <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-1.5">
+          <div className={`w-80 border rounded-2xl p-5 shadow-xl ${isDarkMode ? 'bg-[#0F172A] border-white/10' : 'bg-white border-slate-200 text-slate-800'}`}>
+            <h3 className="text-sm font-bold mb-4 flex items-center gap-1.5">
               <Settings size={16} /> Editor Configuration
             </h3>
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-400 mb-1.5">Font Size</label>
+                <label className={`block mb-1.5 ${textMutedClass}`}>Font Size</label>
                 <select 
                   value={editorFontSize} 
                   onChange={(e) => setEditorFontSize(parseInt(e.target.value))}
-                  className="w-full bg-slate-900 border border-white/10 rounded-lg p-2 text-white"
+                  className={`w-full border rounded-lg p-2 ${isDarkMode ? 'bg-slate-900 border-white/10 text-white' : 'bg-slate-50 border-slate-300 text-slate-800'}`}
                 >
                   <option value={12}>12px</option>
                   <option value={14}>14px</option>
@@ -988,11 +1037,11 @@ export default function Coding() {
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1.5">Word Wrap</label>
+                <label className={`block mb-1.5 ${textMutedClass}`}>Word Wrap</label>
                 <select 
                   value={editorWordWrap} 
                   onChange={(e) => setEditorWordWrap(e.target.value)}
-                  className="w-full bg-slate-900 border border-white/10 rounded-lg p-2 text-white"
+                  className={`w-full border rounded-lg p-2 ${isDarkMode ? 'bg-slate-900 border-white/10 text-white' : 'bg-slate-50 border-slate-300 text-slate-800'}`}
                 >
                   <option value="on">On</option>
                   <option value="off">Off</option>
@@ -1000,7 +1049,7 @@ export default function Coding() {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-slate-400">Enable Minimap</span>
+                <span className={textMutedClass}>Enable Minimap</span>
                 <input 
                   type="checkbox" 
                   checked={editorMinimap} 
@@ -1010,11 +1059,11 @@ export default function Coding() {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-slate-400">Editor Theme</span>
+                <span className={textMutedClass}>Editor Theme</span>
                 <select 
                   value={theme} 
                   onChange={(e) => setTheme(e.target.value)}
-                  className="bg-slate-900 border border-white/10 rounded-lg p-1.5 text-white"
+                  className={`border rounded-lg p-1.5 ${isDarkMode ? 'bg-slate-900 border-white/10 text-white' : 'bg-slate-50 border-slate-300 text-slate-800'}`}
                 >
                   <option value="vs-dark">VS Dark</option>
                   <option value="light">VS Light</option>
@@ -1023,7 +1072,7 @@ export default function Coding() {
             </div>
             <button 
               onClick={() => setShowSettings(false)}
-              className="mt-6 w-full py-2 bg-slate-800 hover:bg-slate-750 border border-white/5 rounded-xl font-bold text-xs"
+              className={`mt-6 w-full py-2 border rounded-xl font-bold text-xs ${isDarkMode ? 'bg-slate-800 hover:bg-slate-750 border-white/5 text-slate-200' : 'bg-slate-200 hover:bg-slate-300 border-slate-300 text-slate-700'}`}
             >
               Close Settings
             </button>

@@ -60,7 +60,7 @@ export default function VoiceAssistantWidget() {
       {/* ── Floating Orb Button (Right Bottom) ── */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full flex items-center justify-center border-2 border-purple-500/80 bg-white/10 dark:bg-slate-900/20 backdrop-blur-md shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all cursor-pointer overflow-hidden"
+        className="fixed bottom-12 right-6 z-50 w-16 h-16 rounded-full flex items-center justify-center border-2 border-purple-500/80 bg-white/10 dark:bg-slate-900/20 backdrop-blur-md shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all cursor-pointer overflow-hidden"
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
         aria-label="EduVerse Voice Teacher Guide"
