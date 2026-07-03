@@ -39,6 +39,28 @@ export default function MathVisualization() {
   const [newtonDiffDirection, setNewtonDiffDirection] = useState('Forward');
   const [newtonDiffTargetX, setNewtonDiffTargetX] = useState('1.2');
 
+  // Simpson's 1/3 Rule States
+  const [simpson13ProblemId, setSimpson13ProblemId] = useState('s13_q1');
+  const [simpson13FuncId, setSimpson13FuncId] = useState('reciprocal');
+  const [simpson13A, setSimpson13A] = useState('0');
+  const [simpson13B, setSimpson13B] = useState('1');
+  const [simpson13N, setSimpson13N] = useState('4');
+
+  // Simpson's 3/8 Rule States
+  const [simpson38ProblemId, setSimpson38ProblemId] = useState('s38_q1');
+  const [simpson38FuncId, setSimpson38FuncId] = useState('reciprocal');
+  const [simpson38A, setSimpson38A] = useState('0');
+  const [simpson38B, setSimpson38B] = useState('1');
+  const [simpson38N, setSimpson38N] = useState('6');
+
+  // RK4 States
+  const [rkProblemId, setRkProblemId] = useState('rk_q1');
+  const [rkFuncId, setRkFuncId] = useState('y_minus_x');
+  const [rkX0, setRkX0] = useState('0');
+  const [rkY0, setRkY0] = useState('2');
+  const [rkH, setRkH] = useState('0.1');
+  const [rkSteps, setRkSteps] = useState('1');
+
   // Execution Control State
   const [playbackState, setPlaybackState] = useState('IDLE');
   const [speed, setSpeed] = useState(1);
@@ -120,6 +142,60 @@ export default function MathVisualization() {
       defaultTarget: 6,
       defaultDirection: 'Backward',
       question: 'From the following table of values of x and y, obtain dy/dx and d\u00B2y/dx\u00B2 for x = 6 using Newton\u2019s backward difference formula.'
+    }
+  ];
+
+  const SIMPSON_13_QUESTIONS = [
+    {
+      id: 's13_q1',
+      label: 'Q1: Evaluate ∫[0 to 1] sin(πx) dx (h = 0.5) (Photo Q3)',
+      question: 'Evaluate: I = ∫ [0 to 1] ( sin(πx) ) dx using Simpson\'s 1/3rd Rule with h = 0.5.'
+    },
+    {
+      id: 's13_q2',
+      label: 'Q2: Evaluate ∫[0 to 1] √(1-x²) dx (h = 0.2) (Photo Q2a)',
+      question: 'Evaluate: I = ∫ [0 to 1] ( √(1-x²) ) dx using Simpson\'s 1/3rd Rule with h = 0.2.'
+    },
+    {
+      id: 'custom',
+      label: 'Custom Equation',
+      question: 'Custom Simpson\'s 1/3 Rule problem.'
+    }
+  ];
+
+  const SIMPSON_38_QUESTIONS = [
+    {
+      id: 's38_q1',
+      label: 'Q1: Evaluate ∫[0 to 1] cos(x) dx (h = 0.2) (Photo Q1)',
+      question: 'Evaluate: I = ∫ [0 to 1] ( cos(x) ) dx using Simpson\'s 3/8th Rule when h = 0.2.'
+    },
+    {
+      id: 's38_q2',
+      label: 'Q2: Evaluate ∫[0 to π/2] √(cos θ) dθ (n = 6) (Photo Q2)',
+      question: 'Find the approximate value of ∫ [0 to π/2] ( √(cos θ) ) dθ dividing the interval into 6 parts using Simpson\'s 3/8th Rule.'
+    },
+    {
+      id: 'custom',
+      label: 'Custom Equation',
+      question: 'Custom Simpson\'s 3/8 Rule problem.'
+    }
+  ];
+
+  const RK_QUESTIONS = [
+    {
+      id: 'rk_q1',
+      label: 'Q1: dy/dx = y - x, y(0)=2, find y(0.1) (h = 0.1) (Photo Q1)',
+      question: 'Given that dy/dx = y - x where y(0) = 2 and h = 0.1, find y(0.1) using Runge Kutta 4th order method.'
+    },
+    {
+      id: 'rk_q2',
+      label: 'Q2: dy/dx = x + y, y(0)=1, find y(0.2) (h = 0.1)',
+      question: 'Given that dy/dx = x + y where y(0) = 1, find y(0.2) in 2 steps of h = 0.1 using Runge Kutta 4th order method.'
+    },
+    {
+      id: 'custom',
+      label: 'Custom ODE',
+      question: 'Custom Runge-Kutta 4th order method problem.'
     }
   ];
 
@@ -388,6 +464,9 @@ export default function MathVisualization() {
   const activeFunction = PREDEFINED_FUNCTIONS.find(f => f.id === funcId);
   const activeQuestion = NEWTON_QUESTIONS.find(q => q.id === newtonQuestionId);
   const activeDiffQuestion = NEWTON_DIFF_QUESTIONS.find(qd => qd.id === newtonDiffQuestionId);
+  const activeSimpson13Question = SIMPSON_13_QUESTIONS.find(q => q.id === simpson13ProblemId);
+  const activeSimpson38Question = SIMPSON_38_QUESTIONS.find(q => q.id === simpson38ProblemId);
+  const activeRKQuestion = RK_QUESTIONS.find(q => q.id === rkProblemId);
 
   // Engine Event Handlers
   const handleExplanationUpdate = (text) => {
@@ -480,6 +559,52 @@ export default function MathVisualization() {
           onFinish={handleExecutionFinished}
         />
       );
+    } else if (selectedMethod === 'Simpson\u2019s 1/3 Rule' || selectedMethod === "Simpson's 1/3 Rule") {
+      return (
+        <NotebookEngine
+          dataset={activeSimpson13Question}
+          func={activeFunction}
+          a={parseFloat(simpson13A)}
+          b={parseFloat(simpson13B)}
+          n={parseInt(simpson13N)}
+          method={selectedMethod}
+          playbackState={playbackState}
+          speed={speed}
+          onExplain={handleExplanationUpdate}
+          onFinish={handleExecutionFinished}
+        />
+      );
+    } else if (selectedMethod === 'Simpson\u2019s 3/8 Rule' || selectedMethod === "Simpson's 3/8 Rule") {
+      return (
+        <NotebookEngine
+          dataset={activeSimpson38Question}
+          func={activeFunction}
+          a={parseFloat(simpson38A)}
+          b={parseFloat(simpson38B)}
+          n={parseInt(simpson38N)}
+          method={selectedMethod}
+          playbackState={playbackState}
+          speed={speed}
+          onExplain={handleExplanationUpdate}
+          onFinish={handleExecutionFinished}
+        />
+      );
+    } else if (selectedMethod === 'RK4') {
+      return (
+        <NotebookEngine
+          dataset={activeRKQuestion}
+          rkX0={parseFloat(rkX0)}
+          rkY0={parseFloat(rkY0)}
+          rkH={parseFloat(rkH)}
+          rkSteps={parseInt(rkSteps)}
+          rkFuncId={rkFuncId}
+          method={selectedMethod}
+          playbackState={playbackState}
+          speed={speed}
+          onExplain={handleExplanationUpdate}
+          onFinish={handleExecutionFinished}
+        />
+      );
     }
     
     return (
@@ -502,6 +627,28 @@ export default function MathVisualization() {
       return activeQuestion?.question || '';
     } else if (selectedMethod === 'Newton\u2019s Difference') {
       return activeDiffQuestion?.question || '';
+    } else if (selectedMethod === 'Simpson\u2019s 1/3 Rule' || selectedMethod === "Simpson's 1/3 Rule") {
+      if (simpson13ProblemId === 'custom') {
+        return `Evaluate: I = \u222B [${simpson13A} to ${simpson13B}] ( ${activeFunction?.label?.split('=')[1]?.trim() || ''} ) dx using Simpson's 1/3 Rule.`;
+      }
+      return activeSimpson13Question?.question || '';
+    } else if (selectedMethod === 'Simpson\u2019s 3/8 Rule' || selectedMethod === "Simpson's 3/8 Rule") {
+      if (simpson38ProblemId === 'custom') {
+        return `Evaluate: I = \u222B [${simpson38A} to ${simpson38B}] ( ${activeFunction?.label?.split('=')[1]?.trim() || ''} ) dx using Simpson's 3/8 Rule.`;
+      }
+      return activeSimpson38Question?.question || '';
+    } else if (selectedMethod === 'RK4') {
+      if (rkProblemId === 'custom') {
+        const RK_FUNCTIONS = {
+          'y_minus_x': "dy/dx = y - x",
+          'x_plus_y':  "dy/dx = x + y",
+          'minus_2xy': "dy/dx = -2xy",
+          'y_plus_x2': "dy/dx = y + x\u00B2"
+        };
+        const odeStr = RK_FUNCTIONS[rkFuncId] || "dy/dx = y - x";
+        return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${ (parseFloat(rkX0) + parseInt(rkSteps) * parseFloat(rkH)).toFixed(2) }) in ${rkSteps} step(s) of h = ${rkH} using RK4.`;
+      }
+      return activeRKQuestion?.question || '';
     }
     return `Solving math system using ${selectedMethod}.`;
   };
@@ -995,6 +1142,148 @@ export default function MathVisualization() {
                     className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
                   />
                 </div>
+              </>
+            ) : selectedMethod === 'Simpson\u2019s 1/3 Rule' || selectedMethod === "Simpson's 1/3 Rule" ? (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
+                  <select 
+                    value={simpson13ProblemId}
+                    onChange={(e) => { setSimpson13ProblemId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
+                  >
+                    {SIMPSON_13_QUESTIONS.map(q => (
+                      <option key={q.id} value={q.id}>{q.label}</option>
+                    ))}
+                  </select>
+                </div>
+                {simpson13ProblemId === 'custom' && (
+                  <>
+                    <div className="mb-4">
+                      <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Target Function f(x)</label>
+                      <select 
+                        value={funcId}
+                        onChange={(e) => { setFuncId(e.target.value); setPlaybackState('IDLE'); }}
+                        className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
+                      >
+                        {PREDEFINED_FUNCTIONS.map(f => (
+                          <option key={f.id} value={f.id}>{f.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Lower [a]</label>
+                        <input type="number" step="0.1" value={simpson13A} onChange={e => { setSimpson13A(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Upper [b]</label>
+                        <input type="number" step="0.1" value={simpson13B} onChange={e => { setSimpson13B(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Steps (n)</label>
+                        <input type="number" min="2" max="20" step="2" value={simpson13N} onChange={e => { setSimpson13N(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            ) : selectedMethod === 'Simpson\u2019s 3/8 Rule' || selectedMethod === "Simpson's 3/8 Rule" ? (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
+                  <select 
+                    value={simpson38ProblemId}
+                    onChange={(e) => { setSimpson38ProblemId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
+                  >
+                    {SIMPSON_38_QUESTIONS.map(q => (
+                      <option key={q.id} value={q.id}>{q.label}</option>
+                    ))}
+                  </select>
+                </div>
+                {simpson38ProblemId === 'custom' && (
+                  <>
+                    <div className="mb-4">
+                      <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Target Function f(x)</label>
+                      <select 
+                        value={funcId}
+                        onChange={(e) => { setFuncId(e.target.value); setPlaybackState('IDLE'); }}
+                        className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
+                      >
+                        {PREDEFINED_FUNCTIONS.map(f => (
+                          <option key={f.id} value={f.id}>{f.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Lower [a]</label>
+                        <input type="number" step="0.1" value={simpson38A} onChange={e => { setSimpson38A(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Upper [b]</label>
+                        <input type="number" step="0.1" value={simpson38B} onChange={e => { setSimpson38B(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Steps (n)</label>
+                        <input type="number" min="3" max="21" step="3" value={simpson38N} onChange={e => { setSimpson38N(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            ) : selectedMethod === 'RK4' ? (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
+                  <select 
+                    value={rkProblemId}
+                    onChange={(e) => { setRkProblemId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
+                  >
+                    {RK_QUESTIONS.map(q => (
+                      <option key={q.id} value={q.id}>{q.label}</option>
+                    ))}
+                  </select>
+                </div>
+                {rkProblemId === 'custom' && (
+                  <>
+                    <div className="mb-4">
+                      <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">ODE dy/dx = f(x,y)</label>
+                      <select 
+                        value={rkFuncId}
+                        onChange={(e) => { setRkFuncId(e.target.value); setPlaybackState('IDLE'); }}
+                        className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
+                      >
+                        <option value="y_minus_x">dy/dx = y - x</option>
+                        <option value="x_plus_y">dy/dx = x + y</option>
+                        <option value="minus_2xy">dy/dx = -2xy</option>
+                        <option value="y_plus_x2">dy/dx = y + x\u00B2</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial x\u2080</label>
+                        <input type="number" step="0.1" value={rkX0} onChange={e => { setRkX0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial y\u2080</label>
+                        <input type="number" step="0.1" value={rkY0} onChange={e => { setRkY0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Step size (h)</label>
+                        <input type="number" step="0.05" min="0.01" max="1" value={rkH} onChange={e => { setRkH(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Steps Count</label>
+                        <input type="number" min="1" max="10" value={rkSteps} onChange={e => { setRkSteps(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                    </div>
+                  </>
+                )}
               </>
             ) : null}
           </div>

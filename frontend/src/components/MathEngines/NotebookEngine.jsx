@@ -4,7 +4,7 @@ import TypewriterStep from './TypewriterStep';
 
 export default function NotebookEngine({ 
   func, a, b, n, method, playbackState, speed, onExplain, onFinish, dataset, targetX, direction,
-  bisectionProblemId, bisectionIterations
+  bisectionProblemId, bisectionIterations, rkX0, rkY0, rkH, rkSteps, rkFuncId
 }) {
   const [activeStepIndex, setActiveStepIndex] = useState(-1);
   const [stepComplete, setStepComplete] = useState(false);
@@ -200,7 +200,410 @@ export default function NotebookEngine({
         explanation: `The approximate area under the function is ${finalI.toFixed(3)}.`
       });
     } 
-    
+
+    else if (method === 'Simpson’s 1/3 Rule' || method === "Simpson's 1/3 Rule") {
+      let isPredefined = dataset && dataset.id !== 'custom';
+      let functionLabel = "";
+      let a_val = 0;
+      let b_val = 0;
+      let n_val = 4;
+      let h_val = 0;
+      let points = [];
+      let xPts = [];
+      let questionText = "";
+      
+      if (isPredefined) {
+        questionText = dataset.question;
+        if (dataset.id === 's13_q1') {
+          a_val = 0;
+          b_val = 1;
+          n_val = 2;
+          h_val = 0.5;
+          functionLabel = "sin(πx)";
+          xPts = [0, 0.5, 1.0];
+          points = [0, 1.0, 0];
+        } else {
+          // s13_q2
+          a_val = 0;
+          b_val = 1;
+          n_val = 5;
+          h_val = 0.2;
+          functionLabel = "√(1 - x²)";
+          xPts = [0, 0.2, 0.4, 0.6, 0.8, 1.0];
+          points = [1.0, 0.979, 0.916, 0.8, 0.6, 0];
+        }
+      } else {
+        a_val = a !== undefined ? parseFloat(a) : 0;
+        b_val = b !== undefined ? parseFloat(b) : 1;
+        n_val = n !== undefined ? parseInt(n) : 4;
+        h_val = (b_val - a_val) / n_val;
+        functionLabel = func?.label ? func.label.split('=')[1].trim() : "1/(1+x)";
+        questionText = `Evaluate: I = ∫ [${a_val} to ${b_val}] ( ${functionLabel} ) dx using Simpson's 1/3 Rule.`;
+        const expr = func?.expr || ((x) => 1 / (1 + x));
+        for (let i = 0; i <= n_val; i++) {
+          const xi = a_val + i * h_val;
+          xPts.push(xi);
+          points.push(expr(xi));
+        }
+      }
+
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content: `Evaluate: I = ∫ [${a_val} to ${b_val}] ( ${functionLabel} ) dx\nMethod:   Simpson's 1/3 Rule\nBounds:   a = ${a_val}, b = ${b_val}, n = ${n_val} intervals`,
+        explanation: 'We identify the integration limit boundaries and interval width to approximate the area using parabolic segments.'
+      });
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 1: COMPUTE STEP SIZE (h)',
+        content: `h = (b - a) / n\nh = (${b_val} - ${a_val}) / ${n_val}\nh = ${h_val.toFixed(4)}`,
+        explanation: 'We divide the total interval length by the number of sub-intervals to get the strip step-size h.'
+      });
+
+      // Construct Data Table text
+      let tableXStr = 'x_i | ';
+      let tableYStr = 'y_i | ';
+      xPts.forEach((x, i) => {
+        tableXStr += `${x.toFixed(2).padEnd(8)}`;
+        tableYStr += `${points[i].toFixed(4).padEnd(8)}`;
+      });
+      const nodesStr = `Given y = f(x) = ${functionLabel}\n\n${tableXStr}\n${tableYStr}`;
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 2: CONSTRUCT DATA TABLE',
+        content: nodesStr,
+        explanation: 'Evaluate f(x) at each coordinate point from x₀ to xₙ to construct our data pairs.'
+      });
+
+      // Calculation of sums
+      let sum1 = points[0] + points[points.length - 1]; // endpoints
+      let sumOdd = 0;
+      let sumEven = 0;
+      
+      // If dataset is s13_q2 (the specific odd-n photo question)
+      if (dataset?.id === 's13_q2') {
+        sumOdd = points[1] + points[3];
+        sumEven = points[2] + points[4];
+      } else {
+        for (let i = 1; i < points.length - 1; i++) {
+          if (i % 2 === 1) {
+            sumOdd += points[i];
+          } else {
+            sumEven += points[i];
+          }
+        }
+      }
+      
+      const finalI = (h_val / 3) * (sum1 + 4 * sumOdd + 2 * sumEven);
+
+      let formulaStr = `I = ∫ y dx = (h/3) × [ y₀ + 4·(y₁ + y₃ + ...) + 2·(y₂ + y₄ + ...) + yₙ ]\n\n`;
+      formulaStr += `I ≈ (${h_val.toFixed(4)}/3) × [ ${points[0].toFixed(4)}`;
+      
+      if (dataset?.id === 's13_q2') {
+        formulaStr += ` + 4·(${points[1].toFixed(4)} + ${points[3].toFixed(4)}) + 2·(${points[2].toFixed(4)} + ${points[4].toFixed(4)}) + ${points[5].toFixed(4)} ]`;
+      } else {
+        if (n_val > 1) {
+          let oddTerms = [];
+          let evenTerms = [];
+          for (let i = 1; i < points.length - 1; i++) {
+            if (i % 2 === 1) oddTerms.push(points[i].toFixed(4));
+            else evenTerms.push(points[i].toFixed(4));
+          }
+          if (oddTerms.length > 0) formulaStr += ` + 4·(${oddTerms.join(' + ')})`;
+          if (evenTerms.length > 0) formulaStr += ` + 2·(${evenTerms.join(' + ')})`;
+        }
+        formulaStr += ` + ${points[points.length - 1].toFixed(4)} ]`;
+      }
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 3: VALUES SUBSTITUTION',
+        content: formulaStr,
+        explanation: 'Substitute boundary and interior nodes into Simpson\'s 1/3 Rule formula. Endpoints have coefficient 1, odd nodes coefficient 4, and even nodes coefficient 2.'
+      });
+
+      let calcStr = `I ≈ ${(h_val/3).toFixed(5)} × [ ${sum1.toFixed(4)} + 4·(${sumOdd.toFixed(4)}) + 2·(${sumEven.toFixed(4)}) ]\n`;
+      calcStr += `I ≈ ${(h_val/3).toFixed(5)} × [ ${sum1.toFixed(4)} + ${(4*sumOdd).toFixed(4)} + ${(2*sumEven).toFixed(4)} ]\n`;
+      calcStr += `I ≈ ${(h_val/3).toFixed(5)} × ${(sum1 + 4*sumOdd + 2*sumEven).toFixed(4)}\n`;
+      calcStr += `I ≈ ${finalI.toFixed(6)}`;
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 4: SOLVE ARITHMETIC',
+        content: calcStr,
+        explanation: 'Evaluate the coefficients, sum the groups, and scale by h/3.'
+      });
+
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: `I ≈ ${finalI.toFixed(6)}\n\nCorrect to 4 decimal places:\nI ≈ ${finalI.toFixed(4)}`,
+        explanation: `The approximate area under the curve is ${finalI.toFixed(4)} using Simpson's 1/3 Rule.`
+      });
+    }
+
+    else if (method === 'Simpson’s 3/8 Rule' || method === "Simpson's 3/8 Rule") {
+      let isPredefined = dataset && dataset.id !== 'custom';
+      let functionLabel = "";
+      let a_val = 0;
+      let b_val = 0;
+      let n_val = 6;
+      let h_val = 0;
+      let points = [];
+      let xPts = [];
+      let questionText = "";
+      
+      if (isPredefined) {
+        questionText = dataset.question;
+        if (dataset.id === 's38_q1') {
+          // cos(x), [0, 1], h = 0.2, n = 5
+          a_val = 0;
+          b_val = 1;
+          n_val = 5;
+          h_val = 0.2;
+          functionLabel = "cos(x)";
+          xPts = [0, 0.2, 0.4, 0.6, 0.8, 1.0];
+          points = [1.0, 0.98, 0.9210, 0.8253, 0.6967, 0.5403];
+        } else {
+          // s38_q2: sqrt(cos(theta)), [0, pi/2], n = 6
+          a_val = 0;
+          b_val = Math.PI / 2;
+          n_val = 6;
+          h_val = Math.PI / 12;
+          functionLabel = "√(cos θ)";
+          xPts = [0, Math.PI/12, Math.PI/6, Math.PI/4, Math.PI/3, 5*Math.PI/12, Math.PI/2];
+          points = [1.0, 0.9828, 0.9306, 0.8409, 0.7071, 0.5087, 0];
+        }
+      } else {
+        a_val = a !== undefined ? parseFloat(a) : 0;
+        b_val = b !== undefined ? parseFloat(b) : 1;
+        n_val = n !== undefined ? parseInt(n) : 6;
+        h_val = (b_val - a_val) / n_val;
+        functionLabel = func?.label ? func.label.split('=')[1].trim() : "1/(1+x)";
+        questionText = `Evaluate: I = ∫ [${a_val} to ${b_val}] ( ${functionLabel} ) dx using Simpson's 3/8 Rule.`;
+        const expr = func?.expr || ((x) => 1 / (1 + x));
+        for (let i = 0; i <= n_val; i++) {
+          const xi = a_val + i * h_val;
+          xPts.push(xi);
+          points.push(expr(xi));
+        }
+      }
+
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content: `Evaluate: I = ∫ [${a_val} to ${b_val}] ( ${functionLabel} ) dx\nMethod:   Simpson's 3/8 Rule\nBounds:   a = ${a_val}, b = ${b_val}, n = ${n_val} intervals`,
+        explanation: 'We identify the integration bounds and prepare to evaluate using Simpson\'s 3/8 Rule (cubic polynomial approximation).'
+      });
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 1: COMPUTE STEP SIZE (h)',
+        content: `h = (b - a) / n\nh = (${b_val} - ${a_val}) / ${n_val}\nh = ${h_val.toFixed(4)}`,
+        explanation: 'Compute step size h by dividing the interval bounds difference by the number of sub-intervals.'
+      });
+
+      // Construct Data Table text
+      let tableXStr = 'x_i | ';
+      let tableYStr = 'y_i | ';
+      xPts.forEach((x, i) => {
+        tableXStr += `${x.toFixed(2).padEnd(8)}`;
+        tableYStr += `${points[i].toFixed(4).padEnd(8)}`;
+      });
+      const nodesStr = `Given y = f(x) = ${functionLabel}\n\n${tableXStr}\n${tableYStr}`;
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 2: CONSTRUCT DATA TABLE',
+        content: nodesStr,
+        explanation: 'We evaluate y = f(x) at each division node x_i to get our data points.'
+      });
+
+      // Sums for Simpson's 3/8 Rule
+      let sumEndpoints = points[0] + points[points.length - 1];
+      let sumMult3 = 0;
+      let sumOther = 0;
+
+      if (dataset?.id === 's38_q1') {
+        // specific n=5 formula from photo: y0 + 3(y1 + y2 + y4) + 2(y3) + y5
+        sumOther = points[1] + points[2] + points[4];
+        sumMult3 = points[3];
+      } else {
+        for (let i = 1; i < points.length - 1; i++) {
+          if (i % 3 === 0) {
+            sumMult3 += points[i];
+          } else {
+            sumOther += points[i];
+          }
+        }
+      }
+
+      const finalI = (3 * h_val / 8) * (sumEndpoints + 3 * sumOther + 2 * sumMult3);
+
+      let formulaStr = `I = ∫ y dx = (3h/8) × [ y₀ + 3·(y₁ + y₂ + y₄ + ...) + 2·(y₃ + y₆ + ...) + yₙ ]\n\n`;
+      formulaStr += `I ≈ (3·${h_val.toFixed(4)}/8) × [ ${points[0].toFixed(4)}`;
+
+      if (dataset?.id === 's38_q1') {
+        formulaStr += ` + 3·(${points[1].toFixed(4)} + ${points[2].toFixed(4)} + ${points[4].toFixed(4)}) + 2·(${points[3].toFixed(4)}) + ${points[5].toFixed(4)} ]`;
+      } else {
+        if (n_val > 1) {
+          let otherTerms = [];
+          let mult3Terms = [];
+          for (let i = 1; i < points.length - 1; i++) {
+            if (i % 3 === 0) mult3Terms.push(points[i].toFixed(4));
+            else otherTerms.push(points[i].toFixed(4));
+          }
+          if (otherTerms.length > 0) formulaStr += ` + 3·(${otherTerms.join(' + ')})`;
+          if (mult3Terms.length > 0) formulaStr += ` + 2·(${mult3Terms.join(' + ')})`;
+        }
+        formulaStr += ` + ${points[points.length - 1].toFixed(4)} ]`;
+      }
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 3: VALUES SUBSTITUTION',
+        content: formulaStr,
+        explanation: 'We plug the tabular values into Simpson\'s 3/8 Rule formula. Points at indices which are multiples of 3 are multiplied by 2, other interior points by 3.'
+      });
+
+      let calcStr = `I ≈ ${(3*h_val/8).toFixed(5)} × [ ${sumEndpoints.toFixed(4)} + 3·(${sumOther.toFixed(4)}) + 2·(${sumMult3.toFixed(4)}) ]\n`;
+      calcStr += `I ≈ ${(3*h_val/8).toFixed(5)} × [ ${sumEndpoints.toFixed(4)} + ${(3*sumOther).toFixed(4)} + ${(2*sumMult3).toFixed(4)} ]\n`;
+      calcStr += `I ≈ ${(3*h_val/8).toFixed(5)} × ${(sumEndpoints + 3*sumOther + 2*sumMult3).toFixed(4)}\n`;
+      calcStr += `I ≈ ${finalI.toFixed(6)}`;
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 4: SOLVE ARITHMETIC',
+        content: calcStr,
+        explanation: 'Solve intermediate sums and scale by 3h/8.'
+      });
+
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: `I ≈ ${finalI.toFixed(6)}\n\nCorrect to 4 decimal places:\nI ≈ ${finalI.toFixed(4)}`,
+        explanation: `The approximate area under the curve is ${finalI.toFixed(4)} using Simpson's 3/8 Rule.`
+      });
+    }
+
+    else if (method === 'RK4') {
+      const RK_FUNCTIONS = {
+        'y_minus_x': { label: "dy/dx = y - x", expr: (x, y) => y - x },
+        'x_plus_y':  { label: "dy/dx = x + y", expr: (x, y) => x + y },
+        'minus_2xy': { label: "dy/dx = -2xy",  expr: (x, y) => -2 * x * y },
+        'y_plus_x2': { label: "dy/dx = y + x²", expr: (x, y) => y + x * x }
+      };
+
+      let isPredefined = dataset && dataset.id !== 'custom';
+      let odeLabel = "";
+      let expr = null;
+      let x0_val = 0;
+      let y0_val = 0;
+      let h_val = 0.1;
+      let steps_count = 1;
+
+      if (isPredefined) {
+        if (dataset.id === 'rk_q1') {
+          odeLabel = "dy/dx = y - x";
+          expr = (x, y) => y - x;
+          x0_val = 0;
+          y0_val = 2;
+          h_val = 0.1;
+          steps_count = 1;
+        } else {
+          // rk_q2
+          odeLabel = "dy/dx = x + y";
+          expr = (x, y) => x + y;
+          x0_val = 0;
+          y0_val = 1;
+          h_val = 0.1;
+          steps_count = 2;
+        }
+      } else {
+        const funcKey = rkFuncId || 'y_minus_x';
+        const fnObj = RK_FUNCTIONS[funcKey] || RK_FUNCTIONS['y_minus_x'];
+        odeLabel = fnObj.label;
+        expr = fnObj.expr;
+        x0_val = rkX0 !== undefined ? parseFloat(rkX0) : 0;
+        y0_val = rkY0 !== undefined ? parseFloat(rkY0) : 2;
+        h_val = rkH !== undefined ? parseFloat(rkH) : 0.1;
+        steps_count = rkSteps !== undefined ? parseInt(rkSteps) : 1;
+      }
+
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content: `Given Differential Equation:\n${odeLabel}\n\nInitial Conditions:\nx₀ = ${x0_val}, y₀ = ${y0_val}\nStep size h = ${h_val}\nTarget: Find y at x = ${(x0_val + steps_count * h_val).toFixed(2)} (${steps_count} step(s))`,
+        explanation: 'We initialize the 4th-order Runge-Kutta parameters. RK4 evaluates four slopes per step to construct a highly accurate prediction.'
+      });
+
+      let currentX = x0_val;
+      let currentY = y0_val;
+
+      for (let s = 1; s <= steps_count; s++) {
+        const x_start = currentX;
+        const y_start = currentY;
+
+        // compute k1, k2, k3, k4
+        const k1 = h_val * expr(x_start, y_start);
+        const k2 = h_val * expr(x_start + h_val / 2, y_start + k1 / 2);
+        const k3 = h_val * expr(x_start + h_val / 2, y_start + k2 / 2);
+        const k4 = h_val * expr(x_start + h_val, y_start + k3);
+
+        const y_next = y_start + (k1 + 2 * k2 + 2 * k3 + k4) / 6;
+        const x_next = x_start + h_val;
+
+        // Adjust display formula strings based on the ODE function
+        let f1Str = "", f2Str = "", f3Str = "", f4Str = "";
+        if (odeLabel.includes("y - x")) {
+          f1Str = `${y_start.toFixed(5)} - ${x_start.toFixed(5)}`;
+          f2Str = `(${(y_start + k1/2).toFixed(5)}) - (${(x_start + h_val/2).toFixed(5)})`;
+          f3Str = `(${(y_start + k2/2).toFixed(5)}) - (${(x_start + h_val/2).toFixed(5)})`;
+          f4Str = `(${(y_start + k3).toFixed(5)}) - (${(x_start + h_val).toFixed(5)})`;
+        } else if (odeLabel.includes("x + y")) {
+          f1Str = `${x_start.toFixed(5)} + ${y_start.toFixed(5)}`;
+          f2Str = `(${(x_start + h_val/2).toFixed(5)}) + (${(y_start + k1/2).toFixed(5)})`;
+          f3Str = `(${(x_start + h_val/2).toFixed(5)}) + (${(y_start + k2/2).toFixed(5)})`;
+          f4Str = `(${(x_start + h_val).toFixed(5)}) + (${(y_start + k3).toFixed(5)})`;
+        } else {
+          f1Str = `f(${x_start.toFixed(3)}, ${y_start.toFixed(3)})`;
+          f2Str = `f(${(x_start + h_val/2).toFixed(3)}, ${(y_start + k1/2).toFixed(3)})`;
+          f3Str = `f(${(x_start + h_val/2).toFixed(3)}, ${(y_start + k2/2).toFixed(3)})`;
+          f4Str = `f(${(x_start + h_val).toFixed(3)}, ${(y_start + k3).toFixed(3)})`;
+        }
+
+        let stepStr = `STEP ${s}: INTERVAL [${x_start.toFixed(2)}, ${x_next.toFixed(2)}]\n`;
+        stepStr += `Current coordinates: x = ${x_start.toFixed(2)}, y = ${y_start.toFixed(5)}\n\n`;
+        stepStr += `k₁ = h · f(x, y) = ${h_val} · [${f1Str}] = ${k1.toFixed(5)}\n`;
+        stepStr += `k₂ = h · f(x + h/2, y + k₁/2) = ${h_val} · [${f2Str}] = ${k2.toFixed(5)}\n`;
+        stepStr += `k₃ = h · f(x + h/2, y + k₂/2) = ${h_val} · [${f3Str}] = ${k3.toFixed(5)}\n`;
+        stepStr += `k₄ = h · f(x + h, y + k₃) = ${h_val} · [${f4Str}] = ${k4.toFixed(5)}\n\n`;
+        stepStr += `y_next = y + (1/6) · (k₁ + 2k₂ + 2k₃ + k₄)\n`;
+        stepStr += `       = ${y_start.toFixed(5)} + (1/6) · (${k1.toFixed(5)} + 2·(${k2.toFixed(5)}) + 2·(${k3.toFixed(5)}) + ${k4.toFixed(5)})\n`;
+        stepStr += `       = ${y_start.toFixed(5)} + (1/6) · ${(k1 + 2*k2 + 2*k3 + k4).toFixed(5)}\n`;
+        stepStr += `       = ${y_next.toFixed(6)}`;
+
+        sequence.push({
+          type: 'math',
+          title: `RK4 STEP ${s} COMPUTATION`,
+          content: stepStr,
+          explanation: `In step ${s}, we compute the four RK4 increments (k₁, k₂, k₃, k₄) representing weighted slope approximations, then compute the next value y = ${y_next.toFixed(5)} at x = ${x_next.toFixed(2)}.`
+        });
+
+        currentX = x_next;
+        currentY = y_next;
+      }
+
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: `At x = ${currentX.toFixed(2)}, the approximate value of y is:\ny ≈ ${currentY.toFixed(5)}\n\n(RK4 Method, h = ${h_val})`,
+        explanation: `The fourth-order Runge-Kutta approximation at target x = ${currentX.toFixed(2)} yields y ≈ ${currentY.toFixed(5)}.`
+      });
+    }
+
     else if (method === 'Newton’s Interpolation') {
       const ds = dataset || {
         x: [1891, 1901, 1911, 1921, 1931],
@@ -535,7 +938,7 @@ export default function NotebookEngine({
     }
 
     return sequence;
-  }, [func, a, b, n, method, dataset, targetX, direction, bisectionProblemId, bisectionIterations]);
+  }, [func, a, b, n, method, dataset, targetX, direction, bisectionProblemId, bisectionIterations, rkX0, rkY0, rkH, rkSteps, rkFuncId]);
 
   // Reset on IDLE
   useEffect(() => {
