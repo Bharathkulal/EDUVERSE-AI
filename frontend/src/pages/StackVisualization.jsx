@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, ArrowRightToLine, ArrowUpFromLine, Eye, 
   Trash2, XCircle, ChevronRight, Zap, Info, ShieldAlert,
-  Play, RotateCcw
+  Play, RotateCcw, Pause, SkipBack, SkipForward
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggleButton from '../components/ThemeToggleButton';
@@ -31,6 +31,18 @@ export default function StackVisualization() {
   const [underflow, setUnderflow] = useState(false);
   const [peekIndex, setPeekIndex] = useState(null);
 
+  // Debugger Controller State
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentOpIndex, setCurrentOpIndex] = useState(-1);
+  const operationsQueue = [
+    { type: 'push', value: 10 },
+    { type: 'push', value: 20 },
+    { type: 'push', value: 50 },
+    { type: 'pop' },
+    { type: 'peek' },
+    { type: 'push', value: 100 }
+  ];
+
   // Focus ref for input
   const inputRef = useRef(null);
 
@@ -43,6 +55,128 @@ export default function StackVisualization() {
   };
 
   const getDuration = (base) => base / speed;
+
+  const applyOperationsUpToIndex = (targetIndex) => {
+    if (targetIndex < 0) {
+      setStack([]);
+      setCurrentOpIndex(-1);
+      return;
+    }
+    let tempStack = [];
+    for (let i = 0; i <= targetIndex; i++) {
+      const op = operationsQueue[i];
+      if (op.type === 'push') {
+        tempStack.push({ id: Date.now() + i, value: op.value });
+      } else if (op.type === 'pop') {
+        tempStack.pop();
+      }
+    }
+    setStack(tempStack);
+    setCurrentOpIndex(targetIndex);
+  };
+
+  const executeOperation = async (op) => {
+    if (op.type === 'push') {
+      setIsAnimating(true);
+      setActiveLine('push_check');
+      await new Promise(r => setTimeout(r, getDuration(400)));
+      if (stack.length >= MAX_CAPACITY) {
+        setActiveLine('push_overflow');
+        setOverflow(true);
+        addHistory(`Push(${op.value}) - Failed (Overflow)`);
+        await new Promise(r => setTimeout(r, getDuration(1000)));
+        setOverflow(false);
+        setIsAnimating(false);
+        setActiveLine(null);
+        return;
+      }
+      setActiveLine('push_execute');
+      const newId = Date.now();
+      await new Promise(r => setTimeout(r, getDuration(800)));
+      setStack(prev => [...prev, { id: newId, value: op.value }]);
+      addHistory(`Push(${op.value})`);
+      setIsAnimating(false);
+      setActiveLine(null);
+    } else if (op.type === 'pop') {
+      setIsAnimating(true);
+      setActiveLine('pop_check');
+      await new Promise(r => setTimeout(r, getDuration(400)));
+      if (stack.length === 0) {
+        setActiveLine('pop_underflow');
+        setUnderflow(true);
+        addHistory(`Pop() - Failed (Underflow)`);
+        await new Promise(r => setTimeout(r, getDuration(1000)));
+        setUnderflow(false);
+        setIsAnimating(false);
+        setActiveLine(null);
+        return;
+      }
+      setActiveLine('pop_execute');
+      const poppedValue = stack[stack.length - 1].value;
+      await new Promise(r => setTimeout(r, getDuration(800)));
+      setStack(prev => prev.slice(0, -1));
+      addHistory(`Pop() -> ${poppedValue}`);
+      setIsAnimating(false);
+      setActiveLine(null);
+    } else if (op.type === 'peek') {
+      setIsAnimating(true);
+      setActiveLine('peek');
+      if (stack.length > 0) {
+        setPeekIndex(stack.length - 1);
+        addHistory(`Peek() -> ${stack[stack.length - 1].value}`);
+      } else {
+        addHistory(`Peek() -> Empty`);
+      }
+      await new Promise(r => setTimeout(r, getDuration(1500)));
+      setPeekIndex(null);
+      setIsAnimating(false);
+      setActiveLine(null);
+    }
+  };
+
+  const handleNext = async () => {
+    if (isAnimating) return;
+    const nextIndex = currentOpIndex + 1;
+    if (nextIndex < operationsQueue.length) {
+      setCurrentOpIndex(nextIndex);
+      await executeOperation(operationsQueue[nextIndex]);
+    } else {
+      setIsPlaying(false);
+    }
+  };
+
+  const handlePrev = () => {
+    if (isAnimating) return;
+    const prevIndex = currentOpIndex - 1;
+    applyOperationsUpToIndex(prevIndex);
+  };
+
+  const handleReset = () => {
+    setIsPlaying(false);
+    setIsAnimating(false);
+    setActiveLine(null);
+    setStack([]);
+    setCurrentOpIndex(-1);
+    addHistory('Reset Simulation');
+  };
+
+  const handlePlayPause = () => {
+    setIsPlaying(!isPlaying);
+  };
+
+  useEffect(() => {
+    let playTimeout;
+    if (isPlaying && !isAnimating) {
+      if (currentOpIndex < operationsQueue.length - 1) {
+        playTimeout = setTimeout(() => {
+          handleNext();
+        }, 1000);
+      } else {
+        setIsPlaying(false);
+      }
+    }
+    return () => clearTimeout(playTimeout);
+  }, [isPlaying, isAnimating, currentOpIndex]);
 
   // Operations
   const handlePush = async () => {
@@ -286,6 +420,48 @@ export default function StackVisualization() {
                 <Trash2 className="w-5 h-5" /> Clear
               </button>
             </div>
+
+            {/* Debugger Actions */}
+            <div className="border-t pt-4 pb-2 space-y-3 border-[var(--db-card-border)]">
+              <label className="block text-[10px] uppercase tracking-widest text-blue-500 font-bold">Debugger Controller</label>
+              
+              {/* Operations Steps Display */}
+              <div className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-none">
+                {operationsQueue.map((op, idx) => (
+                  <span 
+                    key={idx} 
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap border transition-all ${
+                      currentOpIndex === idx 
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/25 scale-105' 
+                        : idx < currentOpIndex
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                          : 'bg-[var(--db-card-bg-elevated)] text-[var(--db-text-muted)] border-[var(--db-card-border)]'
+                    }`}
+                  >
+                    {op.type === 'push' ? `Push(${op.value})` : op.type === 'pop' ? 'Pop()' : 'Peek()'}
+                  </span>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between p-1.5 rounded-xl border border-[var(--db-card-border)] gap-1 bg-[var(--db-card-bg-elevated)]">
+                <button onClick={handleReset} className="p-2 hover:bg-blue-500/10 rounded-lg transition text-slate-400 hover:text-blue-500" title="Reset Simulation">
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+                <button onClick={handlePrev} className="p-2 hover:bg-blue-500/10 rounded-lg transition text-slate-400 hover:text-blue-500" title="Previous Step">
+                  <SkipBack className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={handlePlayPause} 
+                  className="p-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition shadow-lg shadow-blue-500/20" 
+                  title={isPlaying ? "Pause" : "Play"}
+                >
+                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
+                </button>
+                <button onClick={handleNext} className="p-2 hover:bg-blue-500/10 rounded-lg transition text-slate-400 hover:text-blue-500" title="Next Step">
+                  <SkipForward className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Bottom Info: Speed & History */}
@@ -401,7 +577,7 @@ export default function StackVisualization() {
                       <motion.div
                         key={item.id}
                         layout
-                        initial={{ opacity: 0, y: -200, scale: 0.5 }}
+                        initial={{ opacity: 0, y: -400, scale: 0.8 }}
                         animate={{ 
                           opacity: 1, 
                           y: 0, 
@@ -410,7 +586,10 @@ export default function StackVisualization() {
                         }}
                         exit={{ opacity: 0, y: -50, scale: 1.1, rotateZ: 5, backgroundColor: '#EF4444' }}
                         transition={{ 
-                          duration: getDuration(0.5), 
+                          type: "spring",
+                          stiffness: 120,
+                          damping: 14,
+                          mass: 0.8,
                           layout: { type: "spring", stiffness: 200, damping: 20 }
                         }}
                         className={`w-full rounded-xl flex items-center justify-center font-black relative shadow-lg shrink-0 transition-all duration-300
