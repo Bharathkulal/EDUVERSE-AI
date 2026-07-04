@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, ChevronRight, ChevronLeft, Play, Pause, RotateCcw, 
+import {
+  ArrowLeft, ChevronRight, ChevronLeft, Play, Pause, RotateCcw,
   Settings2, Activity, BrainCircuit, FunctionSquare, Rocket, X,
   Layers, BookOpen, Target, Lightbulb, Zap, ArrowRight
 } from 'lucide-react';
@@ -15,12 +15,12 @@ import './DashboardTheme.css';
 export default function LinearAlgebraVisualization() {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
-  
+
   // State
   const [selectedMethod, setSelectedMethod] = useState(null); // null means show selection cards
   const [showFormula, setShowFormula] = useState(false); // Formula intermediate page
   const [formulaPage, setFormulaPage] = useState(0); // Current formula page index
-  
+
   // Question selection states
   const [matMulQuestionId, setMatMulQuestionId] = useState('mm_q5');
 
@@ -35,8 +35,8 @@ export default function LinearAlgebraVisualization() {
       label: 'Q5: A = [[0,1],[1,0]], Find A² (Photo Q5)',
       question: 'Given A = [[0,1],[1,0]], find A² = A × A using Matrix Multiplication.',
       type: 'square',
-      matA: [[0,1],[1,0]],
-      matB: [[0,1],[1,0]],
+      matA: [[0, 1], [1, 0]],
+      matB: [[0, 1], [1, 0]],
       description: 'A is a permutation matrix. Compute A² = A × A.'
     },
     {
@@ -44,8 +44,8 @@ export default function LinearAlgebraVisualization() {
       label: 'Q6: A = [[1,0],[0,0]], B = [[0,0],[1,1]], Find AB (Photo Q6)',
       question: 'Given A = [[1,0],[0,0]] and B = [[0,0],[1,1]], find the product AB using Matrix Multiplication.',
       type: 'product',
-      matA: [[1,0],[0,0]],
-      matB: [[0,0],[1,1]],
+      matA: [[1, 0], [0, 0]],
+      matB: [[0, 0], [1, 1]],
       description: 'A is an idempotent matrix. Compute the product AB.'
     },
     {
@@ -62,8 +62,8 @@ export default function LinearAlgebraVisualization() {
       label: 'Q8: Orthogonal - 3x3 Fractional Matrix B',
       question: 'Given B = [[-2/3, 1/3, 2/3],[2/3, 2/3, 1/3],[1/3, -2/3, 2/3]], show that B is orthogonal by verifying BBᵀ = I.',
       type: 'orthogonal_3x3',
-      matA: [[-2/3, 1/3, 2/3], [2/3, 2/3, 1/3], [1/3, -2/3, 2/3]],
-      matB: [[-2/3, 2/3, 1/3], [1/3, 2/3, -2/3], [2/3, 1/3, 2/3]],
+      matA: [[-2 / 3, 1 / 3, 2 / 3], [2 / 3, 2 / 3, 1 / 3], [1 / 3, -2 / 3, 2 / 3]],
+      matB: [[-2 / 3, 2 / 3, 1 / 3], [1 / 3, 2 / 3, -2 / 3], [2 / 3, 1 / 3, 2 / 3]],
       description: 'B is a 3x3 matrix with fractional entries. Multiply B by its transpose Bᵀ and verify that the product is the 3x3 Identity Matrix I.'
     },
     {
@@ -105,13 +105,13 @@ export default function LinearAlgebraVisualization() {
   ];
 
   const CARDS = [
-    { 
-      id: 'Matrix Multiplication', 
-      title: 'Matrix Multiplication', 
-      desc: 'Compute products of matrices element-by-element using row-column dot product operations.', 
-      status: 'Intermediate', 
-      time: '15 mins', 
-      xp: '120 XP', 
+    {
+      id: 'Matrix Multiplication',
+      title: 'Matrix Multiplication',
+      desc: 'Compute products of matrices element-by-element using row-column dot product operations.',
+      status: 'Intermediate',
+      time: '15 mins',
+      xp: '120 XP',
       progress: 55,
       tags: ['Linear Algebra', 'Dot Product', 'Row × Column'],
       colorTheme: 'indigo',
@@ -119,13 +119,13 @@ export default function LinearAlgebraVisualization() {
       badgeClass: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-600 dark:text-indigo-400',
       icon: '🔢'
     },
-    { 
-      id: 'Orthogonal Verification', 
-      title: 'Orthogonal Verification', 
-      desc: 'Verify if a square matrix is orthogonal by computing the product of the matrix and its transpose (AAᵀ = I).', 
-      status: 'Intermediate', 
-      time: '15 mins', 
-      xp: '120 XP', 
+    {
+      id: 'Orthogonal Verification',
+      title: 'Orthogonal Verification',
+      desc: 'Verify if a square matrix is orthogonal by computing the product of the matrix and its transpose (AAᵀ = I).',
+      status: 'Intermediate',
+      time: '15 mins',
+      xp: '120 XP',
       progress: 75,
       tags: ['Linear Algebra', 'Transpose', 'Orthogonality'],
       colorTheme: 'emerald',
@@ -133,13 +133,13 @@ export default function LinearAlgebraVisualization() {
       badgeClass: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
       icon: '📐'
     },
-    { 
-      id: 'Symmetric & Skew Symmetric', 
-      title: 'Symmetric & Skew Symmetric', 
-      desc: 'Express any square matrix as the sum of a symmetric matrix B = ½(A + Aᵀ) and a skew-symmetric matrix C = ½(A - Aᵀ).', 
-      status: 'Advanced', 
-      time: '20 mins', 
-      xp: '150 XP', 
+    {
+      id: 'Symmetric & Skew Symmetric',
+      title: 'Symmetric & Skew Symmetric',
+      desc: 'Express any square matrix as the sum of a symmetric matrix B = ½(A + Aᵀ) and a skew-symmetric matrix C = ½(A - Aᵀ).',
+      status: 'Advanced',
+      time: '20 mins',
+      xp: '150 XP',
       progress: 40,
       tags: ['Linear Algebra', 'Symmetric', 'Skew Symmetric', 'Decomposition'],
       colorTheme: 'rose',
@@ -147,13 +147,13 @@ export default function LinearAlgebraVisualization() {
       badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-650 dark:text-rose-455',
       icon: '📊'
     },
-    { 
-      id: 'Inverse Matrix', 
-      title: 'Inverse Matrix', 
-      desc: 'Find the inverse of a square matrix using the determinant and adjoint formula (A⁻¹ = (1/|A|) · adj A).', 
-      status: 'Advanced', 
-      time: '20 mins', 
-      xp: '150 XP', 
+    {
+      id: 'Inverse Matrix',
+      title: 'Inverse Matrix',
+      desc: 'Find the inverse of a square matrix using the determinant and adjoint formula (A⁻¹ = (1/|A|) · adj A).',
+      status: 'Advanced',
+      time: '20 mins',
+      xp: '150 XP',
       progress: 60,
       tags: ['Linear Algebra', 'Inverse', 'Determinant', 'Adjoint'],
       colorTheme: 'amber',
@@ -330,7 +330,7 @@ export default function LinearAlgebraVisualization() {
         />
       );
     }
-    
+
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
         <Activity className="w-16 h-16 mb-4 opacity-20" />
@@ -370,7 +370,7 @@ export default function LinearAlgebraVisualization() {
           {/* Title Section */}
           <div className="mb-10 text-left flex flex-col gap-2">
             <div className="flex items-center gap-4">
-              <button 
+              <button
                 onClick={() => navigate('/subjects/math-proto', { state: { activeView: 'practical' } })}
                 className="p-3 bg-[var(--db-card-bg)] hover:bg-[var(--db-btn-secondary-hover)] border border-[var(--db-card-border)] rounded-2xl transition shadow-sm text-[var(--db-text-main)] flex items-center justify-center"
                 title="Back to Mathematics Lab"
@@ -448,11 +448,10 @@ export default function LinearAlgebraVisualization() {
                     <span>{card.progress}%</span>
                   </div>
                   <div className="w-full bg-slate-200 dark:bg-slate-800/50 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full transition-all duration-500 ${
-                        card.colorTheme === 'indigo' ? 'bg-indigo-500' : 'bg-emerald-500'
-                      }`}
-                      style={{ width: `${card.progress}%` }} 
+                    <div
+                      className={`h-full transition-all duration-500 ${card.colorTheme === 'indigo' ? 'bg-indigo-500' : 'bg-emerald-500'
+                        }`}
+                      style={{ width: `${card.progress}%` }}
                     />
                   </div>
                 </div>
@@ -498,7 +497,7 @@ export default function LinearAlgebraVisualization() {
 
         <main className="max-w-7xl mx-auto w-full px-8 py-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            
+
             {/* LEFT PANEL — Method Info Card */}
             <div className="lg:col-span-2">
               <motion.div
@@ -595,7 +594,7 @@ export default function LinearAlgebraVisualization() {
                     >
                       <ChevronLeft className="w-4 h-4" /> Previous
                     </button>
-                    
+
                     <div className="flex gap-2">
                       {Array.from({ length: totalPages }).map((_, i) => (
                         <button
@@ -605,7 +604,7 @@ export default function LinearAlgebraVisualization() {
                         />
                       ))}
                     </div>
-                    
+
                     <button
                       onClick={() => setFormulaPage(Math.min(totalPages - 1, formulaPage + 1))}
                       disabled={formulaPage === totalPages - 1}
@@ -628,16 +627,16 @@ export default function LinearAlgebraVisualization() {
   // =============================================
   return (
     <div className={`h-screen w-full overflow-hidden flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'}`} style={{ backgroundColor: 'var(--db-bg)', color: 'var(--db-text-main)' }}>
-      
+
       {/* HEADER BREADCRUMB */}
       <header className="h-16 shrink-0 bg-[var(--db-card-bg)] border-b border-[var(--db-header-border)] flex items-center justify-between px-8 shadow-sm relative z-10">
         <div className="flex items-center">
-          <button 
+          <button
             onClick={() => {
               setSelectedMethod(null);
               setShowFormula(false);
               setPlaybackState('IDLE');
-            }} 
+            }}
             className="mr-4 px-3.5 py-1.5 rounded-xl transition font-bold flex items-center gap-1.5 text-xs bg-[var(--db-input-bg)] border border-[var(--db-input-border)] text-[var(--db-text-main)] hover:bg-[var(--db-btn-secondary-hover)]"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -655,10 +654,10 @@ export default function LinearAlgebraVisualization() {
 
       {/* MAIN CONTENT */}
       <main className="flex-1 p-4 gap-4 flex flex-row h-[calc(100vh-64px)] max-w-[1920px] mx-auto w-full overflow-hidden">
-        
+
         {/* LEFT PANEL: INPUT SYSTEM */}
         <div className="w-full lg:w-1/4 lg:min-w-[280px] lg:h-full rounded-2xl flex flex-col shrink-0 overflow-hidden bg-[var(--db-card-bg)] border border-[var(--db-card-border)] shadow-md">
-          
+
           <div className="flex-1 overflow-y-auto p-5 pb-2">
             <div className="mb-4">
               <h2 className="text-lg font-extrabold text-[var(--db-text-main)] flex items-center gap-2">
@@ -670,7 +669,7 @@ export default function LinearAlgebraVisualization() {
             {/* Method Selector */}
             <div className="mb-4">
               <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Method</label>
-              <select 
+              <select
                 value={selectedMethod}
                 onChange={(e) => {
                   setSelectedMethod(e.target.value);
@@ -687,7 +686,7 @@ export default function LinearAlgebraVisualization() {
             {/* Problem Selector */}
             <div className="mb-4">
               <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Problem</label>
-              <select 
+              <select
                 value={matMulQuestionId}
                 onChange={(e) => { setMatMulQuestionId(e.target.value); setPlaybackState('IDLE'); }}
                 className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-indigo-500 outline-none text-[var(--db-text-main)]"
@@ -742,8 +741,8 @@ export default function LinearAlgebraVisualization() {
             <div className="rounded-2xl p-4 flex flex-col gap-3 bg-[var(--db-card-bg-elevated)]">
               <div className="flex justify-between items-center p-1 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-card-border)]">
                 {[0.5, 1, 2].map(s => (
-                  <button 
-                    key={s} 
+                  <button
+                    key={s}
                     onClick={() => setSpeed(s)}
                     className={`flex-1 py-1 text-xs font-bold rounded-lg transition-all ${speed === s ? 'bg-emerald-500 text-white shadow' : 'text-[var(--db-text-muted)] hover:text-[var(--db-text-main)]'}`}
                   >
@@ -752,11 +751,11 @@ export default function LinearAlgebraVisualization() {
                 ))}
               </div>
               <div className="flex items-center gap-2">
-                <button 
+                <button
                   onClick={handlePlayPause}
                   className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow-md shadow-emerald-500/20"
                 >
-                  {playbackState === 'PLAYING' ? <><Pause className="w-5 h-5"/> Pause</> : <><Play className="w-5 h-5"/> {playbackState === 'FINISHED' ? 'Restart' : 'Start Solving'}</>}
+                  {playbackState === 'PLAYING' ? <><Pause className="w-5 h-5" /> Pause</> : <><Play className="w-5 h-5" /> {playbackState === 'FINISHED' ? 'Restart' : 'Start Solving'}</>}
                 </button>
                 <button onClick={handleReplay} className="w-12 h-[48px] rounded-xl flex items-center justify-center transition active:scale-95 text-[var(--db-text-main)] hover:text-emerald-500 bg-[var(--db-input-bg)] border border-[var(--db-card-border)]">
                   <RotateCcw className="w-5 h-5" />
@@ -797,7 +796,7 @@ export default function LinearAlgebraVisualization() {
             <div className="absolute -top-10 -right-10 opacity-5 pointer-events-none">
               <BrainCircuit className="w-64 h-64 text-emerald-500" />
             </div>
-            
+
             <div className="flex items-center gap-3 mb-5 relative z-10 pb-4 border-b border-[var(--db-card-border)]">
               <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
                 <Settings2 className="w-5 h-5 text-emerald-555" />
@@ -810,14 +809,14 @@ export default function LinearAlgebraVisualization() {
 
             <div className="flex-1 relative z-10 font-mono text-[13px] leading-relaxed text-emerald-50 flex flex-col">
               <div className="mb-4 text-slate-500">
-                &gt; Analyzing runtime parameters...<br/>
-                &gt; Method: {selectedMethod}<br/>
+                &gt; Analyzing runtime parameters...<br />
+                &gt; Method: {selectedMethod}<br />
                 &gt; Standby.
               </div>
 
               {playbackState !== 'IDLE' && (
                 <AnimatePresence mode="wait">
-                  <motion.div 
+                  <motion.div
                     key={currentExplanation}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -831,7 +830,7 @@ export default function LinearAlgebraVisualization() {
               )}
 
               {playbackState === 'FINISHED' && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="mt-4 text-emerald-500 font-bold"
