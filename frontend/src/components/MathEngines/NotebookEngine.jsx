@@ -1752,6 +1752,244 @@ export default function NotebookEngine({
         }
       }
     }
+    else if (method === 'Gauss Elimination') {
+      const q = matMulQuestion;
+      if (q) {
+        const isProblem1 = q.type === 'gauss_elim_1';
+
+        if (isProblem1) {
+          // Step 0: Problem Statement
+          sequence.push({
+            type: 'header',
+            title: 'PROBLEM STATEMENT',
+            content: `Solve the system of equations using Gauss Elimination:\n\n` +
+                     `  2x +  y +  z = 10\n` +
+                     `  3x + 2y + 3z = 18\n` +
+                     `   x + 4y + 9z = 16\n\n` +
+                     `Let's represent the system as an augmented matrix [A : B]:\n\n` +
+                     `  [  2   1   1  |  10 ]\n` +
+                     `  [  3   2   3  |  18 ]\n` +
+                     `  [  1   4   9  |  16 ]`,
+            explanation: 'Express the system of linear equations in augmented matrix format to prepare for elimination row operations.'
+          });
+
+          // Step 1: Eliminate x
+          sequence.push({
+            type: 'math',
+            title: 'STEP 1: ELIMINATE X FROM ROW 2 AND ROW 3',
+            content: `Create zeros in column 1 below the pivot A\u2081\u2081 = 2:\n` +
+                     `  • R\u2082 \u2190 R\u2082 \u2212 (3/2)R\u2081  \u2192  R\u2082 \u2190 R\u2082 \u2212 1.5R\u2081\n` +
+                     `  • R\u2083 \u2190 R\u2083 \u2212 (1/2)R\u2081  \u2192  R\u2083 \u2190 R\u2083 \u2212 0.5R\u2081\n\n` +
+                     `Calculations:\n` +
+                     `  R\u2082: [3-1.5(2),  2-1.5(1),  3-1.5(1) | 18-1.5(10)] = [0,  0.5,  1.5 | 3]\n` +
+                     `  R\u2083: [1-0.5(2),  4-0.5(1),  9-0.5(1) | 16-0.5(10)] = [0,  3.5,  8.5 | 11]\n\n` +
+                     `Augmented Matrix:\n` +
+                     `  [  2    1    1   |  10 ]\n` +
+                     `  [  0   0.5  1.5  |   3 ]\n` +
+                     `  [  0   3.5  8.5  |  11 ]`,
+            explanation: 'Eliminate x coefficient in row 2 and row 3 by subtracting multiples of the pivot row 1.'
+          });
+
+          // Step 2: Eliminate y
+          sequence.push({
+            type: 'math',
+            title: 'STEP 2: ELIMINATE Y FROM ROW 3',
+            content: `Create a zero in column 2 below the pivot A\u2082\u2082 = 0.5:\n` +
+                     `  • R\u2083 \u2190 R\u2083 \u2212 (3.5/0.5)R\u2082  \u2192  R\u2083 \u2190 R\u2083 \u2212 7R\u2082\n\n` +
+                     `Calculations:\n` +
+                     `  R\u2083: [0-7(0),  3.5-7(0.5),  8.5-7(1.5) | 11-7(3)] = [0,  0,  -2 | -10]\n\n` +
+                     `Row Echelon (Upper Triangular) Form:\n` +
+                     `  [  2    1    1   |  10  ]\n` +
+                     `  [  0   0.5  1.5  |   3  ]\n` +
+                     `  [  0    0   -2   | -10  ]`,
+            explanation: 'Eliminate y coefficient in row 3 by subtracting 7 times row 2.'
+          });
+
+          // Step 3: Back Substitution z
+          sequence.push({
+            type: 'math',
+            title: 'STEP 3: SOLVE FOR Z (BACK SUBSTITUTION ROW 3)',
+            content: `From Row 3:\n` +
+                     `  -2z = -10\n` +
+                     `    z = -10 / -2\n` +
+                     `    z = 5`,
+            explanation: 'Since row 3 only contains z, solve directly for z.'
+          });
+
+          // Step 4: Back Substitution y
+          sequence.push({
+            type: 'math',
+            title: 'STEP 4: SOLVE FOR Y (BACK SUBSTITUTION ROW 2)',
+            content: `From Row 2:\n` +
+                     `  0.5y + 1.5z = 3\n\n` +
+                     `Substitute z = 5:\n` +
+                     `  0.5y + 1.5(5) = 3\n` +
+                     `  0.5y + 7.5 = 3\n` +
+                     `  0.5y = 3 - 7.5\n` +
+                     `  0.5y = -4.5\n` +
+                     `     y = -4.5 / 0.5\n` +
+                     `     y = -9`,
+            explanation: 'Substitute z into row 2 equation to solve for y.'
+          });
+
+          // Step 5: Back Substitution x
+          sequence.push({
+            type: 'math',
+            title: 'STEP 5: SOLVE FOR X (BACK SUBSTITUTION ROW 1)',
+            content: `From Row 1:\n` +
+                     `  2x + y + z = 10\n\n` +
+                     `Substitute y = -9 and z = 5:\n` +
+                     `  2x + (-9) + 5 = 10\n` +
+                     `  2x - 4 = 10\n` +
+                     `  2x = 10 + 4\n` +
+                     `  2x = 14\n` +
+                     `   x = 14 / 2\n` +
+                     `   x = 7`,
+            explanation: 'Substitute y and z into row 1 equation to solve for x.'
+          });
+
+          // Step 6: Verification
+          sequence.push({
+            type: 'math',
+            title: 'STEP 6: VERIFY THE SOLUTION',
+            content: `Substitute x = 7, y = -9, z = 5 into original equations:\n` +
+                     `  1) 2(7) + (-9) + 5 = 14 - 9 + 5 = 10  (Matches Eq 1!)\n` +
+                     `  2) 3(7) + 2(-9) + 3(5) = 21 - 18 + 15 = 18  (Matches Eq 2!)\n` +
+                     `  3) (7) + 4(-9) + 9(5) = 7 - 36 + 45 = 16  (Matches Eq 3!)\n\n` +
+                     `All checks passed successfully!`,
+            explanation: 'Verify the computed system values satisfy all three starting linear equations.'
+          });
+
+          // Step 7: Final Result
+          sequence.push({
+            type: 'result',
+            title: 'FINAL ANSWER',
+            content: `System solution found:\n` +
+                     `  x = 7\n` +
+                     `  y = -9\n` +
+                     `  z = 5\n\n` +
+                     `Decomposed augmented upper triangular system matrix:\n` +
+                     `  [  2    1    1   |  10  ]\n` +
+                     `  [  0   0.5  1.5  |   3  ]\n` +
+                     `  [  0    0   -2   | -10  ]`,
+            explanation: 'Gauss Elimination complete. The system coordinates have been successfully calculated.'
+          });
+        } else {
+          // Problem 2
+          // Step 0: Problem Statement
+          sequence.push({
+            type: 'header',
+            title: 'PROBLEM STATEMENT',
+            content: `Solve the system of equations using Gauss Elimination:\n\n` +
+                     `   x +  y +  z = 6\n` +
+                     `  2x -  y + 3z = 9\n` +
+                     `   x + 2y -  z = 2\n\n` +
+                     `Let's represent the system as an augmented matrix [A : B]:\n\n` +
+                     `  [  1   1   1  |  6 ]\n` +
+                     `  [  2  -1   3  |  9 ]\n` +
+                     `  [  1   2  -1  |  2 ]`,
+            explanation: 'Express the system of linear equations in augmented matrix format.'
+          });
+
+          // Step 1: Eliminate x
+          sequence.push({
+            type: 'math',
+            title: 'STEP 1: ELIMINATE X FROM ROW 2 AND ROW 3',
+            content: `Create zeros in column 1 below the pivot A\u2081\u2081 = 1:\n` +
+                     `  • R\u2082 \u2190 R\u2082 \u2212 2R\u2081\n` +
+                     `  • R\u2083 \u2190 R\u2083 \u2212 R\u2081\n\n` +
+                     `Calculations:\n` +
+                     `  R\u2082: [2-2(1),  -1-2(1),  3-2(1) | 9-2(6)] = [0,  -3,  1 | -3]\n` +
+                     `  R\u2083: [1-1(1),   2-1(1),  -1-1(1) | 2-1(6)] = [0,   1, -2 | -4]\n\n` +
+                     `Augmented Matrix:\n` +
+                     `  [  1    1    1   |   6 ]\n` +
+                     `  [  0   -3    1   |  -3 ]\n` +
+                     `  [  0    1   -2   |  -4 ]`,
+            explanation: 'Eliminate x coefficient in row 2 and row 3 by subtracting multiples of pivot row 1.'
+          });
+
+          // Step 2: Eliminate y
+          sequence.push({
+            type: 'math',
+            title: 'STEP 2: ELIMINATE Y FROM ROW 3',
+            content: `Create a zero in column 2 below pivot A\u2082\u2082 = -3:\n` +
+                     `  • R\u2083 \u2190 R\u2083 \u2212 (1/-3)R\u2082  \u2192  R\u2083 \u2190 R\u2083 + (1/3)R\u2082\n\n` +
+                     `Calculations:\n` +
+                     `  R\u2083 Column 3: -2 + (1/3)(1) = -5/3\n` +
+                     `  R\u2083 Constant: -4 + (1/3)(-3) = -5\n\n` +
+                     `Row Echelon Form:\n` +
+                     `  [  1    1    1   |   6  ]\n` +
+                     `  [  0   -3    1   |  -3  ]\n` +
+                     `  [  0    0  -5/3  |  -5  ]`,
+            explanation: 'Eliminate y coefficient in row 3 by adding 1/3 of row 2.'
+          });
+
+          // Step 3: Back Substitution z
+          sequence.push({
+            type: 'math',
+            title: 'STEP 3: SOLVE FOR Z (BACK SUBSTITUTION ROW 3)',
+            content: `From Row 3:\n` +
+                     `  (-5/3)z = -5\n` +
+                     `        z = -5 \u00B7 (-3/5)\n` +
+                     `        z = 3`,
+            explanation: 'Solve for z using diagonal row 3 coefficient.'
+          });
+
+          // Step 4: Back Substitution y
+          sequence.push({
+            type: 'math',
+            title: 'STEP 4: SOLVE FOR Y (BACK SUBSTITUTION ROW 2)',
+            content: `From Row 2:\n` +
+                     `  -3y + z = -3\n\n` +
+                     `Substitute z = 3:\n` +
+                     `  -3y + 3 = -3\n` +
+                     `  -3y = -6\n` +
+                     `    y = 2`,
+            explanation: 'Substitute z into row 2 equation to solve for y.'
+          });
+
+          // Step 5: Back Substitution x
+          sequence.push({
+            type: 'math',
+            title: 'STEP 5: SOLVE FOR X (BACK SUBSTITUTION ROW 1)',
+            content: `From Row 1:\n` +
+                     `  x + y + z = 6\n\n` +
+                     `Substitute y = 2 and z = 3:\n` +
+                     `  x + 2 + 3 = 6\n` +
+                     `  x + 5 = 6\n` +
+                     `  x = 1`,
+            explanation: 'Substitute y and z into row 1 equation to solve for x.'
+          });
+
+          // Step 6: Verification
+          sequence.push({
+            type: 'math',
+            title: 'STEP 6: VERIFY THE SOLUTION',
+            content: `Substitute x = 1, y = 2, z = 3 into original equations:\n` +
+                     `  1) (1) + (2) + (3) = 6  (Matches Eq 1!)\n` +
+                     `  2) 2(1) - (2) + 3(3) = 2 - 2 + 9 = 9  (Matches Eq 2!)\n` +
+                     `  3) (1) + 2(2) - (3) = 1 + 4 - 3 = 2  (Matches Eq 3!)\n\n` +
+                     `All checks passed successfully!`,
+            explanation: 'Verify the computed system values satisfy all starting linear equations.'
+          });
+
+          // Step 7: Final Result
+          sequence.push({
+            type: 'result',
+            title: 'FINAL ANSWER',
+            content: `System solution found:\n` +
+                     `  x = 1\n` +
+                     `  y = 2\n` +
+                     `  z = 3\n\n` +
+                     `Decomposed augmented upper triangular system matrix:\n` +
+                     `  [  1    1    1   |   6  ]\n` +
+                     `  [  0   -3    1   |  -3  ]\n` +
+                     `  [  0    0  -5/3  |  -5  ]`,
+            explanation: 'Gauss Elimination complete. The system coordinates have been successfully calculated.'
+          });
+        }
+      }
+    }
 
     return sequence;
   }, [func, a, b, n, method, dataset, targetX, direction, bisectionProblemId, bisectionIterations, rkX0, rkY0, rkH, rkSteps, rkFuncId, matMulQuestion]);

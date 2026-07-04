@@ -101,17 +101,45 @@ export default function LinearAlgebraVisualization() {
       matA: [[2, 4, 3], [0, 1, 1], [2, 2, -1]],
       matB: [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
       description: 'Compute determinant |A|, cofactor matrix, adjoint matrix adj A, and find A⁻¹ = (1/|A|) · adj A.'
+    },
+    {
+      id: 'gauss_q1',
+      label: 'Q13: Solve 3-Var System (Photo Q1)',
+      question: 'Solve the system of equations using the Gauss Elimination Method: 2x + y + z = 10, 3x + 2y + 3z = 18, x + 4y + 9z = 16.',
+      type: 'gauss_elim_1',
+      matA: [[2, 1, 1], [3, 2, 3], [1, 4, 9]],
+      matB: [[10], [18], [16]],
+      equations: [
+        '2x +  y +  z = 10',
+        '3x + 2y + 3z = 18',
+        ' x + 4y + 9z = 16'
+      ],
+      description: 'Convert augmented matrix to upper triangular (row echelon) form, then solve for z, y, and x using back substitution.'
+    },
+    {
+      id: 'gauss_q2',
+      label: 'Q14: Solve 3-Var System (Integer solution)',
+      question: 'Solve the system of equations using the Gauss Elimination Method: x + y + z = 6, 2x - y + 3z = 9, x + 2y - z = 2.',
+      type: 'gauss_elim_2',
+      matA: [[1, 1, 1], [2, -1, 3], [1, 2, -1]],
+      matB: [[6], [9], [2]],
+      equations: [
+        ' x +  y +  z = 6',
+        '2x -  y + 3z = 9',
+        ' x + 2y -  z = 2'
+      ],
+      description: 'Convert augmented matrix to upper triangular (row echelon) form, then solve for z, y, and x using back substitution.'
     }
   ];
 
   const CARDS = [
-    {
-      id: 'Matrix Multiplication',
-      title: 'Matrix Multiplication',
-      desc: 'Compute products of matrices element-by-element using row-column dot product operations.',
-      status: 'Intermediate',
-      time: '15 mins',
-      xp: '120 XP',
+    { 
+      id: 'Matrix Multiplication', 
+      title: 'Matrix Multiplication', 
+      desc: 'Compute products of matrices element-by-element using row-column dot product operations.', 
+      status: 'Intermediate', 
+      time: '15 mins', 
+      xp: '120 XP', 
       progress: 55,
       tags: ['Linear Algebra', 'Dot Product', 'Row × Column'],
       colorTheme: 'indigo',
@@ -119,13 +147,13 @@ export default function LinearAlgebraVisualization() {
       badgeClass: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-600 dark:text-indigo-400',
       icon: '🔢'
     },
-    {
-      id: 'Orthogonal Verification',
-      title: 'Orthogonal Verification',
-      desc: 'Verify if a square matrix is orthogonal by computing the product of the matrix and its transpose (AAᵀ = I).',
-      status: 'Intermediate',
-      time: '15 mins',
-      xp: '120 XP',
+    { 
+      id: 'Orthogonal Verification', 
+      title: 'Orthogonal Verification', 
+      desc: 'Verify if a square matrix is orthogonal by computing the product of the matrix and its transpose (AAᵀ = I).', 
+      status: 'Intermediate', 
+      time: '15 mins', 
+      xp: '120 XP', 
       progress: 75,
       tags: ['Linear Algebra', 'Transpose', 'Orthogonality'],
       colorTheme: 'emerald',
@@ -133,13 +161,13 @@ export default function LinearAlgebraVisualization() {
       badgeClass: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
       icon: '📐'
     },
-    {
-      id: 'Symmetric & Skew Symmetric',
-      title: 'Symmetric & Skew Symmetric',
-      desc: 'Express any square matrix as the sum of a symmetric matrix B = ½(A + Aᵀ) and a skew-symmetric matrix C = ½(A - Aᵀ).',
-      status: 'Advanced',
-      time: '20 mins',
-      xp: '150 XP',
+    { 
+      id: 'Symmetric & Skew Symmetric', 
+      title: 'Symmetric & Skew Symmetric', 
+      desc: 'Express any square matrix as the sum of a symmetric matrix B = ½(A + Aᵀ) and a skew-symmetric matrix C = ½(A - Aᵀ).', 
+      status: 'Advanced', 
+      time: '20 mins', 
+      xp: '150 XP', 
       progress: 40,
       tags: ['Linear Algebra', 'Symmetric', 'Skew Symmetric', 'Decomposition'],
       colorTheme: 'rose',
@@ -147,19 +175,33 @@ export default function LinearAlgebraVisualization() {
       badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-650 dark:text-rose-455',
       icon: '📊'
     },
-    {
-      id: 'Inverse Matrix',
-      title: 'Inverse Matrix',
-      desc: 'Find the inverse of a square matrix using the determinant and adjoint formula (A⁻¹ = (1/|A|) · adj A).',
-      status: 'Advanced',
-      time: '20 mins',
-      xp: '150 XP',
+    { 
+      id: 'Inverse Matrix', 
+      title: 'Inverse Matrix', 
+      desc: 'Find the inverse of a square matrix using the determinant and adjoint formula (A⁻¹ = (1/|A|) · adj A).', 
+      status: 'Advanced', 
+      time: '20 mins', 
+      xp: '150 XP', 
       progress: 60,
       tags: ['Linear Algebra', 'Inverse', 'Determinant', 'Adjoint'],
       colorTheme: 'amber',
       btnClass: 'bg-amber-500 hover:bg-amber-600 text-white',
       badgeClass: 'bg-amber-500/10 border-amber-500/20 text-amber-650 dark:text-amber-455',
       icon: '🔄'
+    },
+    { 
+      id: 'Gauss Elimination', 
+      title: 'Gauss Elimination', 
+      desc: 'Solve systems of linear equations Ax = B by converting augmented matrices to row echelon form, followed by back substitution.', 
+      status: 'Advanced', 
+      time: '20 mins', 
+      xp: '150 XP', 
+      progress: 50,
+      tags: ['Linear Algebra', 'Echelon Form', 'Back Substitution', 'Augmented Matrix'],
+      colorTheme: 'violet',
+      btnClass: 'bg-violet-500 hover:bg-violet-600 text-white',
+      badgeClass: 'bg-violet-500/10 border-violet-500/20 text-violet-650 dark:text-violet-455',
+      icon: '📈'
     }
   ];
 
@@ -249,6 +291,25 @@ export default function LinearAlgebraVisualization() {
           ]
         }
       ]
+    },
+    'Gauss Elimination': {
+      features: [
+        { icon: BookOpen, title: 'Forward Elimination', desc: 'Transform the augmented matrix into an upper triangular (row echelon) form using row operations.' },
+        { icon: Target, title: 'Back Substitution', desc: 'Solve for the variables in reverse order starting from the bottom row.' },
+        { icon: Lightbulb, title: 'Applications', desc: 'Direct method to solve any consistent system of linear equations.' },
+      ],
+      formulas: [
+        {
+          title: 'Augmented Matrix Representation',
+          formula: '[ A : B ]',
+          variables: [
+            { sym: 'A', def: 'Coefficient matrix (n \u00D7 n)' },
+            { sym: 'X', def: 'Column vector of variables (x, y, z)' },
+            { sym: 'B', def: 'Right-hand side constant vector' },
+            { sym: '[A:B]', def: 'Augmented matrix of dimensions n \u00D7 (n + 1)' },
+          ]
+        }
+      ]
     }
   };
 
@@ -260,6 +321,8 @@ export default function LinearAlgebraVisualization() {
       return q.type.startsWith('symmetric_skew');
     } else if (selectedMethod === 'Inverse Matrix') {
       return q.type.startsWith('inverse');
+    } else if (selectedMethod === 'Gauss Elimination') {
+      return q.type.startsWith('gauss_elim');
     } else {
       return q.type === 'square' || q.type === 'product';
     }
@@ -276,6 +339,8 @@ export default function LinearAlgebraVisualization() {
       setMatMulQuestionId('sym_q1');
     } else if (selectedMethod === 'Inverse Matrix') {
       setMatMulQuestionId('inv_q1');
+    } else if (selectedMethod === 'Gauss Elimination') {
+      setMatMulQuestionId('gauss_q1');
     }
   }, [selectedMethod]);
 
@@ -318,7 +383,7 @@ export default function LinearAlgebraVisualization() {
   };
 
   const renderActiveEngine = () => {
-    if (selectedMethod === 'Matrix Multiplication' || selectedMethod === 'Orthogonal Verification' || selectedMethod === 'Symmetric & Skew Symmetric' || selectedMethod === 'Inverse Matrix') {
+    if (selectedMethod === 'Matrix Multiplication' || selectedMethod === 'Orthogonal Verification' || selectedMethod === 'Symmetric & Skew Symmetric' || selectedMethod === 'Inverse Matrix' || selectedMethod === 'Gauss Elimination') {
       return (
         <NotebookEngine
           matMulQuestion={activeMatMulQuestion}
@@ -698,41 +763,53 @@ export default function LinearAlgebraVisualization() {
             </div>
 
             {activeMatMulQuestion && (
-              <div className="rounded-xl p-4 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] space-y-3">
-                <p className="text-[10px] font-black uppercase tracking-wider text-indigo-500">Matrix Preview</p>
-                <div className="flex items-center gap-3 flex-wrap justify-center">
-                  <div className="text-center">
-                    <p className="text-[9px] text-[var(--db-text-muted)] mb-1 font-bold">Matrix A</p>
-                    <div className="font-mono text-xs text-[var(--db-text-main)] border border-[var(--db-card-border)] rounded-lg p-2 bg-[var(--db-card-bg)]">
-                      {activeMatMulQuestion.matA.map((row, i) => (
-                        <div key={i} className="flex gap-2 justify-center">
-                          {row.map((v, j) => <span key={j} className="min-w-[3.5rem] text-center inline-block">{v}</span>)}
-                        </div>
-                      ))}
-                    </div>
+              selectedMethod === 'Gauss Elimination' ? (
+                <div className="rounded-xl p-4 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] space-y-3">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-indigo-500">System of Equations</p>
+                  <div className="font-mono text-xs text-[var(--db-text-main)] border border-[var(--db-card-border)] rounded-lg p-3 bg-[var(--db-card-bg)] text-center space-y-1">
+                    {activeMatMulQuestion.equations.map((eq, i) => (
+                      <div key={i}>{eq}</div>
+                    ))}
                   </div>
-                  {selectedMethod !== 'Inverse Matrix' && (
-                    <>
-                      <span className="text-[var(--db-text-muted)] font-bold text-lg">
-                        {selectedMethod === 'Symmetric & Skew Symmetric' ? 'ᵀ' : '×'}
-                      </span>
-                      <div className="text-center">
-                        <p className="text-[9px] text-[var(--db-text-muted)] mb-1 font-bold">
-                          {selectedMethod === 'Symmetric & Skew Symmetric' ? 'Aᵀ' : 'Matrix B'}
-                        </p>
-                        <div className="font-mono text-xs text-[var(--db-text-main)] border border-[var(--db-card-border)] rounded-lg p-2 bg-[var(--db-card-bg)]">
-                          {activeMatMulQuestion.matB.map((row, i) => (
-                            <div key={i} className="flex gap-2 justify-center">
-                              {row.map((v, j) => <span key={j} className="min-w-[3.5rem] text-center inline-block">{v}</span>)}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  <p className="text-[10px] text-[var(--db-text-muted)] leading-relaxed">{activeMatMulQuestion.description}</p>
                 </div>
-                <p className="text-[10px] text-[var(--db-text-muted)] leading-relaxed">{activeMatMulQuestion.description}</p>
-              </div>
+              ) : (
+                <div className="rounded-xl p-4 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] space-y-3">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-indigo-500">Matrix Preview</p>
+                  <div className="flex items-center gap-3 flex-wrap justify-center">
+                    <div className="text-center">
+                      <p className="text-[9px] text-[var(--db-text-muted)] mb-1 font-bold">Matrix A</p>
+                      <div className="font-mono text-xs text-[var(--db-text-main)] border border-[var(--db-card-border)] rounded-lg p-2 bg-[var(--db-card-bg)]">
+                        {activeMatMulQuestion.matA.map((row, i) => (
+                          <div key={i} className="flex gap-2 justify-center">
+                            {row.map((v, j) => <span key={j} className="min-w-[3.5rem] text-center inline-block">{v}</span>)}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    {selectedMethod !== 'Inverse Matrix' && (
+                      <>
+                        <span className="text-[var(--db-text-muted)] font-bold text-lg">
+                          {selectedMethod === 'Symmetric & Skew Symmetric' ? 'ᵀ' : '×'}
+                        </span>
+                        <div className="text-center">
+                          <p className="text-[9px] text-[var(--db-text-muted)] mb-1 font-bold">
+                            {selectedMethod === 'Symmetric & Skew Symmetric' ? 'Aᵀ' : 'Matrix B'}
+                          </p>
+                          <div className="font-mono text-xs text-[var(--db-text-main)] border border-[var(--db-card-border)] rounded-lg p-2 bg-[var(--db-card-bg)]">
+                            {activeMatMulQuestion.matB.map((row, i) => (
+                              <div key={i} className="flex gap-2 justify-center">
+                                {row.map((v, j) => <span key={j} className="min-w-[3.5rem] text-center inline-block">{v}</span>)}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-[var(--db-text-muted)] leading-relaxed">{activeMatMulQuestion.description}</p>
+                </div>
+              )
             )}
           </div>
 
