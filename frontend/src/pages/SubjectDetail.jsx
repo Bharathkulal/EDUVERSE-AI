@@ -130,7 +130,7 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
   };
 
   return (
-    <div className={`min-h-[85vh] flex flex-col justify-center items-center font-sans p-6 relative overflow-hidden transition-colors duration-300 ${
+    <div className={`min-h-[85vh] flex flex-col justify-start items-start font-sans p-6 relative overflow-hidden transition-colors duration-300 w-full ${
       isDark ? 'bg-[#070313] text-slate-100' : 'bg-slate-50/50 text-slate-900'
     }`}>
       {/* Background patterns */}
@@ -140,9 +140,9 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center max-w-2xl space-y-4 mb-12 z-10"
+        className="text-left w-full space-y-4 mb-12 z-10"
       >
-        <div className="flex justify-center items-center gap-3">
+        <div className="flex justify-start items-center gap-3">
           <div className={`w-16 h-16 rounded-2xl bg-gradient-to-tr ${meta.accentFrom} ${meta.accentTo} flex items-center justify-center text-3xl shadow-lg shadow-purple-500/20 text-white font-bold`}>
             {meta.icon}
           </div>
@@ -159,7 +159,7 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
         </p>
 
         {/* Progress bar */}
-        <div className={`max-w-md mx-auto pt-4 flex items-center justify-between gap-4 p-4 rounded-2xl border ${
+        <div className={`max-w-md pt-4 flex items-center justify-between gap-4 p-4 rounded-2xl border ${
           isDark ? 'bg-white/5 border-white/5' : 'bg-white border-slate-200 shadow-sm'
         }`}>
           <div className="flex items-center gap-3">
@@ -178,7 +178,7 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
       </motion.div>
 
       {/* CENTER: TWO CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl w-full z-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-full w-full z-10">
         
         {/* LEFT CARD: THEORY */}
         <motion.div
