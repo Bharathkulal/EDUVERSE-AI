@@ -898,7 +898,7 @@ export default function SubjectDetail() {
                   onClick={() => {
                     if (cat.id === 'numerical-methods') navigate('/mathematics/numerical-methods');
                     if (cat.id === 'calculus') navigate('/mathematics/calculus');
-                    if (cat.id === 'linear-algebra') navigate('/mathematics/numerical-methods', { state: { initialMethod: 'Matrix Multiplication' } });
+                    if (cat.id === 'linear-algebra') navigate('/mathematics/linear-algebra');
                   }}
                   className={`card-glass cursor-pointer flex flex-col justify-between ${cat.id === 'numerical-methods' || cat.id === 'calculus' || cat.id === 'linear-algebra' ? 'ring-2 ring-emerald-500 shadow-emerald-500/20' : ''}`}
                 >
