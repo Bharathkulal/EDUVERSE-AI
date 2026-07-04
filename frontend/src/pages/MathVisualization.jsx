@@ -350,20 +350,6 @@ export default function MathVisualization() {
       btnClass: 'bg-sky-500 hover:bg-sky-600 text-white',
       badgeClass: 'bg-sky-500/10 border-sky-500/20 text-sky-600 dark:text-sky-400',
       icon: '🧪'
-    },
-    { 
-      id: 'Matrix Multiplication', 
-      title: 'Matrix Multiplication', 
-      desc: 'Compute products of matrices element-by-element using row-column dot product operations.', 
-      status: 'Intermediate', 
-      time: '15 mins', 
-      xp: '120 XP', 
-      progress: 55,
-      tags: ['Linear Algebra', 'Dot Product', 'Row × Column'],
-      colorTheme: 'indigo',
-      btnClass: 'bg-indigo-500 hover:bg-indigo-600 text-white',
-      badgeClass: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-600 dark:text-indigo-400',
-      icon: '🔢'
     }
   ];
 
