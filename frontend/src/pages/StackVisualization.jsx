@@ -841,6 +841,7 @@ export default function StackVisualization() {
               </div>
             </div>
           </div>
+        </div>
                 {/* ==========================================
             CENTER PANEL: VISUALIZATION (40% to 50%)
         =========================================== */}
@@ -1381,8 +1382,9 @@ export default function StackVisualization() {
                   </>
                 )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
 
         {/* ==========================================
