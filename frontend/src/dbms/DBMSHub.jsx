@@ -132,7 +132,11 @@ export default function DBMSHub() {
               : 'bg-white border-slate-200 hover:shadow-2xl hover:shadow-slate-300/50 shadow-md'
           }`}
         >
-          <div className="space-y-4">
+          <div 
+            className="absolute inset-0 bg-no-repeat bg-right-bottom pointer-events-none rounded-[32px] transition-opacity duration-300 opacity-[0.22] dark:opacity-[0.38] mix-blend-screen"
+            style={{ backgroundImage: "url('/theory_bg.png')", backgroundSize: '60% auto' }}
+          />
+          <div className="space-y-4 relative z-10">
             <div className="flex items-center justify-between">
               <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 text-2xl font-bold">
                 <BookOpen size={22} />
@@ -141,17 +145,17 @@ export default function DBMSHub() {
             </div>
             <div className="space-y-1.5 text-left">
               <h3 className="text-xl font-bold">Interactive Voice Teacher</h3>
-              <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-650'}`}>
+              <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-655'}`}>
                 Study three-schema architectures, key relations, Normalization, ACID transactions, and lock structures with our bilingual audio coach.
               </p>
             </div>
           </div>
-          <div className="flex items-center justify-end text-cyan-400 gap-1 text-xs font-bold font-mono uppercase tracking-wider group-hover:translate-x-1.5 transition-transform duration-300">
+          <div className="flex items-center justify-end text-cyan-400 gap-1 text-xs font-bold font-mono uppercase tracking-wider group-hover:translate-x-1.5 transition-transform duration-300 relative z-10">
             <span>Enter Studio</span>
             <ArrowRight size={14} />
           </div>
         </motion.div>
-
+ 
         {/* PRACTICAL LAB */}
         <motion.div 
           whileHover={{ y: -6, scale: 1.01 }}
@@ -162,7 +166,11 @@ export default function DBMSHub() {
               : 'bg-white border-slate-200 hover:shadow-2xl hover:shadow-slate-300/50 shadow-md'
           }`}
         >
-          <div className="space-y-4">
+          <div 
+            className="absolute inset-0 bg-no-repeat bg-right-bottom pointer-events-none rounded-[32px] transition-opacity duration-300 opacity-[0.22] dark:opacity-[0.38] mix-blend-screen"
+            style={{ backgroundImage: "url('/practical_bg.png')", backgroundSize: '60% auto' }}
+          />
+          <div className="space-y-4 relative z-10">
             <div className="flex items-center justify-between">
               <div className="w-12 h-12 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-400 text-2xl font-bold">
                 <Code2 size={22} />
@@ -171,12 +179,12 @@ export default function DBMSHub() {
             </div>
             <div className="space-y-1.5 text-left">
               <h3 className="text-xl font-bold">Interactive SQL Lab</h3>
-              <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-650'}`}>
+              <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-655'}`}>
                 Write SQL tables, perform insert queries, join datasets, execute aggregate calculations, and preview memory grids dynamically.
               </p>
             </div>
           </div>
-          <div className="flex items-center justify-end text-teal-400 gap-1 text-xs font-bold font-mono uppercase tracking-wider group-hover:translate-x-1.5 transition-transform duration-300">
+          <div className="flex items-center justify-end text-teal-400 gap-1 text-xs font-bold font-mono uppercase tracking-wider group-hover:translate-x-1.5 transition-transform duration-300 relative z-10">
             <span>Open Playground</span>
             <ArrowRight size={14} />
           </div>

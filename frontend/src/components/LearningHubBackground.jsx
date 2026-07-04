@@ -78,67 +78,71 @@ export default function LearningHubBackground({ isDark }) {
           <circle cx="30" cy="520" r="3.5" fill="#6366F1" />
         </g>
 
-        {/* RIGHT SIDE: MATRIX / CIRCUIT BOARD DIGITAL LAYOUT */}
-        <g opacity="0.85">
-          {/* Horizontal and vertical trace paths */}
-          <path d="M 850,50 L 920,50 L 960,90 L 1040,90 L 1060,110 L 1120,110" stroke="rgba(139, 92, 246, 0.15)" strokeWidth="1.5" fill="none" />
-          <circle cx="1120" cy="110" r="3" fill="#8B5CF6" />
+        {/* RIGHT SIDE: MATRIX / CIRCUIT BOARD DIGITAL LAYOUT & SKYLINE */}
+        <svg x="100%" y="0" style={{ overflow: 'visible' }}>
+          <g transform="translate(-1200, 0)">
+            <g opacity="0.85">
+              {/* Horizontal and vertical trace paths */}
+              <path d="M 850,50 L 920,50 L 960,90 L 1040,90 L 1060,110 L 1120,110" stroke="rgba(139, 92, 246, 0.15)" strokeWidth="1.5" fill="none" />
+              <circle cx="1120" cy="110" r="3" fill="#8B5CF6" />
 
-          <path d="M 900,130 L 980,130 L 1020,170 L 1090,170" stroke="rgba(59, 130, 246, 0.15)" strokeWidth="1.5" fill="none" />
-          <circle cx="1090" cy="170" r="3" fill="#3B82F6" />
+              <path d="M 900,130 L 980,130 L 1020,170 L 1090,170" stroke="rgba(59, 130, 246, 0.15)" strokeWidth="1.5" fill="none" />
+              <circle cx="1090" cy="170" r="3" fill="#3B82F6" />
 
-          <path d="M 950,220 L 1000,220 L 1040,260 L 1150,260" stroke="rgba(139, 92, 246, 0.12)" strokeWidth="1.5" fill="none" />
-          <circle cx="1150" cy="260" r="2.5" fill="#8B5CF6" />
-          
-          <path d="M 1000,80 L 1030,80 L 1050,100 L 1050,150" stroke="rgba(99, 102, 241, 0.12)" strokeWidth="1" fill="none" />
-          <circle cx="1050" cy="150" r="2" fill="#6366F1" />
-        </g>
+              <path d="M 950,220 L 1000,220 L 1040,260 L 1150,260" stroke="rgba(139, 92, 246, 0.12)" strokeWidth="1.5" fill="none" />
+              <circle cx="1150" cy="260" r="2.5" fill="#8B5CF6" />
+              
+              <path d="M 1000,80 L 1030,80 L 1050,100 L 1050,150" stroke="rgba(99, 102, 241, 0.12)" strokeWidth="1" fill="none" />
+              <circle cx="1050" cy="150" r="2" fill="#6366F1" />
+            </g>
 
-        {/* BOTTOM RIGHT: GLOWING PURPLE/BLUE CITY SKYLINE */}
-        <g transform="translate(0, 100)" opacity="0.6">
-          {/* Outer skyline buildings silhouettes */}
-          <rect x="880" y="380" width="30" height="220" fill="url(#skylineGrad1)" rx="2" />
-          <rect x="915" y="340" width="45" height="260" fill="url(#skylineGrad2)" rx="3" />
-          <rect x="965" y="390" width="25" height="210" fill="url(#skylineGrad1)" rx="2" />
-          <rect x="995" y="310" width="55" height="290" fill="url(#skylineGrad2)" rx="4" />
-          <rect x="1055" y="360" width="40" height="240" fill="url(#skylineGrad1)" rx="3" />
-          <rect x="1100" y="400" width="35" height="200" fill="url(#skylineGrad2)" rx="2" />
+            {/* BOTTOM RIGHT: GLOWING PURPLE/BLUE CITY SKYLINE */}
+            <g transform="translate(0, 100)" opacity="0.6">
+              {/* Outer skyline buildings silhouettes */}
+              <rect x="880" y="380" width="30" height="220" fill="url(#skylineGrad1)" rx="2" />
+              <rect x="915" y="340" width="45" height="260" fill="url(#skylineGrad2)" rx="3" />
+              <rect x="965" y="390" width="25" height="210" fill="url(#skylineGrad1)" rx="2" />
+              <rect x="995" y="310" width="55" height="290" fill="url(#skylineGrad2)" rx="4" />
+              <rect x="1055" y="360" width="40" height="240" fill="url(#skylineGrad1)" rx="3" />
+              <rect x="1100" y="400" width="35" height="200" fill="url(#skylineGrad2)" rx="2" />
 
-          {/* Building spire points */}
-          <line x1="937" y1="340" x2="937" y2="290" stroke="#8B5CF6" strokeWidth="1.5" opacity="0.6" />
-          <circle cx="937" cy="290" r="2" fill="#fff" className="animate-pulse" />
+              {/* Building spire points */}
+              <line x1="937" y1="340" x2="937" y2="290" stroke="#8B5CF6" strokeWidth="1.5" opacity="0.6" />
+              <circle cx="937" cy="290" r="2" fill="#fff" className="animate-pulse" />
 
-          <line x1="1022" y1="310" x2="1022" y2="250" stroke="#3B82F6" strokeWidth="1.5" opacity="0.6" />
-          <circle cx="1022" cy="250" r="2" fill="#fff" className="animate-pulse" />
+              <line x1="1022" y1="310" x2="1022" y2="250" stroke="#3B82F6" strokeWidth="1.5" opacity="0.6" />
+              <circle cx="1022" cy="250" r="2" fill="#fff" className="animate-pulse" />
 
-          {/* Scattered glowing window dots inside skyscrapers */}
-          <circle cx="925" cy="360" r="1" fill="#fff" opacity="0.6" />
-          <circle cx="935" cy="360" r="1" fill="#fff" opacity="0.6" />
-          <circle cx="945" cy="360" r="1" fill="#fff" opacity="0.6" />
-          <circle cx="925" cy="380" r="1" fill="#fff" opacity="0.6" />
-          <circle cx="945" cy="380" r="1" fill="#fff" opacity="0.6" />
-          
-          <circle cx="1010" cy="340" r="1" fill="#fff" opacity="0.8" />
-          <circle cx="1020" cy="340" r="1" fill="#fff" opacity="0.8" />
-          <circle cx="1030" cy="340" r="1" fill="#fff" opacity="0.8" />
-          <circle cx="1010" cy="370" r="1" fill="#fff" opacity="0.8" />
-          <circle cx="1020" cy="370" r="1" fill="#fff" opacity="0.8" />
-          <circle cx="1030" cy="370" r="1" fill="#fff" opacity="0.8" />
-          <circle cx="1010" cy="400" r="1" fill="#fff" opacity="0.6" />
-          <circle cx="1020" cy="400" r="1" fill="#fff" opacity="0.6" />
-          <circle cx="1030" cy="400" r="1" fill="#fff" opacity="0.6" />
+              {/* Scattered glowing window dots inside skyscrapers */}
+              <circle cx="925" cy="360" r="1" fill="#fff" opacity="0.6" />
+              <circle cx="935" cy="360" r="1" fill="#fff" opacity="0.6" />
+              <circle cx="945" cy="360" r="1" fill="#fff" opacity="0.6" />
+              <circle cx="925" cy="380" r="1" fill="#fff" opacity="0.6" />
+              <circle cx="945" cy="380" r="1" fill="#fff" opacity="0.6" />
+              
+              <circle cx="1010" cy="340" r="1" fill="#fff" opacity="0.8" />
+              <circle cx="1020" cy="340" r="1" fill="#fff" opacity="0.8" />
+              <circle cx="1030" cy="340" r="1" fill="#fff" opacity="0.8" />
+              <circle cx="1010" cy="370" r="1" fill="#fff" opacity="0.8" />
+              <circle cx="1020" cy="370" r="1" fill="#fff" opacity="0.8" />
+              <circle cx="1030" cy="370" r="1" fill="#fff" opacity="0.8" />
+              <circle cx="1010" cy="400" r="1" fill="#fff" opacity="0.6" />
+              <circle cx="1020" cy="400" r="1" fill="#fff" opacity="0.6" />
+              <circle cx="1030" cy="400" r="1" fill="#fff" opacity="0.6" />
 
-          <circle cx="1070" cy="380" r="1" fill="#fff" opacity="0.5" />
-          <circle cx="1080" cy="380" r="1" fill="#fff" opacity="0.5" />
-          <circle cx="1070" cy="410" r="1" fill="#fff" opacity="0.5" />
-          <circle cx="1080" cy="410" r="1" fill="#fff" opacity="0.5" />
-        </g>
+              <circle cx="1070" cy="380" r="1" fill="#fff" opacity="0.5" />
+              <circle cx="1080" cy="380" r="1" fill="#fff" opacity="0.5" />
+              <circle cx="1070" cy="410" r="1" fill="#fff" opacity="0.5" />
+              <circle cx="1080" cy="410" r="1" fill="#fff" opacity="0.5" />
+            </g>
+          </g>
+        </svg>
 
         {/* BOTTOM LEFT & RIGHT: SMOOTH NEON SINE WAVE LINES */}
         <g opacity="0.65">
-          <path d="M -50,540 Q 150,470 350,530 T 750,490 T 1150,540 T 1550,500" stroke="url(#neonWaveBlue)" strokeWidth="2.5" fill="none" />
-          <path d="M -50,560 Q 200,490 450,550 T 950,510 T 1450,560 T 1950,520" stroke="url(#neonWavePurple)" strokeWidth="2" fill="none" />
-          <path d="M 0,580 Q 250,520 500,570 T 1000,530 T 1500,580" stroke="url(#neonWaveBlue)" strokeWidth="1" fill="none" opacity="0.5" />
+          <path d="M -50,540 Q 150,470 350,530 T 750,490 T 1150,540 T 1550,500 T 1950,540 T 2350,500 T 2750,540" stroke="url(#neonWaveBlue)" strokeWidth="2.5" fill="none" />
+          <path d="M -50,560 Q 200,490 450,550 T 950,510 T 1450,560 T 1950,520 T 2450,560 T 2950,520" stroke="url(#neonWavePurple)" strokeWidth="2" fill="none" />
+          <path d="M 0,580 Q 250,520 500,570 T 1000,530 T 1500,580 T 2000,530 T 2500,580" stroke="url(#neonWaveBlue)" strokeWidth="1" fill="none" opacity="0.5" />
         </g>
       </svg>
     </div>
