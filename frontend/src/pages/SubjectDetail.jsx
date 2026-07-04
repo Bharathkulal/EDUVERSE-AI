@@ -822,7 +822,7 @@ export default function SubjectDetail() {
       const categories = [
         { id: 'numerical-methods', title: 'Numerical Methods', icon: Layers, desc: 'Trapezoidal, Simpson’s, RK4, and Interpolation runtimes.', progress: 80 },
         { id: 'calculus', title: 'Calculus Simulator', icon: Share2, desc: 'Gauss-Seidel iterative solver and Bisection root-finding engines.', progress: 20 },
-        { id: 'linear-algebra', title: 'Linear Algebra', icon: GitMerge, desc: 'Matrix transformations, Eigenvalues, and Vector Spaces.', progress: 0 },
+        { id: 'linear-algebra', title: 'Linear Algebra', icon: GitMerge, desc: 'Matrix transformations, Eigenvalues, and Vector Spaces.', progress: 60 },
       ];
 
       const containerVars = {
@@ -898,8 +898,9 @@ export default function SubjectDetail() {
                   onClick={() => {
                     if (cat.id === 'numerical-methods') navigate('/mathematics/numerical-methods');
                     if (cat.id === 'calculus') navigate('/mathematics/calculus');
+                    if (cat.id === 'linear-algebra') navigate('/mathematics/numerical-methods', { state: { initialMethod: 'Matrix Multiplication' } });
                   }}
-                  className={`card-glass cursor-pointer flex flex-col justify-between ${cat.id === 'numerical-methods' || cat.id === 'calculus' ? 'ring-2 ring-emerald-500 shadow-emerald-500/20' : ''}`}
+                  className={`card-glass cursor-pointer flex flex-col justify-between ${cat.id === 'numerical-methods' || cat.id === 'calculus' || cat.id === 'linear-algebra' ? 'ring-2 ring-emerald-500 shadow-emerald-500/20' : ''}`}
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm">

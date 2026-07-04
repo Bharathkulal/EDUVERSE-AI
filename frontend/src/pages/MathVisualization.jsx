@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, ChevronRight, ChevronLeft, Play, Pause, RotateCcw, 
@@ -14,10 +14,20 @@ import './DashboardTheme.css';
 
 export default function MathVisualization() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isDarkMode } = useTheme();
   
   // State
-  const [selectedMethod, setSelectedMethod] = useState(null); // null means show the selection cards
+  const [selectedMethod, setSelectedMethod] = useState(() => {
+    return location.state?.initialMethod || null;
+  });
+
+  useEffect(() => {
+    if (location.state?.initialMethod) {
+      setSelectedMethod(location.state.initialMethod);
+    }
+  }, [location.state]);
+  
   const [showFormula, setShowFormula] = useState(false); // Formula intermediate page
   const [formulaPage, setFormulaPage] = useState(0); // Current formula page index
   const [funcId, setFuncId] = useState('reciprocal');
@@ -221,6 +231,24 @@ export default function MathVisualization() {
       matA: [[1,0],[0,0]],
       matB: [[0,0],[1,1]],
       description: 'A is an idempotent matrix. Compute the product AB.'
+    },
+    {
+      id: 'mm_q7',
+      label: 'Q7: Orthogonal - Rotation Matrix A (cos θ)',
+      question: 'Given A = [[cos θ, -sin θ],[sin θ, cos θ]], show that A is orthogonal by verifying AAᵀ = I.',
+      type: 'orthogonal_2x2',
+      matA: [['cos θ', '-sin θ'], ['sin θ', 'cos θ']],
+      matB: [['cos θ', 'sin θ'], ['-sin θ', 'cos θ']],
+      description: 'A is a 2D rotation matrix. Multiply A by its transpose Aᵀ (since Aᵀ = A⁻¹ for orthogonal matrices) and verify it equals Identity Matrix I.'
+    },
+    {
+      id: 'mm_q8',
+      label: 'Q8: Orthogonal - 3x3 Fractional Matrix B',
+      question: 'Given B = [[-2/3, 1/3, 2/3],[2/3, 2/3, 1/3],[1/3, -2/3, 2/3]], show that B is orthogonal by verifying BBᵀ = I.',
+      type: 'orthogonal_3x3',
+      matA: [[-2/3, 1/3, 2/3], [2/3, 2/3, 1/3], [1/3, -2/3, 2/3]],
+      matB: [[-2/3, 2/3, 1/3], [1/3, 2/3, -2/3], [2/3, 1/3, 2/3]],
+      description: 'B is a 3x3 matrix with fractional entries. Multiply B by its transpose Bᵀ and verify that the product is the 3x3 Identity Matrix I.'
     }
   ];
 
@@ -502,7 +530,7 @@ export default function MathVisualization() {
       features: [
         { icon: BookOpen, title: 'Row × Column Rule', desc: 'Each entry C[i][j] is the dot product of row i of A with column j of B.' },
         { icon: Target, title: 'Dimension Requirement', desc: 'A (m×n) × B (n×p) → C (m×p). Inner dimensions must match.' },
-        { icon: Lightbulb, title: 'Photo Problems', desc: 'Q5: Find A² for permutation matrix. Q6: Find AB for idempotent matrices.' },
+        { icon: Lightbulb, title: 'Problems', desc: 'Q5-Q6: Matrix products. Q7-Q8: Orthogonal matrix verifications (AAᵀ = I).' },
       ],
       formulas: [
         {
@@ -515,6 +543,15 @@ export default function MathVisualization() {
             { sym: 'i', def: 'Row index of result matrix C' },
             { sym: 'j', def: 'Column index of result matrix C' },
             { sym: 'k', def: 'Summation index running from 1 to n' },
+          ]
+        },
+        {
+          title: 'Orthogonal Matrix Verification',
+          formula: 'A \u00D7 A\u1D40 = A\u1D40 \u00D7 A = I',
+          variables: [
+            { sym: 'A', def: 'A square matrix' },
+            { sym: 'A\u1D40', def: 'Transpose of matrix A (rows and columns swapped)' },
+            { sym: 'I', def: 'Identity Matrix' },
           ]
         },
         {
@@ -1391,8 +1428,8 @@ export default function MathVisualization() {
                         <p className="text-[9px] text-[var(--db-text-muted)] mb-1 font-bold">Matrix A</p>
                         <div className="font-mono text-xs text-[var(--db-text-main)] border border-[var(--db-card-border)] rounded-lg p-2 bg-[var(--db-card-bg)]">
                           {activeMatMulQuestion.matA.map((row, i) => (
-                            <div key={i} className="flex gap-2">
-                              {row.map((v, j) => <span key={j} className="w-4 text-center">{v}</span>)}
+                            <div key={i} className="flex gap-2 justify-center">
+                              {row.map((v, j) => <span key={j} className="min-w-[3.5rem] text-center inline-block">{v}</span>)}
                             </div>
                           ))}
                         </div>
@@ -1402,8 +1439,8 @@ export default function MathVisualization() {
                         <p className="text-[9px] text-[var(--db-text-muted)] mb-1 font-bold">Matrix B</p>
                         <div className="font-mono text-xs text-[var(--db-text-main)] border border-[var(--db-card-border)] rounded-lg p-2 bg-[var(--db-card-bg)]">
                           {activeMatMulQuestion.matB.map((row, i) => (
-                            <div key={i} className="flex gap-2">
-                              {row.map((v, j) => <span key={j} className="w-4 text-center">{v}</span>)}
+                            <div key={i} className="flex gap-2 justify-center">
+                              {row.map((v, j) => <span key={j} className="min-w-[3.5rem] text-center inline-block">{v}</span>)}
                             </div>
                           ))}
                         </div>

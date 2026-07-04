@@ -1043,102 +1043,276 @@ export default function NotebookEngine({
       const A = q.matA;
       const B = q.matB;
       const isSquare = q.type === 'square';
-      const label = isSquare ? 'A\u00B2' : 'AB';
-      const Blabel = isSquare ? 'A' : 'B';
+      const isOrthogonal2x2 = q.type === 'orthogonal_2x2';
+      const isOrthogonal3x3 = q.type === 'orthogonal_3x3';
 
-      // Helper: format 2x2 matrix as text block
-      const fmtMat = (M, name) => {
-        const r0 = `[ ${M[0][0]}  ${M[0][1]} ]`;
-        const r1 = `[ ${M[1][0]}  ${M[1][1]} ]`;
-        return `${name} = ${r0}\n${' '.repeat(name.length + 3)}${r1}`;
-      };
+      const label = isOrthogonal2x2 ? 'AAᵀ' : isOrthogonal3x3 ? 'BBᵀ' : isSquare ? 'A²' : 'AB';
+      const Blabel = isOrthogonal2x2 ? 'Aᵀ' : isOrthogonal3x3 ? 'Bᵀ' : isSquare ? 'A' : 'B';
 
-      // Compute result
-      const C = [
-        [A[0][0]*B[0][0] + A[0][1]*B[1][0],  A[0][0]*B[0][1] + A[0][1]*B[1][1]],
-        [A[1][0]*B[0][0] + A[1][1]*B[1][0],  A[1][0]*B[0][1] + A[1][1]*B[1][1]]
-      ];
+      if (isOrthogonal2x2) {
+        // Step 0 — Problem Statement
+        sequence.push({
+          type: 'header',
+          title: 'PROBLEM STATEMENT',
+          content: `Show that matrix A is orthogonal.\n\n` +
+                   `Given:\n` +
+                   `A = [  cos θ   -sin θ ]\n` +
+                   `    [  sin θ    cos θ ]\n\n` +
+                   `Definition: A square matrix is orthogonal if A × Aᵀ = Aᵀ × A = I.\n` +
+                   `We swap rows and columns of A to find its transpose Aᵀ:\n` +
+                   `Aᵀ = [  cos θ    sin θ ]\n` +
+                   `     [ -sin θ    cos θ ]\n\n` +
+                   `Let's compute AAᵀ and check if it equals the Identity Matrix I.`,
+          explanation: 'An orthogonal matrix multiplied by its transpose yields the Identity Matrix. We check if AAᵀ = I.'
+        });
+        
+        // Step 1: Set up multiplication
+        sequence.push({
+          type: 'math',
+          title: 'STEP 1: SET UP THE MULTIPLICATION',
+          content: `AAᵀ = [  cos θ   -sin θ ]   [  cos θ    sin θ ]\n` +
+                   `     [  sin θ    cos θ ] × [ -sin θ    cos θ ]\n\n` +
+                   `We will compute each element of the resulting 2×2 matrix C.`,
+          explanation: 'Write A and Aᵀ side-by-side. The resulting matrix C is computed element by element using dot products.'
+        });
 
-      // Step 0 — Problem Statement
-      const problemText =
-        `${isSquare ? `Given: A = [ ${A[0][0]}  ${A[0][1]} ]    Find: ${label} = A \u00D7 A\n       ${' '.repeat(8)}[ ${A[1][0]}  ${A[1][1]} ]`
-          : `Given: A = [ ${A[0][0]}  ${A[0][1]} ]    ${fmtMat(B, Blabel)}\n       ${' '.repeat(8)}[ ${A[1][0]}  ${A[1][1]} ]`}\n\nFind: ${label} = A \u00D7 ${Blabel}\n\nFormula: C[i][j] = \u03A3 A[i][k] \u00D7 ${Blabel}[k][j]   (k = 1 to 2)`;
+        // Step 2: C[1][1]
+        sequence.push({
+          type: 'math',
+          title: 'STEP 2: COMPUTE C[1][1]',
+          content: `C[1][1] = (Row 1 of A) · (Col 1 of Aᵀ)\n` +
+                   `        = (cos θ)×(cos θ) + (-sin θ)×(-sin θ)\n` +
+                   `        = cos² θ + sin² θ\n` +
+                   `        = 1`,
+          explanation: 'Since cos² θ + sin² θ = 1, C[1][1] = 1.'
+        });
 
-      sequence.push({
-        type: 'header',
-        title: 'PROBLEM STATEMENT',
-        content: problemText,
-        explanation: `We are given ${isSquare ? 'matrix A and must compute A\u00B2 = A \u00D7 A' : 'matrices A and B and must compute their product AB'}. We apply the row \u00D7 column dot product rule.`
-      });
+        // Step 3: C[1][2]
+        sequence.push({
+          type: 'math',
+          title: 'STEP 3: COMPUTE C[1][2]',
+          content: `C[1][2] = (Row 1 of A) · (Col 2 of Aᵀ)\n` +
+                   `        = (cos θ)×(sin θ) + (-sin θ)×(cos θ)\n` +
+                   `        = cos θ sin θ - sin θ cos θ\n` +
+                   `        = 0`,
+          explanation: 'The opposite terms cancel out, so C[1][2] = 0.'
+        });
 
-      // Step 1 — Write out the multiplication
-      const writeText =
-        `A \u00D7 ${Blabel} = [ ${A[0][0]}  ${A[0][1]} ]   [ ${B[0][0]}  ${B[0][1]} ]\n` +
-        `${' '.repeat(8)}[ ${A[1][0]}  ${A[1][1]} ] \u00D7 [ ${B[1][0]}  ${B[1][1]} ]\n\n` +
-        `Result C is a 2\u00D72 matrix.\nWe compute each element C[i][j] using:\n  C[i][j] = (Row i of A) \u00B7 (Column j of ${Blabel})`;
+        // Step 4: C[2][1]
+        sequence.push({
+          type: 'math',
+          title: 'STEP 4: COMPUTE C[2][1]',
+          content: `C[2][1] = (Row 2 of A) · (Col 1 of Aᵀ)\n` +
+                   `        = (sin θ)×(cos θ) + (cos θ)×(-sin θ)\n` +
+                   `        = sin θ cos θ - cos θ sin θ\n` +
+                   `        = 0`,
+          explanation: 'The terms cancel out here as well, so C[2][1] = 0.'
+        });
 
-      sequence.push({
-        type: 'math',
-        title: 'STEP 1: SET UP THE MULTIPLICATION',
-        content: writeText,
-        explanation: 'Write both matrices side by side. The result matrix C has the same number of rows as A and same columns as B.'
-      });
+        // Step 5: C[2][2]
+        sequence.push({
+          type: 'math',
+          title: 'STEP 5: COMPUTE C[2][2]',
+          content: `C[2][2] = (Row 2 of A) · (Col 2 of Aᵀ)\n` +
+                   `        = (sin θ)×(sin θ) + (cos θ)×(cos θ)\n` +
+                   `        = sin² θ + cos² θ\n` +
+                   `        = 1`,
+          explanation: 'By the fundamental trigonometric identity, sin² θ + cos² θ = 1, so C[2][2] = 1.'
+        });
 
-      // Steps 2-5 — one step per element (all 4 cells)
-      const cellLabels = [[1,1],[1,2],[2,1],[2,2]];
-      cellLabels.forEach(([ri, ci], k) => {
-        const i = ri - 1, j = ci - 1;
-        const rowA = [A[i][0], A[i][1]];
-        const colB = [B[0][j], B[1][j]];
-        const products = rowA.map((v, idx) => `(${v} \u00D7 ${colB[idx]})`);
-        const sums    = rowA.map((v, idx) =>  v * colB[idx]);
-        const total   = sums.reduce((acc, v) => acc + v, 0);
+        // Step 6: Assemble
+        sequence.push({
+          type: 'math',
+          title: 'STEP 6: ASSEMBLE THE RESULT MATRIX',
+          content: `AAᵀ = [  C[1][1]   C[1][2] ]\n` +
+                   `      [  C[2][1]   C[2][2] ]\n\n` +
+                   `    = [  1   0 ]\n` +
+                   `      [  0   1 ]\n` +
+                   `    = I`,
+          explanation: 'Substitute all computed values. The result matrix matches the 2×2 Identity Matrix.'
+        });
 
-        const cellText =
-          `C[${ri}][${ci}] = Row ${ri} of A  \u00B7  Col ${ci} of ${Blabel}\n\n` +
-          `     Row ${ri} of A : [ ${rowA[0]}  ${rowA[1]} ]\n` +
-          `     Col ${ci} of ${Blabel} : [ ${colB[0]}  ${colB[1]} ]\n\n` +
-          `C[${ri}][${ci}] = ${products.join(' + ')}\n` +
-          `       = ${sums[0]} + ${sums[1]}\n` +
-          `       = ${total}`;
+        // Step 7: Final Answer
+        sequence.push({
+          type: 'result',
+          title: 'FINAL ANSWER',
+          content: `AAᵀ = [ 1  0 ] = I\n      [ 0  1 ]\n\nSince AAᵀ = I (and AᵀA = I), the matrix A is orthogonal!`,
+          explanation: 'The verification shows that AAᵀ equals the Identity Matrix. Thus, A is orthogonal.'
+        });
+      }
+      else if (isOrthogonal3x3) {
+        // Step 0 — Problem Statement
+        sequence.push({
+          type: 'header',
+          title: 'PROBLEM STATEMENT',
+          content: `Show that matrix B is orthogonal.\n\n` +
+                   `Given:\n` +
+                   `B = [ -2/3   1/3   2/3 ]\n` +
+                   `    [  2/3   2/3   1/3 ]\n` +
+                   `    [  1/3  -2/3   2/3 ]\n\n` +
+                   `Definition: A square matrix is orthogonal if B × Bᵀ = Bᵀ × B = I.\n` +
+                   `We transpose matrix B to find Bᵀ:\n` +
+                   `Bᵀ = [ -2/3   2/3   1/3 ]\n` +
+                   `     [  1/3   2/3  -2/3 ]\n` +
+                   `     [  2/3   1/3   2/3 ]\n\n` +
+                   `Let's compute BBᵀ and verify that BBᵀ = I.`,
+          explanation: 'An orthogonal matrix multiplied by its transpose yields the Identity Matrix. We set up BBᵀ.'
+        });
+
+        // Step 1: Set up multiplication
+        sequence.push({
+          type: 'math',
+          title: 'STEP 1: SET UP THE MULTIPLICATION',
+          content: `BBᵀ = [ -2/3   1/3   2/3 ]   [ -2/3   2/3   1/3 ]\n` +
+                   `      [  2/3   2/3   1/3 ] × [  1/3   2/3  -2/3 ]\n` +
+                   `      [  1/3  -2/3   2/3 ]   [  2/3   1/3   2/3 ]\n\n` +
+                   `We will compute each element of the resulting 3×3 matrix C.`,
+          explanation: 'Write B and Bᵀ side-by-side. The result matrix C has dimension 3×3.'
+        });
+
+        const details = [
+          { r: 1, c: 1, expr: '(-2/3)×(-2/3) + (1/3)×(1/3) + (2/3)×(2/3)', sum: '4/9 + 1/9 + 4/9 = 9/9', val: '1' },
+          { r: 1, c: 2, expr: '(-2/3)×(2/3) + (1/3)×(2/3) + (2/3)×(1/3)', sum: '-4/9 + 2/9 + 2/9', val: '0' },
+          { r: 1, c: 3, expr: '(-2/3)×(1/3) + (1/3)×(-2/3) + (2/3)×(2/3)', sum: '-2/9 - 2/9 + 4/9', val: '0' },
+          
+          { r: 2, c: 1, expr: '(2/3)×(-2/3) + (2/3)×(1/3) + (1/3)×(2/3)', sum: '-4/9 + 2/9 + 2/9', val: '0' },
+          { r: 2, c: 2, expr: '(2/3)×(2/3) + (2/3)×(2/3) + (1/3)×(1/3)', sum: '4/9 + 4/9 + 1/9 = 9/9', val: '1' },
+          { r: 2, c: 3, expr: '(2/3)×(1/3) + (2/3)×(-2/3) + (1/3)×(2/3)', sum: '2/9 - 4/9 + 2/9', val: '0' },
+          
+          { r: 3, c: 1, expr: '(1/3)×(-2/3) + (-2/3)×(1/3) + (2/3)×(2/3)', sum: '-2/9 - 2/9 + 4/9', val: '0' },
+          { r: 3, c: 2, expr: '(1/3)×(2/3) + (-2/3)×(2/3) + (2/3)×(1/3)', sum: '2/9 - 4/9 + 2/9', val: '0' },
+          { r: 3, c: 3, expr: '(1/3)×(1/3) + (-2/3)×(-2/3) + (2/3)×(2/3)', sum: '1/9 + 4/9 + 4/9 = 9/9', val: '1' }
+        ];
+
+        details.forEach((cell, idx) => {
+          sequence.push({
+            type: 'math',
+            title: `STEP ${idx + 2}: COMPUTE C[${cell.r}][${cell.c}]`,
+            content: `C[${cell.r}][${cell.c}] = (Row ${cell.r} of B) · (Col ${cell.c} of Bᵀ)\n` +
+                     `        = ${cell.expr}\n` +
+                     `        = ${cell.sum}\n` +
+                     `        = ${cell.val}`,
+            explanation: `Compute the dot product of Row ${cell.r} of B and Column ${cell.c} of Bᵀ: result is ${cell.val}.`
+          });
+        });
+
+        // Assemble step
+        sequence.push({
+          type: 'math',
+          title: 'STEP 11: ASSEMBLE THE RESULT MATRIX',
+          content: `BBᵀ = [ C[1][1]  C[1][2]  C[1][3] ]\n` +
+                   `      [ C[2][1]  C[2][2]  C[2][3] ]\n` +
+                   `      [ C[3][1]  C[3][2]  C[3][3] ]\n\n` +
+                   `    = [  1   0   0 ]\n` +
+                   `      [  0   1   0 ]\n` +
+                   `      [  0   0   1 ]\n` +
+                   `    = I`,
+          explanation: 'Combine all nine values to form the result matrix, which is the 3×3 Identity Matrix I.'
+        });
+
+        // Final answer step
+        sequence.push({
+          type: 'result',
+          title: 'FINAL ANSWER',
+          content: `BBᵀ = [ 1  0  0 ] = I\n      [ 0  1  0 ]\n      [ 0  0  1 ]\n\nSince BBᵀ = I (and BᵀB = I), the matrix B is orthogonal!`,
+          explanation: 'The product BBᵀ is indeed the Identity Matrix. Thus, B is orthogonal.'
+        });
+      }
+      else {
+        // Helper: format 2x2 matrix as text block
+        const fmtMat = (M, name) => {
+          const r0 = `[ ${M[0][0]}  ${M[0][1]} ]`;
+          const r1 = `[ ${M[1][0]}  ${M[1][1]} ]`;
+          return `${name} = ${r0}\n${' '.repeat(name.length + 3)}${r1}`;
+        };
+
+        // Compute result
+        const C = [
+          [A[0][0]*B[0][0] + A[0][1]*B[1][0],  A[0][0]*B[0][1] + A[0][1]*B[1][1]],
+          [A[1][0]*B[0][0] + A[1][1]*B[1][0],  A[1][0]*B[0][1] + A[1][1]*B[1][1]]
+        ];
+
+        // Step 0 — Problem Statement
+        const problemText =
+          `${isSquare ? `Given: A = [ ${A[0][0]}  ${A[0][1]} ]    Find: ${label} = A \u00D7 A\n       ${' '.repeat(8)}[ ${A[1][0]}  ${A[1][1]} ]`
+            : `Given: A = [ ${A[0][0]}  ${A[0][1]} ]    ${fmtMat(B, Blabel)}\n       ${' '.repeat(8)}[ ${A[1][0]}  ${A[1][1]} ]`}\n\nFind: ${label} = A \u00D7 ${Blabel}\n\nFormula: C[i][j] = \u03A3 A[i][k] \u00D7 ${Blabel}[k][j]   (k = 1 to 2)`;
+
+        sequence.push({
+          type: 'header',
+          title: 'PROBLEM STATEMENT',
+          content: problemText,
+          explanation: `We are given ${isSquare ? 'matrix A and must compute A\u00B2 = A \u00D7 A' : 'matrices A and B and must compute their product AB'}. We apply the row \u00D7 column dot product rule.`
+        });
+
+        // Step 1 — Write out the multiplication
+        const writeText =
+          `A \u00D7 ${Blabel} = [ ${A[0][0]}  ${A[0][1]} ]   [ ${B[0][0]}  ${B[0][1]} ]\n` +
+          `${' '.repeat(8)}[ ${A[1][0]}  ${A[1][1]} ] \u00D7 [ ${B[1][0]}  ${B[1][1]} ]\n\n` +
+          `Result C is a 2\u00D72 matrix.\nWe compute each element C[i][j] using:\n  C[i][j] = (Row i of A) \u00B7 (Column j of ${Blabel})`;
 
         sequence.push({
           type: 'math',
-          title: `STEP ${k + 2}: COMPUTE C[${ri}][${ci}]`,
-          content: cellText,
-          explanation: `C[${ri}][${ci}] is the dot product of Row ${ri} of A with Column ${ci} of ${Blabel}: ${products.join(' + ')} = ${sums[0]} + ${sums[1]} = ${total}.`
+          title: 'STEP 1: SET UP THE MULTIPLICATION',
+          content: writeText,
+          explanation: 'Write both matrices side by side. The result matrix C has the same number of rows as A and same columns as B.'
         });
-      });
 
-      // Step 6 — Assembled result
-      const assembleText =
-        `Substituting all computed values:\n\n` +
-        `${label} = A \u00D7 ${Blabel}\n\n` +
-        `   = [ ${C[0][0]}  ${C[0][1]} ]\n` +
-        `     [ ${C[1][0]}  ${C[1][1]} ]`;
+        // Steps 2-5 — one step per element (all 4 cells)
+        const cellLabels = [[1,1],[1,2],[2,1],[2,2]];
+        cellLabels.forEach(([ri, ci], k) => {
+          const i = ri - 1, j = ci - 1;
+          const rowA = [A[i][0], A[i][1]];
+          const colB = [B[0][j], B[1][j]];
+          const products = rowA.map((v, idx) => `(${v} \u00D7 ${colB[idx]})`);
+          const sums    = rowA.map((v, idx) =>  v * colB[idx]);
+          const total   = sums.reduce((acc, v) => acc + v, 0);
 
-      sequence.push({
-        type: 'math',
-        title: 'STEP 6: ASSEMBLE THE RESULT MATRIX',
-        content: assembleText,
-        explanation: `Placing all four computed values into the result matrix gives us ${label}.`
-      });
+          const cellText =
+            `C[${ri}][${ci}] = Row ${ri} of A  \u00B7  Col ${ci} of ${Blabel}\n\n` +
+            `     Row ${ri} of A : [ ${rowA[0]}  ${rowA[1]} ]\n` +
+            `     Col ${ci} of ${Blabel} : [ ${colB[0]}  ${colB[1]} ]\n\n` +
+            `C[${ri}][${ci}] = ${products.join(' + ')}\n` +
+            `       = ${sums[0]} + ${sums[1]}\n` +
+            `       = ${total}`;
 
-      // Step 7 — Final answer with interpretation
-      const isIdentity = C[0][0]===1 && C[0][1]===0 && C[1][0]===0 && C[1][1]===1;
-      const isZero     = C[0][0]===0 && C[0][1]===0 && C[1][0]===0 && C[1][1]===0;
-      const note = isIdentity
-        ? `\n\u2234 A\u00B2 = I  (Identity Matrix)\n   A is an Involutory Matrix (A\u00B2 = I)`
-        : isZero
-        ? `\n\u2234 AB = O  (Zero Matrix)\n   Note: AB = 0 even though A \u2260 0 and B \u2260 0`
-        : '';
+          sequence.push({
+            type: 'math',
+            title: `STEP ${k + 2}: COMPUTE C[${ri}][${ci}]`,
+            content: cellText,
+            explanation: `C[${ri}][${ci}] is the dot product of Row ${ri} of A with Column ${ci} of ${Blabel}: ${products.join(' + ')} = ${sums[0]} + ${sums[1]} = ${total}.`
+          });
+        });
 
-      sequence.push({
-        type: 'result',
-        title: 'FINAL ANSWER',
-        content: `${label} = [ ${C[0][0]}  ${C[0][1]} ]\n${' '.repeat(label.length + 3)}[ ${C[1][0]}  ${C[1][1]} ]${note}`,
-        explanation: `The product ${label} has been computed. ${isIdentity ? 'The result is the Identity Matrix — A is involutory.' : isZero ? 'The result is the Zero Matrix — AB = 0 despite A and B being non-zero.' : 'Matrix multiplication complete.'}`
-      });
+        // Step 6 — Assembled result
+        const assembleText =
+          `Substituting all computed values:\n\n` +
+          `${label} = A \u00D7 ${Blabel}\n\n` +
+          `   = [ ${C[0][0]}  ${C[0][1]} ]\n` +
+          `     [ ${C[1][0]}  ${C[1][1]} ]`;
+
+        sequence.push({
+          type: 'math',
+          title: 'STEP 6: ASSEMBLE THE RESULT MATRIX',
+          content: assembleText,
+          explanation: `Placing all four computed values into the result matrix gives us ${label}.`
+        });
+
+        // Step 7 — Final answer with interpretation
+        const isIdentity = C[0][0]===1 && C[0][1]===0 && C[1][0]===0 && C[1][1]===1;
+        const isZero     = C[0][0]===0 && C[0][1]===0 && C[1][0]===0 && C[1][1]===0;
+        const note = isIdentity
+          ? `\n\u2234 A\u00B2 = I  (Identity Matrix)\n   A is an Involutory Matrix (A\u00B2 = I)`
+          : isZero
+          ? `\n\u2234 AB = O  (Zero Matrix)\n   Note: AB = 0 even though A \u2260 0 and B \u2260 0`
+          : '';
+
+        sequence.push({
+          type: 'result',
+          title: 'FINAL ANSWER',
+          content: `${label} = [ ${C[0][0]}  ${C[0][1]} ]\n${' '.repeat(label.length + 3)}[ ${C[1][0]}  ${C[1][1]} ]${note}`,
+          explanation: `The product ${label} has been computed. ${isIdentity ? 'The result is the Identity Matrix — A is involutory.' : isZero ? 'The result is the Zero Matrix — AB = 0 despite A and B being non-zero.' : 'Matrix multiplication complete.'}`
+        });
+      }
     }
 
     return sequence;
