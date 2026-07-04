@@ -476,6 +476,16 @@ export default function ITSuiteDashboard() {
               <p className="text-[9px] text-[var(--db-text-muted)] mt-1 font-semibold leading-tight max-w-[120px]">Enhance & convert images to beautiful AI PDFs</p>
             </div>
 
+            <div 
+              onClick={() => navigate('/it-suite/friday-builder')}
+              className="p-4 bg-[var(--db-card-bg)] border border-dashed border-[var(--db-sidebar-border)] hover:border-cyan-500 rounded-2xl flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:-translate-y-0.5 group relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/10 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-500 text-white flex items-center justify-center font-bold text-lg mb-2 shadow-md shadow-cyan-500/20 group-hover:scale-110 transition duration-300">🌐</div>
+              <span className="text-xs font-bold bg-gradient-to-r from-cyan-500 to-purple-500 bg-clip-text text-transparent group-hover:text-cyan-500 transition">Friday Web Builder</span>
+              <p className="text-[9px] text-[var(--db-text-muted)] mt-1 font-semibold leading-tight max-w-[120px]">Create premium websites with AI inside minutes</p>
+            </div>
+
             {templates.word.map((t, idx) => (
               <div 
                 key={`wt-${idx}`}
