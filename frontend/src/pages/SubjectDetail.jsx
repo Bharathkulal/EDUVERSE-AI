@@ -17,7 +17,7 @@ import FocVisualization from './FocVisualization';
 import TechVerse from './TechVerse';
 import DsaCoursePage from '../dsa-theory/DsaCoursePage';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Layers, List, GitCommit, GitMerge, Share2, PlayCircle, CheckCircle2, ArrowLeft, ArrowRight, Trophy } from 'lucide-react';
+import { Layers, List, GitCommit, GitMerge, Share2, PlayCircle, CheckCircle2, ArrowLeft, ArrowRight, Trophy, Activity } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import LearningHubBackground from '../components/LearningHubBackground';
 
@@ -769,6 +769,7 @@ export default function SubjectDetail() {
         { id: 'stack', title: 'Stack', icon: Layers, desc: 'LIFO data structure. Ideal for undo/redo and recursion.', progress: 100 },
         { id: 'queue', title: 'Queue', icon: List, desc: 'FIFO data structure. Great for task scheduling and BFS.', progress: 40 },
         { id: 'linked-list', title: 'Linked List', icon: GitCommit, desc: 'Dynamic memory allocation with O(1) insertions.', progress: 0 },
+        { id: 'sorting', title: 'Sorting Algorithms', icon: Activity, desc: 'Rearrange array elements in order. Real-time comparison, swaps, and visual codes.', progress: 20 },
         { id: 'tree', title: 'Tree', icon: GitMerge, desc: 'Hierarchical structure. Essential for databases and search.', progress: 0 },
         { id: 'graph', title: 'Graph', icon: Share2, desc: 'Nodes and edges representing networks and paths.', progress: 0 },
       ];
@@ -847,10 +848,11 @@ export default function SubjectDetail() {
                     if (cat.id === 'stack') navigate('/dsa/stack');
                     if (cat.id === 'queue') navigate('/dsa/queue');
                     if (cat.id === 'linked-list') navigate('/dsa/linked-list');
+                    if (cat.id === 'sorting') navigate('/dsa/sorting');
                     if (cat.id === 'tree') navigate('/dsa/tree');
                     if (cat.id === 'graph') navigate('/dsa/graph');
                   }}
-                  className={`card-glass cursor-pointer flex flex-col justify-between ${['stack', 'queue', 'linked-list', 'tree', 'graph'].includes(cat.id) ? 'ring-2 ring-blue-500 shadow-blue-500/20' : ''}`}
+                  className={`card-glass cursor-pointer flex flex-col justify-between ${['stack', 'queue', 'linked-list', 'sorting', 'tree', 'graph'].includes(cat.id) ? 'ring-2 ring-blue-500 shadow-blue-500/20' : ''}`}
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm">

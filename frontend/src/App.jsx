@@ -66,6 +66,7 @@ const QueueVisualization = lazy(() => import('./pages/QueueVisualization'));
 const LinkedListVisualization = lazy(() => import('./pages/LinkedListVisualization'));
 const TreeVisualization = lazy(() => import('./pages/TreeVisualization'));
 const GraphVisualization = lazy(() => import('./pages/GraphVisualization'));
+const SortingVisualization = lazy(() => import('./pages/SortingVisualization'));
 const MathVisualization = lazy(() => import('./pages/MathVisualization'));
 const CalculusVisualization = lazy(() => import('./pages/CalculusVisualization'));
 const LinearAlgebraVisualization = lazy(() => import('./pages/LinearAlgebraVisualization'));
@@ -136,6 +137,8 @@ export default function App() {
             <Route path="/dsa/stack" element={<ProtectedRoute><StackVisualization /></ProtectedRoute>} />
             <Route path="/dsa/queue" element={<ProtectedRoute><QueueVisualization /></ProtectedRoute>} />
             <Route path="/dsa/linked-list" element={<ProtectedRoute><LinkedListVisualization /></ProtectedRoute>} />
+            <Route path="/dsa/sorting" element={<ProtectedRoute><SortingVisualization /></ProtectedRoute>} />
+            <Route path="/dsa/searching" element={<ProtectedRoute><SearchingVisualization /></ProtectedRoute>} />
             <Route path="/dsa/tree" element={<ProtectedRoute><TreeVisualization /></ProtectedRoute>} />
             <Route path="/dsa/graph" element={<ProtectedRoute><GraphVisualization /></ProtectedRoute>} />
             <Route path="/mathematics/numerical-methods" element={<ProtectedRoute><MathVisualization /></ProtectedRoute>} />
@@ -192,7 +195,7 @@ export default function App() {
 
             {/* DSA index route — redirect to first visualizer */}
             <Route path="/dsa" element={<Navigate to="/dsa/stack" replace />} />
-            <Route path="/dsa/sorting" element={<ProtectedRoute><Layout><Overview /></Layout></ProtectedRoute>} />
+            <Route path="/dsa/sorting" element={<ProtectedRoute><SortingVisualization /></ProtectedRoute>} />
             <Route path="/dsa/pathfinding" element={<ProtectedRoute><Layout><Overview /></Layout></ProtectedRoute>} />
 
             <Route path="/admin" element={<ProtectedRoute adminOnly><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
