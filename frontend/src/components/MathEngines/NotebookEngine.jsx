@@ -1314,6 +1314,225 @@ export default function NotebookEngine({
         });
       }
     }
+    else if (method === 'Symmetric & Skew Symmetric') {
+      const q = matMulQuestion;
+      if (q) {
+        const is2x2 = q.type === 'symmetric_skew_2x2';
+
+        if (is2x2) {
+          // Step 0: Problem Statement
+          sequence.push({
+            type: 'header',
+            title: 'PROBLEM STATEMENT',
+            content: `Express the matrix A as the sum of a symmetric matrix B and a skew-symmetric matrix C.\n\n` +
+                     `Given:\n` +
+                     `A = [  3   5 ]\n` +
+                     `    [  1  -1 ]\n\n` +
+                     `Formulas:\n` +
+                     `  • Symmetric part: B = ½(A + Aᵀ)\n` +
+                     `  • Skew-Symmetric part: C = ½(A - Aᵀ)\n` +
+                     `  • Verification: A = B + C`,
+            explanation: 'We decompose matrix A into symmetric (B) and skew-symmetric (C) parts using transpose formulas.'
+          });
+
+          // Step 1: Compute Transpose
+          sequence.push({
+            type: 'math',
+            title: 'STEP 1: COMPUTE TRANSPOSE Aᵀ',
+            content: `Aᵀ is obtained by swapping rows with columns:\n\n` +
+                     `Aᵀ = [  3   1 ]\n` +
+                     `     [  5  -1 ]`,
+            explanation: 'Rows of matrix A become the columns of Aᵀ.'
+          });
+
+          // Step 2: Compute A + Aᵀ
+          sequence.push({
+            type: 'math',
+            title: 'STEP 2: COMPUTE A + Aᵀ',
+            content: `A + Aᵀ = [  3+3    5+1  ]\n` +
+                     `         [  1+5   -1+(-1) ]\n\n` +
+                     `       = [  6   6 ]\n` +
+                     `         [  6  -2 ]`,
+            explanation: 'Add corresponding elements from A and Aᵀ.'
+          });
+
+          // Step 3: Compute Symmetric Matrix B
+          sequence.push({
+            type: 'math',
+            title: 'STEP 3: COMPUTE SYMMETRIC MATRIX B = ½(A + Aᵀ)',
+            content: `B = ½ × [  6   6 ]\n` +
+                     `        [  6  -2 ]\n\n` +
+                     `  = [  3   3 ]\n` +
+                     `    [  3  -1 ]\n\n` +
+                     `Check Symmetry: Bᵀ = B. Since row 1 equals col 1 and row 2 equals col 2, B is symmetric.`,
+            explanation: 'Divide each element of A + Aᵀ by 2 to get B.'
+          });
+
+          // Step 4: Compute A - Aᵀ
+          sequence.push({
+            type: 'math',
+            title: 'STEP 4: COMPUTE A - Aᵀ',
+            content: `A - Aᵀ = [  3-3    5-1  ]\n` +
+                     `         [  1-5   -1-(-1) ]\n\n` +
+                     `       = [  0   4 ]\n` +
+                     `         [ -4   0 ]`,
+            explanation: 'Subtract elements of Aᵀ from corresponding elements of A.'
+          });
+
+          // Step 5: Compute Skew-Symmetric Matrix C
+          sequence.push({
+            type: 'math',
+            title: 'STEP 5: COMPUTE SKEW-SYMMETRIC MATRIX C = ½(A - Aᵀ)',
+            content: `C = ½ × [  0   4 ]\n` +
+                     `        [ -4   0 ]\n\n` +
+                     `  = [  0   2 ]\n` +
+                     `    [ -2   0 ]\n\n` +
+                     `Check Skew-Symmetry: Cᵀ = -C. Diagonal elements are 0, and C[1][2] = -C[2][1]. C is skew-symmetric.`,
+            explanation: 'Divide each element of A - Aᵀ by 2 to get C.'
+          });
+
+          // Step 6: Verify B + C = A
+          sequence.push({
+            type: 'math',
+            title: 'STEP 6: VERIFY DECOMPOSITION (B + C = A)',
+            content: `B + C = [  3+0   3+2  ]\n` +
+                     `        [  3-2  -1+0  ]\n\n` +
+                     `      = [  3   5 ]\n` +
+                     `        [  1  -1 ]\n\n` +
+                     `      = A  (Verified!)`,
+            explanation: 'Add the symmetric matrix B and skew-symmetric matrix C. The sum equals the original matrix A.'
+          });
+
+          // Step 7: Final Answer
+          sequence.push({
+            type: 'result',
+            title: 'FINAL ANSWER',
+            content: `Symmetric Matrix B:\n` +
+                     `  B = [  3   3 ]\n` +
+                     `      [  3  -1 ]\n\n` +
+                     `Skew-Symmetric Matrix C:\n` +
+                     `  C = [  0   2 ]\n` +
+                     `      [ -2   0 ]\n\n` +
+                     `Where A = B + C.`,
+            explanation: 'The decomposition is complete. The sum of B and C equals matrix A.'
+          });
+        } else {
+          // 3x3 Problem from image
+          // Step 0: Problem Statement
+          sequence.push({
+            type: 'header',
+            title: 'PROBLEM STATEMENT',
+            content: `Express the matrix A as the sum of a symmetric matrix B and a skew-symmetric matrix C.\n\n` +
+                     `Given:\n` +
+                     `A = [  1   7   8 ]\n` +
+                     `    [  6   2   9 ]\n` +
+                     `    [  5   4   3 ]\n\n` +
+                     `Formulas:\n` +
+                     `  • Symmetric part: B = ½(A + Aᵀ)\n` +
+                     `  • Skew-Symmetric part: C = ½(A - Aᵀ)\n` +
+                     `  • Verification: A = B + C`,
+            explanation: 'We decompose matrix A into symmetric (B) and skew-symmetric (C) parts using transpose formulas.'
+          });
+
+          // Step 1: Compute Transpose
+          sequence.push({
+            type: 'math',
+            title: 'STEP 1: COMPUTE TRANSPOSE Aᵀ',
+            content: `Aᵀ is obtained by swapping rows with columns:\n\n` +
+                     `Aᵀ = [  1   6   5 ]\n` +
+                     `     [  7   2   4 ]\n` +
+                     `     [  8   9   3 ]`,
+            explanation: 'Rows of matrix A become the columns of Aᵀ.'
+          });
+
+          // Step 2: Compute A + Aᵀ
+          sequence.push({
+            type: 'math',
+            title: 'STEP 2: COMPUTE A + Aᵀ',
+            content: `A + Aᵀ = [  1+1    7+6    8+5  ]\n` +
+                     `         [  6+7    2+2    9+4  ]\n` +
+                     `         [  5+8    4+9    3+3  ]\n\n` +
+                     `       = [  2   13   13 ]\n` +
+                     `         [ 13    4   13 ]\n` +
+                     `         [ 13   13    6 ]`,
+            explanation: 'Add corresponding elements from A and Aᵀ.'
+          });
+
+          // Step 3: Compute Symmetric Matrix B
+          sequence.push({
+            type: 'math',
+            title: 'STEP 3: COMPUTE SYMMETRIC MATRIX B = ½(A + Aᵀ)',
+            content: `B = ½ × [  2   13   13 ]\n` +
+                     `        [ 13    4   13 ]\n` +
+                     `        [ 13   13    6 ]\n\n` +
+                     `  = [  1    13/2   13/2 ]\n` +
+                     `    [ 13/2   2     13/2 ]\n` +
+                     `    [ 13/2  13/2    3   ]\n\n` +
+                     `Check Symmetry: Bᵀ = B. Since B[i][j] = B[j][i], B is symmetric.`,
+            explanation: 'Divide each element of A + Aᵀ by 2 to get B.'
+          });
+
+          // Step 4: Compute A - Aᵀ
+          sequence.push({
+            type: 'math',
+            title: 'STEP 4: COMPUTE A - Aᵀ',
+            content: `A - Aᵀ = [  1-1    7-6    8-5  ]\n` +
+                     `         [  6-7    2-2    9-4  ]\n` +
+                     `         [  5-8    4-9    3-3  ]\n\n` +
+                     `       = [  0    1    3 ]\n` +
+                     `         [ -1    0    5 ]\n` +
+                     `         [ -3   -5    0 ]`,
+            explanation: 'Subtract elements of Aᵀ from corresponding elements of A.'
+          });
+
+          // Step 5: Compute Skew-Symmetric Matrix C
+          sequence.push({
+            type: 'math',
+            title: 'STEP 5: COMPUTE SKEW-SYMMETRIC MATRIX C = ½(A - Aᵀ)',
+            content: `C = ½ × [  0    1    3 ]\n` +
+                     `        [ -1    0    5 ]\n` +
+                     `        [ -3   -5    0 ]\n\n` +
+                     `  = [   0    1/2   3/2 ]\n` +
+                     `    [ -1/2    0    5/2 ]\n` +
+                     `    [ -3/2  -5/2    0  ]\n\n` +
+                     `Check Skew-Symmetry: Cᵀ = -C. Diagonal elements are 0, and C[i][j] = -C[j][i]. C is skew-symmetric.`,
+            explanation: 'Divide each element of A - Aᵀ by 2 to get C.'
+          });
+
+          // Step 6: Verify B + C = A
+          sequence.push({
+            type: 'math',
+            title: 'STEP 6: VERIFY DECOMPOSITION (B + C = A)',
+            content: `B + C = [  1+0    13/2+1/2   13/2+3/2 ]\n` +
+                     `        [ 13/2-1/2   2+0     13/2+5/2 ]\n` +
+                     `        [ 13/2-3/2  13/2-5/2   3+0    ]\n\n` +
+                     `      = [  1    14/2   16/2 ]\n` +
+                     `        [ 12/2   2     18/2 ]\n` +
+                     `        [ 10/2   8/2    3   ]\n\n` +
+                     `      = [  1   7   8 ]\n` +
+                     `        [  6   2   9 ]\n` +
+                     `        [  5   4   3 ] = A  (Verified!)`,
+            explanation: 'Add the symmetric matrix B and skew-symmetric matrix C. The sum equals the original matrix A.'
+          });
+
+          // Step 7: Final Answer
+          sequence.push({
+            type: 'result',
+            title: 'FINAL ANSWER',
+            content: `Symmetric Matrix B:\n` +
+                     `  B = [  1    13/2   13/2 ]\n` +
+                     `      [ 13/2   2     13/2 ]\n` +
+                     `      [ 13/2  13/2    3   ]\n\n` +
+                     `Skew-Symmetric Matrix C:\n` +
+                     `  C = [   0    1/2   3/2 ]\n` +
+                     `      [ -1/2    0    5/2 ]\n` +
+                     `      [ -3/2  -5/2    0  ]\n\n` +
+                     `Where A = B + C.`,
+            explanation: 'The decomposition is complete. The sum of B and C equals matrix A.'
+          });
+        }
+      }
+    }
 
     return sequence;
   }, [func, a, b, n, method, dataset, targetX, direction, bisectionProblemId, bisectionIterations, rkX0, rkY0, rkH, rkSteps, rkFuncId, matMulQuestion]);
@@ -1549,7 +1768,7 @@ export default function NotebookEngine({
                     onComplete={handleTypingComplete}
                   />
                   <div className="mt-4 text-emerald-200 text-sm font-medium">
-                    {method === 'Matrix Multiplication' ? 'Linear Algebra · Matrix multiplication complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : 'Numerical interpolation/differentiation complete.'}
+                    {method === 'Matrix Multiplication' || method === 'Symmetric & Skew Symmetric' ? 'Linear Algebra complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : 'Numerical interpolation/differentiation complete.'}
                   </div>
                 </div>
               ) : step.type === 'header' ? (

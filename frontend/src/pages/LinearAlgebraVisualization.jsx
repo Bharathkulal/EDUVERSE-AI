@@ -65,6 +65,24 @@ export default function LinearAlgebraVisualization() {
       matA: [[-2/3, 1/3, 2/3], [2/3, 2/3, 1/3], [1/3, -2/3, 2/3]],
       matB: [[-2/3, 2/3, 1/3], [1/3, 2/3, -2/3], [2/3, 1/3, 2/3]],
       description: 'B is a 3x3 matrix with fractional entries. Multiply B by its transpose Bᵀ and verify that the product is the 3x3 Identity Matrix I.'
+    },
+    {
+      id: 'sym_q1',
+      label: 'Q9: Express 3x3 A as Sum of Symmetric & Skew-Symmetric (Photo Q)',
+      question: 'Express the matrix A = [[1, 7, 8], [6, 2, 9], [5, 4, 3]] as the sum of a symmetric and a skew-symmetric matrix.',
+      type: 'symmetric_skew',
+      matA: [[1, 7, 8], [6, 2, 9], [5, 4, 3]],
+      matB: [[1, 6, 5], [7, 2, 4], [8, 9, 3]], // Store transpose as matB for matrix previews
+      description: 'Decompose matrix A into B = ½(A + Aᵀ) and C = ½(A - Aᵀ), then verify A = B + C.'
+    },
+    {
+      id: 'sym_q2',
+      label: 'Q10: Express 2x2 A as Sum of Symmetric & Skew-Symmetric',
+      question: 'Express the matrix A = [[3, 5], [1, -1]] as the sum of a symmetric and a skew-symmetric matrix.',
+      type: 'symmetric_skew_2x2',
+      matA: [[3, 5], [1, -1]],
+      matB: [[3, 1], [5, -1]], // Store transpose as matB for matrix previews
+      description: 'Decompose matrix A into B = ½(A + Aᵀ) and C = ½(A - Aᵀ), then verify A = B + C.'
     }
   ];
 
@@ -96,6 +114,20 @@ export default function LinearAlgebraVisualization() {
       btnClass: 'bg-emerald-500 hover:bg-emerald-600 text-white',
       badgeClass: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
       icon: '📐'
+    },
+    { 
+      id: 'Symmetric & Skew Symmetric', 
+      title: 'Symmetric & Skew Symmetric', 
+      desc: 'Express any square matrix as the sum of a symmetric matrix B = ½(A + Aᵀ) and a skew-symmetric matrix C = ½(A - Aᵀ).', 
+      status: 'Advanced', 
+      time: '20 mins', 
+      xp: '150 XP', 
+      progress: 40,
+      tags: ['Linear Algebra', 'Symmetric', 'Skew Symmetric', 'Decomposition'],
+      colorTheme: 'rose',
+      btnClass: 'bg-rose-500 hover:bg-rose-600 text-white',
+      badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-650 dark:text-rose-455',
+      icon: '📊'
     }
   ];
 
@@ -148,6 +180,24 @@ export default function LinearAlgebraVisualization() {
           ]
         }
       ]
+    },
+    'Symmetric & Skew Symmetric': {
+      features: [
+        { icon: BookOpen, title: 'Decomposition Theorem', desc: 'Every square matrix A can be uniquely written as the sum of a symmetric and skew-symmetric matrix: A = B + C.' },
+        { icon: Target, title: 'Symmetric Matrix B', desc: 'Satisfies Bᵀ = B. Computed as ½(A + Aᵀ).' },
+        { icon: Lightbulb, title: 'Skew-Symmetric Matrix C', desc: 'Satisfies Cᵀ = -C. Diagonal elements are zero. Computed as ½(A - Aᵀ).' },
+      ],
+      formulas: [
+        {
+          title: 'Decomposition Formula',
+          formula: 'A = B + C = \u00BD(A + A\u1D40) + \u00BD(A \u2212 A\u1D40)',
+          variables: [
+            { sym: 'A', def: 'Any square matrix' },
+            { sym: 'B', def: '\u00BD(A + A\u1D40) — Symmetric part' },
+            { sym: 'C', def: '\u00BD(A \u2212 A\u1D40) — Skew-symmetric part' },
+          ]
+        }
+      ]
     }
   };
 
@@ -155,6 +205,8 @@ export default function LinearAlgebraVisualization() {
   const activeQuestions = MATRIX_MUL_QUESTIONS.filter(q => {
     if (selectedMethod === 'Orthogonal Verification') {
       return q.type.startsWith('orthogonal');
+    } else if (selectedMethod === 'Symmetric & Skew Symmetric') {
+      return q.type.startsWith('symmetric_skew');
     } else {
       return q.type === 'square' || q.type === 'product';
     }
@@ -167,6 +219,8 @@ export default function LinearAlgebraVisualization() {
       setMatMulQuestionId('mm_q7');
     } else if (selectedMethod === 'Matrix Multiplication') {
       setMatMulQuestionId('mm_q5');
+    } else if (selectedMethod === 'Symmetric & Skew Symmetric') {
+      setMatMulQuestionId('sym_q1');
     }
   }, [selectedMethod]);
 
@@ -209,11 +263,11 @@ export default function LinearAlgebraVisualization() {
   };
 
   const renderActiveEngine = () => {
-    if (selectedMethod === 'Matrix Multiplication' || selectedMethod === 'Orthogonal Verification') {
+    if (selectedMethod === 'Matrix Multiplication' || selectedMethod === 'Orthogonal Verification' || selectedMethod === 'Symmetric & Skew Symmetric') {
       return (
         <NotebookEngine
           matMulQuestion={activeMatMulQuestion}
-          method="Matrix Multiplication"
+          method={selectedMethod === 'Orthogonal Verification' ? 'Matrix Multiplication' : selectedMethod}
           playbackState={playbackState}
           speed={speed}
           onExplain={handleExplanationUpdate}
