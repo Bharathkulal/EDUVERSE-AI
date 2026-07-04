@@ -26,6 +26,7 @@ export default function Subjects() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('subjects');
   const [bookmarks, setBookmarks] = useState(() => JSON.parse(localStorage.getItem('eduverse_bookmarks') || '[]'));
+  const [dsaGameMode, setDsaGameMode] = useState(() => localStorage.getItem('dsa_game_mode') === 'true');
 
   // Hash-based navigation from sidebar
   useHashNavigation({
@@ -284,26 +285,41 @@ export default function Subjects() {
                       <h3 className="font-semibold text-lg text-[var(--db-text-main)] group-hover:text-emerald-500 transition-colors duration-300 flex items-center justify-between">
                         <span>{s.subject_name}</span>
                         {s.subject_name === 'DSA' && (
-                          <span className="text-[10px] bg-orange-500 text-white px-2 py-0.5 rounded-full font-black flex items-center gap-0.5 animate-pulse">🎮 GAME</span>
+                          <span 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const nextVal = !dsaGameMode;
+                              setDsaGameMode(nextVal);
+                              localStorage.setItem('dsa_game_mode', nextVal ? 'true' : 'false');
+                            }}
+                            className="text-[10px] bg-orange-500 hover:bg-orange-600 active:scale-95 transition-all text-white px-2 py-0.5 rounded-full font-black flex items-center gap-0.5 animate-pulse cursor-pointer relative z-10"
+                          >
+                            🎮 GAME
+                          </span>
                         )}
                       </h3>
                       {s.subject_name === 'DSA' && (
                         <div 
-                          className="mt-2.5 p-2 rounded-xl bg-orange-500/5 border border-orange-500/20 flex items-center justify-between text-xs cursor-default relative z-10" 
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                          className="mt-2.5 p-2 rounded-xl bg-orange-500/5 border border-orange-500/20 flex items-center justify-between text-xs cursor-pointer relative z-10 select-none" 
+                          onClick={(e) => { 
+                            e.preventDefault(); 
+                            e.stopPropagation(); 
+                            const nextVal = !dsaGameMode;
+                            setDsaGameMode(nextVal);
+                            localStorage.setItem('dsa_game_mode', nextVal ? 'true' : 'false');
+                          }}
                         >
                           <span className="font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1">🎮 Game Mode (Rotate)</span>
-                          <label className="relative inline-flex items-center cursor-pointer">
+                          <div className="relative inline-flex items-center">
                             <input 
                               type="checkbox" 
-                              defaultChecked={localStorage.getItem('dsa_game_mode') === 'true'} 
-                              onChange={(e) => {
-                                localStorage.setItem('dsa_game_mode', e.target.checked ? 'true' : 'false');
-                              }}
+                              checked={dsaGameMode} 
+                              readOnly
                               className="sr-only peer" 
                             />
-                            <div className="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-slate-600 peer-checked:bg-orange-500"></div>
-                          </label>
+                            <div className="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-[14px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-slate-600 peer-checked:bg-orange-500"></div>
+                          </div>
                         </div>
                       )}
                       <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 line-clamp-3 leading-relaxed">{s.description}</p>
