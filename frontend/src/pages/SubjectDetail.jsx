@@ -116,6 +116,7 @@ const SUBJECT_HUB_METADATA = {
 };
 
 function SubjectHub({ subjectName, description, isDark, onSelectView }) {
+  const navigate = useNavigate();
   const meta = SUBJECT_HUB_METADATA[subjectName] || {
     icon: '📚',
     accentFrom: 'from-blue-500',
@@ -130,21 +131,42 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
     labPills: ['Interactive Editor', 'Live Output', 'AI Assistant']
   };
 
+  // Helper to extract clean tailwind base colors (e.g., 'blue', 'indigo') from accents
+  const getThemeColors = (accentFrom, accentTo) => {
+    const fromColor = accentFrom.replace('from-', '').split('-')[0] || 'blue';
+    const toColor = accentTo.replace('to-', '').split('-')[0] || 'purple';
+    return { from: fromColor, to: toColor };
+  };
+
+  const colors = getThemeColors(meta.accentFrom, meta.accentTo);
+
   return (
-    <div className={`min-h-[85vh] flex flex-col justify-start items-start font-sans p-6 relative overflow-hidden transition-colors duration-300 w-full ${
+    <div className={`min-h-[85vh] flex flex-col justify-center items-center font-sans p-6 relative overflow-hidden transition-colors duration-300 w-full ${
       isDark ? 'bg-[#070313] text-slate-100' : 'bg-slate-50/50 text-slate-900'
     }`}>
       {/* Background patterns */}
       <LearningHubBackground isDark={isDark} />
 
+      {/* Back Button to Subjects */}
+      <button 
+        onClick={() => navigate('/subjects')}
+        className={`absolute top-6 left-6 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
+          isDark 
+            ? 'bg-[#120e2a] hover:bg-[#1a143b] text-white border-purple-500/20' 
+            : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-sm'
+        }`}
+      >
+        <ArrowLeft size={16} /> Back to Subjects
+      </button>
+
       {/* TOP SECTION */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-left w-full space-y-4 mb-12 z-10"
+        className="text-center max-w-2xl space-y-4 mb-12 z-10"
       >
-        <div className="flex justify-start items-center gap-3">
-          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-tr ${meta.accentFrom} ${meta.accentTo} flex items-center justify-center text-3xl shadow-lg shadow-purple-500/20 text-white font-bold`}>
+        <div className="flex justify-center items-center gap-3">
+          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-tr ${meta.accentFrom} ${meta.accentTo} flex items-center justify-center text-3xl shadow-lg shadow-${colors.from}-500/20 text-white font-bold`}>
             {meta.icon}
           </div>
         </div>
@@ -160,7 +182,7 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
         </p>
 
         {/* Progress bar */}
-        <div className={`max-w-md pt-4 flex items-center justify-between gap-4 p-4 rounded-2xl border ${
+        <div className={`max-w-md mx-auto pt-4 flex items-center justify-between gap-4 p-4 rounded-2xl border ${
           isDark ? 'bg-white/5 border-white/5' : 'bg-white border-slate-200 shadow-sm'
         }`}>
           <div className="flex items-center gap-3">
@@ -179,7 +201,7 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
       </motion.div>
 
       {/* CENTER: TWO CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-full w-full z-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl w-full z-10">
         
         {/* LEFT CARD: THEORY */}
         <motion.div
@@ -194,12 +216,14 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
           }`}>
             <div className="space-y-6 text-left">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl ${
-                isDark ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400' : 'bg-blue-50 border border-blue-100 text-blue-600'
+                isDark 
+                  ? `bg-${colors.from}-500/10 border border-${colors.from}-500/20 text-${colors.from}-400` 
+                  : `bg-${colors.from}-50 border border-${colors.from}-100 text-${colors.from}-600`
               }`}>
                 📚
               </div>
               <div>
-                <h2 className={`text-2xl font-black group-hover:text-blue-500 transition ${isDark ? 'text-white' : 'text-slate-800'}`}>Theory Learning</h2>
+                <h2 className={`text-2xl font-black group-hover:text-${colors.from}-500 transition ${isDark ? 'text-white' : 'text-slate-800'}`}>Theory Learning</h2>
                 <p className={`text-xs mt-2 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                   {meta.theoryDesc}
                 </p>
@@ -207,7 +231,9 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
               <div className="flex flex-wrap gap-2 pt-2">
                 {meta.theoryPills.map((feat, idx) => (
                   <span key={idx} className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
-                    isDark ? 'bg-blue-500/10 border border-blue-500/20 text-blue-300' : 'bg-blue-50 border border-blue-100 text-blue-600'
+                    isDark 
+                      ? `bg-${colors.from}-500/10 border border-${colors.from}-500/20 text-${colors.from}-300` 
+                      : `bg-${colors.from}-50 border border-${colors.from}-100 text-${colors.from}-600`
                   }`}>
                     {feat}
                   </span>
@@ -215,7 +241,7 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
               </div>
             </div>
 
-            <button className="w-full py-3 bg-blue-600 hover:bg-blue-750 text-white text-xs font-bold rounded-xl transition duration-300 mt-8 flex items-center justify-center gap-2 group-hover:gap-3">
+            <button className={`w-full py-3 bg-${colors.from}-600 hover:bg-${colors.from}-700 text-white text-xs font-bold rounded-xl transition duration-300 mt-8 flex items-center justify-center gap-2 group-hover:gap-3`}>
               Continue Theory <ArrowRight size={14} />
             </button>
           </div>
@@ -234,12 +260,14 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
           }`}>
             <div className="space-y-6 text-left">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl ${
-                isDark ? 'bg-purple-500/10 border border-purple-500/20 text-purple-400' : 'bg-purple-50 border border-purple-100 text-purple-600'
+                isDark 
+                  ? `bg-${colors.to}-500/10 border border-${colors.to}-500/20 text-${colors.to}-400` 
+                  : `bg-${colors.to}-50 border border-${colors.to}-100 text-${colors.to}-600`
               }`}>
                 💻
               </div>
               <div>
-                <h2 className={`text-2xl font-black group-hover:text-purple-500 transition ${isDark ? 'text-white' : 'text-slate-800'}`}>Practical Lab</h2>
+                <h2 className={`text-2xl font-black group-hover:text-${colors.to}-500 transition ${isDark ? 'text-white' : 'text-slate-800'}`}>Practical Lab</h2>
                 <p className={`text-xs mt-2 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                   {meta.labDesc}
                 </p>
@@ -247,7 +275,9 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
               <div className="flex flex-wrap gap-2 pt-2">
                 {meta.labPills.map((feat, idx) => (
                   <span key={idx} className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
-                    isDark ? 'bg-purple-500/10 border border-purple-500/20 text-purple-300' : 'bg-purple-50 border border-purple-100 text-purple-600'
+                    isDark 
+                      ? `bg-${colors.to}-500/10 border border-${colors.to}-500/20 text-${colors.to}-300` 
+                      : `bg-${colors.to}-50 border border-${colors.to}-100 text-${colors.to}-600`
                   }`}>
                     {feat}
                   </span>
@@ -255,7 +285,7 @@ function SubjectHub({ subjectName, description, isDark, onSelectView }) {
               </div>
             </div>
 
-            <button className="w-full py-3 bg-purple-600 hover:bg-purple-750 text-white text-xs font-bold rounded-xl transition duration-300 mt-8 flex items-center justify-center gap-2 group-hover:gap-3">
+            <button className={`w-full py-3 bg-${colors.to}-600 hover:bg-${colors.to}-700 text-white text-xs font-bold rounded-xl transition duration-300 mt-8 flex items-center justify-center gap-2 group-hover:gap-3`}>
               Enter Practical Lab <ArrowRight size={14} />
             </button>
           </div>
