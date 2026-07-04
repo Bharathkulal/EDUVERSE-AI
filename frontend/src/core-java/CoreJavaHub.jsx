@@ -104,11 +104,15 @@ export default function CoreJavaHub() {
           className="relative group cursor-pointer p-[1px] rounded-3xl overflow-hidden"
           onClick={() => setActiveView('theory')}
         >
-          <div className={`absolute inset-0 bg-gradient-to-b from-orange-500/40 to-transparent opacity-50 group-hover:opacity-100 transition duration-300`} />
-          <div className={`relative p-8 rounded-3.5xl flex flex-col justify-between h-full border min-h-[360px] ${
+          <div className={`absolute inset-0 bg-gradient-to-b from-orange-500/40 to-transparent opacity-50 group-hover:opacity-100 transition duration-300 pointer-events-none`} />
+          <div className={`relative p-8 rounded-3.5xl flex flex-col justify-between h-full border min-h-[360px] overflow-hidden ${
             isDark ? 'bg-[#120e2a]/90 border-white/5' : 'bg-white border-slate-200 shadow-md group-hover:shadow-lg transition-shadow'
           }`}>
-            <div className="space-y-6 text-left">
+            <div 
+              className="absolute inset-0 bg-no-repeat bg-right-bottom pointer-events-none rounded-3.5xl transition-opacity duration-300 opacity-[0.22] dark:opacity-[0.38] mix-blend-screen"
+              style={{ backgroundImage: "url('/theory_bg.png')", backgroundSize: '65% auto' }}
+            />
+            <div className="space-y-6 text-left relative z-10">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl ${
                 isDark ? 'bg-orange-500/10 border border-orange-500/20 text-orange-400' : 'bg-orange-50 border border-orange-100 text-orange-600'
               }`}>
@@ -131,7 +135,7 @@ export default function CoreJavaHub() {
               </div>
             </div>
 
-            <button className="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl transition duration-300 mt-8 flex items-center justify-center gap-2 group-hover:gap-3">
+            <button className="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl transition duration-300 mt-8 flex items-center justify-center gap-2 group-hover:gap-3 relative z-10">
               Continue Theory <ArrowRight size={14} />
             </button>
           </div>
@@ -144,11 +148,15 @@ export default function CoreJavaHub() {
           className="relative group cursor-pointer p-[1px] rounded-3xl overflow-hidden"
           onClick={() => setActiveView('practical')}
         >
-          <div className={`absolute inset-0 bg-gradient-to-b from-purple-500/40 to-transparent opacity-50 group-hover:opacity-100 transition duration-300`} />
-          <div className={`relative p-8 rounded-3.5xl flex flex-col justify-between h-full border min-h-[360px] ${
+          <div className={`absolute inset-0 bg-gradient-to-b from-purple-500/40 to-transparent opacity-50 group-hover:opacity-100 transition duration-300 pointer-events-none`} />
+          <div className={`relative p-8 rounded-3.5xl flex flex-col justify-between h-full border min-h-[360px] overflow-hidden ${
             isDark ? 'bg-[#120e2a]/90 border-white/5' : 'bg-white border-slate-200 shadow-md group-hover:shadow-lg transition-shadow'
           }`}>
-            <div className="space-y-6 text-left">
+            <div 
+              className="absolute inset-0 bg-no-repeat bg-right-bottom pointer-events-none rounded-3.5xl transition-opacity duration-300 opacity-[0.22] dark:opacity-[0.38] mix-blend-screen"
+              style={{ backgroundImage: "url('/practical_bg.png')", backgroundSize: '65% auto' }}
+            />
+            <div className="space-y-6 text-left relative z-10">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl ${
                 isDark ? 'bg-purple-500/10 border border-purple-500/20 text-purple-400' : 'bg-purple-50 border border-purple-100 text-purple-600'
               }`}>
@@ -171,7 +179,7 @@ export default function CoreJavaHub() {
               </div>
             </div>
 
-            <button className="w-full py-3 bg-purple-600 hover:bg-purple-750 text-white text-xs font-bold rounded-xl transition duration-300 mt-8 flex items-center justify-center gap-2 group-hover:gap-3">
+            <button className="w-full py-3 bg-purple-600 hover:bg-purple-750 text-white text-xs font-bold rounded-xl transition duration-300 mt-8 flex items-center justify-center gap-2 group-hover:gap-3 relative z-10">
               Enter Practical Lab <ArrowRight size={14} />
             </button>
           </div>
