@@ -83,6 +83,24 @@ export default function LinearAlgebraVisualization() {
       matA: [[3, 5], [1, -1]],
       matB: [[3, 1], [5, -1]], // Store transpose as matB for matrix previews
       description: 'Decompose matrix A into B = ½(A + Aᵀ) and C = ½(A - Aᵀ), then verify A = B + C.'
+    },
+    {
+      id: 'inv_q1',
+      label: 'Q11: Find Inverse of A = [[5,-2,4],[-2,1,1],[4,1,0]] (Photo Q1)',
+      question: 'Find the inverse of the matrix A = [[5, -2, 4], [-2, 1, 1], [4, 1, 0]] using the adjoint method.',
+      type: 'inverse_3x3_1',
+      matA: [[5, -2, 4], [-2, 1, 1], [4, 1, 0]],
+      matB: [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+      description: 'Compute determinant |A|, cofactor matrix, adjoint matrix adj A, and find A⁻¹ = (1/|A|) · adj A.'
+    },
+    {
+      id: 'inv_q2',
+      label: 'Q12: Find Inverse of A = [[2,4,3],[0,1,1],[2,2,-1]] (Photo Q2)',
+      question: 'Find the inverse of the matrix A = [[2, 4, 3], [0, 1, 1], [2, 2, -1]] using the adjoint method.',
+      type: 'inverse_3x3_2',
+      matA: [[2, 4, 3], [0, 1, 1], [2, 2, -1]],
+      matB: [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+      description: 'Compute determinant |A|, cofactor matrix, adjoint matrix adj A, and find A⁻¹ = (1/|A|) · adj A.'
     }
   ];
 
@@ -128,6 +146,20 @@ export default function LinearAlgebraVisualization() {
       btnClass: 'bg-rose-500 hover:bg-rose-600 text-white',
       badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-650 dark:text-rose-455',
       icon: '📊'
+    },
+    { 
+      id: 'Inverse Matrix', 
+      title: 'Inverse Matrix', 
+      desc: 'Find the inverse of a square matrix using the determinant and adjoint formula (A⁻¹ = (1/|A|) · adj A).', 
+      status: 'Advanced', 
+      time: '20 mins', 
+      xp: '150 XP', 
+      progress: 60,
+      tags: ['Linear Algebra', 'Inverse', 'Determinant', 'Adjoint'],
+      colorTheme: 'amber',
+      btnClass: 'bg-amber-500 hover:bg-amber-600 text-white',
+      badgeClass: 'bg-amber-500/10 border-amber-500/20 text-amber-650 dark:text-amber-455',
+      icon: '🔄'
     }
   ];
 
@@ -198,6 +230,25 @@ export default function LinearAlgebraVisualization() {
           ]
         }
       ]
+    },
+    'Inverse Matrix': {
+      features: [
+        { icon: BookOpen, title: 'Adjoint Method', desc: 'Finds the inverse of a square matrix A by dividing its adjoint matrix (adj A) by its determinant (|A|).' },
+        { icon: Target, title: 'Existence condition', desc: 'The inverse matrix exists if and only if the determinant is non-zero (|A| \u2260 0).' },
+        { icon: Lightbulb, title: 'Application', desc: 'Useful for solving systems of linear equations and general linear system transformations.' },
+      ],
+      formulas: [
+        {
+          title: 'Inverse Matrix Formula',
+          formula: 'A\u207B\u00B9 = (1 / |A|) \u00B7 adj A',
+          variables: [
+            { sym: 'A', def: 'A square matrix' },
+            { sym: 'A\u207B\u00B9', def: 'Inverse of matrix A' },
+            { sym: '|A|', def: 'Determinant of matrix A (must be \u2260 0)' },
+            { sym: 'adj A', def: 'Adjoint matrix (transpose of cofactor matrix)' },
+          ]
+        }
+      ]
     }
   };
 
@@ -207,6 +258,8 @@ export default function LinearAlgebraVisualization() {
       return q.type.startsWith('orthogonal');
     } else if (selectedMethod === 'Symmetric & Skew Symmetric') {
       return q.type.startsWith('symmetric_skew');
+    } else if (selectedMethod === 'Inverse Matrix') {
+      return q.type.startsWith('inverse');
     } else {
       return q.type === 'square' || q.type === 'product';
     }
@@ -221,6 +274,8 @@ export default function LinearAlgebraVisualization() {
       setMatMulQuestionId('mm_q5');
     } else if (selectedMethod === 'Symmetric & Skew Symmetric') {
       setMatMulQuestionId('sym_q1');
+    } else if (selectedMethod === 'Inverse Matrix') {
+      setMatMulQuestionId('inv_q1');
     }
   }, [selectedMethod]);
 
@@ -263,7 +318,7 @@ export default function LinearAlgebraVisualization() {
   };
 
   const renderActiveEngine = () => {
-    if (selectedMethod === 'Matrix Multiplication' || selectedMethod === 'Orthogonal Verification' || selectedMethod === 'Symmetric & Skew Symmetric') {
+    if (selectedMethod === 'Matrix Multiplication' || selectedMethod === 'Orthogonal Verification' || selectedMethod === 'Symmetric & Skew Symmetric' || selectedMethod === 'Inverse Matrix') {
       return (
         <NotebookEngine
           matMulQuestion={activeMatMulQuestion}
@@ -657,17 +712,25 @@ export default function LinearAlgebraVisualization() {
                       ))}
                     </div>
                   </div>
-                  <span className="text-[var(--db-text-muted)] font-bold text-lg">×</span>
-                  <div className="text-center">
-                    <p className="text-[9px] text-[var(--db-text-muted)] mb-1 font-bold">Matrix B</p>
-                    <div className="font-mono text-xs text-[var(--db-text-main)] border border-[var(--db-card-border)] rounded-lg p-2 bg-[var(--db-card-bg)]">
-                      {activeMatMulQuestion.matB.map((row, i) => (
-                        <div key={i} className="flex gap-2 justify-center">
-                          {row.map((v, j) => <span key={j} className="min-w-[3.5rem] text-center inline-block">{v}</span>)}
+                  {selectedMethod !== 'Inverse Matrix' && (
+                    <>
+                      <span className="text-[var(--db-text-muted)] font-bold text-lg">
+                        {selectedMethod === 'Symmetric & Skew Symmetric' ? 'ᵀ' : '×'}
+                      </span>
+                      <div className="text-center">
+                        <p className="text-[9px] text-[var(--db-text-muted)] mb-1 font-bold">
+                          {selectedMethod === 'Symmetric & Skew Symmetric' ? 'Aᵀ' : 'Matrix B'}
+                        </p>
+                        <div className="font-mono text-xs text-[var(--db-text-main)] border border-[var(--db-card-border)] rounded-lg p-2 bg-[var(--db-card-bg)]">
+                          {activeMatMulQuestion.matB.map((row, i) => (
+                            <div key={i} className="flex gap-2 justify-center">
+                              {row.map((v, j) => <span key={j} className="min-w-[3.5rem] text-center inline-block">{v}</span>)}
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <p className="text-[10px] text-[var(--db-text-muted)] leading-relaxed">{activeMatMulQuestion.description}</p>
               </div>

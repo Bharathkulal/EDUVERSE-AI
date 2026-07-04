@@ -1533,6 +1533,225 @@ export default function NotebookEngine({
         }
       }
     }
+    else if (method === 'Inverse Matrix') {
+      const q = matMulQuestion;
+      if (q) {
+        const isProblem1 = q.type === 'inverse_3x3_1';
+
+        if (isProblem1) {
+          // Step 0: Problem Statement
+          sequence.push({
+            type: 'header',
+            title: 'PROBLEM STATEMENT',
+            content: `Find the inverse of the matrix A using the adjoint method.\n\n` +
+                     `Given:\n` +
+                     `A = [  5  -2   4 ]\n` +
+                     `    [ -2   1   1 ]\n` +
+                     `    [  4   1   0 ]\n\n` +
+                     `Formula:\n` +
+                     `  A\u207B\u00B9 = (1 / |A|) \u00B7 adj A\n` +
+                     `  where |A| is the determinant and adj A is the adjoint matrix (transpose of the cofactor matrix).`,
+            explanation: 'We set up the matrix inversion problem and the required formulas.'
+          });
+
+          // Step 1: Compute Determinant
+          sequence.push({
+            type: 'math',
+            title: 'STEP 1: COMPUTE DETERMINANT |A|',
+            content: `|A| = 5\u00B7(1\u00B70 - 1\u00B71) - (-2)\u00B7((-2)\u00B70 - 1\u00B74) + 4\u00B7((-2)\u00B71 - 1\u00B74)\n` +
+                     `    = 5\u00B7(0 - 1) + 2\u00B7(0 - 4) + 4\u00B7(-2 - 4)\n` +
+                     `    = 5\u00B7(-1) + 2\u00B7(-4) + 4\u00B7(-6)\n` +
+                     `    = -5 - 8 - 24\n` +
+                     `    = -37\n\n` +
+                     `Since |A| = -37 \u2260 0, the matrix A is non-singular and its inverse A\u207B\u00B9 exists.`,
+            explanation: 'Expand the determinant along the first row. Since it is non-zero, the inverse exists.'
+          });
+
+          // Step 2: Cofactors of Row 1
+          sequence.push({
+            type: 'math',
+            title: 'STEP 2: FIND COFACTORS OF ROW 1',
+            content: `C\u2081\u2081 = +| 1  1 | = +(1\u00B70 - 1\u00B71) = -1\n` +
+                     `       | 1  0 |\n\n` +
+                     `C\u2081\u2082 = -| -2  1 | = -((-2)\u00B70 - 1\u00B74) = 4\n` +
+                     `       |  4  0 |\n\n` +
+                     `C\u2081\u2083 = +| -2  1 | = +((-2)\u00B71 - 1\u00B74) = -6\n` +
+                     `       |  4  1 |`,
+            explanation: 'Compute cofactors for row 1 elements using sign checkers (-1)^(i+j).'
+          });
+
+          // Step 3: Cofactors of Row 2
+          sequence.push({
+            type: 'math',
+            title: 'STEP 3: FIND COFACTORS OF ROW 2',
+            content: `C\u2082\u2081 = -| -2  4 | = -((-2)\u00B70 - 4\u00B71) = 4\n` +
+                     `       |  1  0 |\n\n` +
+                     `C\u2082\u2082 = +|  5  4 | = +(5\u00B70 - 4\u00B74) = -16\n` +
+                     `       |  4  0 |\n\n` +
+                     `C\u2082\u2083 = -|  5 -2 | = -(5\u00B71 - (-2)\u00B74) = -13\n` +
+                     `       |  4  1 |`,
+            explanation: 'Compute cofactors for row 2 elements.'
+          });
+
+          // Step 4: Cofactors of Row 3
+          sequence.push({
+            type: 'math',
+            title: 'STEP 4: FIND COFACTORS OF ROW 3',
+            content: `C\u2083\u2081 = +| -2  4 | = +((-2)\u00B71 - 4\u00B71) = -6\n` +
+                     `       |  1  1 |\n\n` +
+                     `C\u2083\u2082 = -|  5  4 | = -(5\u00B71 - 4\u00B7(-2)) = -13\n` +
+                     `       | -2  1 |\n\n` +
+                     `C\u2083\u2083 = +|  5 -2 | = +(5\u00B71 - (-2)\u00B7(-2)) = 1\n` +
+                     `       | -2  1 |`,
+            explanation: 'Compute cofactors for row 3 elements.'
+          });
+
+          // Step 5: Assemble Cofactor Matrix
+          sequence.push({
+            type: 'math',
+            title: 'STEP 5: ASSEMBLE COFACTOR MATRIX',
+            content: `cof(A) = [ C\u2081\u2081  C\u2081\u2082  C\u2081\u2083 ]\n` +
+                     `         [ C\u2082\u2081  C\u2082\u2082  C\u2082\u2083 ]\n` +
+                     `         [ C\u2083\u2081  C\u2083\u2082  C\u2083\u2083 ]\n\n` +
+                     `       = [ -1    4   -6 ]\n` +
+                     `         [  4  -16  -13 ]\n` +
+                     `         [ -6  -13    1 ]`,
+            explanation: 'Assemble all computed cofactors into a 3×3 matrix.'
+          });
+
+          // Step 6: Compute Adjoint Matrix
+          sequence.push({
+            type: 'math',
+            title: 'STEP 6: COMPUTE ADJOINT MATRIX adj A = (cof A)ᵀ',
+            content: `Transpose the cofactor matrix (rows become columns):\n\n` +
+                     `adj A = [ -1    4   -6 ]\n` +
+                     `        [  4  -16  -13 ]\n` +
+                     `        [ -6  -13    1 ]`,
+            explanation: 'The adjoint is the transpose of the cofactor matrix. Since cof(A) is symmetric, adj A is identical.'
+          });
+
+          // Step 7: Compute Inverse
+          sequence.push({
+            type: 'result',
+            title: 'FINAL ANSWER',
+            content: `A\u207B\u00B9 = (1 / |A|) \u00B7 adj A\n` +
+                     `    = (1 / -37) \u00B7 [ -1    4   -6 ]\n` +
+                     `                    [  4  -16  -13 ]\n` +
+                     `                    [ -6  -13    1 ]\n\n` +
+                     `    = [  1/37   -4/37    6/37  ]\n` +
+                     `      [ -4/37   16/37   13/37  ]\n` +
+                     `      [  6/37   13/37   -1/37  ]`,
+            explanation: 'Multiply the scalar (1 / -37) by each element of the adjoint matrix to get A⁻¹.'
+          });
+        } else {
+          // Problem 2
+          // Step 0: Problem Statement
+          sequence.push({
+            type: 'header',
+            title: 'PROBLEM STATEMENT',
+            content: `Find the inverse of the matrix A using the adjoint method.\n\n` +
+                     `Given:\n` +
+                     `A = [  2   4   3 ]\n` +
+                     `    [  0   1   1 ]\n` +
+                     `    [  2   2  -1 ]\n\n` +
+                     `Formula:\n` +
+                     `  A\u207B\u00B9 = (1 / |A|) \u00B7 adj A\n` +
+                     `  where |A| is the determinant and adj A is the adjoint matrix (transpose of the cofactor matrix).`,
+            explanation: 'We set up the matrix inversion problem and the required formulas.'
+          });
+
+          // Step 1: Compute Determinant
+          sequence.push({
+            type: 'math',
+            title: 'STEP 1: COMPUTE DETERMINANT |A|',
+            content: `|A| = 2\u00B7(1\u00B7(-1) - 1\u00B72) - 4\u00B7(0\u00B7(-1) - 1\u00B72) + 3\u00B7(0\u00B72 - 1\u00B72)\n` +
+                     `    = 2\u00B7(-1 - 2) - 4\u00B7(0 - 2) + 3\u00B7(0 - 2)\n` +
+                     `    = 2\u00B7(-3) - 4\u00B7(-2) + 3\u00B7(-2)\n` +
+                     `    = -6 + 8 - 6\n` +
+                     `    = -4\n\n` +
+                     `Since |A| = -4 \u2260 0, the matrix A is non-singular and its inverse A\u207B\u00B9 exists.`,
+            explanation: 'Expand the determinant along the first row. Since it is non-zero, the inverse exists.'
+          });
+
+          // Step 2: Cofactors of Row 1
+          sequence.push({
+            type: 'math',
+            title: 'STEP 2: FIND COFACTORS OF ROW 1',
+            content: `C\u2081\u2081 = +| 1  1 | = +(1\u00B7(-1) - 1\u00B72) = -3\n` +
+                     `       | 2 -1 |\n\n` +
+                     `C\u2081\u2082 = -| 0  1 | = -(0\u00B7(-1) - 1\u00B72) = 2\n` +
+                     `       | 2 -1 |\n\n` +
+                     `C\u2081\u2083 = +| 0  1 | = +(0\u00B72 - 1\u00B72) = -2\n` +
+                     `       | 2  2 |`,
+            explanation: 'Compute cofactors for row 1 elements using sign checkers (-1)^(i+j).'
+          });
+
+          // Step 3: Cofactors of Row 2
+          sequence.push({
+            type: 'math',
+            title: 'STEP 3: FIND COFACTORS OF ROW 2',
+            content: `C\u2082\u2081 = -| 4  3 | = -(4\u00B7(-1) - 3\u00B72) = 10\n` +
+                     `       | 2 -1 |\n\n` +
+                     `C\u2082\u2082 = +| 2  3 | = +(2\u00B7(-1) - 3\u00B72) = -8\n` +
+                     `       | 2 -1 |\n\n` +
+                     `C\u2082\u2083 = -| 2  4 | = -(2\u00B72 - 4\u00B72) = 4\n` +
+                     `       | 2  2 |`,
+            explanation: 'Compute cofactors for row 2 elements.'
+          });
+
+          // Step 4: Cofactors of Row 3
+          sequence.push({
+            type: 'math',
+            title: 'STEP 4: FIND COFACTORS OF ROW 3',
+            content: `C\u2083\u2081 = +| 4  3 | = +(4\u00B71 - 3\u00B71) = 1\n` +
+                     `       | 1  1 |\n\n` +
+                     `C\u2083\u2082 = -| 2  3 | = -(2\u00B71 - 3\u00B70) = -2\n` +
+                     `       | 0  1 |\n\n` +
+                     `C\u2083\u2083 = +| 2  4 | = +(2\u00B71 - 4\u00B70) = 2\n` +
+                     `       | 0  1 |`,
+            explanation: 'Compute cofactors for row 3 elements.'
+          });
+
+          // Step 5: Assemble Cofactor Matrix
+          sequence.push({
+            type: 'math',
+            title: 'STEP 5: ASSEMBLE COFACTOR MATRIX',
+            content: `cof(A) = [ C\u2081\u2081  C\u2081\u2082  C\u2081\u2083 ]\n` +
+                     `         [ C\u2082\u2081  C\u2082\u2082  C\u2082\u2083 ]\n` +
+                     `         [ C\u2083\u2081  C\u2083\u2082  C\u2083\u2083 ]\n\n` +
+                     `       = [ -3    2   -2 ]\n` +
+                     `         [ 10   -8    4 ]\n` +
+                     `         [  1   -2    2 ]`,
+            explanation: 'Assemble all computed cofactors into a 3×3 matrix.'
+          });
+
+          // Step 6: Compute Adjoint Matrix
+          sequence.push({
+            type: 'math',
+            title: 'STEP 6: COMPUTE ADJOINT MATRIX adj A = (cof A)ᵀ',
+            content: `Transpose the cofactor matrix (rows become columns):\n\n` +
+                     `adj A = [ -3   10    1 ]\n` +
+                     `        [  2   -8   -2 ]\n` +
+                     `        [ -2    4    2 ]`,
+            explanation: 'The adjoint is the transpose of the cofactor matrix.'
+          });
+
+          // Step 7: Compute Inverse
+          sequence.push({
+            type: 'result',
+            title: 'FINAL ANSWER',
+            content: `A\u207B\u00B9 = (1 / |A|) \u00B7 adj A\n` +
+                     `    = (1 / -4) \u00B7 [ -3   10    1 ]\n` +
+                     `                   [  2   -8   -2 ]\n` +
+                     `                   [ -2    4    2 ]\n\n` +
+                     `    = [  3/4   -5/2   -1/4  ]\n` +
+                     `      [ -1/2    2     1/2  ]\n` +
+                     `      [  1/2   -1    -1/2  ]`,
+            explanation: 'Multiply the scalar (1 / -4) by each element of the adjoint matrix to get A⁻¹.'
+          });
+        }
+      }
+    }
 
     return sequence;
   }, [func, a, b, n, method, dataset, targetX, direction, bisectionProblemId, bisectionIterations, rkX0, rkY0, rkH, rkSteps, rkFuncId, matMulQuestion]);
@@ -1768,7 +1987,7 @@ export default function NotebookEngine({
                     onComplete={handleTypingComplete}
                   />
                   <div className="mt-4 text-emerald-200 text-sm font-medium">
-                    {method === 'Matrix Multiplication' || method === 'Symmetric & Skew Symmetric' ? 'Linear Algebra complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : 'Numerical interpolation/differentiation complete.'}
+                    {method === 'Matrix Multiplication' || method === 'Symmetric & Skew Symmetric' || method === 'Inverse Matrix' ? 'Linear Algebra complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : 'Numerical interpolation/differentiation complete.'}
                   </div>
                 </div>
               ) : step.type === 'header' ? (
