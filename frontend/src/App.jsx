@@ -67,6 +67,7 @@ const LinkedListVisualization = lazy(() => import('./pages/LinkedListVisualizati
 const TreeVisualization = lazy(() => import('./pages/TreeVisualization'));
 const GraphVisualization = lazy(() => import('./pages/GraphVisualization'));
 const SortingVisualization = lazy(() => import('./pages/SortingVisualization'));
+const SearchingVisualization = lazy(() => import('./pages/SearchingVisualization'));
 const MathVisualization = lazy(() => import('./pages/MathVisualization'));
 const CalculusVisualization = lazy(() => import('./pages/CalculusVisualization'));
 const LinearAlgebraVisualization = lazy(() => import('./pages/LinearAlgebraVisualization'));
