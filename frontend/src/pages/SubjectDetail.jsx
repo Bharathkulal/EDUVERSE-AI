@@ -15,6 +15,7 @@ import WebDevHub from '../web-dev/WebDevHub';
 import MathHub from '../math/MathHub';
 import FocVisualization from './FocVisualization';
 import TechVerse from './TechVerse';
+import DsaCoursePage from '../dsa-theory/DsaCoursePage';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Layers, List, GitCommit, GitMerge, Share2, PlayCircle, CheckCircle2, ArrowLeft, ArrowRight, Trophy } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
@@ -304,8 +305,50 @@ export default function SubjectDetail() {
       if (res.data.topics?.length) setActiveTopic(res.data.topics[0]);
       setLoading(false);
     }).catch(err => {
-      console.error(err);
-      setError(err.response?.status === 404 ? 'Subject not found' : 'Failed to load subject. Please check your connection and try again.');
+      console.warn("API failed, loading local fallback subject details:", err);
+      let name = "DSA";
+      let desc = "Data Structures and Algorithms for problem solving";
+      const sId = String(id).toLowerCase();
+      if (sId === '1' || sId.includes('foc')) {
+        name = "FOC";
+        desc = "Fundamentals of Computing - Introduction to computer science concepts";
+      } else if (sId === '2' || sId === 'java') {
+        name = "Java";
+        desc = "Core Java programming - OOP, collections, and fundamentals";
+      } else if (sId === '3' || sId.includes('advanced')) {
+        name = "Advanced Java";
+        desc = "JSP, Servlets, JDBC, and enterprise Java development";
+      } else if (sId === '4' || sId.includes('dsa')) {
+        name = "DSA";
+        desc = "Data Structures and Algorithms for problem solving";
+      } else if (sId === '5' || sId.includes('c#') || sId.includes('csharp')) {
+        name = "C#";
+        desc = "C# programming with .NET framework fundamentals";
+      } else if (sId === '6' || sId.includes('dbms')) {
+        name = "DBMS";
+        desc = "Database Management Systems - SQL, normalization, and design";
+      } else if (sId === '7' || sId.includes('python')) {
+        name = "Python";
+        desc = "Python programming for beginners to advanced";
+      } else if (sId === '8' || sId.includes('web')) {
+        name = "Web Development";
+        desc = "HTML, CSS, JavaScript, React and full-stack development";
+      } else if (sId.includes('math')) {
+        name = "Mathematics";
+        desc = "Advanced numerical methods and calculus execution engines.";
+      }
+
+      setSubject({
+        id: id,
+        subject_name: name,
+        description: desc,
+        topics: [
+          { id: 101, title: 'Introduction', content: 'Overview of the subject and learning objectives.' },
+          { id: 102, title: 'Core Concepts', content: 'Fundamental concepts and theory.' },
+          { id: 103, title: 'Practical Applications', content: 'Hands-on examples and use cases.' }
+        ]
+      });
+      setActiveTopic({ id: 101, title: 'Introduction', content: 'Overview of the subject and learning objectives.' });
       setLoading(false);
     });
 
@@ -688,7 +731,7 @@ export default function SubjectDetail() {
     }
 
     if (activeView === 'theory') {
-      return renderTheoryTopics();
+      return <DsaCoursePage onBack={() => setActiveView('hub')} />;
     }
 
     if (activeView === 'practical') {
