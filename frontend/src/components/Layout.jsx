@@ -307,13 +307,15 @@ export default function Layout({ children }) {
           {/* Right part: Actions + Profile */}
           <div className="flex items-center gap-4">
             {/* Open Learning Command Center Pill Button */}
-            <button
-              onClick={() => navigate('/dashboard/goals')}
-              className="px-4 py-2 bg-[#3b82f6] text-[#1e293b] font-bold rounded-full shadow-md hover:bg-[#2563eb] hover:text-white transition-all duration-200 flex items-center gap-1.5 text-xs md:text-sm cursor-pointer whitespace-nowrap"
-            >
-              <span>🚀 Open Learning Command Center</span>
-              <span className="font-semibold">→</span>
-            </button>
+            {!isAdmin && (
+              <button
+                onClick={() => navigate('/dashboard/goals')}
+                className="px-4 py-2 bg-[#3b82f6] text-[#1e293b] font-bold rounded-full shadow-md hover:bg-[#2563eb] hover:text-white transition-all duration-200 flex items-center gap-1.5 text-xs md:text-sm cursor-pointer whitespace-nowrap"
+              >
+                <span>🚀 Open Learning Command Center</span>
+                <span className="font-semibold">→</span>
+              </button>
+            )}
 
             {/* Logout Button */}
             <button 
@@ -327,15 +329,17 @@ export default function Layout({ children }) {
             </button>
 
             {/* Calendar Indicator Icon */}
-            <button 
-              onClick={() => navigate('/dashboard/goals')} 
-              className="p-2 text-[var(--db-text-muted)] hover:text-[var(--db-text-accent)] hover:bg-[var(--db-btn-secondary-hover)] rounded-xl transition hidden sm:flex items-center justify-center cursor-pointer" 
-              title="Learning Command Center"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </button>
+            {!isAdmin && (
+              <button 
+                onClick={() => navigate('/dashboard/goals')} 
+                className="p-2 text-[var(--db-text-muted)] hover:text-[var(--db-text-accent)] hover:bg-[var(--db-btn-secondary-hover)] rounded-xl transition hidden sm:flex items-center justify-center cursor-pointer" 
+                title="Learning Command Center"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </button>
+            )}
 
             {/* Mock Notifications Icon with badge */}
             <div className="relative">
