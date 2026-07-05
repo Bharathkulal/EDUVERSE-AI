@@ -455,15 +455,19 @@ export default function Overview() {
           style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
         >
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[16px] font-bold" style={{ color: 'var(--db-text-main)' }}>Daily Learning Goals</h3>
-              <button
-                onClick={handleGenerateAiGoals}
-                disabled={generatingGoals}
-                className="text-xs px-2.5 py-1 bg-violet-600/20 text-violet-400 border border-violet-500/30 rounded-lg font-bold hover:bg-violet-600/30 transition-all disabled:opacity-50 cursor-pointer"
-              >
-                {generatingGoals ? 'Generating...' : '✨ Auto-Generate Goals'}
-              </button>
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <h3 className="text-[16px] font-bold" style={{ color: 'var(--db-text-main)' }}>Daily Learning Goals 🎯</h3>
+              
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleGenerateAiGoals}
+                  disabled={generatingGoals}
+                  className="text-xs px-3 py-1.5 bg-violet-600/20 text-violet-400 border border-violet-500/30 rounded-xl font-bold hover:bg-violet-600/30 transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {generatingGoals ? 'Generating...' : '✨ Auto-Generate'}
+                </button>
+              </div>
             </div>
 
             {/* Goals creation input */}
