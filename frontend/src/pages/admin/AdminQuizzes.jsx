@@ -4,7 +4,15 @@ import {
   Plus, Trash2, HelpCircle, RefreshCw, Layers, Award, Sparkles, X, Clock, ShieldAlert, Award as Trophy
 } from 'lucide-react';
 import api from '../../api/axios';
+import AdminTabBar from '../../components/AdminTabBar';
 import './AdminApiSettings.css';
+
+const QUIZ_TABS = [
+  { id: 'list', label: 'Question Bank', icon: '🗄' },
+  { id: 'create', label: 'Quiz Builder', icon: '📝' },
+  { id: 'ai-generate', label: 'AI Question Generator', icon: '🧠' },
+  { id: 'results', label: 'Quiz Analytics', icon: '📊' },
+];
 
 export default function AdminQuizzes() {
   const [quizzes, setQuizzes] = useState([]);
@@ -114,32 +122,21 @@ export default function AdminQuizzes() {
     .slice(0, 10);
 
   return (
-    <div className="friday-admin-container relative space-y-6">
-      <div className="friday-grid-overlay" />
-      <div className="friday-hud-scanline" />
-
+    <div className="space-y-6" style={{ color: 'var(--db-text-main)' }}>
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="friday-hud-logo text-2xl font-black text-white flex items-center gap-2 tracking-wider">
-            ⚡ QUIZ OPERATIONS CONSOLE
+          <h1 className="text-2xl font-black flex items-center gap-2" style={{ color: 'var(--db-text-main)' }}>
+            📝 Quiz Intelligence
           </h1>
-          <p className="text-slate-400 text-[10px] uppercase tracking-widest mt-0.5 font-mono font-bold">Configure timed evaluation challenges, leaderboards, and AI question synthesizers</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--db-text-muted)' }}>Configure question banks, build quizzes, generate questions with AI, and view analytics.</p>
         </div>
-        <button onClick={fetchInitData} className="px-3.5 py-1.5 bg-slate-900 border border-white/5 text-xs text-cyan-300 rounded-lg hover:border-cyan-500/30 transition flex items-center gap-2">
-          <RefreshCw className="w-3.5 h-3.5" /> Reload Quizzes
+        <button onClick={fetchInitData} className="px-3.5 py-1.5 border text-xs font-bold rounded-lg transition flex items-center gap-2 cursor-pointer" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}>
+          <RefreshCw className="w-3.5 h-3.5" /> Reload
         </button>
       </div>
 
-      {/* Tab bar */}
-      <div className="flex border-b border-white/5 gap-2 overflow-x-auto pb-1">
-        <button onClick={() => setActiveTab('list')} className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition ${activeTab === 'list' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-slate-400 hover:text-white'}`}>Active Quizzes</button>
-        <button onClick={() => setActiveTab('results')} className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition ${activeTab === 'results' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-slate-400 hover:text-white'}`}>Submissions & Leaderboards</button>
-        <button onClick={() => setActiveTab('create')} className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition ${activeTab === 'create' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-slate-400 hover:text-white'}`}>Manual Quiz Builder</button>
-        <button onClick={() => setActiveTab('ai-generate')} className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition flex items-center gap-1.5 ${activeTab === 'ai-generate' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-slate-400 hover:text-white'}`}>
-          <Sparkles className="w-3.5 h-3.5 text-cyan-400" /> AI Quiz Generator
-        </button>
-      </div>
+      <AdminTabBar tabs={QUIZ_TABS} activeTab={activeTab} onTabChange={setActiveTab} />
 
       {loading ? (
         <div className="flex items-center justify-center min-h-[300px]">

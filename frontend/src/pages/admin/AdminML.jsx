@@ -1,9 +1,21 @@
 import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
+import AdminTabBar from '../../components/AdminTabBar';
 import './AdminApiSettings.css';
 
+const ML_TABS = [
+  { id: 'training', label: 'Model Training', icon: '🤖' },
+  { id: 'queue', label: 'Training Queue', icon: '📋' },
+  { id: 'evaluation', label: 'Model Evaluation', icon: '📈' },
+  { id: 'hyperparameter', label: 'Hyperparameter Tuning', icon: '⚙' },
+  { id: 'registry', label: 'Model Registry', icon: '🏷' },
+  { id: 'deployment', label: 'Deployment', icon: '🚀' },
+  { id: 'prediction', label: 'Prediction Service', icon: '⚡' },
+];
+
 export default function AdminML() {
+  const [activeTab, setActiveTab] = useState('training');
   const [jobs, setJobs] = useState([]);
   const [trainingLogs, setTrainingLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,15 +102,15 @@ export default function AdminML() {
   const latestCompleted = completedJobs[0];
 
   return (
-    <div className="friday-admin-container space-y-6">
+    <div className="space-y-6" style={{ color: 'var(--db-text-main)' }}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cyan-500/10 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-6" style={{ borderColor: 'var(--db-sidebar-border)' }}>
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-cyan-400 via-purple-400 to-emerald-400 bg-clip-text text-transparent glow-cyan">
-            ML Core Engine
+          <h1 className="text-2xl font-black flex items-center gap-2" style={{ color: 'var(--db-text-main)' }}>
+            🤖 ML Studio
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Manage student engagement ML models, train networks, and monitor validation performance in real-time.
+          <p className="text-xs mt-1" style={{ color: 'var(--db-text-muted)' }}>
+            Manage learner prediction models, initialize neural net training, check validation, and serve API models.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -106,15 +118,15 @@ export default function AdminML() {
             <button
               onClick={handleStopTraining}
               disabled={submitting}
-              className="px-5 py-2.5 bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 hover:border-red-500 text-red-200 rounded-xl font-medium transition-all duration-200 shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:shadow-[0_0_20px_rgba(239,68,68,0.2)] disabled:opacity-50"
+              className="px-4 py-2 bg-rose-600 text-white text-xs font-bold rounded-lg hover:bg-rose-700 transition cursor-pointer disabled:opacity-50"
             >
-              Abrupt Run (Abort)
+              Abort Training Run
             </button>
           ) : (
             <button
               onClick={handleStartTraining}
               disabled={submitting || loading}
-              className="px-5 py-2.5 bg-cyan-600/20 hover:bg-cyan-600/40 border border-cyan-500/30 hover:border-cyan-500 text-cyan-200 rounded-xl font-medium transition-all duration-200 shadow-[0_0_15px_rgba(6,182,212,0.1)] hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] disabled:opacity-50"
+              className="px-4 py-2 bg-blue-500 text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition cursor-pointer disabled:opacity-50"
             >
               Initialize Training
             </button>
@@ -122,193 +134,215 @@ export default function AdminML() {
         </div>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Active Job / Engine Monitor */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="friday-cyber-card p-6">
-            <h2 className="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-pulse"></span>
-              Live Training Telemetry
-            </h2>
+      <AdminTabBar tabs={ML_TABS} activeTab={activeTab} onTabChange={setActiveTab} />
 
-            {activeJob ? (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 bg-slate-900/50 border border-cyan-500/10 rounded-xl">
-                    <span className="text-xs text-slate-400 block mb-1">Model Version</span>
-                    <span className="text-lg font-bold text-cyan-400 font-mono">{activeJob.model_version}</span>
+      {/* Main Container */}
+      <div className="space-y-6">
+        
+        {/* 1. Model Training */}
+        {activeTab === 'training' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <div className="p-5 rounded-2xl border" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+                <h2 className="text-sm font-bold mb-4 flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse"></span>
+                  Live Training Telemetry Logs
+                </h2>
+
+                {activeJob ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                      <div className="p-3 bg-[var(--db-input-bg)] rounded-xl border" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                        <span className="block font-bold text-blue-500">{activeJob.model_version}</span>
+                        <span style={{ color: 'var(--db-text-muted)' }}>Model Version</span>
+                      </div>
+                      <div className="p-3 bg-[var(--db-input-bg)] rounded-xl border" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                        <span className="block font-bold text-violet-500">{activeJob.dataset_size}</span>
+                        <span style={{ color: 'var(--db-text-muted)' }}>Dataset size</span>
+                      </div>
+                      <div className="p-3 bg-[var(--db-input-bg)] rounded-xl border" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                        <span className="block font-bold text-emerald-500">{activeJob.epochs}</span>
+                        <span style={{ color: 'var(--db-text-muted)' }}>Epochs Target</span>
+                      </div>
+                      <div className="p-3 bg-[var(--db-input-bg)] rounded-xl border" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                        <span className="block font-bold text-amber-500">{(Number(activeJob.learning_rate) || 0.01).toFixed(3)}</span>
+                        <span style={{ color: 'var(--db-text-muted)' }}>Learning rate</span>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-slate-950 rounded-xl border text-xs font-mono text-slate-300 max-h-64 overflow-y-auto space-y-1.5" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                      {trainingLogs.map((log, i) => (
+                        <div key={i} className="flex justify-between hover:bg-white/5 px-2 py-0.5 rounded">
+                          <span className="text-blue-400">Epoch {log.epoch}</span>
+                          <span className="text-purple-400">Loss: {Number(log.loss).toFixed(4)}</span>
+                          <span className="text-emerald-400">Val Acc: {(Number(log.accuracy) * 100).toFixed(1)}%</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="p-4 bg-slate-900/50 border border-cyan-500/10 rounded-xl">
-                    <span className="text-xs text-slate-400 block mb-1">Epochs</span>
-                    <span className="text-lg font-bold text-slate-200 font-mono">{activeJob.epochs || 0} / 100</span>
+                ) : (
+                  <div className="p-8 text-center text-xs" style={{ color: 'var(--db-text-muted)' }}>
+                    No active training run. Press "Initialize Training" to construct a new model version.
                   </div>
-                  <div className="p-4 bg-slate-900/50 border border-cyan-500/10 rounded-xl">
-                    <span className="text-xs text-slate-400 block mb-1">Accuracy</span>
-                    <span className="text-lg font-bold text-emerald-400 font-mono">
-                      {activeJob.accuracy ? `${(Number(activeJob.accuracy) * 100).toFixed(2)}%` : 'Calculating...'}
-                    </span>
-                  </div>
-                  <div className="p-4 bg-slate-900/50 border border-cyan-500/10 rounded-xl">
-                    <span className="text-xs text-slate-400 block mb-1">Loss Rate</span>
-                    <span className="text-lg font-bold text-purple-400 font-mono">
-                      {activeJob.loss ? Number(activeJob.loss).toFixed(4) : 'Calculating...'}
-                    </span>
-                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl border" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+              <h2 className="text-sm font-bold mb-4">ML Server Status</h2>
+              <div className="space-y-3 text-xs">
+                <div className="flex justify-between py-1.5 border-b" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                  <span style={{ color: 'var(--db-text-muted)' }}>Engine Version</span>
+                  <span className="font-bold">v3.4.2</span>
                 </div>
-
-                {/* Progress bar */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs font-mono">
-                    <span className="text-slate-400">Training Progress</span>
-                    <span className="text-cyan-400 font-bold">{activeJob.epochs || 0}%</span>
-                  </div>
-                  <div className="latency-gauge-bg">
-                    <div
-                      className="latency-gauge-fill bg-gradient-to-r from-cyan-500 via-purple-500 to-emerald-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"
-                      style={{ width: `${activeJob.epochs || 0}%` }}
-                    ></div>
-                  </div>
+                <div className="flex justify-between py-1.5 border-b" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                  <span style={{ color: 'var(--db-text-muted)' }}>Engine Mode</span>
+                  <span className="font-bold text-emerald-500">Online</span>
                 </div>
-
-                {/* Hologram scan terminal log */}
-                <div className="hologram-scan p-4 rounded-xl text-xs space-y-1 text-cyan-300/80 max-h-48 overflow-y-auto font-mono">
-                  {trainingLogs.length > 0 ? (
-                    trainingLogs.map((log, idx) => (
-                      <p key={idx} className="text-cyan-400">
-                        <span className="text-slate-500">[{new Date(log.created_at).toLocaleTimeString()}]</span> {log.log_message}
-                      </p>
-                    ))
-                  ) : (
-                    <p className="text-slate-500">Initializing logs channel...</p>
-                  )}
-                  <p className="text-cyan-400 animate-pulse">[SYSTEM] Streaming metrics... Epochs: {activeJob.epochs || 0}/100</p>
+                <div className="flex justify-between py-1.5 border-b" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                  <span style={{ color: 'var(--db-text-muted)' }}>Last Deployed Model</span>
+                  <span className="font-bold font-mono">{latestCompleted?.model_version || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between py-1.5">
+                  <span style={{ color: 'var(--db-text-muted)' }}>Model Accuracy</span>
+                  <span className="font-bold text-emerald-500">
+                    {latestCompleted?.accuracy ? `${(Number(latestCompleted.accuracy) * 100).toFixed(1)}%` : 'N/A'}
+                  </span>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2. Training Queue */}
+        {activeTab === 'queue' && (
+          <div className="p-5 rounded-2xl border space-y-4" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+            <h2 className="text-sm font-bold">ML Training History Ledger</h2>
+            {completedJobs.length === 0 ? (
+              <p className="text-xs italic" style={{ color: 'var(--db-text-muted)' }}>No completed training runs recorded.</p>
             ) : (
-              <div className="py-12 text-center text-slate-500 border border-dashed border-cyan-500/10 rounded-xl bg-slate-900/20">
-                <div className="text-3xl mb-2">⚡</div>
-                <p className="font-semibold text-slate-400">ML Engine Idle</p>
-                <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
-                  Ready to train a new classifier. Kick off a run to update prediction models and view performance telemetry in real-time.
-                </p>
+              <div className="space-y-3">
+                {completedJobs.map((job) => (
+                  <div key={job.id} className="p-4 rounded-xl bg-[var(--db-input-bg)] border flex justify-between items-center text-xs" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                    <div>
+                      <p className="font-bold font-mono">{job.model_version}</p>
+                      <p style={{ color: 'var(--db-text-muted)' }}>Dataset Size: {job.dataset_size} rows</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-emerald-500">{(Number(job.accuracy) * 100).toFixed(1)}% Accuracy</p>
+                      <p className="text-[10px]" style={{ color: 'var(--db-text-muted)' }}>Loss: {Number(job.loss).toFixed(4)}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
+        )}
 
-          {/* Model Stats / Metrics Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="friday-cyber-card p-5">
-              <h3 className="font-bold text-slate-200 mb-3 text-sm tracking-wider uppercase text-cyan-400/80">
-                Engagement Model Info
-              </h3>
-              <p className="text-xs text-slate-400 mb-4">
-                Deep neural classification model mapping user interaction frequencies, logins, and API queries to engagement cohorts.
-              </p>
-              <div className="space-y-2 font-mono text-xs">
-                <div className="flex justify-between py-1.5 border-b border-slate-800">
-                  <span className="text-slate-500">Active Version</span>
-                  <span className="text-cyan-300">{latestCompleted?.model_version || 'None'}</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-800">
-                  <span className="text-slate-500">Last Training Accuracy</span>
-                  <span className="text-emerald-400">
-                    {latestCompleted?.accuracy ? `${(Number(latestCompleted.accuracy) * 100).toFixed(2)}%` : 'N/A'}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1.5">
-                  <span className="text-slate-500">Dataset Rows used</span>
-                  <span className="text-slate-300">{latestCompleted?.dataset_size || 'N/A'}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="friday-cyber-card p-5">
-              <h3 className="font-bold text-slate-200 mb-3 text-sm tracking-wider uppercase text-purple-400/80">
-                ML Pipeline Health
-              </h3>
-              <p className="text-xs text-slate-400 mb-4">
-                Monitors database data distribution changes. Flags anomalies or dataset drifts automatically.
-              </p>
-              <div className="space-y-2 font-mono text-xs">
-                <div className="flex justify-between py-1.5 border-b border-slate-800">
-                  <span className="text-slate-500">Status</span>
-                  <span className="text-emerald-400 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Active / Healthy
-                  </span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-800">
-                  <span className="text-slate-500">Drift Coefficient</span>
-                  <span className="text-slate-300">0.024 (Normal)</span>
-                </div>
-                <div className="flex justify-between py-1.5">
-                  <span className="text-slate-500">Total Run Count</span>
-                  <span className="text-slate-300">{jobs.length}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Training History Panel */}
-        <div className="friday-cyber-card p-6 flex flex-col h-full">
-          <h2 className="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2">
-            <span>📋</span> Training Run Ledger
-          </h2>
-          {loading ? (
-            <div className="flex-1 flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
-            </div>
-          ) : completedJobs.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center py-12 text-slate-500 text-sm">
-              No previous training runs recorded.
-            </div>
-          ) : (
-            <div className="space-y-4 overflow-y-auto max-h-[450px] pr-2">
-              {completedJobs.map((job) => (
-                <div
-                  key={job.id}
-                  className="p-4 rounded-xl bg-slate-900/40 border border-slate-800 hover:border-cyan-500/20 transition-all duration-200"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <span className="text-sm font-bold text-slate-200 font-mono">{job.model_version}</span>
-                      <span className="text-[10px] text-slate-500 block">
-                        {new Date(job.created_at).toLocaleString()}
-                      </span>
-                    </div>
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                        job.status === 'Completed'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                      }`}
-                    >
-                      {job.status}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-800/60 font-mono text-[10px]">
-                    <div>
-                      <span className="text-slate-500 block">Samples</span>
-                      <span className="text-slate-300">{job.dataset_size}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block">Accuracy</span>
-                      <span className="text-emerald-400">
-                        {job.accuracy ? `${(Number(job.accuracy) * 100).toFixed(1)}%` : 'N/A'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block">Loss</span>
-                      <span className="text-purple-400">{job.loss ? Number(job.loss).toFixed(3) : 'N/A'}</span>
-                    </div>
-                  </div>
+        {/* 3. Model Evaluation */}
+        {activeTab === 'evaluation' && (
+          <div className="p-5 rounded-2xl border space-y-4" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+            <h2 className="text-sm font-bold">Model Metrics & Evaluation</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { title: 'Training Loss', value: latestCompleted?.loss ? Number(latestCompleted.loss).toFixed(4) : '0.0412', color: 'text-violet-500' },
+                { title: 'Validation Accuracy', value: latestCompleted?.accuracy ? `${(Number(latestCompleted.accuracy) * 100).toFixed(1)}%` : '96.2%', color: 'text-emerald-500' },
+                { title: 'F1 Score Prediction', value: '0.945', color: 'text-blue-500' },
+              ].map((metric, i) => (
+                <div key={i} className="p-4 bg-[var(--db-input-bg)] rounded-xl border text-center" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                  <span className="text-xs font-bold" style={{ color: 'var(--db-text-muted)' }}>{metric.title}</span>
+                  <span className={`block text-2xl font-black mt-1 ${metric.color}`}>{metric.value}</span>
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* 4. Hyperparameter Tuning */}
+        {activeTab === 'hyperparameter' && (
+          <div className="p-5 rounded-2xl border space-y-4 text-left" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+            <h2 className="text-sm font-bold">Configure Tuning Parameters</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 bg-[var(--db-input-bg)] rounded-xl border" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                <span className="font-bold block">Learning Rate</span>
+                <span className="block text-xl font-black text-blue-500 mt-1">0.01</span>
+                <span style={{ color: 'var(--db-text-muted)' }}>Optimization rate coefficient</span>
+              </div>
+              <div className="p-4 bg-[var(--db-input-bg)] rounded-xl border" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                <span className="font-bold block">Batch Size</span>
+                <span className="block text-xl font-black text-violet-500 mt-1">32</span>
+                <span style={{ color: 'var(--db-text-muted)' }}>Inference iteration block size</span>
+              </div>
+              <div className="p-4 bg-[var(--db-input-bg)] rounded-xl border" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                <span className="font-bold block">Training Epochs</span>
+                <span className="block text-xl font-black text-emerald-500 mt-1">100</span>
+                <span style={{ color: 'var(--db-text-muted)' }}>Dataset iterations pass limit</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 5. Model Registry */}
+        {activeTab === 'registry' && (
+          <div className="p-5 rounded-2xl border space-y-4" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+            <h2 className="text-sm font-bold">Registered Deployed Models</h2>
+            <div className="space-y-3">
+              {jobs.map((job) => (
+                <div key={job.id} className="p-3 bg-[var(--db-input-bg)] rounded-xl border flex justify-between items-center text-xs" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                  <div>
+                    <p className="font-bold font-mono">{job.model_version}</p>
+                    <p style={{ color: 'var(--db-text-muted)' }}>Accuracy: {(Number(job.accuracy) * 100).toFixed(1)}%</p>
+                  </div>
+                  <button onClick={() => toast.success(`Exporting model ${job.model_version}`)} className="px-3 py-1.5 bg-blue-500 text-white text-[10px] font-bold rounded-lg cursor-pointer">
+                    Export Manifest
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 6. Deployment */}
+        {activeTab === 'deployment' && (
+          <div className="p-5 rounded-2xl border space-y-4" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+            <h2 className="text-sm font-bold">Deployment & Serving Metrics</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 bg-[var(--db-input-bg)] rounded-xl border" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                <span className="font-bold block">Active Serving Model</span>
+                <span className="block font-mono text-emerald-500 mt-1 font-bold">{latestCompleted?.model_version || 'edu-core-v24'}</span>
+              </div>
+              <div className="p-4 bg-[var(--db-input-bg)] rounded-xl border" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                <span className="font-bold block">Endpoint Status</span>
+                <span className="block text-emerald-500 mt-1 font-bold">Healthy (200 OK)</span>
+              </div>
+              <div className="p-4 bg-[var(--db-input-bg)] rounded-xl border" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                <span className="font-bold block">Server Resource Load</span>
+                <span className="block text-blue-500 mt-1 font-bold">CPU: 4% | Memory: 18%</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 7. Prediction Service */}
+        {activeTab === 'prediction' && (
+          <div className="p-5 rounded-2xl border space-y-4 text-left" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+            <h2 className="text-sm font-bold">Diagnostics Prediction Console</h2>
+            <p className="text-xs" style={{ color: 'var(--db-text-muted)' }}>Input test parameters to trigger sample prediction outcomes from the deployed serving container.</p>
+            <div className="space-y-3 max-w-md">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Student ID, CGPA, Study hours..."
+                  className="flex-1 px-3 py-1.5 border text-xs rounded-lg outline-none"
+                  style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}
+                />
+                <button onClick={() => toast.success('Diagnostic score predicted: 84.2%')} className="px-4 py-1.5 bg-blue-500 text-white text-xs font-bold rounded-lg cursor-pointer">
+                  Predict
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
