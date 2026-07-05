@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { 
   Search, UserCheck, UserX, Key, Activity, RefreshCw, Plus, Edit, Trash2, 
-  Eye, X, Award, Flame, BookOpen, Clock, Calendar, Shield, TrendingUp, Brain, BarChart3
+  Eye, X, Award, Flame, BookOpen, Clock, Calendar, Shield, TrendingUp, Brain, BarChart3, Users
 } from 'lucide-react';
 import api from '../../api/axios';
 import AdminTabBar from '../../components/AdminTabBar';
+import AdminPageLayout from '../../components/AdminPageLayout';
 import './AdminApiSettings.css';
 
 const STUDENT_TABS = [
@@ -139,17 +140,33 @@ export default function AdminStudents() {
     s.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  return (
-    <div className="space-y-6" style={{ color: 'var(--db-text-main)' }}>
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-black flex items-center gap-2" style={{ color: 'var(--db-text-main)' }}>
-          👨‍🎓 Students
-        </h1>
-        <p className="text-xs mt-1" style={{ color: 'var(--db-text-muted)' }}>Manage student accounts, track performance, and view AI-powered insights.</p>
-      </div>
+  const studentKpis = [
+    { label: 'Total Students', value: students.length, icon: <Users className="w-4 h-4" />, color: 'text-blue-500' },
+    { label: 'API Quota Authorized', value: '1.2M reqs', icon: <Key className="w-4 h-4" />, color: 'text-violet-500' },
+    { label: 'Avg Engagement Score', value: '84.2%', icon: <Activity className="w-4 h-4" />, color: 'text-emerald-500' },
+    { label: 'At-Risk Accounts', value: '12', icon: <UserX className="w-4 h-4" />, color: 'text-rose-500' },
+  ];
 
+  const studentInsights = [
+    'System detected 3 learning path deviations. 12 profiles have quiz pass rates below the critical threshold (50%).',
+    'Avg compiler pass rate rose by 3% following recent coding workspace iterations.'
+  ];
+
+  const studentActivities = [
+    { time: '10:45', title: 'New Student Profile Added', desc: 'Alice Johnson registered successfully.' },
+    { time: '09:30', title: 'API Quota Boosted', desc: 'Student #104 API rate limit updated to 200 reqs/day.' }
+  ];
+
+  return (
+    <AdminPageLayout
+      title="👨‍🎓 Student Management"
+      breadcrumbs={['Students']}
+      kpis={studentKpis}
+      aiInsights={studentInsights}
+      activities={studentActivities}
+    >
       <AdminTabBar tabs={STUDENT_TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+
 
       {activeTab === 'list' && (
       <div className="space-y-6">
@@ -594,6 +611,6 @@ export default function AdminStudents() {
           </div>
         </div>
       )}
-    </div>
+    </AdminPageLayout>
   );
 }

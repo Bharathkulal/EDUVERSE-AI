@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TrendingUp, Target, Briefcase, FileText, Brain, BarChart3, Users, Award, Play, Activity, Clock, ShieldAlert } from 'lucide-react';
 import AdminTabBar from '../../components/AdminTabBar';
+import AdminPageLayout from '../../components/AdminPageLayout';
 import toast from 'react-hot-toast';
 
 const TABS = [
@@ -37,28 +38,31 @@ export default function AdminPredictions() {
     toast.success('Inference query completed successfully!');
   };
 
-  return (
-    <div className="space-y-6" style={{ color: 'var(--db-text-main)' }}>
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-black flex items-center gap-2" style={{ color: 'var(--db-text-main)' }}>
-            📈 Prediction Center
-          </h1>
-          <p className="text-xs mt-1" style={{ color: 'var(--db-text-muted)' }}>Query deployed models in real-time, view serving statistics, and inspect confidence level distributions.</p>
-        </div>
-        <div className="flex items-center gap-3 text-xs">
-          <div className="px-3 py-1.5 bg-[var(--db-input-bg)] border rounded-lg flex items-center gap-1.5" style={{ borderColor: 'var(--db-sidebar-border)' }}>
-            <Activity className="w-3.5 h-3.5 text-blue-500" />
-            <span>Serving Model: <span className="font-bold font-mono text-blue-500">{modelUsed}</span></span>
-          </div>
-          <div className="px-3 py-1.5 bg-[var(--db-input-bg)] border rounded-lg flex items-center gap-1.5" style={{ borderColor: 'var(--db-sidebar-border)' }}>
-            <Clock className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Inference Latency: <span className="font-bold text-emerald-500">{latency} ms</span></span>
-          </div>
-        </div>
-      </div>
+  const predKpis = [
+    { label: 'Active Prediction Endpoints', value: '7 APIs', icon: <Target className="w-4 h-4" />, color: 'text-blue-500' },
+    { label: 'Average serving Latency', value: `${latency} ms`, icon: <Clock className="w-4 h-4" />, color: 'text-emerald-500' },
+    { label: 'Deployment Accuracy Target', value: '94.2%', icon: <Award className="w-4 h-4" />, color: 'text-violet-500' },
+    { label: 'Total Inferences run today', value: '1,420 queries', icon: <Activity className="w-4 h-4" />, color: 'text-amber-500' },
+  ];
 
+  const predInsights = [
+    'Model output confidence scores average above 93% on current active student profiles.',
+    'System detected warning latency spike on /api/predict/resume following cold start.'
+  ];
+
+  const predActivities = [
+    { time: '11:02', title: 'Resume Score Predicted', desc: 'Diana L. resume ATS score evaluated at 92/100.' },
+    { time: '10:45', title: 'Placement Probability Query', desc: 'Match verified for student Bob Smith.' }
+  ];
+
+  return (
+    <AdminPageLayout
+      title="📈 Prediction Center"
+      breadcrumbs={['Prediction Center']}
+      kpis={predKpis}
+      aiInsights={predInsights}
+      activities={predActivities}
+    >
       <AdminTabBar tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
@@ -152,6 +156,6 @@ export default function AdminPredictions() {
           </div>
         </div>
       </div>
-    </div>
+    </AdminPageLayout>
   );
 }

@@ -117,6 +117,25 @@ export default function Layout({ children }) {
     navigate('/?login=true');
   };
 
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [commandQuery, setCommandQuery] = useState('');
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowCommandPalette(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const getBreadcrumbs = () => {
+    const parts = location.pathname.split('/').filter(Boolean);
+    return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1));
+  };
+
   const getInitials = (name) => {
     if (!name) return 'U';
     return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
@@ -277,8 +296,10 @@ export default function Layout({ children }) {
               </span>
               <input 
                 type="text" 
-                placeholder="Search subjects, quizzes, notes..." 
-                className="w-full bg-[var(--db-input-bg)] border border-[var(--db-input-border)] text-[var(--db-text-main)] placeholder-[var(--db-text-muted)] text-sm rounded-xl py-2 pl-10 pr-4 focus:outline-none focus:border-[var(--db-text-accent)] focus:ring-1 focus:ring-[var(--db-text-accent)] transition-all duration-200"
+                placeholder="Search command palette... (Ctrl+K)" 
+                className="w-full bg-[var(--db-input-bg)] border border-[var(--db-input-border)] text-[var(--db-text-main)] placeholder-[var(--db-text-muted)] text-sm rounded-xl py-2 pl-10 pr-4 focus:outline-none focus:border-[var(--db-text-accent)] focus:ring-1 focus:ring-[var(--db-text-accent)] transition-all duration-200 cursor-pointer"
+                onClick={() => setShowCommandPalette(true)}
+                readOnly
               />
             </div>
           </div>
@@ -446,6 +467,61 @@ export default function Layout({ children }) {
             {/* Footer Info */}
             <div className="p-3 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] rounded-2xl text-[11px] leading-relaxed text-left" style={{ color: 'var(--db-text-muted)' }}>
               <strong>💡 Tip:</strong> Keep up your daily streak! Completed topics and quiz attempts automatically sync to your Study Calendar timeline.
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Command Palette Modal */}
+      {showCommandPalette && (
+        <div className="fixed inset-0 z-[110] flex items-start justify-center pt-[15vh] p-4 bg-black/70 backdrop-blur-md">
+          <div className="relative w-full max-w-xl p-5 rounded-2xl border shadow-2xl flex flex-col justify-between"
+            style={{
+              background: 'var(--db-card-bg)',
+              borderColor: 'var(--db-card-border)',
+              color: 'var(--db-text-main)'
+            }}
+          >
+            <div className="flex justify-between items-center border-b border-[var(--db-header-border)] pb-3 mb-4">
+              <h3 className="font-extrabold text-sm flex items-center gap-2">
+                ⌨️ Command Center
+              </h3>
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[var(--db-input-bg)]" style={{ color: 'var(--db-text-muted)' }}>Esc to close</span>
+            </div>
+            
+            <input
+              type="text"
+              placeholder="Search actions, models, datasets or modules..."
+              className="w-full px-3.5 py-2 border text-xs rounded-lg outline-none mb-4"
+              style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}
+              value={commandQuery}
+              onChange={(e) => setCommandQuery(e.target.value)}
+              autoFocus
+            />
+
+            <div className="max-h-60 overflow-y-auto space-y-2 pr-1 text-left text-xs">
+              {[
+                { name: 'Go to AI Data Center', path: '/admin/dataset', icon: '🗂' },
+                { name: 'Go to ML Studio', path: '/admin/ml', icon: '🤖' },
+                { name: 'Go to Prediction Center', path: '/admin/predictions', icon: '📈' },
+                { name: 'Go to Student Management', path: '/admin/students', icon: '👨‍🎓' },
+                { name: 'Go to Quiz Intelligence', path: '/admin/quizzes', icon: '📝' },
+                { name: 'Go to Content Studio', path: '/admin/content', icon: '📚' },
+                { name: 'Go to Settings', path: '/admin/settings', icon: '⚙' },
+                { name: 'Run Model Train Iteration', path: '/admin/ml', icon: '⚡' },
+              ].filter(cmd => cmd.name.toLowerCase().includes(commandQuery.toLowerCase())).map((cmd, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => {
+                    if (cmd.path) navigate(cmd.path);
+                    else if (cmd.action) cmd.action();
+                    setShowCommandPalette(false);
+                  }}
+                  className="p-2.5 rounded-xl hover:bg-blue-500 hover:text-white transition cursor-pointer flex items-center gap-2.5"
+                >
+                  <span>{cmd.icon}</span>
+                  <span className="font-bold">{cmd.name}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

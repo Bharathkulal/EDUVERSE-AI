@@ -294,7 +294,7 @@ export default function WebDevPracticalLab({ onBack }) {
                     onClick={() => toast.success('Correct! Unclosed selectors block document compiler runs. (+40 XP)')}
                     className="w-full p-4 rounded-xl border border-slate-800 bg-slate-900/20 text-left text-xs hover:border-blue-500/40 transition"
                   >
-                    1. Fix: add closing bracket `}` to CSS selectors.
+                    {"1. Fix: add closing bracket } to CSS selectors."}
                   </button>
                   <button 
                     onClick={() => toast.error('Incorrect. Margin spacing changes display positioning but resolves no syntax checks.')}

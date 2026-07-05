@@ -2,10 +2,11 @@ import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { 
   Search, RefreshCw, Plus, Edit, Trash2, CheckCircle, XCircle, FileText, 
-  Video, FileUp, Sparkles, BookOpen, Layers, Check, Clock, Eye
+  Video, FileUp, Sparkles, BookOpen, Layers, Check, Clock, Eye, Library
 } from 'lucide-react';
 import api from '../../api/axios';
 import AdminTabBar from '../../components/AdminTabBar';
+import AdminPageLayout from '../../components/AdminPageLayout';
 import './AdminApiSettings.css';
 
 const CONTENT_TABS = [
@@ -151,18 +152,34 @@ export default function AdminContent() {
     { id: 'approvals', label: 'Approvals Queue', icon: <CheckCircle className="w-4 h-4" /> }
   ];
 
+  const contentKpis = [
+    { label: 'Subjects Registered', value: data.subjects?.length || 0, icon: <BookOpen className="w-4 h-4" />, color: 'text-blue-500' },
+    { label: 'Active Modules', value: data.topics?.length || 0, icon: <Layers className="w-4 h-4" />, color: 'text-violet-500' },
+    { label: 'Notes Pending', value: data.notes?.filter(n => !n.approved).length || 0, icon: <FileText className="w-4 h-4" />, color: 'text-amber-500' },
+    { label: 'Video Catalog Size', value: '45 videos', icon: <Video className="w-4 h-4" />, color: 'text-emerald-500' },
+  ];
+
+  const contentInsights = [
+    'AI generator completed notes synthesis for "Calculus Integrations". Schema checks completed successfully.',
+    'Approvals backlog is currently clean. All uploaded draft documents are reviewed.'
+  ];
+
+  const contentActivities = [
+    { time: '14:15', title: 'New Unit Registered', desc: 'Linear Algebra Unit 3 published.' },
+    { time: '09:00', title: 'AI Generator Completed', desc: 'Synthesized 5 review questions.' }
+  ];
+
   return (
-    <div className="space-y-6" style={{ color: 'var(--db-text-main)' }}>
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-black flex items-center gap-2" style={{ color: 'var(--db-text-main)' }}>
-            📚 Content Studio
-          </h1>
-          <p className="text-xs mt-1" style={{ color: 'var(--db-text-muted)' }}>Create courses, compile modules, manage videos and notes.</p>
-        </div>
+    <AdminPageLayout
+      title="📚 Content Studio"
+      breadcrumbs={['Content']}
+      kpis={contentKpis}
+      aiInsights={contentInsights}
+      activities={contentActivities}
+    >
+      <div className="flex justify-end gap-2">
         <button onClick={fetchContent} className="px-3.5 py-1.5 border text-xs font-bold rounded-lg transition flex items-center gap-2 cursor-pointer" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}>
-          <RefreshCw className="w-3.5 h-3.5" /> Synchronize
+          <RefreshCw className="w-3.5 h-3.5" /> Reload
         </button>
       </div>
 
@@ -390,6 +407,6 @@ export default function AdminContent() {
         </div>
       )}
 
-    </div>
+    </AdminPageLayout>
   );
 }

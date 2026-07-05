@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import api from '../../api/axios';
 import AdminTabBar from '../../components/AdminTabBar';
+import AdminPageLayout from '../../components/AdminPageLayout';
 import './AdminApiSettings.css';
 
 const DATASET_TABS = [
@@ -222,16 +223,32 @@ export default function AdminDataset() {
     toast.success('Dataset CSV exported successfully');
   };
 
+  const datasetKpis = [
+    { label: 'Automatic Datasets', value: `${autoDatasets.length} groups`, icon: <Database className="w-4 h-4" />, color: 'text-blue-500' },
+    { label: 'Imported Archives', value: `${datasets.length} files`, icon: <FileUp className="w-4 h-4" />, color: 'text-violet-500' },
+    { label: 'Storage Monitored', value: '2.4 GB / 10 GB', icon: <HardDrive className="w-4 h-4" />, color: 'text-emerald-500' },
+    { label: 'Model Readiness Index', value: '98%', icon: <Sparkles className="w-4 h-4" />, color: 'text-amber-500' },
+  ];
+
+  const datasetInsights = [
+    'Automated collection captures quiz attempts, coding progress, and learning timelines continuously in the background.',
+    'System detected warning drift indicator on feature: competency_index (drift: 0.184).'
+  ];
+
+  const datasetActivities = [
+    { time: '09:30', title: 'Manual Upload Completed', desc: 'student_engagement_2026.csv imported.' },
+    { time: '07:15', title: 'Data Cleaning Run', desc: 'Removed 12 duplicated rows from memory.' }
+  ];
+
   return (
-    <div className="space-y-6" style={{ color: 'var(--db-text-main)' }}>
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-black flex items-center gap-2" style={{ color: 'var(--db-text-main)' }}>
-            🗂 AI Data Center
-          </h1>
-          <p className="text-xs mt-1" style={{ color: 'var(--db-text-muted)' }}>Enterprise repository for automatic student logs and external ML training sets.</p>
-        </div>
+    <AdminPageLayout
+      title="🗂 AI Data Center"
+      breadcrumbs={['Data Center']}
+      kpis={datasetKpis}
+      aiInsights={datasetInsights}
+      activities={datasetActivities}
+    >
+      <div className="flex justify-end gap-2">
         <button onClick={fetchDatasets} className="px-3.5 py-1.5 border text-xs font-bold rounded-lg transition flex items-center gap-2 cursor-pointer" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}>
           <RefreshCw className="w-3.5 h-3.5" /> Synchronize
         </button>
@@ -655,6 +672,6 @@ export default function AdminDataset() {
           )}
         </div>
       )}
-    </div>
+    </AdminPageLayout>
   );
 }

@@ -883,7 +883,7 @@ export default function Coding() {
                   {activeBottomTab === 'Test Cases' && (
                     <div className="p-2 bg-slate-900/20 border border-white/5 rounded-lg text-slate-400">
                       <span>Standard Input/Output files present in Explorer:</span>
-                      <pre className="mt-2 text-slate-500">input.txt -> Sample input data...\noutput.txt -> [Write values here]</pre>
+                      <pre className="mt-2 text-slate-500">{"input.txt -> Sample input data...\noutput.txt -> [Write values here]"}</pre>
                     </div>
                   )}
 

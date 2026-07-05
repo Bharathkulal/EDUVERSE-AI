@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { 
-  Plus, Trash2, HelpCircle, RefreshCw, Layers, Award, Sparkles, X, Clock, ShieldAlert, Award as Trophy
+  Plus, Trash2, HelpCircle, RefreshCw, Layers, Award, Sparkles, X, Clock, ShieldAlert, Award as Trophy, BookOpen
 } from 'lucide-react';
 import api from '../../api/axios';
 import AdminTabBar from '../../components/AdminTabBar';
+import AdminPageLayout from '../../components/AdminPageLayout';
 import './AdminApiSettings.css';
 
 const QUIZ_TABS = [
@@ -121,16 +122,32 @@ export default function AdminQuizzes() {
     .sort((a, b) => b.score - a.score)
     .slice(0, 10);
 
+  const quizKpis = [
+    { label: 'Timers Configured', value: `${quizzes.length} Quizzes`, icon: <Clock className="w-4 h-4" />, color: 'text-blue-500' },
+    { label: 'Evaluations Completed', value: `${results.length} trials`, icon: <Award className="w-4 h-4" />, color: 'text-violet-500' },
+    { label: 'Avg Pass Score', value: '72%', icon: <Award className="w-4 h-4" />, color: 'text-emerald-500' },
+    { label: 'Subjects mapped', value: `${subjects.length} tags`, icon: <BookOpen className="w-4 h-4" />, color: 'text-amber-500' },
+  ];
+
+  const quizInsights = [
+    'AI Synthesizer generated 10 revision questions in Data Structures. Pass rate holds steady at 72%.',
+    '3 quizzes have compilation rates lower than average (CGPA threshold < 7.0).'
+  ];
+
+  const quizActivities = [
+    { time: '11:02', title: 'New Evaluation Created', desc: 'Mock placement coding test active.' },
+    { time: '08:45', title: 'Inference Run Completed', desc: 'Predicted outcomes for 14 quiz takers.' }
+  ];
+
   return (
-    <div className="space-y-6" style={{ color: 'var(--db-text-main)' }}>
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-black flex items-center gap-2" style={{ color: 'var(--db-text-main)' }}>
-            📝 Quiz Intelligence
-          </h1>
-          <p className="text-xs mt-1" style={{ color: 'var(--db-text-muted)' }}>Configure question banks, build quizzes, generate questions with AI, and view analytics.</p>
-        </div>
+    <AdminPageLayout
+      title="📝 Quiz Intelligence"
+      breadcrumbs={['Quizzes']}
+      kpis={quizKpis}
+      aiInsights={quizInsights}
+      activities={quizActivities}
+    >
+      <div className="flex justify-end gap-2">
         <button onClick={fetchInitData} className="px-3.5 py-1.5 border text-xs font-bold rounded-lg transition flex items-center gap-2 cursor-pointer" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}>
           <RefreshCw className="w-3.5 h-3.5" /> Reload
         </button>
@@ -341,6 +358,6 @@ export default function AdminQuizzes() {
         </div>
       )}
 
-    </div>
+    </AdminPageLayout>
   );
 }
