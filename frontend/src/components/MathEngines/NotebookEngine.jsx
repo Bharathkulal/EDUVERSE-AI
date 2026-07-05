@@ -2218,6 +2218,172 @@ export default function NotebookEngine({
         }
       }
     }
+    else if (method === "Taylor's Method") {
+      const isQ1 = dataset?.id === 'taylor_q1';
+      const isQ2 = dataset?.id === 'taylor_q2';
+
+      let x0_val = 0;
+      let y0_val = 1;
+      let targetX_val = 0.1;
+      let odeLabel = "";
+      let dy1 = 0, dy2 = 0, dy3 = 0, dy4 = 0;
+      let step1Text = "", step2Text = "", step3Text = "", step4Text = "";
+
+      if (isQ1) {
+        odeLabel = "dy/dx = x - y²";
+        x0_val = 0;
+        y0_val = 1;
+        targetX_val = 0.1;
+        
+        dy1 = x0_val - y0_val * y0_val; // -1
+        dy2 = 1 - 2 * y0_val * dy1; // 1 - 2(1)(-1) = 3
+        dy3 = -2 * (dy1 * dy1 + y0_val * dy2); // -2(1 + 3) = -8
+        dy4 = -2 * (3 * dy1 * dy2 + y0_val * dy3); // -2(3*-1*3 + 1*-8) = -2(-9 - 8) = 34
+
+        step1Text = `y' = x - y²\nSubstitute x₀ = ${x0_val}, y₀ = ${y0_val}:\ny'₀ = ${x0_val} - (${y0_val})² = ${dy1}`;
+        step2Text = `y'' = d/dx(x - y²) = 1 - 2y·y'\nSubstitute values:\ny''₀ = 1 - 2(${y0_val})(${dy1}) = ${dy2}`;
+        step3Text = `y''' = d/dx(1 - 2y·y') = -2(y'·y' + y·y'') = -2((y')² + y·y'')\nSubstitute values:\ny'''₀ = -2((${dy1})² + (${y0_val})(${dy2})) = -2(1 + 3) = ${dy3}`;
+        step4Text = `y⁽⁴⁾ = d/dx(-2(y')² - 2y·y'') = -2(2y'·y'' + y'·y'' + y·y''') = -2(3y'·y'' + y·y''')\nSubstitute values:\ny⁽⁴⁾₀ = -2(3(${dy1})(${dy2}) + (${y0_val})(${dy3})) = -2(-9 - 8) = ${dy4}`;
+      } else if (isQ2) {
+        odeLabel = "dy/dx = x - y";
+        x0_val = 0;
+        y0_val = 1;
+        targetX_val = 0.1;
+
+        dy1 = x0_val - y0_val; // -1
+        dy2 = 1 - dy1; // 2
+        dy3 = -dy2; // -2
+        dy4 = -dy3; // 2
+
+        step1Text = `y' = x - y\nSubstitute x₀ = ${x0_val}, y₀ = ${y0_val}:\ny'₀ = ${x0_val} - ${y0_val} = ${dy1}`;
+        step2Text = `y'' = d/dx(x - y) = 1 - y'\nSubstitute values:\ny''₀ = 1 - (${dy1}) = ${dy2}`;
+        step3Text = `y''' = d/dx(1 - y') = -y''\nSubstitute values:\ny'''₀ = -(${dy2}) = ${dy3}`;
+        step4Text = `y⁽⁴⁾ = d/dx(-y'') = -y'''\nSubstitute values:\ny⁽⁴⁾₀ = -(${dy3}) = ${dy4}`;
+      } else {
+        // Custom ODE
+        const funcKey = rkFuncId || 'y_minus_x';
+        x0_val = rkX0 !== undefined ? parseFloat(rkX0) : 0;
+        y0_val = rkY0 !== undefined ? parseFloat(rkY0) : 1;
+        targetX_val = rkH !== undefined ? parseFloat(rkH) : 0.1;
+
+        if (funcKey === 'y_minus_x') {
+          odeLabel = "dy/dx = y - x";
+          dy1 = y0_val - x0_val;
+          dy2 = dy1 - 1;
+          dy3 = dy2;
+          dy4 = dy3;
+
+          step1Text = `y' = y - x\nSubstitute x₀ = ${x0_val}, y₀ = ${y0_val}:\ny'₀ = ${y0_val} - ${x0_val} = ${dy1.toFixed(4)}`;
+          step2Text = `y'' = d/dx(y - x) = y' - 1\nSubstitute values:\ny''₀ = ${dy1.toFixed(4)} - 1 = ${dy2.toFixed(4)}`;
+          step3Text = `y''' = d/dx(y' - 1) = y''\nSubstitute values:\ny'''₀ = ${dy2.toFixed(4)}`;
+          step4Text = `y⁽⁴⁾ = d/dx(y'') = y'''\nSubstitute values:\ny⁽⁴⁾₀ = ${dy3.toFixed(4)}`;
+        } else if (funcKey === 'x_plus_y') {
+          odeLabel = "dy/dx = x + y";
+          dy1 = x0_val + y0_val;
+          dy2 = 1 + dy1;
+          dy3 = dy2;
+          dy4 = dy3;
+
+          step1Text = `y' = x + y\nSubstitute x₀ = ${x0_val}, y₀ = ${y0_val}:\ny'₀ = ${x0_val} + ${y0_val} = ${dy1.toFixed(4)}`;
+          step2Text = `y'' = d/dx(x + y) = 1 + y'\nSubstitute values:\ny''₀ = 1 + ${dy1.toFixed(4)} = ${dy2.toFixed(4)}`;
+          step3Text = `y''' = d/dx(1 + y') = y''\nSubstitute values:\ny'''₀ = ${dy2.toFixed(4)}`;
+          step4Text = `y⁽⁴⁾ = d/dx(y'') = y'''\nSubstitute values:\ny⁽⁴⁾₀ = ${dy3.toFixed(4)}`;
+        } else if (funcKey === 'minus_2xy') {
+          odeLabel = "dy/dx = -2xy";
+          dy1 = -2 * x0_val * y0_val;
+          dy2 = -2 * y0_val - 2 * x0_val * dy1;
+          dy3 = -4 * dy1 - 2 * x0_val * dy2;
+          dy4 = -6 * dy2 - 2 * x0_val * dy3;
+
+          step1Text = `y' = -2xy\nSubstitute x₀ = ${x0_val}, y₀ = ${y0_val}:\ny'₀ = -2(${x0_val})(${y0_val}) = ${dy1.toFixed(4)}`;
+          step2Text = `y'' = d/dx(-2xy) = -2y - 2xy'\nSubstitute values:\ny''₀ = -2(${y0_val}) - 2(${x0_val})(${dy1.toFixed(4)}) = ${dy2.toFixed(4)}`;
+          step3Text = `y''' = d/dx(-2y - 2xy') = -4y' - 2xy''\nSubstitute values:\ny'''₀ = -4(${dy1.toFixed(4)}) - 2(${x0_val})(${dy2.toFixed(4)}) = ${dy3.toFixed(4)}`;
+          step4Text = `y⁽⁴⁾ = d/dx(-4y' - 2xy'') = -6y'' - 2xy'''\nSubstitute values:\ny⁽⁴⁾₀ = -6(${dy2.toFixed(4)}) - 2(${x0_val})(${dy3.toFixed(4)}) = ${dy4.toFixed(4)}`;
+        } else if (funcKey === 'y_plus_x2') {
+          odeLabel = "dy/dx = y + x²";
+          dy1 = y0_val + x0_val * x0_val;
+          dy2 = dy1 + 2 * x0_val;
+          dy3 = dy2 + 2;
+          dy4 = dy3;
+
+          step1Text = `y' = y + x²\nSubstitute x₀ = ${x0_val}, y₀ = ${y0_val}:\ny'₀ = ${y0_val} + (${x0_val})² = ${dy1.toFixed(4)}`;
+          step2Text = `y'' = d/dx(y + x²) = y' + 2x\nSubstitute values:\ny''₀ = ${dy1.toFixed(4)} + 2(${x0_val}) = ${dy2.toFixed(4)}`;
+          step3Text = `y''' = d/dx(y' + 2x) = y'' + 2\nSubstitute values:\ny'''₀ = ${dy2.toFixed(4)} + 2 = ${dy3.toFixed(4)}`;
+          step4Text = `y⁽⁴⁾ = d/dx(y'' + 2) = y'''\nSubstitute values:\ny⁽⁴⁾₀ = ${dy3.toFixed(4)}`;
+        }
+      }
+
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content: `Given Differential Equation:\n${odeLabel}\n\n` +
+                 `Initial Conditions: x₀ = ${x0_val}, y₀ = ${y0_val}\n` +
+                 `Evaluate at target: x = ${targetX_val}\n\n` +
+                 `Taylor Series Formula:\n` +
+                 `y(x) = y₀ + (x - x₀)y'₀ + (x - x₀)²/2! · y''₀ + (x - x₀)³/3! · y'''₀ + (x - x₀)⁴/4! · y⁽⁴⁾₀ + ...`,
+        explanation: "We set up Taylor's series expansion at x₀. We need to compute up to the 4th-order derivative at the initial point."
+      });
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 1: FIND FIRST DERIVATIVE y\'₀',
+        content: step1Text,
+        explanation: "Substitute the initial coordinates into the differential equation to find y'₀."
+      });
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 2: FIND SECOND DERIVATIVE y\'\'₀',
+        content: step2Text,
+        explanation: "Differentiate the ODE equation with respect to x using chain rule, then substitute the known values."
+      });
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 3: FIND THIRD DERIVATIVE y\'\'\'₀',
+        content: step3Text,
+        explanation: "Differentiate y'' with respect to x to obtain y''' and evaluate it at the initial point."
+      });
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 4: FIND FOURTH DERIVATIVE y⁽⁴⁾₀',
+        content: step4Text,
+        explanation: "Differentiate y''' with respect to x to obtain y⁽⁴⁾ and substitute the values."
+      });
+
+      // Calculate final answer terms
+      const h_diff = targetX_val - x0_val;
+      const term1 = h_diff * dy1;
+      const term2 = (h_diff * h_diff * dy2) / 2;
+      const term3 = (h_diff * h_diff * h_diff * dy3) / 6;
+      const term4 = (h_diff * h_diff * h_diff * h_diff * dy4) / 24;
+      const finalY = y0_val + term1 + term2 + term3 + term4;
+
+      sequence.push({
+        type: 'math',
+        title: 'STEP 5: SUBSTITUTE INTO TAYLOR SERIES',
+        content: `y(${targetX_val}) = ${y0_val} + (${h_diff})·(${typeof dy1 === 'number' ? dy1.toFixed(4) : dy1}) + \n` +
+                 `         (${h_diff})²/2 · (${typeof dy2 === 'number' ? dy2.toFixed(4) : dy2}) + \n` +
+                 `         (${h_diff})³/6 · (${typeof dy3 === 'number' ? dy3.toFixed(4) : dy3}) + \n` +
+                 `         (${h_diff})⁴/24 · (${typeof dy4 === 'number' ? dy4.toFixed(4) : dy4})\n\n` +
+                 `Terms evaluated:\n` +
+                 `  T₁ = ${term1.toFixed(6)}\n` +
+                 `  T₂ = ${term2.toFixed(6)}\n` +
+                 `  T₃ = ${term3.toFixed(6)}\n` +
+                 `  T₄ = ${term4.toFixed(6)}`,
+        explanation: "Substitute all computed derivatives and the step size (x - x₀) into the Taylor series formula."
+      });
+
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: `y(${targetX_val}) ≈ ${y0_val} + (${term1.toFixed(6)}) + (${term2.toFixed(6)}) + (${term3.toFixed(6)}) + (${term4.toFixed(6)})\n\n` +
+                 `y(${targetX_val}) ≈ ${finalY.toFixed(6)}\n\n` +
+                 `Therefore, y(${targetX_val}) = ${finalY.toFixed(4)} (correct to 4 decimal places).`,
+        explanation: "Sum up all terms in the series. Taylor's Series method computation complete."
+      });
+    }
 
     return sequence;
   }, [func, a, b, n, method, dataset, targetX, direction, bisectionProblemId, bisectionIterations, rkX0, rkY0, rkH, rkSteps, rkFuncId, matMulQuestion]);
@@ -2453,7 +2619,7 @@ export default function NotebookEngine({
                     onComplete={handleTypingComplete}
                   />
                   <div className="mt-4 text-emerald-200 text-sm font-medium">
-                    {method === 'Matrix Multiplication' || method === 'Symmetric & Skew Symmetric' || method === 'Inverse Matrix' || method === 'Gauss Elimination' || method === 'Gauss-Jordan Elimination' ? 'Linear Algebra complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : 'Numerical interpolation/differentiation complete.'}
+                    {method === 'Matrix Multiplication' || method === 'Symmetric & Skew Symmetric' || method === 'Inverse Matrix' || method === 'Gauss Elimination' || method === 'Gauss-Jordan Elimination' ? 'Linear Algebra complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : method.includes('Taylor') ? "Taylor's Method ODE solving complete." : 'Numerical interpolation/differentiation/ODE complete.'}
                   </div>
                 </div>
               ) : step.type === 'header' ? (

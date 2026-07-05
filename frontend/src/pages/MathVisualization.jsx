@@ -73,6 +73,7 @@ export default function MathVisualization() {
 
   // Matrix Multiplication States
   const [matMulQuestionId, setMatMulQuestionId] = useState('mm_q5');
+  const [taylorQuestionId, setTaylorQuestionId] = useState('taylor_q1');
 
   // Execution Control State
   const [playbackState, setPlaybackState] = useState('IDLE');
@@ -209,6 +210,24 @@ export default function MathVisualization() {
       id: 'custom',
       label: 'Custom ODE',
       question: 'Custom Runge-Kutta 4th order method problem.'
+    }
+  ];
+
+  const TAYLOR_QUESTIONS = [
+    {
+      id: 'taylor_q1',
+      label: 'Q1: dy/dx = x - y², y(0)=1, find y(0.1) (Photo Q1)',
+      question: 'Given dy/dx = x - y² with y(0) = 1, find y(0.1) correct to 4 decimal places using Taylor\'s Series Method.'
+    },
+    {
+      id: 'taylor_q2',
+      label: 'Q2: dy/dx = x - y, y(0)=1, find y(0.1)',
+      question: 'Given dy/dx = x - y with y(0) = 1, find y(0.1) correct to 4 decimal places using Taylor\'s Series Method.'
+    },
+    {
+      id: 'custom',
+      label: 'Custom ODE',
+      question: 'Custom Taylor\'s Series Method problem.'
     }
   ];
 
@@ -350,6 +369,20 @@ export default function MathVisualization() {
       btnClass: 'bg-sky-500 hover:bg-sky-600 text-white',
       badgeClass: 'bg-sky-500/10 border-sky-500/20 text-sky-600 dark:text-sky-400',
       icon: '🧪'
+    },
+    { 
+      id: "Taylor's Method", 
+      title: "Taylor's Method", 
+      desc: "Solve ordinary differential equations by approximating solutions with Taylor series polynomials.", 
+      status: 'Advanced', 
+      time: '20 mins', 
+      xp: '150 XP', 
+      progress: 0,
+      tags: ['ODE Solver', 'Power Series', 'Successive Derivatives'],
+      colorTheme: 'rose',
+      btnClass: 'bg-rose-500 hover:bg-rose-600 text-white',
+      badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-650 dark:text-rose-455',
+      icon: '📈'
     }
   ];
 
@@ -512,6 +545,26 @@ export default function MathVisualization() {
         },
       ]
     },
+    "Taylor's Method": {
+      features: [
+        { icon: BookOpen, title: 'Power Series Solution', desc: 'Approximates solutions of differential equations by calculating terms of its Taylor series.' },
+        { icon: Target, title: 'High-Order Derivatives', desc: 'Requires successive differentiation of the ODE function at the initial point.' },
+        { icon: Lightbulb, title: 'Photo Problem', desc: 'Q1: Solve dy/dx = x - y² with y(0)=1 up to 4th-order derivative.' },
+      ],
+      formulas: [
+        {
+          title: 'Taylor\'s Series Expansion',
+          formula: 'y(x) = y\u2080 + (x - x\u2080)y\'\u2080 + (x - x\u2080)\u00B2/2! · y\'\'\u2080 + (x - x\u2080)\u00B3/3! · y\'\'\'\u2080 + (x - x\u2080)\u2074/4! · y\u207F\u2080',
+          variables: [
+            { sym: 'x\u2080, y\u2080', def: 'Initial condition coordinates' },
+            { sym: 'y\'\u2080', def: 'f(x\u2080, y\u2080) — first derivative value' },
+            { sym: 'y\'\'\u2080', def: 'y\'\' evaluated at (x\u2080, y\u2080)' },
+            { sym: 'y\'\'\'\u2080', def: 'y\'\'\' evaluated at (x\u2080, y\u2080)' },
+            { sym: 'y\u207F\u2080', def: 'Fourth derivative y⁽⁴⁾ evaluated at (x\u2080, y\u2080)' },
+          ]
+        }
+      ]
+    },
     'Matrix Multiplication': {
       features: [
         { icon: BookOpen, title: 'Row × Column Rule', desc: 'Each entry C[i][j] is the dot product of row i of A with column j of B.' },
@@ -561,6 +614,7 @@ export default function MathVisualization() {
   const activeSimpson38Question = SIMPSON_38_QUESTIONS.find(q => q.id === simpson38ProblemId);
   const activeRKQuestion = RK_QUESTIONS.find(q => q.id === rkProblemId);
   const activeMatMulQuestion = MATRIX_MUL_QUESTIONS.find(q => q.id === matMulQuestionId);
+  const activeTaylorQuestion = TAYLOR_QUESTIONS.find(q => q.id === taylorQuestionId);
 
   // Engine Event Handlers
   const handleExplanationUpdate = (text) => {
@@ -699,6 +753,21 @@ export default function MathVisualization() {
           onFinish={handleExecutionFinished}
         />
       );
+    } else if (selectedMethod === "Taylor's Method") {
+      return (
+        <NotebookEngine
+          dataset={activeTaylorQuestion}
+          rkX0={parseFloat(rkX0)}
+          rkY0={parseFloat(rkY0)}
+          rkH={parseFloat(rkH)}
+          rkFuncId={rkFuncId}
+          method={selectedMethod}
+          playbackState={playbackState}
+          speed={speed}
+          onExplain={handleExplanationUpdate}
+          onFinish={handleExecutionFinished}
+        />
+      );
     } else if (selectedMethod === 'Matrix Multiplication') {
       return (
         <NotebookEngine
@@ -754,6 +823,18 @@ export default function MathVisualization() {
         return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${ (parseFloat(rkX0) + parseInt(rkSteps) * parseFloat(rkH)).toFixed(2) }) in ${rkSteps} step(s) of h = ${rkH} using RK4.`;
       }
       return activeRKQuestion?.question || '';
+    } else if (selectedMethod === "Taylor's Method") {
+      if (taylorQuestionId === 'custom') {
+        const RK_FUNCTIONS = {
+          'y_minus_x': "dy/dx = y - x",
+          'x_plus_y':  "dy/dx = x + y",
+          'minus_2xy': "dy/dx = -2xy",
+          'y_plus_x2': "dy/dx = y + x\u00B2"
+        };
+        const odeStr = RK_FUNCTIONS[rkFuncId] || "dy/dx = y - x";
+        return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${rkH}) using Taylor's Series Method.`;
+      }
+      return activeTaylorQuestion?.question || '';
     } else if (selectedMethod === 'Matrix Multiplication') {
       return activeMatMulQuestion?.question || 'Compute matrix product using row × column dot product rule.';
     }
@@ -1387,6 +1468,52 @@ export default function MathVisualization() {
                       <div>
                         <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Steps Count</label>
                         <input type="number" min="1" max="10" value={rkSteps} onChange={e => { setRkSteps(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            ) : selectedMethod === "Taylor's Method" ? (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
+                  <select 
+                    value={taylorQuestionId}
+                    onChange={(e) => { setTaylorQuestionId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
+                  >
+                    {TAYLOR_QUESTIONS.map(q => (
+                      <option key={q.id} value={q.id}>{q.label}</option>
+                    ))}
+                  </select>
+                </div>
+                {taylorQuestionId === 'custom' && (
+                  <>
+                    <div className="mb-4">
+                      <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">ODE dy/dx = f(x,y)</label>
+                      <select 
+                        value={rkFuncId}
+                        onChange={(e) => { setRkFuncId(e.target.value); setPlaybackState('IDLE'); }}
+                        className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
+                      >
+                        <option value="y_minus_x">dy/dx = y - x</option>
+                        <option value="x_plus_y">dy/dx = x + y</option>
+                        <option value="minus_2xy">dy/dx = -2xy</option>
+                        <option value="y_plus_x2">dy/dx = y + x\u00B2</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial x₀</label>
+                        <input type="number" step="0.1" value={rkX0} onChange={e => { setRkX0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial y₀</label>
+                        <input type="number" step="0.1" value={rkY0} onChange={e => { setRkY0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Target x</label>
+                        <input type="number" step="0.05" min="0.01" max="1" value={rkH} onChange={e => { setRkH(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
                       </div>
                     </div>
                   </>
