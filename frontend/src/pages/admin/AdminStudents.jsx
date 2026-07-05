@@ -2,12 +2,21 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { 
   Search, UserCheck, UserX, Key, Activity, RefreshCw, Plus, Edit, Trash2, 
-  Eye, X, Award, Flame, BookOpen, Clock, Calendar, Shield
+  Eye, X, Award, Flame, BookOpen, Clock, Calendar, Shield, TrendingUp, Brain, BarChart3
 } from 'lucide-react';
 import api from '../../api/axios';
+import AdminTabBar from '../../components/AdminTabBar';
 import './AdminApiSettings.css';
 
+const STUDENT_TABS = [
+  { id: 'list', label: 'Student List', icon: '👥' },
+  { id: 'performance', label: 'Performance', icon: '📊' },
+  { id: 'progress', label: 'Progress', icon: '📈' },
+  { id: 'insights', label: 'AI Insights', icon: '🧠' },
+];
+
 export default function AdminStudents() {
+  const [activeTab, setActiveTab] = useState('list');
   const [students, setStudents] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -131,18 +140,22 @@ export default function AdminStudents() {
   );
 
   return (
-    <div className="friday-admin-container relative space-y-6">
-      <div className="friday-grid-overlay" />
-      <div className="friday-hud-scanline" />
-
+    <div className="space-y-6" style={{ color: 'var(--db-text-main)' }}>
       {/* Header */}
+      <div>
+        <h1 className="text-2xl font-black flex items-center gap-2" style={{ color: 'var(--db-text-main)' }}>
+          👨‍🎓 Students
+        </h1>
+        <p className="text-xs mt-1" style={{ color: 'var(--db-text-muted)' }}>Manage student accounts, track performance, and view AI-powered insights.</p>
+      </div>
+
+      <AdminTabBar tabs={STUDENT_TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {activeTab === 'list' && (
+      <div className="space-y-6">
+      {/* Original Header Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="friday-hud-logo text-2xl font-black text-white flex items-center gap-2 tracking-wider">
-            👥 STUDENTS MATRIX MANAGER
-          </h1>
-          <p className="text-slate-400 text-[10px] uppercase tracking-widest mt-0.5 font-mono">Control Access levels, Quotas, and check live Engagement logs</p>
-        </div>
+        <div />
 
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           {/* Search */}
@@ -479,6 +492,105 @@ export default function AdminStudents() {
             ) : (
               <div className="flex-1 flex items-center justify-center text-slate-500">No profile details active.</div>
             )}
+          </div>
+        </div>
+      )}
+    </div>
+      )}
+
+      {activeTab === 'performance' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { label: 'Average GPA', value: '3.42', change: '+0.12', color: 'text-blue-500' },
+              { label: 'Quiz Pass Rate', value: '78%', change: '+5%', color: 'text-emerald-500' },
+              { label: 'Coding Accuracy', value: '64%', change: '+3%', color: 'text-violet-500' },
+            ].map((metric) => (
+              <div key={metric.label} className="p-5 rounded-2xl border" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+                <p className="text-xs font-bold uppercase" style={{ color: 'var(--db-text-muted)' }}>{metric.label}</p>
+                <p className="text-3xl font-black mt-1" style={{ color: 'var(--db-text-main)' }}>{metric.value}</p>
+                <p className={`text-xs font-bold mt-1 ${metric.color}`}>↗ {metric.change} this semester</p>
+              </div>
+            ))}
+          </div>
+          <div className="p-6 rounded-2xl border" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+            <h3 className="text-sm font-bold mb-4" style={{ color: 'var(--db-text-main)' }}>📊 Performance Distribution</h3>
+            <div className="grid grid-cols-5 gap-2">
+              {['A+', 'A', 'B+', 'B', 'C'].map((grade, i) => (
+                <div key={grade} className="text-center">
+                  <div className="mx-auto w-8 rounded-t-lg bg-blue-500" style={{ height: `${[80, 60, 45, 30, 15][i]}px`, opacity: 1 - i * 0.15 }} />
+                  <p className="text-xs font-bold mt-1" style={{ color: 'var(--db-text-muted)' }}>{grade}</p>
+                  <p className="text-[10px]" style={{ color: 'var(--db-text-muted)' }}>{[32, 24, 18, 12, 6][i]}%</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'progress' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { label: 'Course Completion', value: '67%', desc: 'Average across all enrolled students' },
+              { label: 'Active Learners', value: '142', desc: 'Students active in last 7 days' },
+              { label: 'Avg Study Hours', value: '4.2h', desc: 'Daily average per student' },
+              { label: 'Topics Mastered', value: '856', desc: 'Total across all students' },
+            ].map((item) => (
+              <div key={item.label} className="p-5 rounded-2xl border" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+                <p className="text-xs font-bold uppercase" style={{ color: 'var(--db-text-muted)' }}>{item.label}</p>
+                <p className="text-3xl font-black mt-1" style={{ color: 'var(--db-text-main)' }}>{item.value}</p>
+                <p className="text-[10px] mt-1" style={{ color: 'var(--db-text-muted)' }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="p-6 rounded-2xl border" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+            <h3 className="text-sm font-bold mb-4" style={{ color: 'var(--db-text-main)' }}>📈 Weekly Progress Trend</h3>
+            <div className="flex items-end gap-2 h-32">
+              {[45, 52, 48, 60, 55, 72, 68].map((v, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                  <div className="w-full rounded-t bg-blue-500/80" style={{ height: `${v}%` }} />
+                  <span className="text-[9px] font-bold" style={{ color: 'var(--db-text-muted)' }}>{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'insights' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { icon: '🧠', title: 'At-Risk Students', value: '12', desc: 'Students predicted to underperform', color: 'text-rose-500' },
+              { icon: '⚡', title: 'High Potential', value: '28', desc: 'Students showing exceptional growth', color: 'text-emerald-500' },
+              { icon: '📚', title: 'Knowledge Gaps', value: '45', desc: 'Topics with low mastery across cohort', color: 'text-amber-500' },
+              { icon: '🎯', title: 'Placement Ready', value: '67%', desc: 'Students meeting placement criteria', color: 'text-blue-500' },
+            ].map((item) => (
+              <div key={item.title} className="p-5 rounded-2xl border flex items-start gap-4" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+                <span className="text-2xl">{item.icon}</span>
+                <div>
+                  <p className="text-xs font-bold uppercase" style={{ color: 'var(--db-text-muted)' }}>{item.title}</p>
+                  <p className={`text-2xl font-black mt-0.5 ${item.color}`}>{item.value}</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: 'var(--db-text-muted)' }}>{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="p-6 rounded-2xl border" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+            <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--db-text-main)' }}>🤖 AI Recommendations</h3>
+            <div className="space-y-3">
+              {[
+                'Assign extra practice sets to 12 at-risk students in Data Structures.',
+                'Schedule 1-on-1 mentoring sessions for students below 50% quiz scores.',
+                'Recommend advanced electives to 28 high-potential learners.',
+              ].map((rec, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 rounded-xl border" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+                  <span className="text-blue-500 font-bold text-xs mt-0.5">→</span>
+                  <p className="text-xs" style={{ color: 'var(--db-text-main)' }}>{rec}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

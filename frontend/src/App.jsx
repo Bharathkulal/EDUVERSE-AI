@@ -88,7 +88,8 @@ const AdminApiSettings = lazy(() => import('./pages/admin/AdminApiSettings'));
 const AdminSystemLogs = lazy(() => import('./pages/admin/AdminSystemLogs'));
 const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 const AdminAlerts = lazy(() => import('./pages/admin/AdminAlerts'));
-
+const AdminPredictions = lazy(() => import('./pages/admin/AdminPredictions'));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 // Other Components
 const DBMSLab = lazy(() => import('./components/DBMSLab'));
 
@@ -211,6 +212,8 @@ export default function App() {
             <Route path="/admin/logs" element={<ProtectedRoute adminOnly><Layout><AdminSystemLogs /></Layout></ProtectedRoute>} />
             <Route path="/admin/analytics" element={<ProtectedRoute adminOnly><Layout><AdminAnalytics /></Layout></ProtectedRoute>} />
             <Route path="/admin/alerts" element={<ProtectedRoute adminOnly><Layout><AdminAlerts /></Layout></ProtectedRoute>} />
+            <Route path="/admin/predictions" element={<ProtectedRoute adminOnly><Layout><AdminPredictions /></Layout></ProtectedRoute>} />
+            <Route path="/admin/settings" element={<ProtectedRoute adminOnly><Layout><AdminSettings /></Layout></ProtectedRoute>} />
 
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>

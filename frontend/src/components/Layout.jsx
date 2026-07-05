@@ -28,16 +28,17 @@ const studentNav = [
 
 
 const adminNav = [
-  { path: '/admin', label: 'Dashboard', icon: '⚡' },
-  { path: '/admin/students', label: 'Students', icon: '👥' },
-  { path: '/admin/content', label: 'Content', icon: '📝' },
-  { path: '/admin/quizzes', label: 'Quizzes', icon: '✅' },
-  { path: '/admin/dataset', label: 'Dataset', icon: '📁' },
-  { path: '/admin/ml', label: 'ML Training', icon: '⚙️' },
-  { path: '/question-bank', label: 'Question Bank', icon: '❓' },
-  { path: '/admin/logs', label: 'Logs', icon: '📋' },
-  { path: '/admin/analytics', label: 'Analytics', icon: '📈' },
+  { path: '/admin', label: 'Dashboard', icon: '🏠' },
+  { path: '/admin/students', label: 'Students', icon: '👨‍🎓' },
+  { path: '/admin/content', label: 'Content Studio', icon: '📚' },
+  { path: '/admin/quizzes', label: 'Quiz Intelligence', icon: '📝' },
+  { path: '/admin/dataset', label: 'AI Data Center', icon: '🗂' },
+  { path: '/admin/ml', label: 'ML Studio', icon: '🤖' },
+  { path: '/admin/analytics', label: 'Analytics', icon: '📊' },
+  { path: '/admin/predictions', label: 'Prediction Center', icon: '📈' },
+  { path: '/admin/logs', label: 'Logs & Audit', icon: '📋' },
   { path: '/admin/alerts', label: 'Alerts', icon: '🚨' },
+  { path: '/admin/settings', label: 'Settings', icon: '⚙' },
 ];
 
 // All top-level nav paths — back button hidden on these
@@ -50,6 +51,7 @@ const TOP_LEVEL_PATHS = [
   '/admin', '/admin/students', '/admin/content', '/admin/quizzes',
   '/admin/dataset', '/admin/ml', '/admin/questions',
   '/admin/logs', '/admin/analytics', '/admin/alerts',
+  '/admin/predictions', '/admin/settings',
 ];
 
 export default function Layout({ children }) {
