@@ -1990,6 +1990,234 @@ export default function NotebookEngine({
         }
       }
     }
+    else if (method === 'Gauss-Jordan Elimination') {
+      const q = matMulQuestion;
+      if (q) {
+        const isProblem1 = q.type === 'gauss_jordan_1';
+
+        if (isProblem1) {
+          // Gauss-Jordan 3x3 Photo Problem
+          // Step 0: Problem Statement
+          sequence.push({
+            type: 'header',
+            title: 'PROBLEM STATEMENT',
+            content: `Solve the system of equations using Gauss-Jordan Elimination:\n\n` +
+                     `  2x +  y +  z = 10\n` +
+                     `  3x + 2y + 3z = 18\n` +
+                     `   x + 4y + 9z = 16\n\n` +
+                     `Let's represent the system as an augmented matrix [A : B]:\n\n` +
+                     `  [  2   1   1  |  10 ]\n` +
+                     `  [  3   2   3  |  18 ]\n` +
+                     `  [  1   4   9  |  16 ]`,
+            explanation: 'Express the system of linear equations in augmented matrix format to prepare for Gauss-Jordan elimination.'
+          });
+
+          // Step 1: Eliminate x below the first pivot
+          sequence.push({
+            type: 'math',
+            title: 'STEP 1: ELIMINATE X FROM ROW 2 AND ROW 3',
+            content: `Create zeros in column 1 below the pivot A\u2081\u2081 = 2:\n` +
+                     `  • R\u2082 \u2190 R\u2082 \u2212 (3/2)R\u2081  \u2192  R\u2082 \u2190 R\u2082 \u2212 1.5R\u2081\n` +
+                     `  • R\u2083 \u2190 R\u2083 \u2212 (1/2)R\u2081  \u2192  R\u2083 \u2190 R\u2083 \u2212 0.5R\u2081\n\n` +
+                     `Calculations:\n` +
+                     `  R\u2082: [3-1.5(2),  2-1.5(1),  3-1.5(1) | 18-1.5(10)] = [0,  0.5,  1.5 | 3]\n` +
+                     `  R\u2083: [1-0.5(2),  4-0.5(1),  9-0.5(1) | 16-0.5(10)] = [0,  3.5,  8.5 | 11]\n\n` +
+                     `Augmented Matrix:\n` +
+                     `  [  2    1    1   |  10 ]\n` +
+                     `  [  0   0.5  1.5  |   3 ]\n` +
+                     `  [  0   3.5  8.5  |  11 ]`,
+            explanation: 'Perform row operations to eliminate the x variable from row 2 and row 3 using the first row as the pivot.'
+          });
+
+          // Step 2: Eliminate y above and below the second pivot
+          sequence.push({
+            type: 'math',
+            title: 'STEP 2: ELIMINATE Y FROM ROW 1 AND ROW 3',
+            content: `Create zeros in column 2 above and below the pivot A\u2082\u2082 = 0.5:\n` +
+                     `  • R\u2081 \u2190 R\u2081 \u2212 (1/0.5)R\u2082  \u2192  R\u2081 \u2190 R\u2081 \u2212 2R\u2082\n` +
+                     `  • R\u2083 \u2190 R\u2083 \u2212 (3.5/0.5)R\u2082  \u2192  R\u2083 \u2190 R\u2083 \u2212 7R\u2082\n\n` +
+                     `Calculations:\n` +
+                     `  R\u2081: [2-2(0),  1-2(0.5),  1-2(1.5) | 10-2(3)] = [2,  0,  -2 | 4]\n` +
+                     `  R\u2083: [0-7(0),  3.5-7(0.5),  8.5-7(1.5) | 11-7(3)] = [0,  0,  -2 | -10]\n\n` +
+                     `Augmented Matrix:\n` +
+                     `  [  2    0   -2   |   4 ]\n` +
+                     `  [  0   0.5  1.5  |   3 ]\n` +
+                     `  [  0    0   -2   | -10 ]`,
+            explanation: 'Eliminate the y variable from row 1 and row 3 using row 2 as the pivot. This is the key difference in Gauss-Jordan reduction.'
+          });
+
+          // Step 3: Eliminate z above the third pivot
+          sequence.push({
+            type: 'math',
+            title: 'STEP 3: ELIMINATE Z FROM ROW 1 AND ROW 2',
+            content: `Create zeros in column 3 above the pivot A\u2083\u2083 = -2:\n` +
+                     `  • R\u2081 \u2190 R\u2081 \u2212 (-2/-2)R\u2083  \u2192  R\u2081 \u2190 R\u2081 \u2212 R\u2083\n` +
+                     `  • R\u2082 \u2190 R\u2082 \u2212 (1.5/-2)R\u2083  \u2192  R\u2082 \u2190 R\u2082 + 0.75R\u2083\n\n` +
+                     `Calculations:\n` +
+                     `  R\u2081: [2-0,  0-0,  -2-(-2) | 4-(-10)] = [2,  0,  0 | 14]\n` +
+                     `  R\u2082: [0+0,  0.5+0,  1.5+0.75(-2) | 3+0.75(-10)] = [0,  0.5,  0 | -4.5]\n\n` +
+                     `Augmented Matrix (Diagonal Form):\n` +
+                     `  [  2    0    0   |  14  ]\n` +
+                     `  [  0   0.5   0   | -4.5 ]\n` +
+                     `  [  0    0   -2   | -10  ]`,
+            explanation: 'Eliminate the z variable from row 1 and row 2 using row 3 as the pivot, achieving a fully diagonal coefficient matrix.'
+          });
+
+          // Step 4: Simplify/Normalize diagonal elements
+          sequence.push({
+            type: 'math',
+            title: 'STEP 4: SIMPLIFY TO FIND VARIABLES',
+            content: `Divide each row by its diagonal element to find the variables:\n` +
+                     `  • R\u2081 \u2190 R\u2081 / 2      \u2192  x = 14 / 2 = 7\n` +
+                     `  • R\u2082 \u2190 R\u2082 / 0.5    \u2192  y = -4.5 / 0.5 = -9\n` +
+                     `  • R\u2083 \u2190 R\u2083 / (-2)   \u2192  z = -10 / -2 = 5\n\n` +
+                     `Reduced Row Echelon Form [I : Solution]:\n` +
+                     `  [  1   0   0  |  7  ]\n` +
+                     `  [  0   1   0  | -9  ]\n` +
+                     `  [  0   0   1  |  5  ]`,
+            explanation: 'Normalize the diagonal entries of the matrix to 1. The constant vector directly contains the solutions.'
+          });
+
+          // Step 5: Verification
+          sequence.push({
+            type: 'math',
+            title: 'STEP 5: VERIFY THE SOLUTION',
+            content: `Substitute x = 7, y = -9, z = 5 into original equations:\n` +
+                     `  1) 2(7) + (-9) + 5 = 14 - 9 + 5 = 10  (Matches Eq 1!)\n` +
+                     `  2) 3(7) + 2(-9) + 3(5) = 21 - 18 + 15 = 18  (Matches Eq 2!)\n` +
+                     `  3) (7) + 4(-9) + 9(5) = 7 - 36 + 45 = 16  (Matches Eq 3!)\n\n` +
+                     `All checks passed successfully!`,
+            explanation: 'Substitute the computed solutions back into the original system of equations to verify correctness.'
+          });
+
+          // Step 6: Final Result
+          sequence.push({
+            type: 'result',
+            title: 'FINAL ANSWER',
+            content: `System solution found:\n` +
+                     `  x = 7\n` +
+                     `  y = -9\n` +
+                     `  z = 5\n\n` +
+                     `Decomposed diagonalized augmented system matrix:\n` +
+                     `  [  1   0   0  |  7  ]\n` +
+                     `  [  0   1   0  | -9  ]\n` +
+                     `  [  0   0   1  |  5  ]`,
+            explanation: 'Gauss-Jordan elimination complete. The variables have been successfully solved.'
+          });
+        } else {
+          // Gauss-Jordan 3x3 Integer solution
+          // Step 0: Problem Statement
+          sequence.push({
+            type: 'header',
+            title: 'PROBLEM STATEMENT',
+            content: `Solve the system of equations using Gauss-Jordan Elimination:\n\n` +
+                     `   x +  y +  z = 6\n` +
+                     `  2x -  y + 3z = 9\n` +
+                     `   x + 2y -  z = 2\n\n` +
+                     `Let's represent the system as an augmented matrix [A : B]:\n\n` +
+                     `  [  1   1   1  |  6 ]\n` +
+                     `  [  2  -1   3  |  9 ]\n` +
+                     `  [  1   2  -1  |  2 ]`,
+            explanation: 'Express the system of linear equations in augmented matrix format.'
+          });
+
+          // Step 1: Eliminate x below pivot A11 = 1
+          sequence.push({
+            type: 'math',
+            title: 'STEP 1: ELIMINATE X FROM ROW 2 AND ROW 3',
+            content: `Create zeros in column 1 below the pivot A\u2081\u2081 = 1:\n` +
+                     `  • R\u2082 \u2190 R\u2082 \u2212 2R\u2081\n` +
+                     `  • R\u2083 \u2190 R\u2083 \u2212 R\u2081\n\n` +
+                     `Calculations:\n` +
+                     `  R\u2082: [2-2(1),  -1-2(1),  3-2(1) | 9-2(6)] = [0,  -3,  1 | -3]\n` +
+                     `  R\u2083: [1-1(1),   2-1(1),  -1-1(1) | 2-1(6)] = [0,   1, -2 | -4]\n\n` +
+                     `Augmented Matrix:\n` +
+                     `  [  1    1    1   |   6 ]\n` +
+                     `  [  0   -3    1   |  -3 ]\n` +
+                     `  [  0    1   -2   |  -4 ]`,
+            explanation: 'Eliminate the x variable from row 2 and row 3 using row 1 as the pivot.'
+          });
+
+          // Step 2: Eliminate y above and below pivot A22 = -3
+          sequence.push({
+            type: 'math',
+            title: 'STEP 2: ELIMINATE Y FROM ROW 1 AND ROW 3',
+            content: `Create zeros in column 2 above and below the pivot A\u2082\u2082 = -3:\n` +
+                     `  • R\u2081 \u2190 R\u2081 \u2212 (1/-3)R\u2082  \u2192  R\u2081 \u2190 R\u2081 + (1/3)R\u2082\n` +
+                     `  • R\u2083 \u2190 R\u2083 \u2212 (1/-3)R\u2082  \u2192  R\u2083 \u2190 R\u2083 + (1/3)R\u2082\n\n` +
+                     `Calculations:\n` +
+                     `  R\u2081 Column 3: 1 + (1/3)(1) = 4/3\n` +
+                     `  R\u2081 Constant: 6 + (1/3)(-3) = 5\n` +
+                     `  R\u2083 Column 3: -2 + (1/3)(1) = -5/3\n` +
+                     `  R\u2083 Constant: -4 + (1/3)(-3) = -5\n\n` +
+                     `Augmented Matrix:\n` +
+                     `  [  1    0   4/3  |   5  ]\n` +
+                     `  [  0   -3    1   |  -3  ]\n` +
+                     `  [  0    0  -5/3  |  -5  ]`,
+            explanation: 'Eliminate the y variable from row 1 and row 3 using row 2 as the pivot.'
+          });
+
+          // Step 3: Eliminate z above pivot A33 = -5/3
+          sequence.push({
+            type: 'math',
+            title: 'STEP 3: ELIMINATE Z FROM ROW 1 AND ROW 2',
+            content: `Create zeros in column 3 above the pivot A\u2083\u2083 = -5/3:\n` +
+                     `  • R\u2081 \u2190 R\u2081 \u2212 (4/3 / (-5/3))R\u2083  \u2192  R\u2081 \u2190 R\u2081 + 0.8R\u2083\n` +
+                     `  • R\u2082 \u2190 R\u2082 \u2212 (1 / (-5/3))R\u2083     \u2192  R\u2082 \u2190 R\u2082 + 0.6R\u2083\n\n` +
+                     `Calculations:\n` +
+                     `  R\u2081 Constant: 5 + 0.8(-5) = 5 - 4 = 1\n` +
+                     `  R\u2082 Constant: -3 + 0.6(-5) = -3 - 3 = -6\n\n` +
+                     `Augmented Matrix (Diagonal Form):\n` +
+                     `  [  1    0    0   |  1  ]\n` +
+                     `  [  0   -3    0   | -6  ]\n` +
+                     `  [  0    0  -5/3  | -5  ]`,
+            explanation: 'Eliminate the z variable from row 1 and row 2 using row 3 as the pivot to diagonalize the coefficient matrix.'
+          });
+
+          // Step 4: Simplify/Normalize diagonal elements
+          sequence.push({
+            type: 'math',
+            title: 'STEP 4: SIMPLIFY TO FIND VARIABLES',
+            content: `Divide each row by its diagonal element to find the variables:\n` +
+                     `  • R\u2081 \u2190 R\u2081 / 1      \u2192  x = 1 / 1 = 1\n` +
+                     `  • R\u2082 \u2190 R\u2082 / (-3)   \u2192  y = -6 / -3 = 2\n` +
+                     `  • R\u2083 \u2190 R\u2083 / (-5/3) \u2192  z = -5 / (-5/3) = 3\n\n` +
+                     `Reduced Row Echelon Form [I : Solution]:\n` +
+                     `  [  1   0   0  |  1  ]\n` +
+                     `  [  0   1   0  |  2  ]\n` +
+                     `  [  0   0   1  |  3  ]`,
+            explanation: 'Normalize the diagonal entries of the matrix to 1. The constants now yield the solutions directly.'
+          });
+
+          // Step 5: Verification
+          sequence.push({
+            type: 'math',
+            title: 'STEP 5: VERIFY THE SOLUTION',
+            content: `Substitute x = 1, y = 2, z = 3 into original equations:\n` +
+                     `  1) (1) + (2) + (3) = 6  (Matches Eq 1!)\n` +
+                     `  2) 2(1) - (2) + 3(3) = 2 - 2 + 9 = 9  (Matches Eq 2!)\n` +
+                     `  3) (1) + 2(2) - (3) = 1 + 4 - 3 = 2  (Matches Eq 3!)\n\n` +
+                     `All checks passed successfully!`,
+            explanation: 'Verify the computed system values satisfy all starting linear equations.'
+          });
+
+          // Step 6: Final Result
+          sequence.push({
+            type: 'result',
+            title: 'FINAL ANSWER',
+            content: `System solution found:\n` +
+                     `  x = 1\n` +
+                     `  y = 2\n` +
+                     `  z = 3\n\n` +
+                     `Decomposed diagonalized augmented system matrix:\n` +
+                     `  [  1   0   0  |  1  ]\n` +
+                     `  [  0   1   0  |  2  ]\n` +
+                     `  [  0   0   1  |  3  ]`,
+            explanation: 'Gauss-Jordan elimination complete. The variables have been successfully solved.'
+          });
+        }
+      }
+    }
 
     return sequence;
   }, [func, a, b, n, method, dataset, targetX, direction, bisectionProblemId, bisectionIterations, rkX0, rkY0, rkH, rkSteps, rkFuncId, matMulQuestion]);
@@ -2225,7 +2453,7 @@ export default function NotebookEngine({
                     onComplete={handleTypingComplete}
                   />
                   <div className="mt-4 text-emerald-200 text-sm font-medium">
-                    {method === 'Matrix Multiplication' || method === 'Symmetric & Skew Symmetric' || method === 'Inverse Matrix' ? 'Linear Algebra complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : 'Numerical interpolation/differentiation complete.'}
+                    {method === 'Matrix Multiplication' || method === 'Symmetric & Skew Symmetric' || method === 'Inverse Matrix' || method === 'Gauss Elimination' || method === 'Gauss-Jordan Elimination' ? 'Linear Algebra complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : 'Numerical interpolation/differentiation complete.'}
                   </div>
                 </div>
               ) : step.type === 'header' ? (

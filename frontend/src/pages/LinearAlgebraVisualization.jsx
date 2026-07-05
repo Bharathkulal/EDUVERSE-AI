@@ -129,6 +129,34 @@ export default function LinearAlgebraVisualization() {
         ' x + 2y -  z = 2'
       ],
       description: 'Convert augmented matrix to upper triangular (row echelon) form, then solve for z, y, and x using back substitution.'
+    },
+    {
+      id: 'gj_q1',
+      label: 'Q15: Solve 3-Var System by Gauss-Jordan (Photo Problem)',
+      question: 'Solve the system of equations using the Gauss-Jordan Method: 2x + y + z = 10, 3x + 2y + 3z = 18, x + 4y + 9z = 16.',
+      type: 'gauss_jordan_1',
+      matA: [[2, 1, 1], [3, 2, 3], [1, 4, 9]],
+      matB: [[10], [18], [16]],
+      equations: [
+        '2x +  y +  z = 10',
+        '3x + 2y + 3z = 18',
+        ' x + 4y + 9z = 16'
+      ],
+      description: 'Convert augmented matrix to diagonal form using row operations, then solve directly for the variables.'
+    },
+    {
+      id: 'gj_q2',
+      label: 'Q16: Solve 3-Var System by Gauss-Jordan (Integer solution)',
+      question: 'Solve the system of equations using the Gauss-Jordan Method: x + y + z = 6, 2x - y + 3z = 9, x + 2y - z = 2.',
+      type: 'gauss_jordan_2',
+      matA: [[1, 1, 1], [2, -1, 3], [1, 2, -1]],
+      matB: [[6], [9], [2]],
+      equations: [
+        ' x +  y +  z = 6',
+        '2x -  y + 3z = 9',
+        ' x + 2y -  z = 2'
+      ],
+      description: 'Convert augmented matrix to diagonal form using row operations, then solve directly for the variables.'
     }
   ];
 
@@ -202,6 +230,20 @@ export default function LinearAlgebraVisualization() {
       btnClass: 'bg-violet-500 hover:bg-violet-600 text-white',
       badgeClass: 'bg-violet-500/10 border-violet-500/20 text-violet-650 dark:text-violet-455',
       icon: '📈'
+    },
+    { 
+      id: 'Gauss-Jordan Elimination', 
+      title: 'Gauss-Jordan Elimination', 
+      desc: 'Solve systems of linear equations Ax = B by converting augmented matrices directly to diagonal form using row operations.', 
+      status: 'Advanced', 
+      time: '20 mins', 
+      xp: '150 XP', 
+      progress: 0,
+      tags: ['Linear Algebra', 'Diagonal Form', 'Augmented Matrix', 'Row Operations'],
+      colorTheme: 'teal',
+      btnClass: 'bg-teal-500 hover:bg-teal-600 text-white',
+      badgeClass: 'bg-teal-500/10 border-teal-500/20 text-teal-650 dark:text-teal-455',
+      icon: '📊'
     }
   ];
 
@@ -310,6 +352,25 @@ export default function LinearAlgebraVisualization() {
           ]
         }
       ]
+    },
+    'Gauss-Jordan Elimination': {
+      features: [
+        { icon: BookOpen, title: 'Diagonal Reduction', desc: 'Transform the augmented matrix into a diagonal form using row operations, eliminating entries both below and above the main diagonal.' },
+        { icon: Target, title: 'Direct Solution', desc: 'Once in diagonal form, the variables are solved directly without back substitution.' },
+        { icon: Lightbulb, title: 'Photo Problem', desc: 'Q15: Solve the system from the handwritten notebook image.' },
+      ],
+      formulas: [
+        {
+          title: 'Gauss-Jordan Representation',
+          formula: '[ A : B ] \u2192 [ D : B\' ] or [ I : B\'\' ]',
+          variables: [
+            { sym: '[A:B]', def: 'Starting augmented matrix' },
+            { sym: 'D', def: 'Diagonal matrix' },
+            { sym: 'I', def: 'Identity matrix' },
+            { sym: 'B\', B\'\'', def: 'Transformed constants' },
+          ]
+        }
+      ]
     }
   };
 
@@ -323,6 +384,8 @@ export default function LinearAlgebraVisualization() {
       return q.type.startsWith('inverse');
     } else if (selectedMethod === 'Gauss Elimination') {
       return q.type.startsWith('gauss_elim');
+    } else if (selectedMethod === 'Gauss-Jordan Elimination') {
+      return q.type.startsWith('gauss_jordan');
     } else {
       return q.type === 'square' || q.type === 'product';
     }
@@ -341,6 +404,8 @@ export default function LinearAlgebraVisualization() {
       setMatMulQuestionId('inv_q1');
     } else if (selectedMethod === 'Gauss Elimination') {
       setMatMulQuestionId('gauss_q1');
+    } else if (selectedMethod === 'Gauss-Jordan Elimination') {
+      setMatMulQuestionId('gj_q1');
     }
   }, [selectedMethod]);
 
@@ -383,7 +448,7 @@ export default function LinearAlgebraVisualization() {
   };
 
   const renderActiveEngine = () => {
-    if (selectedMethod === 'Matrix Multiplication' || selectedMethod === 'Orthogonal Verification' || selectedMethod === 'Symmetric & Skew Symmetric' || selectedMethod === 'Inverse Matrix' || selectedMethod === 'Gauss Elimination') {
+    if (selectedMethod === 'Matrix Multiplication' || selectedMethod === 'Orthogonal Verification' || selectedMethod === 'Symmetric & Skew Symmetric' || selectedMethod === 'Inverse Matrix' || selectedMethod === 'Gauss Elimination' || selectedMethod === 'Gauss-Jordan Elimination') {
       return (
         <NotebookEngine
           matMulQuestion={activeMatMulQuestion}
@@ -761,9 +826,8 @@ export default function LinearAlgebraVisualization() {
                 ))}
               </select>
             </div>
-
             {activeMatMulQuestion && (
-              selectedMethod === 'Gauss Elimination' ? (
+              (selectedMethod === 'Gauss Elimination' || selectedMethod === 'Gauss-Jordan Elimination') ? (
                 <div className="rounded-xl p-4 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] space-y-3">
                   <p className="text-[10px] font-black uppercase tracking-wider text-indigo-500">System of Equations</p>
                   <div className="font-mono text-xs text-[var(--db-text-main)] border border-[var(--db-card-border)] rounded-lg p-3 bg-[var(--db-card-bg)] text-center space-y-1">
