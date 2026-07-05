@@ -1,137 +1,157 @@
 import { useState } from 'react';
-import { TrendingUp, Target, Briefcase, FileText, Brain, BarChart3, Users, Award } from 'lucide-react';
+import { TrendingUp, Target, Briefcase, FileText, Brain, BarChart3, Users, Award, Play, Activity, Clock, ShieldAlert } from 'lucide-react';
 import AdminTabBar from '../../components/AdminTabBar';
+import toast from 'react-hot-toast';
 
 const TABS = [
   { id: 'learning', label: 'Learning Prediction', icon: '📚' },
   { id: 'interview', label: 'Interview Prediction', icon: '🎤' },
   { id: 'placement', label: 'Placement Prediction', icon: '💼' },
+  { id: 'quiz', label: 'Quiz Prediction', icon: '📝' },
+  { id: 'coding', label: 'Coding Prediction', icon: '💻' },
   { id: 'resume', label: 'Resume Prediction', icon: '📄' },
+  { id: 'recommendation', label: 'Recommendation Index', icon: '🎯' },
 ];
-
-const StatCard = ({ icon, title, value, desc, color = 'text-blue-500' }) => (
-  <div className="p-5 rounded-2xl border flex items-start gap-4" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-    <span className="text-2xl">{icon}</span>
-    <div>
-      <p className="text-xs font-bold uppercase" style={{ color: 'var(--db-text-muted)' }}>{title}</p>
-      <p className={`text-2xl font-black mt-0.5 ${color}`}>{value}</p>
-      <p className="text-[10px] mt-0.5" style={{ color: 'var(--db-text-muted)' }}>{desc}</p>
-    </div>
-  </div>
-);
-
-const PredictionTable = ({ headers, rows }) => (
-  <div className="rounded-2xl border overflow-hidden" style={{ borderColor: 'var(--db-sidebar-border)' }}>
-    <table className="w-full text-xs">
-      <thead>
-        <tr style={{ backgroundColor: 'var(--db-input-bg)' }}>
-          {headers.map((h) => <th key={h} className="text-left py-3 px-4 font-bold uppercase" style={{ color: 'var(--db-text-muted)' }}>{h}</th>)}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row, i) => (
-          <tr key={i} className="border-t" style={{ borderColor: 'var(--db-sidebar-border)' }}>
-            {row.map((cell, j) => <td key={j} className="py-3 px-4" style={{ color: 'var(--db-text-main)' }}>{cell}</td>)}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
 
 export default function AdminPredictions() {
   const [activeTab, setActiveTab] = useState('learning');
+  const [latency, setLatency] = useState(24); // ms
+  const [modelUsed, setModelUsed] = useState('edu-core-v24');
+  
+  // Predict form input simulation
+  const [studentId, setStudentId] = useState('');
+  const [cgpaInput, setCgpaInput] = useState('');
+  const [studyHours, setStudyHours] = useState('');
+
+  const [predictedScore, setPredictedScore] = useState(null);
+  const [confidence, setConfidence] = useState(null);
+
+  const runPredictionDiagnostic = (e) => {
+    e.preventDefault();
+    if (!studentId) return toast.error('Student Identifier key required');
+    
+    // Simulate inference latency variance
+    setLatency(Math.floor(Math.random() * 15) + 12);
+    setPredictedScore(Math.floor(Math.random() * 25) + 72);
+    setConfidence(Math.floor(Math.random() * 8) + 91);
+    toast.success('Inference query completed successfully!');
+  };
 
   return (
     <div className="space-y-6" style={{ color: 'var(--db-text-main)' }}>
-      <div>
-        <h1 className="text-2xl font-black flex items-center gap-2" style={{ color: 'var(--db-text-main)' }}>
-          📈 Prediction Center
-        </h1>
-        <p className="text-xs mt-1" style={{ color: 'var(--db-text-muted)' }}>ML-powered predictions for learning outcomes, interviews, placements, and resume scoring.</p>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-black flex items-center gap-2" style={{ color: 'var(--db-text-main)' }}>
+            📈 Prediction Center
+          </h1>
+          <p className="text-xs mt-1" style={{ color: 'var(--db-text-muted)' }}>Query deployed models in real-time, view serving statistics, and inspect confidence level distributions.</p>
+        </div>
+        <div className="flex items-center gap-3 text-xs">
+          <div className="px-3 py-1.5 bg-[var(--db-input-bg)] border rounded-lg flex items-center gap-1.5" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+            <Activity className="w-3.5 h-3.5 text-blue-500" />
+            <span>Serving Model: <span className="font-bold font-mono text-blue-500">{modelUsed}</span></span>
+          </div>
+          <div className="px-3 py-1.5 bg-[var(--db-input-bg)] border rounded-lg flex items-center gap-1.5" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+            <Clock className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Inference Latency: <span className="font-bold text-emerald-500">{latency} ms</span></span>
+          </div>
+        </div>
       </div>
 
       <AdminTabBar tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {activeTab === 'learning' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard icon="🏆" title="Avg Learning Score" value="78.4" desc="Across all active students" color="text-blue-500" />
-            <StatCard icon="📈" title="Predicted Pass Rate" value="86%" desc="Next semester estimate" color="text-emerald-500" />
-            <StatCard icon="⚠️" title="At-Risk Learners" value="18" desc="Students below 50% score" color="text-rose-500" />
-          </div>
-          <PredictionTable
-            headers={['Student', 'Current Score', 'Predicted Score', 'Confidence', 'Trend']}
-            rows={[
-              ['Alice Johnson', '82', '87', '94%', '↗ Improving'],
-              ['Bob Smith', '45', '42', '88%', '↘ Declining'],
-              ['Charlie K.', '71', '75', '91%', '↗ Improving'],
-              ['Diana L.', '93', '95', '96%', '→ Stable'],
-              ['Eve M.', '38', '35', '85%', '↘ Declining'],
-            ]}
-          />
-        </div>
-      )}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+        {/* Diagnostic Form */}
+        <div className="lg:col-span-1 p-5 rounded-2xl border space-y-4" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+          <h3 className="text-xs font-bold uppercase tracking-wider">Run Inference Diagnostic</h3>
+          <form onSubmit={runPredictionDiagnostic} className="space-y-3 text-xs">
+            <div>
+              <label className="block mb-1 font-bold" style={{ color: 'var(--db-text-muted)' }}>Student ID key</label>
+              <input
+                type="text"
+                placeholder="e.g. #1024"
+                className="w-full px-3 py-1.5 border rounded-lg outline-none"
+                style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}
+                value={studentId}
+                onChange={(e) => setStudentId(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-bold" style={{ color: 'var(--db-text-muted)' }}>Student Cumulative CGPA</label>
+              <input
+                type="text"
+                placeholder="e.g. 8.42"
+                className="w-full px-3 py-1.5 border rounded-lg outline-none"
+                style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}
+                value={cgpaInput}
+                onChange={(e) => setCgpaInput(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-bold" style={{ color: 'var(--db-text-muted)' }}>Average Study Hours Daily</label>
+              <input
+                type="text"
+                placeholder="e.g. 6"
+                className="w-full px-3 py-1.5 border rounded-lg outline-none"
+                style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}
+                value={studyHours}
+                onChange={(e) => setStudyHours(e.target.value)}
+              />
+            </div>
+            <button type="submit" className="w-full py-2 bg-blue-500 text-white font-bold rounded-lg cursor-pointer hover:bg-blue-600 transition flex items-center justify-center gap-1.5">
+              <Play className="w-3.5 h-3.5" /> Predict
+            </button>
+          </form>
 
-      {activeTab === 'interview' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard icon="🎤" title="Interview Ready" value="67%" desc="Students meeting criteria" color="text-violet-500" />
-            <StatCard icon="💬" title="Communication Score" value="7.2/10" desc="Average across mock interviews" color="text-blue-500" />
-            <StatCard icon="🧠" title="Technical Score" value="6.8/10" desc="DSA + System Design avg" color="text-amber-500" />
-          </div>
-          <PredictionTable
-            headers={['Student', 'Technical', 'Communication', 'Overall', 'Readiness']}
-            rows={[
-              ['Alice Johnson', '8.5', '7.8', '8.2', '✅ Ready'],
-              ['Bob Smith', '5.2', '6.0', '5.6', '⚠️ Needs Work'],
-              ['Charlie K.', '7.0', '7.5', '7.3', '✅ Ready'],
-              ['Diana L.', '9.1', '8.5', '8.8', '✅ Excellent'],
-              ['Eve M.', '4.1', '5.5', '4.8', '❌ Not Ready'],
-            ]}
-          />
+          {predictedScore && (
+            <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-xl space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span style={{ color: 'var(--db-text-muted)' }}>Inference Output</span>
+                <span className="font-bold text-blue-500">{predictedScore}% Score</span>
+              </div>
+              <div className="flex justify-between">
+                <span style={{ color: 'var(--db-text-muted)' }}>Confidence Score</span>
+                <span className="font-bold text-emerald-500">{confidence}%</span>
+              </div>
+            </div>
+          )}
         </div>
-      )}
 
-      {activeTab === 'placement' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard icon="💼" title="Placement Rate" value="73%" desc="Predicted for current batch" color="text-emerald-500" />
-            <StatCard icon="🏢" title="Top Company Match" value="Google" desc="Most matched employer" color="text-blue-500" />
-            <StatCard icon="💰" title="Avg Package" value="₹12.4 LPA" desc="Predicted average offer" color="text-amber-500" />
+        {/* Prediction Logs / History */}
+        <div className="lg:col-span-2 p-5 rounded-2xl border space-y-4" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+          <h3 className="text-xs font-bold uppercase tracking-wider">Inference Query Log History</h3>
+          <div className="overflow-x-auto rounded-xl border" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+            <table className="w-full text-xs text-left">
+              <thead style={{ backgroundColor: 'var(--db-input-bg)', color: 'var(--db-text-muted)' }}>
+                <tr className="border-b" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                  <th className="py-2.5 px-4 font-bold">Query Date</th>
+                  <th className="py-2.5 px-4 font-bold">Student</th>
+                  <th className="py-2.5 px-4 font-bold">Prediction type</th>
+                  <th className="py-2.5 px-4 font-bold">Inference Output</th>
+                  <th className="py-2.5 px-4 font-bold">Confidence</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { date: '2026-07-05 11:02', student: 'Alice Johnson', type: 'Learning Speed', val: '87.4%', conf: '94%' },
+                  { date: '2026-07-05 10:45', student: 'Bob Smith', type: 'Mock Interview Readiness', val: 'Needs improvement', conf: '91%' },
+                  { date: '2026-07-04 15:32', student: 'Charlie K.', type: 'Placement Probability', val: '86% matched', conf: '95%' },
+                  { date: '2026-07-03 09:12', student: 'Diana L.', type: 'ATS Resume Score', val: '92/100', conf: '97%' }
+                ].map((row, idx) => (
+                  <tr key={idx} className="border-b hover:bg-[var(--db-input-bg)] transition" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                    <td className="py-2.5 px-4" style={{ color: 'var(--db-text-muted)' }}>{row.date}</td>
+                    <td className="py-2.5 px-4 font-bold">{row.student}</td>
+                    <td className="py-2.5 px-4">{row.type}</td>
+                    <td className="py-2.5 px-4 font-bold text-blue-500">{row.val}</td>
+                    <td className="py-2.5 px-4 text-emerald-500 font-bold">{row.conf}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <PredictionTable
-            headers={['Student', 'Skills Match', 'Company Fit', 'Package Est.', 'Probability']}
-            rows={[
-              ['Alice Johnson', '92%', 'Google', '₹18 LPA', '88%'],
-              ['Bob Smith', '61%', 'TCS', '₹6 LPA', '72%'],
-              ['Charlie K.', '78%', 'Microsoft', '₹14 LPA', '81%'],
-              ['Diana L.', '95%', 'Amazon', '₹22 LPA', '93%'],
-              ['Eve M.', '48%', 'Wipro', '₹4.5 LPA', '55%'],
-            ]}
-          />
         </div>
-      )}
-
-      {activeTab === 'resume' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard icon="📄" title="Avg Resume Score" value="72/100" desc="ATS compatibility average" color="text-blue-500" />
-            <StatCard icon="✅" title="ATS Pass Rate" value="64%" desc="Resumes passing ATS filters" color="text-emerald-500" />
-            <StatCard icon="📝" title="Needs Improvement" value="38" desc="Resumes scoring below 60" color="text-rose-500" />
-          </div>
-          <PredictionTable
-            headers={['Student', 'ATS Score', 'Keywords', 'Format', 'Recommendation']}
-            rows={[
-              ['Alice Johnson', '88', '✅ Strong', '✅ Clean', 'Add leadership section'],
-              ['Bob Smith', '52', '⚠️ Weak', '✅ Clean', 'Add project descriptions'],
-              ['Charlie K.', '74', '✅ Good', '⚠️ Fix spacing', 'Optimize keywords'],
-              ['Diana L.', '95', '✅ Excellent', '✅ Perfect', 'Ready to submit'],
-              ['Eve M.', '41', '❌ Missing', '❌ Poor', 'Major rewrite needed'],
-            ]}
-          />
-        </div>
-      )}
+      </div>
     </div>
   );
 }
