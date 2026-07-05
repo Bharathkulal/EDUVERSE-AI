@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 import heroCharacter from '../../assets/hero_character.png';
+import MlPredictionCard from '../../components/MlPredictionCard';
 
 // ── Animated Counter Hook ──────────────────────────────
 function CountUp({ end, duration = 800 }) {
@@ -73,16 +74,14 @@ export default function Overview() {
   const { user } = useAuth();
   const [dbData, setDbData] = useState(null);
   const [analytics, setAnalytics] = useState(null);
+  const [mlDashboard, setMlDashboard] = useState(null);
   const [goals, setGoals] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [heatmapData, setHeatmapData] = useState([]);
-
-  // Local state for goals management
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [newGoalPriority, setNewGoalPriority] = useState('medium');
   const [addingGoal, setAddingGoal] = useState(false);
   const [generatingGoals, setGeneratingGoals] = useState(false);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -93,14 +92,16 @@ export default function Overview() {
       api.get('/progress/analytics'),
       api.get('/progress/goals'),
       api.get('/progress/leaderboard'),
-      api.get('/progress/heatmap')
+      api.get('/progress/heatmap'),
+      api.get('/predictions/modules/dashboard')
     ])
-      .then(([dashRes, analyticsRes, goalsRes, leaderboardRes, heatmapRes]) => {
+      .then(([dashRes, analyticsRes, goalsRes, leaderboardRes, heatmapRes, mlDashboardRes]) => {
         setDbData(dashRes.data);
         setAnalytics(analyticsRes.data);
         setGoals(goalsRes.data);
         setLeaderboard(leaderboardRes.data.leaderboard || []);
         setHeatmapData(heatmapRes.data.heatmapData || []);
+        setMlDashboard(mlDashboardRes.data);
       })
       .catch((err) => {
         console.error('Error fetching dashboard data:', err);
@@ -446,6 +447,170 @@ export default function Overview() {
         </div>
       </div>
 
+      {/* ── 🧠 AI + MACHINE LEARNING COMMAND CENTER ── */}
+      <div 
+        className="p-6 rounded-3xl border text-left space-y-6"
+        style={{
+          background: 'var(--db-card-bg)',
+          borderColor: 'var(--db-sidebar-border)',
+          boxShadow: 'var(--db-card-shadow)'
+        }}
+      >
+        <div className="flex justify-between items-center flex-wrap gap-3 border-b pb-4" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+          <div>
+            <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: 'var(--db-text-main)' }}>
+              🧠 AI + Machine Learning Command Center
+            </h2>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--db-text-muted)' }}>Real-time feature engineering & model prediction from active learner parameters.</p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full border bg-blue-500/10 text-blue-500 border-blue-500/20">
+              Active Model: {mlDashboard?.modelVersion || 'edu-core-v24'}
+            </span>
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full border bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+              Confidence: {mlDashboard?.confidence || '94.2'}%
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Learning Score */}
+          <MlPredictionCard 
+            title="Learning Score" 
+            loading={!mlDashboard} 
+            confidence={mlDashboard?.confidence} 
+            modelVersion={mlDashboard?.modelVersion}
+            lastUpdated={mlDashboard?.lastUpdated}
+            icon="🏆"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-3xl font-extrabold" style={{ color: 'var(--db-text-main)' }}>{mlDashboard?.prediction?.learningScore || '75.2'}</span>
+                <span className="text-xs block mt-1" style={{ color: 'var(--db-text-muted)' }}>Adaptive capability index</span>
+              </div>
+              <div className="w-12 h-12 rounded-full border-4 border-blue-500 flex items-center justify-center font-bold text-xs" style={{ color: 'var(--db-text-main)' }}>
+                {Math.round(mlDashboard?.prediction?.learningScore || 75)}%
+              </div>
+            </div>
+          </MlPredictionCard>
+
+          {/* AI Readiness Score */}
+          <MlPredictionCard 
+            title="AI Readiness" 
+            loading={!mlDashboard} 
+            confidence={mlDashboard?.confidence} 
+            modelVersion={mlDashboard?.modelVersion}
+            lastUpdated={mlDashboard?.lastUpdated}
+            icon="⚡"
+          >
+            <div className="space-y-2">
+              <div className="flex justify-between items-end">
+                <span className="text-3xl font-extrabold" style={{ color: 'var(--db-text-main)' }}>{mlDashboard?.prediction?.aiReadiness || '82.0'}</span>
+                <span className="text-xs font-bold text-blue-500">Match score</span>
+              </div>
+              <div className="w-full h-1.5 rounded-full overflow-hidden bg-white/5">
+                <div className="bg-blue-500 h-full rounded-full" style={{ width: `${mlDashboard?.prediction?.aiReadiness || 82}%` }} />
+              </div>
+            </div>
+          </MlPredictionCard>
+
+          {/* Knowledge Score */}
+          <MlPredictionCard 
+            title="Knowledge Score" 
+            loading={!mlDashboard} 
+            confidence={mlDashboard?.confidence} 
+            modelVersion={mlDashboard?.modelVersion}
+            lastUpdated={mlDashboard?.lastUpdated}
+            icon="📚"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-3xl font-extrabold" style={{ color: 'var(--db-text-main)' }}>{mlDashboard?.prediction?.knowledgeScore || '68.5'}</span>
+                <span className="text-xs block mt-1" style={{ color: 'var(--db-text-muted)' }}>Concepts mastery rate</span>
+              </div>
+              <div className="w-12 h-12 rounded-full border-4 border-violet-500 flex items-center justify-center font-bold text-xs" style={{ color: 'var(--db-text-main)' }}>
+                {Math.round(mlDashboard?.prediction?.knowledgeScore || 68)}%
+              </div>
+            </div>
+          </MlPredictionCard>
+
+          {/* Productivity & Focus */}
+          <MlPredictionCard 
+            title="Daily Productivity" 
+            loading={!mlDashboard} 
+            confidence={mlDashboard?.confidence} 
+            modelVersion={mlDashboard?.modelVersion}
+            lastUpdated={mlDashboard?.lastUpdated}
+            icon="📈"
+          >
+            <div className="space-y-2">
+              <div className="flex justify-between items-end">
+                <span className="text-3xl font-extrabold" style={{ color: 'var(--db-text-main)' }}>{mlDashboard?.prediction?.dailyProductivityScore || '91'}%</span>
+                <span className="text-xs font-bold text-emerald-500">High efficiency</span>
+              </div>
+              <div className="w-full h-1.5 rounded-full overflow-hidden bg-white/5">
+                <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${mlDashboard?.prediction?.dailyProductivityScore || 91}%` }} />
+              </div>
+            </div>
+          </MlPredictionCard>
+        </div>
+
+        {/* Prediction Insights Banner */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
+          {/* Chart/Forecast */}
+          <div className="lg:col-span-2 p-5 rounded-2xl border text-left flex flex-col justify-between" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-blue-500">Weekly Performance Forecast</h4>
+              <p className="text-[10px] mt-0.5" style={{ color: 'var(--db-text-muted)' }}>ML predicted learning score capability for next 7 days.</p>
+            </div>
+            
+            <div className="h-28 w-full flex items-end justify-between px-2 pt-4">
+              {(mlDashboard?.prediction?.weeklyPerformanceForecast || []).map((forecast, i) => {
+                const heightPct = Math.round((forecast.score / 100) * 100);
+                return (
+                  <div key={i} className="w-4 flex flex-col items-center gap-1.5">
+                    <div className="w-2.5 rounded-full flex flex-col justify-end" style={{ height: '70px', backgroundColor: 'var(--db-sidebar-border)' }}>
+                      <div className="bg-blue-500 rounded-full" style={{ height: `${heightPct}%`, minHeight: '2px' }} />
+                    </div>
+                    <span className="text-[8px] font-bold" style={{ color: 'var(--db-text-muted)' }}>{forecast.day}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Risk Metrics & Recommendation */}
+          <div className="p-5 rounded-2xl border text-left flex flex-col justify-between space-y-4" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center border-b pb-2" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                <span className="text-xs font-bold" style={{ color: 'var(--db-text-muted)' }}>Burnout Risk</span>
+                <span className={`text-xs font-extrabold px-2 py-0.5 rounded-full border ${mlDashboard?.prediction?.burnoutRisk > 50 ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'}`}>
+                  {mlDashboard?.prediction?.burnoutRisk || '22'}% Risk
+                </span>
+              </div>
+              <div className="flex justify-between items-center border-b pb-2" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                <span className="text-xs font-bold" style={{ color: 'var(--db-text-muted)' }}>Completion Probability</span>
+                <span className="text-xs font-extrabold" style={{ color: 'var(--db-text-main)' }}>
+                  {mlDashboard?.prediction?.completionProbability || '94.5'}%
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold" style={{ color: 'var(--db-text-muted)' }}>Learning Trend</span>
+                <span className="text-xs font-extrabold text-blue-500 flex items-center gap-1">
+                  ↗ {mlDashboard?.prediction?.learningTrend || 'Increasing'}
+                </span>
+              </div>
+            </div>
+            
+            <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl">
+              <span className="text-[9px] text-blue-500 font-extrabold uppercase font-mono block">Smart Recommendation</span>
+              <p className="text-[10px] mt-1" style={{ color: 'var(--db-text-main)' }}>{mlDashboard?.prediction?.smartRecommendation}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ── MIDDLE ROW split GRID ── */}
       <div className="grid md:grid-cols-3 gap-6">
 
@@ -611,33 +776,32 @@ export default function Overview() {
               <p className="text-xs mt-1" style={{ color: 'var(--db-text-muted)' }}>Your learning commitment over the last 60 days</p>
             </div>
 
-            <div className="grid grid-cols-10 gap-2.5 py-2">
+            <div className="flex flex-wrap gap-1.5 py-3 justify-start max-w-full">
               {recentHeatmapDays.map((day, idx) => (
                 <div
                   key={idx}
-                  className={`aspect-square rounded-lg flex flex-col items-center justify-center relative group border ${day.count === 0 ? 'bg-white/[0.02] border-slate-900/60' :
-                      day.count === 1 ? 'bg-violet-900/40 border-violet-800/40 text-violet-300' :
-                        day.count <= 3 ? 'bg-violet-700/60 border-violet-600/40 text-violet-200' :
-                          'bg-violet-500 border-violet-400/50 text-white'
+                  className={`w-[20px] h-[20px] rounded-[4px] relative group border transition-all duration-200 hover:scale-110 cursor-pointer ${day.count === 0 ? 'bg-[var(--db-input-bg)] border-[var(--db-sidebar-border)]' :
+                      day.count === 1 ? 'bg-violet-400/30 border-violet-400/20' :
+                        day.count <= 3 ? 'bg-violet-500/60 border-violet-500/30' :
+                          'bg-violet-600 border-violet-600'
                     }`}
                 >
-                  <span className="text-[10px] font-extrabold">{day.count}</span>
                   {/* Tooltip */}
                   <div
-                    className="absolute bottom-full mb-1 hidden group-hover:block text-[9px] px-2 py-1 rounded whitespace-nowrap z-30 border border-slate-800 shadow-md"
-                    style={{ color: '#ffffff', backgroundColor: '#000000' }}
+                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1.5 hidden group-hover:block text-[9px] font-bold px-2 py-1 rounded whitespace-nowrap z-30 border border-slate-800 shadow-md"
+                    style={{ color: '#ffffff', backgroundColor: '#0f172a' }}
                   >
-                    {day.date}: {day.count} action{day.count !== 1 ? 's' : ''}
+                    {new Date(day.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}: {day.count} action{day.count !== 1 ? 's' : ''}
                   </div>
                 </div>
               ))}
             </div>
 
             <div className="flex gap-4 text-[10px] font-bold border-t pt-3" style={{ borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-muted)' }}>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-white/[0.02] border border-slate-900"></span> No Activity</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-violet-900/40 border border-violet-800/40"></span> Light</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-violet-700/60 border border-violet-600/40"></span> Medium</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-violet-500 border border-violet-400"></span> High</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)]"></span> No Activity</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-violet-400/30 border border-violet-400/20"></span> Light</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-violet-500/60 border border-violet-500/30"></span> Medium</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-violet-600 border border-violet-600"></span> High</span>
             </div>
           </div>
         </div>

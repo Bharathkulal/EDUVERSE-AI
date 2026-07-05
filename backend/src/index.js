@@ -287,6 +287,30 @@ const db = require('./config/db');
       )
     `);
 
+    // Create ml_predictions_history and predictions tables
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS predictions (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        predicted_score DECIMAL(5,2),
+        skill_level VARCHAR(100),
+        weak_subject VARCHAR(255),
+        recommendations TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      
+      CREATE TABLE IF NOT EXISTS ml_predictions_history (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        module VARCHAR(100) NOT NULL,
+        prediction_key VARCHAR(100) NOT NULL,
+        prediction_value JSONB NOT NULL,
+        confidence DECIMAL(5,2) NOT NULL,
+        model_version VARCHAR(50) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     await db.query(`
       CREATE TABLE IF NOT EXISTS api_usage_logs (
         id SERIAL PRIMARY KEY,

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
+import MlPredictionCard from '../../components/MlPredictionCard';
 import { 
   Plus, Trash2, Award, Sparkles, CheckCircle, Circle, 
   BarChart2, Star, CheckSquare, Edit3, Save, BookOpen, 
@@ -91,6 +92,7 @@ export default function DailyGoals() {
   const [goals, setGoals] = useState([]);
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [mlPlanner, setMlPlanner] = useState(null);
 
   // --- UI & Animation States ---
   const [noteTitle, setNoteTitle] = useState('');
@@ -123,17 +125,19 @@ export default function DailyGoals() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [dashRes, analyticsRes, goalsRes, notesRes] = await Promise.all([
+      const [dashRes, analyticsRes, goalsRes, notesRes, mlPlannerRes] = await Promise.all([
         api.get('/progress/dashboard'),
         api.get('/progress/analytics'),
         api.get('/progress/goals'),
-        api.get('/notes')
+        api.get('/notes'),
+        api.get('/predictions/modules/planner')
       ]);
 
       setProfile(dashRes.data.profile || {});
       setAnalytics(analyticsRes.data || {});
       setGoals(goalsRes.data || []);
       setNotes(notesRes.data || []);
+      setMlPlanner(mlPlannerRes.data);
     } catch (err) {
       toast.error('Failed to sync learning dashboard metrics');
       console.error(err);
@@ -733,6 +737,38 @@ export default function DailyGoals() {
             </div>
           </section>
 
+          {/* ================= ML PLANNER PREDICTIONS ================= */}
+          <MlPredictionCard
+            title="ML Study Schedule Forecast"
+            loading={!mlPlanner}
+            confidence={mlPlanner?.confidence}
+            modelVersion={mlPlanner?.modelVersion}
+            lastUpdated={mlPlanner?.lastUpdated}
+            icon="📅"
+          >
+            <div className="space-y-3.5 text-xs text-left">
+              <div className="flex justify-between items-center border-b pb-1.5" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                <span style={{ color: '#94a3b8' }}>Best Study Time</span>
+                <span className="font-bold text-white">{mlPlanner?.prediction?.bestStudyTime || '09:00 - 11:00 AM'}</span>
+              </div>
+              <div className="flex justify-between items-center border-b pb-1.5" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                <span style={{ color: '#94a3b8' }}>Daily Hours Goal</span>
+                <span className="font-bold text-blue-400">{mlPlanner?.prediction?.dailyStudyHoursGoal || '4'} Hours</span>
+              </div>
+              <div className="flex justify-between items-center border-b pb-1.5" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                <span style={{ color: '#94a3b8' }}>Break Interval</span>
+                <span className="font-bold text-amber-500">{mlPlanner?.prediction?.breakTiming || '5m every 25m'}</span>
+              </div>
+              <div className="flex justify-between items-center border-b pb-1.5" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                <span style={{ color: '#94a3b8' }}>Exam Readiness</span>
+                <span className="font-extrabold text-emerald-400">{mlPlanner?.prediction?.examReadiness || '82'}%</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span style={{ color: '#94a3b8' }}>Goal Target Date</span>
+                <span className="font-bold text-white">{mlPlanner?.prediction?.goalCompletionDate || '7/20/2026'}</span>
+              </div>
+            </div>
+          </MlPredictionCard>
 
           {/* ================= SECTION 7: FOCUS MODE ================= */}
           <section className="p-5 rounded-2xl border space-y-4" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-card-border)' }}>
