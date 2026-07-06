@@ -32,6 +32,9 @@ export default function CalculusVisualization() {
   // Fitting Straight Line inputs
   const [fslProblemId, setFslProblemId] = useState('fs1');
 
+  // Fitting 2nd Degree Parabola inputs
+  const [fsdpProblemId, setFsdpProblemId] = useState('fd1');
+
   // Regula Falsi inputs
   const [rfProblemId, setRfProblemId] = useState('rf1');
   const [rfIterations, setRfIterations] = useState('7');
@@ -68,6 +71,11 @@ export default function CalculusVisualization() {
   const FSL_PROBS = [
     { id: 'fs1', label: 'FSL: Copper rod T vs l (Photo Q1)' },
     { id: 'fs2', label: 'FSL: Experiment x vs y (Photo Q2)' },
+  ];
+
+  const FSDP_PROBS = [
+    { id: 'fd1', label: 'Parabola: x=[0,1,2], y=[1,6,17] (Photo Q1)' },
+    { id: 'fd2', label: 'Parabola: x=[1,2,3,4], y=[6,11,18,27]' },
   ];
 
   const RF_PROBS = [
@@ -198,19 +206,33 @@ export default function CalculusVisualization() {
       badgeClass: 'bg-pink-500/10 border-pink-500/20 text-pink-600 dark:text-pink-400',
       icon: '🧪'
     },
-    {
-      id: 'Fitting Straight Line',
-      title: 'Fitting Straight Line',
-      desc: 'Fit a straight line y = a₀ + a₁x to a set of data points using least squares.',
-      status: 'Beginner',
-      time: '12 mins',
-      xp: '90 XP',
+    { 
+      id: 'Fitting Straight Line', 
+      title: 'Fitting Straight Line', 
+      desc: 'Fit a straight line y = a₀ + a₁x to a set of data points using least squares.', 
+      status: 'Beginner', 
+      time: '12 mins', 
+      xp: '90 XP', 
       progress: 95,
       tags: ['Least Squares', 'Curve Fitting', 'y = a₀ + a₁x'],
       colorTheme: 'sky',
       btnClass: 'bg-sky-500 hover:bg-sky-600 text-white',
       badgeClass: 'bg-sky-500/10 border-sky-500/20 text-sky-600 dark:text-sky-400',
       icon: '📏'
+    },
+    { 
+      id: 'Fitting 2nd Degree Parabola', 
+      title: 'Fitting 2nd Degree Parabola', 
+      desc: 'Fit a second-degree polynomial y = a₀ + a₁x + a₂x² to a set of data points using least squares.', 
+      status: 'Intermediate', 
+      time: '18 mins', 
+      xp: '120 XP', 
+      progress: 0,
+      tags: ['Least Squares', 'Parabola Fitting', 'y = a₀ + a₁x + a₂x²'],
+      colorTheme: 'teal',
+      btnClass: 'bg-teal-600 hover:bg-teal-700 text-white',
+      badgeClass: 'bg-teal-500/10 border-teal-500/20 text-teal-600 dark:text-teal-400',
+      icon: '📐'
     }
   ];
 
@@ -369,6 +391,26 @@ export default function CalculusVisualization() {
         },
       ],
     },
+    'Fitting 2nd Degree Parabola': {
+      features: [
+        { icon: BookOpen, title: 'Parabola Fitting', desc: 'Find the best-fitting quadratic polynomial y = a₀ + a₁x + a₂x² through data points.' },
+        { icon: Target, title: 'Least Squares Method', desc: 'Minimizes the sum of squared residuals for quadratic curves.' },
+        { icon: Lightbulb, title: 'Photo Problems', desc: 'Fit a second-degree polynomial to x=[0,1,2], y=[1,6,17] from notebook.' },
+      ],
+      formulas: [
+        {
+          title: 'Fitting a 2nd Degree Parabola Formula',
+          formula: 'y = a₀ + a₁x + a₂x²',
+          variables: [
+            { sym: 'a₀', def: 'y-intercept of the parabola' },
+            { sym: 'a₁, a₂', def: 'Coefficients of x and x² of the parabola' },
+            { sym: 'Σy', def: 'Σy = n·a₀ + a₁·Σx + a₂·Σx²' },
+            { sym: 'Σxy', def: 'Σxy = a₀·Σx + a₁·Σx² + a₂·Σx³' },
+            { sym: 'Σx²y', def: 'Σx²y = a₀·Σx² + a₁·Σx³ + a₂·Σx⁴' },
+          ],
+        },
+      ],
+    },
   };
 
   // ─── Engine Event Handlers ────────────────────────────────────────────────
@@ -428,6 +470,7 @@ export default function CalculusVisualization() {
       nrIterations,
       lagrangeProblemId,
       newtonGenProblemId,
+      fsdpProblemId,
     };
 
     return <CalculusNotebookEngine {...commonProps} />;
@@ -470,6 +513,11 @@ export default function CalculusVisualization() {
       return fslProblemId === 'fs1'
         ? 'Fit straight line: Copper rod T vs l (Photo Q1)'
         : 'Fit straight line: Experiment x vs y (Photo Q2)';
+    }
+    if (selectedMethod === 'Fitting 2nd Degree Parabola') {
+      return fsdpProblemId === 'fd1'
+        ? 'Fit 2nd degree polynomial: Parabola x=[0,1,2], y=[1,6,17] (Photo Q1)'
+        : 'Fit 2nd degree polynomial: Parabola x=[1,2,3,4], y=[6,11,18,27]';
     }
     return `Solving using ${selectedMethod}.`;
   };
@@ -921,6 +969,18 @@ export default function CalculusVisualization() {
                   <select value={fslProblemId} onChange={e => { setFslProblemId(e.target.value); setPlaybackState('IDLE'); }}
                     className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]">
                     {FSL_PROBS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                  </select>
+                </div>
+              </>
+            )}
+
+            {selectedMethod === 'Fitting 2nd Degree Parabola' && (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5">Select Dataset</label>
+                  <select value={fsdpProblemId} onChange={e => { setFsdpProblemId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]">
+                    {FSDP_PROBS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                   </select>
                 </div>
               </>

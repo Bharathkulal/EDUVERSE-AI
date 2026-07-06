@@ -90,6 +90,8 @@ export default function CalculusNotebookEngine({
   jacobiIterations,
   // Fitting Straight Line props
   fslProblemId,
+  // Fitting 2nd Degree Parabola props
+  fsdpProblemId,
   // Regula Falsi props
   rfProblemId,
   rfIterations,
@@ -1341,9 +1343,129 @@ export default function CalculusNotebookEngine({
         explanation: `The least squares regression line is y = ${a0.toFixed(4)} + ${a1.toFixed(4)}x. This line minimizes the vertical distance to all data points.`
       });
     }
+    
+    // ── 12. FITTING 2ND DEGREE PARABOLA ──────────────────────────────────────
+    else if (method === 'Fitting 2nd Degree Parabola') {
+      const isFd1 = fsdpProblemId === 'fd1';
+      
+      const ptsX = isFd1 ? [0, 1, 2] : [1, 2, 3, 4];
+      const ptsY = isFd1 ? [1, 6, 17] : [6, 11, 18, 27];
+      const title = isFd1 ? 'Polynomial of 2nd Degree Fitting' : 'Parabola Fitting';
+      const xLabel = 'x';
+      const yLabel = 'y';
+      
+      const n = ptsX.length;
+      
+      let sumX = 0;
+      let sumY = 0;
+      let sumXX = 0;
+      let sumXXX = 0;
+      let sumXXXX = 0;
+      let sumXY = 0;
+      let sumXXY = 0;
+      
+      const rows = ptsX.map((xi, i) => {
+        const yi = ptsY[i];
+        const xx = xi * xi;
+        const xxx = xi * xi * xi;
+        const xxxx = xi * xi * xi * xi;
+        const xy = xi * yi;
+        const xxy = xi * xi * yi;
+        sumX += xi;
+        sumY += yi;
+        sumXX += xx;
+        sumXXX += xxx;
+        sumXXXX += xxxx;
+        sumXY += xy;
+        sumXXY += xxy;
+        return { xi, yi, xx, xxx, xxxx, xy, xxy };
+      });
+      
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content: `Fit a second degree polynomial (parabola) of the form: y = a₀ + a₁x + a₂x²\nto the following ${n} data points:\n` +
+                 ptsX.map((xi, idx) => `  x = ${xi}, y = ${ptsY[idx]}`).join('\n') + `\n\n` +
+                 `Normal Equations:\n` +
+                 `1) Σy = n·a₀ + a₁·Σx + a₂·Σx²\n` +
+                 `2) Σxy = a₀·Σx + a₁·Σx² + a₂·Σx³\n` +
+                 `3) Σx²y = a₀·Σx² + a₁·Σx³ + a₂·Σx⁴`,
+        explanation: `We set up a second-degree polynomial y = a₀ + a₁x + a₂x² to fit the data points. We construct the three normal equations using the least squares criterion.`
+      });
+      
+      sequence.push({
+        type: 'fsdpTable',
+        title: 'DATA SUMMARY TABLE',
+        rows,
+        sums: { sumX, sumY, sumXX, sumXXX, sumXXXX, sumXY, sumXXY },
+        xLabel,
+        yLabel,
+        explanation: `We build the data table calculating x², x³, x⁴, xy, x²y and sum each column. These sums serve as coefficients in our normal equations.`
+      });
+      
+      const D = n * (sumXX * sumXXXX - sumXXX * sumXXX)
+              - sumX * (sumX * sumXXXX - sumXX * sumXXX)
+              + sumXX * (sumX * sumXXX - sumXX * sumXX);
+              
+      const D0 = sumY * (sumXX * sumXXXX - sumXXX * sumXXX)
+               - sumX * (sumXY * sumXXXX - sumXXY * sumXXX)
+               + sumXX * (sumXY * sumXXX - sumXXY * sumXX);
+               
+      const D1 = n * (sumXY * sumXXXX - sumXXY * sumXXX)
+               - sumY * (sumX * sumXXXX - sumXX * sumXXX)
+               + sumXX * (sumX * sumXXY - sumXX * sumXY);
+               
+      const D2 = n * (sumXX * sumXXY - sumXXX * sumXY)
+               - sumX * (sumX * sumXXY - sumXX * sumXY)
+               + sumY * (sumX * sumXXX - sumXX * sumXX);
+               
+      const a0 = D0 / D;
+      const a1 = D1 / D;
+      const a2 = D2 / D;
+      
+      let solveStr = `Substitute sums into the Normal Equations:\n\n` +
+                     `1) ${sumY} = ${n}a₀ + ${sumX}a₁ + ${sumXX}a₂\n` +
+                     `2) ${sumXY} = ${sumX}a₀ + ${sumXX}a₁ + ${sumXXX}a₂\n` +
+                     `3) ${sumXXY} = ${sumXX}a₀ + ${sumXXX}a₁ + ${sumXXXX}a₂\n\n` +
+                     `Solve this system using Cramer's Rule:\n\n` +
+                     `Determinant of Coefficients Matrix (D):\n` +
+                     `  |  ${n}   ${sumX}   ${sumXX}  |\n` +
+                     `  |  ${sumX}   ${sumXX}   ${sumXXX}  | = ${D}\n` +
+                     `  |  ${sumXX}   ${sumXXX}   ${sumXXXX} |\n\n` +
+                     `Determinant D₀ (replace column 1 with sums of y):\n` +
+                     `  |  ${sumY}   ${sumX}   ${sumXX}  | = ${D0}\n\n` +
+                     `Determinant D₁ (replace column 2 with sums of xy):\n` +
+                     `  |  ${n}   ${sumY}   ${sumXX}  | = ${D1}\n\n` +
+                     `Determinant D₂ (replace column 3 with sums of x²y):\n` +
+                     `  |  ${n}   ${sumX}   ${sumY}  | = ${D2}\n\n` +
+                     `Compute coefficients:\n` +
+                     `  a₀ = D₀ / D = ${D0} / ${D} = ${a0.toFixed(4)}\n` +
+                     `  a₁ = D₁ / D = ${D1} / ${D} = ${a1.toFixed(4)}\n` +
+                     `  a₂ = D₂ / D = ${D2} / ${D} = ${a2.toFixed(4)}`;
+      
+      sequence.push({
+        type: 'math',
+        title: 'STEP 1: SOLVE NORMAL EQUATIONS',
+        content: solveStr,
+        explanation: `Using Cramer's Rule, we compute determinants D, D₀, D₁, D₂. Solving yields a₀ = ${a0.toFixed(4)}, a₁ = ${a1.toFixed(4)}, and a₂ = ${a2.toFixed(4)}.`
+      });
+      
+      const fitStr = `Fitted Parabola Equation:\ny = ${a0.toFixed(4)} + ${a1.toFixed(4)}x + ${a2.toFixed(4)}x²\n\n` +
+                     `where:\n` +
+                     `- Intercept a₀ = ${a0.toFixed(6)}\n` +
+                     `- Coefficient a₁ = ${a1.toFixed(6)}\n` +
+                     `- Coefficient a₂ = ${a2.toFixed(6)}`;
+                     
+      sequence.push({
+        type: 'result',
+        title: 'FINAL ANSWER',
+        content: fitStr,
+        explanation: `The least squares quadratic fitted curve is y = ${a0.toFixed(4)} + ${a1.toFixed(4)}x + ${a2.toFixed(4)}x². This curve minimizes the sum of squared residuals.`
+      });
+    }
 
     return sequence;
-  }, [method, limitFuncId, limitApproachVal, derivFuncId, derivAtX, integFuncId, integA, integB, integN, lhopitalProblemId, gaussSeidelProblemId, gaussSeidelIterations, jacobiProblemId, jacobiIterations, fslProblemId, rfProblemId, rfIterations, iterProblemId, iterIterations, nrProblemId, nrIterations, lagrangeProblemId, newtonGenProblemId]);
+  }, [method, limitFuncId, limitApproachVal, derivFuncId, derivAtX, integFuncId, integA, integB, integN, lhopitalProblemId, gaussSeidelProblemId, gaussSeidelIterations, jacobiProblemId, jacobiIterations, fslProblemId, rfProblemId, rfIterations, iterProblemId, iterIterations, nrProblemId, nrIterations, lagrangeProblemId, newtonGenProblemId, fsdpProblemId]);
 
   // ─── Playback Control ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -1748,6 +1870,50 @@ export default function CalculusNotebookEngine({
     );
   };
 
+  const renderFsdpGrid = (rows, sums, xLabel, yLabel) => {
+    setTimeout(() => {
+      if (playbackState === 'PLAYING' && !stepComplete) handleTypingComplete();
+    }, getDuration(1000));
+
+    return (
+      <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
+        <table className="w-full text-center border-collapse text-xs font-mono">
+          <thead>
+            <tr className="bg-[var(--db-card-bg-elevated)] border-b border-[var(--db-card-border)]">
+              {['i', `${xLabel} (x)`, `${yLabel} (y)`, 'x²', 'x³', 'x⁴', 'x·y', 'x²·y'].map((h, idx) => (
+                <th key={idx} className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-teal-700 whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr key={i} className={`${i % 2 === 0 ? 'bg-[var(--db-card-bg)]' : 'bg-[var(--db-card-bg-elevated)]/40'} border-b border-[var(--db-card-border)]/50 hover:bg-[var(--db-card-bg-elevated)]/80 transition`}>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] font-bold text-teal-600">{i + 1}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-700">{row.xi}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-700">{row.yi}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-500">{row.xx}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-500">{row.xxx}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-500">{row.xxxx}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-550">{row.xy.toFixed(2)}</td>
+                <td className="py-2 px-3 border-r border-[var(--db-card-border)] text-slate-550">{row.xxy.toFixed(2)}</td>
+              </tr>
+            ))}
+            <tr className="bg-[var(--db-card-bg-elevated)] font-bold border-t-2 border-[var(--db-card-border)]">
+              <td className="py-2.5 px-3 border-r border-[var(--db-card-border)] text-teal-700">Σ (Sum)</td>
+              <td className="py-2.5 px-3 border-r border-[var(--db-card-border)] text-slate-700">{sums.sumX}</td>
+              <td className="py-2.5 px-3 border-r border-[var(--db-card-border)] text-slate-700">{sums.sumY}</td>
+              <td className="py-2.5 px-3 border-r border-[var(--db-card-border)] text-slate-500">{sums.sumXX}</td>
+              <td className="py-2.5 px-3 border-r border-[var(--db-card-border)] text-slate-500">{sums.sumXXX}</td>
+              <td className="py-2.5 px-3 border-r border-[var(--db-card-border)] text-slate-500">{sums.sumXXXX}</td>
+              <td className="py-2.5 px-3 border-r border-[var(--db-card-border)] text-slate-550">{sums.sumXY.toFixed(2)}</td>
+              <td className="py-2.5 px-3 text-slate-550">{sums.sumXXY.toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   const progress = activeStepIndex >= 0 ? ((activeStepIndex + 1) / steps.length) * 100 : 0;
 
   return (
@@ -1860,6 +2026,11 @@ export default function CalculusNotebookEngine({
                 <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-sky-400 shadow-md border-y border-r border-[var(--db-card-border)]/50">
                   <span className="text-xs font-bold text-slate-500 font-sans">Least Squares Data Summary Table:</span>
                   {renderFslGrid(step.rows, step.sums, step.xLabel, step.yLabel)}
+                </div>
+              ) : step.type === 'fsdpTable' ? (
+                <div className="bg-[var(--db-card-bg)] p-6 rounded-2xl border-l-4 border-teal-500 shadow-md border-y border-r border-[var(--db-card-border)]/50">
+                  <span className="text-xs font-bold text-slate-500 font-sans">Least Squares 2nd Degree Polynomial Summary Table:</span>
+                  {renderFsdpGrid(step.rows, step.sums, step.xLabel, step.yLabel)}
                 </div>
               ) : step.type === 'header' ? (
                 <div className="bg-gradient-to-br from-[var(--db-card-bg-elevated)] to-[var(--db-card-bg)] p-6 rounded-2xl border border-[var(--db-card-border)] shadow-sm">
