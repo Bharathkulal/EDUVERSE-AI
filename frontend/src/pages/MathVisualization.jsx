@@ -75,6 +75,7 @@ export default function MathVisualization() {
   // Matrix Multiplication States
   const [matMulQuestionId, setMatMulQuestionId] = useState('mm_q5');
   const [taylorQuestionId, setTaylorQuestionId] = useState('taylor_q1');
+  const [eulerQuestionId, setEulerQuestionId] = useState('euler_q1');
 
   // Execution Control State
   const [playbackState, setPlaybackState] = useState('IDLE');
@@ -232,6 +233,24 @@ export default function MathVisualization() {
     }
   ];
 
+  const EULER_QUESTIONS = [
+    {
+      id: 'euler_q1',
+      label: 'Q1: dy/dx = -y, y(0)=1, find y(0.04) (Photo Q1)',
+      question: 'Given dy/dx = -y with y(0) = 1 and step size h = 0.01, find y(0.01), y(0.02), y(0.03), y(0.04) using Euler\'s Method.'
+    },
+    {
+      id: 'euler_q2',
+      label: 'Q2: dy/dx = x + y, y(0)=0, find y(0.6) (Photo Q2)',
+      question: 'Given dy/dx = x + y with y(0) = 0 and step size h = 0.2, compute y(0.2), y(0.4), y(0.6) using Euler\'s Method.'
+    },
+    {
+      id: 'custom',
+      label: 'Custom ODE',
+      question: 'Custom Euler\'s Method problem.'
+    }
+  ];
+
   // Matrix Multiplication Questions (from photo)
   const MATRIX_MUL_QUESTIONS = [
     {
@@ -384,6 +403,20 @@ export default function MathVisualization() {
       btnClass: 'bg-rose-500 hover:bg-rose-600 text-white',
       badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-650 dark:text-rose-455',
       icon: '📈'
+    },
+    { 
+      id: "Euler's Method", 
+      title: "Euler's Method", 
+      desc: "Solve ordinary differential equations step-by-step using tangent line approximations.", 
+      status: 'Intermediate', 
+      time: '15 mins', 
+      xp: '100 XP', 
+      progress: 0,
+      tags: ['ODE Solver', 'Tangent Slope', 'First Order'],
+      colorTheme: 'emerald',
+      btnClass: 'bg-emerald-500 hover:bg-emerald-600 text-white',
+      badgeClass: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+      icon: '📐'
     }
   ];
 
@@ -566,6 +599,25 @@ export default function MathVisualization() {
         }
       ]
     },
+    "Euler's Method": {
+      features: [
+        { icon: BookOpen, title: 'Tangent Linear Solver', desc: 'Solves ordinary differential equations numerically using step-by-step tangent line approximations.' },
+        { icon: Target, title: 'First-order Accuracy', desc: 'Local truncation error is O(h²), while global error is O(h).' },
+        { icon: Lightbulb, title: 'Photo Problems', desc: 'Q1: solve dy/dx = -y, y(0)=1, h=0.01. Q2: solve dy/dx = x + y, y(0)=0, h=0.2.' },
+      ],
+      formulas: [
+        {
+          title: 'Euler\'s Iterative Formula',
+          formula: 'y\u2099\u208A\u2081 = y\u2099 + h · f(x\u2099, y\u2099)',
+          variables: [
+            { sym: 'x\u2099, y\u2099', def: 'Coordinates at step n' },
+            { sym: 'h', def: 'Step size' },
+            { sym: 'f(x\u2099, y\u2099)', def: 'Derivative function dy/dx evaluating tangent slope' },
+            { sym: 'y\u2099\u208A\u2081', def: 'Approximated value of y at next step coordinate x\u2099 + h' },
+          ]
+        }
+      ]
+    },
     'Matrix Multiplication': {
       features: [
         { icon: BookOpen, title: 'Row × Column Rule', desc: 'Each entry C[i][j] is the dot product of row i of A with column j of B.' },
@@ -616,6 +668,7 @@ export default function MathVisualization() {
   const activeRKQuestion = RK_QUESTIONS.find(q => q.id === rkProblemId);
   const activeMatMulQuestion = MATRIX_MUL_QUESTIONS.find(q => q.id === matMulQuestionId);
   const activeTaylorQuestion = TAYLOR_QUESTIONS.find(q => q.id === taylorQuestionId);
+  const activeEulerQuestion = EULER_QUESTIONS.find(q => q.id === eulerQuestionId);
 
   // Engine Event Handlers
   const handleExplanationUpdate = (text) => {
@@ -721,6 +774,22 @@ export default function MathVisualization() {
           rkFuncId={rkFuncId}
         />
       );
+    } else if (selectedMethod === "Euler's Method") {
+      return (
+        <NotebookEngine
+          dataset={activeEulerQuestion}
+          rkX0={parseFloat(rkX0)}
+          rkY0={parseFloat(rkY0)}
+          rkH={parseFloat(rkH)}
+          rkSteps={parseInt(rkSteps)}
+          rkFuncId={rkFuncId}
+          method={selectedMethod}
+          playbackState={playbackState}
+          speed={speed}
+          onExplain={handleExplanationUpdate}
+          onFinish={handleExecutionFinished}
+        />
+      );
     } else if (selectedMethod === "Taylor's Method") {
       engineElement = (
         <NotebookEngine
@@ -804,6 +873,18 @@ export default function MathVisualization() {
         return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${rkH}) using Taylor's Series Method.`;
       }
       return activeTaylorQuestion?.question || '';
+    } else if (selectedMethod === "Euler's Method") {
+      if (eulerQuestionId === 'custom') {
+        const RK_FUNCTIONS = {
+          'y_minus_x': "dy/dx = y - x",
+          'x_plus_y':  "dy/dx = x + y",
+          'minus_2xy': "dy/dx = -2xy",
+          'y_plus_x2': "dy/dx = y + x\u00B2"
+        };
+        const odeStr = RK_FUNCTIONS[rkFuncId] || "dy/dx = y - x";
+        return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${ (parseFloat(rkX0) + parseInt(rkSteps) * parseFloat(rkH)).toFixed(2) }) in ${rkSteps} step(s) of h = ${rkH} using Euler's Method.`;
+      }
+      return activeEulerQuestion?.question || '';
     } else if (selectedMethod === 'Matrix Multiplication') {
       return activeMatMulQuestion?.question || 'Compute matrix product using row × column dot product rule.';
     }
@@ -1486,6 +1567,58 @@ export default function MathVisualization() {
                       <div>
                         <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Target x</label>
                         <input type="number" step="0.05" min="0.01" max="1" value={rkH} onChange={e => { setRkH(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            ) : selectedMethod === "Euler's Method" ? (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
+                  <select 
+                    value={eulerQuestionId}
+                    onChange={(e) => { setEulerQuestionId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
+                  >
+                    {EULER_QUESTIONS.map(q => (
+                      <option key={q.id} value={q.id}>{q.label}</option>
+                    ))}
+                  </select>
+                </div>
+                {eulerQuestionId === 'custom' && (
+                  <>
+                    <div className="mb-4">
+                      <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">ODE dy/dx = f(x,y)</label>
+                      <select 
+                        value={rkFuncId}
+                        onChange={(e) => { setRkFuncId(e.target.value); setPlaybackState('IDLE'); }}
+                        className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
+                      >
+                        <option value="y_minus_x">dy/dx = y - x</option>
+                        <option value="x_plus_y">dy/dx = x + y</option>
+                        <option value="minus_2xy">dy/dx = -2xy</option>
+                        <option value="y_plus_x2">dy/dx = y + x\u00B2</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial x₀</label>
+                        <input type="number" step="0.1" value={rkX0} onChange={e => { setRkX0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial y₀</label>
+                        <input type="number" step="0.1" value={rkY0} onChange={e => { setRkY0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Step size (h)</label>
+                        <input type="number" step="0.05" min="0.01" max="1" value={rkH} onChange={e => { setRkH(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Steps Count</label>
+                        <input type="number" min="1" max="10" value={rkSteps} onChange={e => { setRkSteps(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
                       </div>
                     </div>
                   </>

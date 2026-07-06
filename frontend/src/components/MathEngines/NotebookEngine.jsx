@@ -2744,6 +2744,108 @@ export default function NotebookEngine({
         explanation: "Sum up all terms in the series. Taylor's Series method computation complete."
       });
     }
+    else if (method === "Euler's Method") {
+      const isQ1 = dataset?.id === 'euler_q1';
+      const isQ2 = dataset?.id === 'euler_q2';
+
+      let x0_val = 0;
+      let y0_val = 1;
+      let h_val = 0.1;
+      let steps_count = 1;
+      let expr = (x, y) => y - x;
+      let odeLabel = "dy/dx = y - x";
+
+      if (isQ1) {
+        odeLabel = "dy/dx = -y";
+        expr = (x, y) => -y;
+        x0_val = 0;
+        y0_val = 1;
+        h_val = 0.01;
+        steps_count = 4;
+      } else if (isQ2) {
+        odeLabel = "dy/dx = x + y";
+        expr = (x, y) => x + y;
+        x0_val = 0;
+        y0_val = 0;
+        h_val = 0.2;
+        steps_count = 3;
+      } else {
+        // Custom ODE
+        const funcKey = rkFuncId || 'y_minus_x';
+        if (funcKey === 'y_minus_x') {
+          odeLabel = "dy/dx = y - x";
+          expr = (x, y) => y - x;
+        } else if (funcKey === 'x_plus_y') {
+          odeLabel = "dy/dx = x + y";
+          expr = (x, y) => x + y;
+        } else if (funcKey === 'minus_2xy') {
+          odeLabel = "dy/dx = -2xy";
+          expr = (x, y) => -2 * x * y;
+        } else if (funcKey === 'y_plus_x2') {
+          odeLabel = "dy/dx = y + x²";
+          expr = (x, y) => y + x * x;
+        }
+        x0_val = rkX0 !== undefined ? parseFloat(rkX0) : 0;
+        y0_val = rkY0 !== undefined ? parseFloat(rkY0) : 1;
+        h_val = rkH !== undefined ? parseFloat(rkH) : 0.1;
+        steps_count = rkSteps !== undefined ? parseInt(rkSteps) : 1;
+      }
+
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content: `Given Differential Equation:\n  ${odeLabel}\n\n` +
+                 `Initial Conditions: x₀ = ${x0_val}, y₀ = ${y0_val}\n` +
+                 `Step size h = ${h_val}\n` +
+                 `Target: Find y after ${steps_count} step(s) (at x = ${(x0_val + steps_count * h_val).toFixed(4)})\n\n` +
+                 `Euler's Iterative Formula:\n` +
+                 `  yₙ₊₁ = yₙ + h · f(xₙ, yₙ)`,
+        explanation: "We set up Euler's method iteration parameters. Euler's method calculates the next y-value using the tangent slope at the current point."
+      });
+
+      let currentX = x0_val;
+      let currentY = y0_val;
+      let finalPoints = [];
+
+      for (let s = 1; s <= steps_count; s++) {
+        const x_start = currentX;
+        const y_start = currentY;
+        const slope = expr(x_start, y_start);
+        const y_next = y_start + h_val * slope;
+        const x_next = x_start + h_val;
+
+        sequence.push({
+          type: 'math',
+          title: `STEP ${s}: COMPUTE y(${x_next.toFixed(4)})`,
+          content: `Current Point: (x${s-1}, y${s-1}) = (${x_start.toFixed(4)}, ${y_start.toFixed(4)})\n` +
+                   `Evaluate Slope f(x${s-1}, y${s-1}):\n` +
+                   `  f(${x_start.toFixed(4)}, ${y_start.toFixed(4)}) = ${slope.toFixed(4)}\n\n` +
+                   `Apply Euler's Formula:\n` +
+                   `  y${s} = y${s-1} + h · f(x${s-1}, y${s-1})\n` +
+                   `  y${s} = ${y_start.toFixed(4)} + ${h_val} · (${slope.toFixed(4)})\n` +
+                   `  y${s} = ${y_start.toFixed(4)} + ${(h_val * slope).toFixed(6)}\n` +
+                   `  y${s} = ${y_next.toFixed(6)}`,
+          explanation: `We calculate the next estimate y${s} using the linear approximation starting at x = ${x_start.toFixed(4)}.`
+        });
+
+        currentX = x_next;
+        currentY = y_next;
+        finalPoints.push({ x: currentX, y: currentY });
+      }
+
+      // Final summary
+      let summaryContent = `Euler's method completed successfully after ${steps_count} step(s).\n\nCalculated values:\n`;
+      finalPoints.forEach((pt, idx) => {
+        summaryContent += `  y(${pt.x.toFixed(4)}) ≈ ${pt.y.toFixed(4)} (exact: ${pt.y.toFixed(6)})\n`;
+      });
+
+      sequence.push({
+        type: 'result',
+        title: 'FINAL RESULT SUMMARY',
+        content: summaryContent,
+        explanation: "Euler's method simulation is now complete. The final calculated coordinate values are displayed above."
+      });
+    }
 
     return sequence;
   }, [func, a, b, n, method, dataset, targetX, direction, bisectionProblemId, bisectionIterations, rkX0, rkY0, rkH, rkSteps, rkFuncId, matMulQuestion]);
@@ -2965,7 +3067,7 @@ export default function NotebookEngine({
                     onComplete={handleTypingComplete}
                   />
                   <div className="mt-4 text-emerald-200 text-sm font-medium">
-                    {method === 'Matrix Multiplication' || method === 'Symmetric & Skew Symmetric' || method === 'Inverse Matrix' || method === 'Gauss Elimination' || method === 'Gauss-Jordan Elimination' ? 'Linear Algebra complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : method.includes('Taylor') ? "Taylor's Method ODE solving complete." : 'Numerical interpolation/differentiation/ODE complete.'}
+                    {method === 'Matrix Multiplication' || method === 'Symmetric & Skew Symmetric' || method === 'Inverse Matrix' || method === 'Gauss Elimination' || method === 'Gauss-Jordan Elimination' ? 'Linear Algebra complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : method.includes('Taylor') ? "Taylor's Method ODE solving complete." : method.includes('Euler') ? "Euler's Method ODE solving complete." : 'Numerical interpolation/differentiation/ODE complete.'}
                   </div>
                 </div>
               ) : step.type === 'header' ? (
