@@ -195,9 +195,9 @@ export default function MathTheory({ onBack }) {
           <div className="lg:col-span-8 space-y-6">
             
             {/* 1. AI VOICE TEACHER */}
-            <div className={`p-6 rounded-3xl border ${isDark ? 'bg-slate-900/25 border-slate-850' : 'bg-white border-slate-200 shadow-sm'}`}>
+            <div className={`p-6 rounded-3xl border transition-all duration-300 shadow-sm bg-[var(--db-card-bg)] border-[var(--db-card-border)]`}>
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-extrabold text-sm flex items-center gap-2">
+                <h3 className="font-extrabold text-sm flex items-center gap-2 text-[var(--db-text-main)]">
                   <Volume2 className="text-emerald-500" size={18} /> AI Voice Teacher
                 </h3>
                 <div className="flex items-center gap-2">
@@ -205,7 +205,7 @@ export default function MathTheory({ onBack }) {
                   <select 
                     value={voiceLang}
                     onChange={e => setVoiceLang(e.target.value)}
-                    className="p-1 bg-slate-950 border border-slate-850 text-white rounded text-[10px] font-bold"
+                    className="p-1 px-2.5 bg-[var(--db-input-bg)] border border-[var(--db-card-border)] text-[var(--db-text-main)] rounded-lg text-[10px] font-bold outline-none"
                   >
                     <option value="en-US">English (US)</option>
                     <option value="en-IN">Indian English</option>
@@ -216,7 +216,7 @@ export default function MathTheory({ onBack }) {
                   <select
                     value={voiceSpeed}
                     onChange={e => setVoiceSpeed(parseFloat(e.target.value))}
-                    className="p-1 bg-slate-950 border border-slate-850 text-white rounded text-[10px] font-bold"
+                    className="p-1 px-2.5 bg-[var(--db-input-bg)] border border-[var(--db-card-border)] text-[var(--db-text-main)] rounded-lg text-[10px] font-bold outline-none"
                   >
                     <option value="0.75">0.75x</option>
                     <option value="1">1.0x</option>
@@ -227,7 +227,7 @@ export default function MathTheory({ onBack }) {
               </div>
 
               {/* Synchronized voice script lines */}
-              <div className="space-y-2.5 p-4 rounded-2xl bg-black/45 border border-slate-900/60 min-h-[90px] flex flex-col justify-center">
+              <div className="space-y-2.5 p-5 rounded-2xl bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] min-h-[90px] flex flex-col justify-center">
                 <AnimatePresence mode="wait">
                   {((voiceScripts[activeTopic] || []).map((script, idx) => (
                     idx === currentLine && (
@@ -238,9 +238,9 @@ export default function MathTheory({ onBack }) {
                         exit={{ opacity: 0, y: -5 }}
                         className="text-center font-semibold text-xs leading-relaxed"
                       >
-                        <p className="text-emerald-300 font-bold">"{script.text}"</p>
+                        <p className="text-emerald-600 dark:text-emerald-450 font-bold text-sm">"{script.text}"</p>
                         {script.formula && (
-                          <div className="mt-2 text-sm font-mono text-purple-400 bg-purple-500/5 py-1 px-3 rounded-lg border border-purple-500/10 inline-block">
+                          <div className="mt-2 text-sm font-mono text-purple-600 dark:text-purple-400 bg-purple-500/10 py-1 px-3 rounded-lg border border-purple-500/20 inline-block">
                             {script.formula}
                           </div>
                         )}
@@ -253,7 +253,7 @@ export default function MathTheory({ onBack }) {
               <div className="flex gap-2 mt-4 justify-center">
                 <button
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
                 >
                   {isPlaying ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" />} {isPlaying ? 'Pause Voice' : 'Start Explanation'}
                 </button>
@@ -265,48 +265,53 @@ export default function MathTheory({ onBack }) {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                 
                 {/* 3. Formula Component Breakdown */}
-                <div className={`p-6 rounded-3xl border ${isDark ? 'bg-slate-900/25 border-slate-850' : 'bg-white border-slate-200'}`}>
-                  <h3 className="font-extrabold text-sm mb-4">Formula Breakdown (Hover symbols)</h3>
-                  <div className="flex gap-2 items-center justify-center p-6 border border-slate-850 rounded-2xl bg-black/15 font-mono text-lg mb-4">
+                <div className={`p-6 rounded-3xl border transition-all duration-300 shadow-sm bg-[var(--db-card-bg)] border-[var(--db-card-border)]`}>
+                  <h3 className="font-extrabold text-sm mb-4 text-[var(--db-text-main)]">Formula Breakdown (Hover symbols)</h3>
+                  <div className="flex gap-1 items-center justify-center p-6 border border-[var(--db-card-border)] rounded-2xl bg-[var(--db-card-bg-elevated)] font-mono text-lg mb-4 text-[var(--db-text-main)]">
                     <span 
                       onMouseEnter={() => setHoveredSymbol('derivative')}
                       onMouseLeave={() => setHoveredSymbol(null)}
-                      className="cursor-pointer hover:text-emerald-400 transition font-bold"
+                      className="cursor-pointer hover:text-emerald-500 transition font-bold px-2 py-0.5 rounded hover:bg-emerald-500/10"
                     >
                       f'(x)
                     </span>
-                    <span>=</span>
+                    <span className="mx-2">=</span>
                     <span 
                       onMouseEnter={() => setHoveredSymbol('limit')}
                       onMouseLeave={() => setHoveredSymbol(null)}
-                      className="cursor-pointer hover:text-emerald-400 transition font-bold"
+                      className="cursor-pointer hover:text-emerald-500 transition font-bold flex flex-col items-center leading-none px-2 py-0.5 rounded hover:bg-emerald-500/10"
                     >
-                      lim_{'h \\to 0'}
+                      <span>lim</span>
+                      <span className="text-[10px] text-slate-450 dark:text-slate-400 mt-1">h → 0</span>
                     </span>
-                    <span className="text-slate-650 px-1">(</span>
-                    <span 
-                      onMouseEnter={() => setHoveredSymbol('delta')}
-                      onMouseLeave={() => setHoveredSymbol(null)}
-                      className="cursor-pointer hover:text-emerald-400 transition font-bold"
-                    >
-                      f(x+h) - f(x)
-                    </span>
-                    <span className="text-slate-650">/</span>
-                    <span 
-                      onMouseEnter={() => setHoveredSymbol('increment')}
-                      onMouseLeave={() => setHoveredSymbol(null)}
-                      className="cursor-pointer hover:text-emerald-400 transition font-bold"
-                    >
-                      h
-                    </span>
+                    
+                    {/* Fraction */}
+                    <div className="flex items-center gap-1.5 ml-2">
+                      <div className="flex flex-col items-center">
+                        <span 
+                          onMouseEnter={() => setHoveredSymbol('delta')}
+                          onMouseLeave={() => setHoveredSymbol(null)}
+                          className="cursor-pointer hover:text-emerald-500 transition font-bold border-b border-[var(--db-text-main)] pb-1 px-2 rounded hover:bg-emerald-500/10"
+                        >
+                          f(x + h) − f(x)
+                        </span>
+                        <span 
+                          onMouseEnter={() => setHoveredSymbol('increment')}
+                          onMouseLeave={() => setHoveredSymbol(null)}
+                          className="cursor-pointer hover:text-emerald-500 transition font-bold pt-1 px-2 rounded hover:bg-emerald-500/10"
+                        >
+                          h
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="min-h-[70px] p-3 rounded-xl bg-slate-950 border border-slate-900 text-xs">
+                  <div className="min-h-[75px] p-4 rounded-xl bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] text-xs text-[var(--db-text-secondary)] flex items-center justify-center text-center">
                     {hoveredSymbol === 'derivative' && <p><strong>f'(x) (Derivative):</strong> Represents the instantaneous rate of change or the slope of the tangent line touching the function curve f(x).</p>}
                     {hoveredSymbol === 'limit' && <p><strong>lim (Limit boundary):</strong> Approaches an infinitely small interval where variable h converges to zero.</p>}
                     {hoveredSymbol === 'delta' && <p><strong>f(x+h) - f(x):</strong> Change in y values across the interval width h.</p>}
                     {hoveredSymbol === 'increment' && <p><strong>h (Step interval):</strong> Represents the step change delta x across the domain axes.</p>}
-                    {!hoveredSymbol && <p className="text-slate-500">Hover over any formula symbol to view details.</p>}
+                    {!hoveredSymbol && <p className="text-slate-450 dark:text-slate-400">Hover over any formula symbol to view details.</p>}
                   </div>
                 </div>
 
@@ -365,8 +370,8 @@ export default function MathTheory({ onBack }) {
             {/* TAB: MATRIX TRANSFORMATIONS */}
             {activeTopic === 'matrices' && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                <div className={`p-6 rounded-3xl border ${isDark ? 'bg-slate-900/25 border-slate-850' : 'bg-white border-slate-200'}`}>
-                  <h3 className="font-extrabold text-sm mb-4">Matrix Operations and Transformations</h3>
+                <div className={`p-6 rounded-3xl border transition-all duration-300 shadow-sm bg-[var(--db-card-bg)] border-[var(--db-card-border)]`}>
+                  <h3 className="font-extrabold text-sm mb-4 text-[var(--db-text-main)]">Matrix Operations and Transformations</h3>
                   
                   {/* Grid fields */}
                   <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto mb-6">
@@ -380,23 +385,23 @@ export default function MathTheory({ onBack }) {
                           updated[rIdx][cIdx] = parseFloat(e.target.value) || 0;
                           setMatrixA(updated);
                         }}
-                        className="p-3 bg-black border border-slate-800 rounded-xl text-center font-mono text-white text-xs"
+                        className="p-3 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] rounded-xl text-center font-mono text-[var(--db-text-main)] text-sm font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
                       />
                     )))}
                   </div>
 
                   {/* Calculations outputs */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-black/40 border border-slate-900 rounded-xl text-xs space-y-2">
-                      <span className="text-[10px] text-slate-500 font-bold block uppercase">Determinant (det A)</span>
-                      <strong className="text-base font-mono text-emerald-400">
+                    <div className="p-4 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] rounded-2xl text-xs space-y-2">
+                      <span className="text-xs text-[var(--db-text-muted)] font-black tracking-wider block uppercase">Determinant (det A)</span>
+                      <strong className="text-lg font-mono text-emerald-600 dark:text-emerald-400 block mt-1">
                         {(matrixA[0][0]*matrixA[1][1] - matrixA[0][1]*matrixA[1][0]).toFixed(2)}
                       </strong>
                     </div>
 
-                    <div className="p-4 bg-black/40 border border-slate-900 rounded-xl text-xs space-y-2">
-                      <span className="text-[10px] text-slate-500 font-bold block uppercase">Transpose Matrix</span>
-                      <div className="font-mono text-emerald-400">
+                    <div className="p-4 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] rounded-2xl text-xs space-y-2">
+                      <span className="text-xs text-[var(--db-text-muted)] font-black tracking-wider block uppercase">Transpose Matrix</span>
+                      <div className="font-mono text-emerald-600 dark:text-emerald-450 text-sm font-bold mt-1 leading-relaxed">
                         [{matrixA[0][0]}, {matrixA[1][0]}]<br />
                         [{matrixA[0][1]}, {matrixA[1][1]}]
                       </div>
@@ -412,31 +417,31 @@ export default function MathTheory({ onBack }) {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                 
                 {/* 4. Step-by-Step Solution Engine */}
-                <div className={`p-6 rounded-3xl border ${isDark ? 'bg-slate-900/25 border-slate-850' : 'bg-white border-slate-200'}`}>
-                  <h3 className="font-extrabold text-sm mb-4">Step-by-Step Numerical Root-Finder</h3>
+                <div className={`p-6 rounded-3xl border transition-all duration-300 shadow-sm bg-[var(--db-card-bg)] border-[var(--db-card-border)]`}>
+                  <h3 className="font-extrabold text-sm mb-4 text-[var(--db-text-main)]">Step-by-Step Numerical Root-Finder</h3>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-slate-400">Step {solverStep + 1} of {solverSteps.length}</span>
-                      <span className="text-xs font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">{solverSteps[solverStep].label}</span>
+                      <span className="text-xs font-bold text-[var(--db-text-secondary)]">Step {solverStep + 1} of {solverSteps.length}</span>
+                      <span className="text-xs font-black text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded">{solverSteps[solverStep].label}</span>
                     </div>
 
-                    <div className="p-6 bg-black rounded-2xl border border-slate-900 text-center">
-                      <span className="text-lg font-mono text-white block mb-2">{solverSteps[solverStep].equation}</span>
-                      <p className="text-xs text-slate-400">{solverSteps[solverStep].desc}</p>
+                    <div className="p-6 bg-[var(--db-card-bg-elevated)] rounded-2xl border border-[var(--db-card-border)] text-center">
+                      <span className="text-xl font-mono text-[var(--db-text-main)] font-extrabold block mb-2">{solverSteps[solverStep].equation}</span>
+                      <p className="text-xs text-[var(--db-text-secondary)]">{solverSteps[solverStep].desc}</p>
                     </div>
 
                     <div className="flex justify-between">
                       <button 
                         disabled={solverStep === 0}
                         onClick={() => setSolverStep(prev => prev - 1)}
-                        className="px-4 py-2 border border-slate-800 rounded-xl text-xs font-bold disabled:opacity-40"
+                        className="px-4 py-2 bg-[var(--db-btn-secondary)] hover:bg-[var(--db-btn-secondary-hover)] border border-[var(--db-card-border)] text-[var(--db-text-main)] rounded-xl text-xs font-bold disabled:opacity-40 transition active:scale-95"
                       >
                         Previous Step
                       </button>
                       <button 
                         disabled={solverStep === solverSteps.length - 1}
                         onClick={() => setSolverStep(prev => prev + 1)}
-                        className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold disabled:opacity-40"
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold disabled:opacity-40 transition active:scale-95 shadow-sm"
                       >
                         Next Step
                       </button>
@@ -445,10 +450,10 @@ export default function MathTheory({ onBack }) {
                 </div>
 
                 {/* 8. Numerical Method Simulator: Newton-Raphson Iterations */}
-                <div className={`p-6 rounded-3xl border ${isDark ? 'bg-slate-900/25 border-slate-850' : 'bg-white border-slate-200 shadow-sm'}`}>
+                <div className={`p-6 rounded-3xl border transition-all duration-300 shadow-sm bg-[var(--db-card-bg)] border-[var(--db-card-border)]`}>
                   <div className="mb-4">
-                    <h3 className="font-extrabold text-sm">Newton-Raphson Solver</h3>
-                    <p className="text-[10px] text-slate-500">Find the positive root of f(x) = x² - 4 = 0 using iterations.</p>
+                    <h3 className="font-extrabold text-sm text-[var(--db-text-main)]">Newton-Raphson Solver</h3>
+                    <p className="text-xs text-[var(--db-text-secondary)] mt-0.5">Find the positive root of f(x) = x² - 4 = 0 using iterations.</p>
                   </div>
 
                   <div className="flex gap-3 mb-4">
@@ -457,11 +462,11 @@ export default function MathTheory({ onBack }) {
                       value={nrX0}
                       onChange={e => setNrX0(e.target.value)}
                       placeholder="Start value x0..."
-                      className="flex-1 px-4 py-2.5 bg-slate-950 border border-slate-850 rounded-xl text-xs text-white outline-none"
+                      className="flex-1 px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] rounded-xl text-sm text-[var(--db-text-main)] outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                     <button
                       onClick={runNewtonRaphson}
-                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl"
+                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition active:scale-95 shadow-sm"
                     >
                       Run Iterations
                     </button>
@@ -471,7 +476,7 @@ export default function MathTheory({ onBack }) {
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs font-mono text-left">
                         <thead>
-                          <tr className="border-b border-slate-800 text-slate-500">
+                          <tr className="border-b border-[var(--db-card-border)] text-[var(--db-text-muted)]">
                             <th className="py-2">Iteration</th>
                             <th className="py-2">x_n</th>
                             <th className="py-2">f(x_n)</th>
@@ -480,11 +485,11 @@ export default function MathTheory({ onBack }) {
                         </thead>
                         <tbody>
                           {nrIterations.map(row => (
-                            <tr key={row.iter} className="border-b border-slate-900">
-                              <td className="py-2">{row.iter}</td>
-                              <td className="py-2 text-white">{row.x}</td>
-                              <td className="py-2 text-red-400">{row.fx}</td>
-                              <td className="py-2 text-emerald-400">{row.nextX}</td>
+                            <tr key={row.iter} className="border-b border-[var(--db-card-border)]/50">
+                              <td className="py-2 text-[var(--db-text-main)]">{row.iter}</td>
+                              <td className="py-2 text-[var(--db-text-main)] font-semibold">{row.x}</td>
+                              <td className="py-2 text-rose-500 dark:text-rose-400 font-semibold">{row.fx}</td>
+                              <td className="py-2 text-emerald-600 dark:text-emerald-450 font-bold">{row.nextX}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -505,26 +510,30 @@ export default function MathTheory({ onBack }) {
                   <div className="flex flex-col sm:flex-row gap-6 items-center">
                     <div className="space-y-4 flex-1">
                       <div>
-                        <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Circle Radius (r)</label>
+                        <label className="text-xs uppercase font-bold text-[var(--db-text-secondary)] block mb-1">Circle Radius (r)</label>
                         <input 
                           type="range" min="1" max="10" step="1" 
                           value={geomRadius} onChange={e => setGeomRadius(parseInt(e.target.value))}
-                          className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer"
+                          className="w-full h-1 bg-[var(--db-card-border)] rounded-lg appearance-none cursor-pointer"
                         />
-                        <span className="text-xs font-mono font-bold mt-1 block">Radius = {geomRadius} cm</span>
+                        <span className="text-sm font-mono font-bold mt-1 block text-[var(--db-text-main)]">Radius = {geomRadius} cm</span>
                       </div>
 
-                      <div className="space-y-1 text-xs">
-                        <div>Area: <span className="font-mono text-emerald-400">{(Math.PI * geomRadius * geomRadius).toFixed(2)} cm²</span></div>
-                        <div>Perimeter: <span className="font-mono text-emerald-400">{(2 * Math.PI * geomRadius).toFixed(2)} cm</span></div>
+                      <div className="space-y-1 text-sm text-[var(--db-text-secondary)] font-medium">
+                        <div>Area: <span className="font-mono text-emerald-600 dark:text-emerald-450 font-bold">{(Math.PI * geomRadius * geomRadius).toFixed(2)} cm²</span></div>
+                        <div>Perimeter: <span className="font-mono text-emerald-600 dark:text-emerald-450 font-bold">{(2 * Math.PI * geomRadius).toFixed(2)} cm</span></div>
                       </div>
                     </div>
 
-                    <div className="w-[180px] h-[180px] border border-slate-800 rounded-2xl bg-black flex items-center justify-center">
+                    <div className="w-[180px] h-[180px] border border-[var(--db-card-border)] rounded-2xl bg-black flex items-center justify-center relative overflow-hidden">
+                      {/* Grid Lines */}
+                      <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 opacity-10">
+                        {Array.from({ length: 36 }).map((_, i) => <div key={i} className="border border-slate-300" />)}
+                      </div>
                       <motion.div
                         animate={{ width: geomRadius * 15, height: geomRadius * 15 }}
                         transition={{ type: 'spring', stiffness: 150 }}
-                        className="rounded-full border-2 border-emerald-500 bg-emerald-500/10"
+                        className="relative z-10 rounded-full border-2 border-emerald-500 bg-emerald-500/10"
                       />
                     </div>
                   </div>
@@ -538,34 +547,34 @@ export default function MathTheory({ onBack }) {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                 
                 {/* 10. Probability Simulator */}
-                <div className={`p-6 rounded-3xl border ${isDark ? 'bg-slate-900/25 border-slate-850' : 'bg-white border-slate-200'}`}>
-                  <h3 className="font-extrabold text-sm mb-4">Coin Toss Probability Simulator</h3>
+                <div className={`p-6 rounded-3xl border transition-all duration-300 shadow-sm bg-[var(--db-card-bg)] border-[var(--db-card-border)]`}>
+                  <h3 className="font-extrabold text-sm mb-4 text-[var(--db-text-main)]">Coin Toss Probability Simulator</h3>
                   
                   <div className="flex gap-3 mb-6">
                     <button 
                       onClick={tossCoin}
-                      className="px-4 py-2.5 bg-emerald-650 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-sm"
                     >
                       Toss Coin
                     </button>
                     <button 
                       onClick={() => setCoinTosses([])}
-                      className="px-4 py-2.5 border border-slate-800 rounded-xl text-xs font-bold"
+                      className="px-4 py-2.5 bg-[var(--db-btn-secondary)] hover:bg-[var(--db-btn-secondary-hover)] border border-[var(--db-card-border)] text-[var(--db-text-main)] rounded-xl text-xs font-bold transition active:scale-95"
                     >
                       Reset Sim
                     </button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 text-xs font-semibold">
-                    <div className="p-4 bg-slate-950 rounded-xl border border-slate-900">
-                      <span className="text-[10px] text-slate-500 block uppercase">Heads frequency</span>
-                      <span className="text-lg font-black text-emerald-400">
+                    <div className="p-4 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] rounded-2xl shadow-sm">
+                      <span className="text-xs text-[var(--db-text-muted)] font-black tracking-wider block uppercase mb-1">Heads frequency</span>
+                      <span className="text-xl font-black text-emerald-600 dark:text-emerald-450 block mt-1">
                         {coinTosses.filter(x => x === 'Heads').length} / {coinTosses.length || 0}
                       </span>
                     </div>
-                    <div className="p-4 bg-slate-950 rounded-xl border border-slate-900">
-                      <span className="text-[10px] text-slate-500 block uppercase">Probability %</span>
-                      <span className="text-lg font-black text-emerald-400">
+                    <div className="p-4 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] rounded-2xl shadow-sm">
+                      <span className="text-xs text-[var(--db-text-muted)] font-black tracking-wider block uppercase mb-1">Probability %</span>
+                      <span className="text-xl font-black text-emerald-600 dark:text-emerald-450 block mt-1">
                         {coinTosses.length > 0 ? ((coinTosses.filter(x => x === 'Heads').length / coinTosses.length) * 100).toFixed(1) : 0}%
                       </span>
                     </div>
@@ -573,31 +582,31 @@ export default function MathTheory({ onBack }) {
                 </div>
 
                 {/* 11. Statistics Dashboard */}
-                <div className={`p-6 rounded-3xl border ${isDark ? 'bg-slate-900/25 border-slate-850' : 'bg-white border-slate-200'}`}>
-                  <h3 className="font-extrabold text-sm mb-4">Dataset Statistics Dashboard</h3>
+                <div className={`p-6 rounded-3xl border transition-all duration-300 shadow-sm bg-[var(--db-card-bg)] border-[var(--db-card-border)]`}>
+                  <h3 className="font-extrabold text-sm mb-4 text-[var(--db-text-main)]">Dataset Statistics Dashboard</h3>
                   
                   <div className="mb-4">
-                    <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Enter comma-separated values</label>
+                    <label className="text-xs uppercase font-bold text-[var(--db-text-secondary)] block mb-1">Enter comma-separated values</label>
                     <input 
                       type="text" 
                       value={statData} 
                       onChange={e => setStatData(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-slate-950 border border-slate-850 rounded-xl text-xs text-white outline-none"
+                      className="w-full px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] rounded-xl text-sm text-[var(--db-text-main)] outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                   </div>
 
                   <div className="grid grid-cols-3 gap-4 text-xs font-semibold font-mono text-center">
-                    <div className="p-3 bg-black/40 border border-slate-900 rounded-xl">
-                      <span className="text-[9px] text-slate-500 block uppercase">Mean</span>
-                      <span className="text-sm font-black text-white mt-1 block">{stats.mean}</span>
+                    <div className="p-3.5 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] rounded-2xl shadow-sm">
+                      <span className="text-[10px] text-[var(--db-text-muted)] font-black tracking-wider block uppercase">Mean</span>
+                      <span className="text-base font-black text-[var(--db-text-main)] mt-1.5 block">{stats.mean}</span>
                     </div>
-                    <div className="p-3 bg-black/40 border border-slate-900 rounded-xl">
-                      <span className="text-[9px] text-slate-500 block uppercase">Median</span>
-                      <span className="text-sm font-black text-white mt-1 block">{stats.median}</span>
+                    <div className="p-3.5 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] rounded-2xl shadow-sm">
+                      <span className="text-[10px] text-[var(--db-text-muted)] font-black tracking-wider block uppercase">Median</span>
+                      <span className="text-base font-black text-[var(--db-text-main)] mt-1.5 block">{stats.median}</span>
                     </div>
-                    <div className="p-3 bg-black/40 border border-slate-900 rounded-xl">
-                      <span className="text-[9px] text-slate-500 block uppercase">Total items</span>
-                      <span className="text-sm font-black text-white mt-1 block">{stats.count}</span>
+                    <div className="p-3.5 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] rounded-2xl shadow-sm">
+                      <span className="text-[10px] text-[var(--db-text-muted)] font-black tracking-wider block uppercase">Total items</span>
+                      <span className="text-base font-black text-[var(--db-text-main)] mt-1.5 block">{stats.count}</span>
                     </div>
                   </div>
                 </div>
@@ -624,8 +633,8 @@ export default function MathTheory({ onBack }) {
             </div>
 
             {/* 14. FORMULA FLASHCARDS */}
-            <div className={`p-6 rounded-3xl border ${isDark ? 'bg-slate-900/25 border-slate-850' : 'bg-white border-slate-200 shadow-sm'}`}>
-              <h3 className="font-extrabold text-sm mb-4">Formula Flashcards</h3>
+            <div className={`p-6 rounded-3xl border transition-all duration-300 shadow-sm bg-[var(--db-card-bg)] border-[var(--db-card-border)]`}>
+              <h3 className="font-extrabold text-sm mb-4 text-[var(--db-text-main)]">Formula Flashcards</h3>
               
               <div 
                 onClick={() => setFlashcardFlipped(!flashcardFlipped)}
@@ -634,19 +643,19 @@ export default function MathTheory({ onBack }) {
                 <motion.div
                   animate={{ rotateY: flashcardFlipped ? 180 : 0 }}
                   transition={{ duration: 0.6 }}
-                  className="w-full h-full relative transform-style-3d border border-slate-800 rounded-2xl p-6 flex flex-col justify-center items-center bg-black/40"
+                  className="w-full h-full relative transform-style-3d border border-[var(--db-card-border)] bg-[var(--db-card-bg-elevated)] rounded-2xl p-6 flex flex-col justify-center items-center shadow-sm"
                 >
                   {!flashcardFlipped ? (
                     <div className="text-center">
-                      <span className="text-[9px] font-bold text-emerald-400 block uppercase mb-1">Front</span>
-                      <h4 className="text-base font-black text-white">Power Rule of Derivatives</h4>
-                      <p className="text-[10px] text-slate-500 mt-1">Tap to flip & view formula</p>
+                      <span className="text-xs font-black text-emerald-500 block uppercase mb-1.5 tracking-wider">Front</span>
+                      <h4 className="text-lg font-black text-[var(--db-text-main)]">Power Rule of Derivatives</h4>
+                      <p className="text-xs text-[var(--db-text-secondary)] mt-1.5 font-medium">Tap to flip & view formula</p>
                     </div>
                   ) : (
                     <div className="text-center transform rotate-y-180">
-                      <span className="text-[9px] font-bold text-emerald-400 block uppercase mb-1">Back</span>
-                      <h4 className="text-base font-black text-emerald-300 font-mono">d/dx (x^n) = n * x^(n-1)</h4>
-                      <p className="text-[10px] text-slate-500 mt-2">Exam tip: Works for all real number exponents values.</p>
+                      <span className="text-xs font-black text-emerald-500 block uppercase mb-1.5 tracking-wider">Back</span>
+                      <h4 className="text-lg font-black text-emerald-600 dark:text-emerald-450 font-mono">d/dx (xⁿ) = n · xⁿ⁻¹</h4>
+                      <p className="text-xs text-[var(--db-text-secondary)] mt-2 font-medium">Exam tip: Works for all real number exponents.</p>
                     </div>
                   )}
                 </motion.div>
@@ -659,11 +668,11 @@ export default function MathTheory({ onBack }) {
           <div className="lg:col-span-4 space-y-6">
             
             {/* 12. AI FORMULA ASSISTANT */}
-            <div className={`p-6 rounded-3xl border backdrop-blur-xl ${isDark ? 'bg-slate-900/60 border-slate-850' : 'bg-white border-slate-200 shadow-xl'}`}>
-              <h3 className="font-extrabold text-sm mb-3 flex items-center gap-2">
+            <div className={`p-6 rounded-3xl border backdrop-blur-xl transition-all duration-300 shadow-sm bg-[var(--db-card-bg)] border-[var(--db-card-border)]`}>
+              <h3 className="font-extrabold text-sm mb-3 flex items-center gap-2 text-[var(--db-text-main)]">
                 <Sparkles className="text-emerald-500" size={18} /> AI Formula Assistant
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Ask why a formula works, shortcut tricks, or translate concepts to Kannada.</p>
+              <p className="text-xs text-[var(--db-text-muted)] mb-4">Ask why a formula works, shortcut tricks, or translate concepts to Kannada.</p>
 
               <div className="space-y-2">
                 <input
@@ -672,19 +681,19 @@ export default function MathTheory({ onBack }) {
                   value={aiQuestion}
                   onChange={e => setAiQuestion(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleAskAI(aiQuestion)}
-                  className="w-full px-4 py-2.5 bg-slate-950 border border-slate-850 rounded-xl text-xs text-white outline-none"
+                  className="w-full px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] rounded-xl text-xs text-[var(--db-text-main)] outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 
                 <div className="flex gap-2">
                   <button 
                     onClick={() => handleAskAI('Explain in Kannada')}
-                    className="flex-1 py-1.5 bg-slate-900 hover:bg-slate-800 text-[10px] font-bold text-white rounded-lg border border-slate-800"
+                    className="flex-1 py-1.5 bg-[var(--db-btn-secondary)] hover:bg-[var(--db-btn-secondary-hover)] text-[10px] font-bold text-[var(--db-text-main)] rounded-lg border border-[var(--db-card-border)] transition active:scale-95"
                   >
                     Translate Kannada
                   </button>
                   <button 
                     onClick={() => handleAskAI('Explain shortcut')}
-                    className="flex-1 py-1.5 bg-slate-900 hover:bg-slate-800 text-[10px] font-bold text-white rounded-lg border border-slate-800"
+                    className="flex-1 py-1.5 bg-[var(--db-btn-secondary)] hover:bg-[var(--db-btn-secondary-hover)] text-[10px] font-bold text-[var(--db-text-main)] rounded-lg border border-[var(--db-card-border)] transition active:scale-95"
                   >
                     Shortcut Trick
                   </button>
@@ -692,28 +701,28 @@ export default function MathTheory({ onBack }) {
               </div>
 
               {aiAnswer && (
-                <div className="mt-4 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-[11px] leading-relaxed text-slate-300">
+                <div className="mt-4 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-[11px] leading-relaxed text-[var(--db-text-secondary)]">
                   {aiAnswer}
                 </div>
               )}
             </div>
 
             {/* 17. AI REVISION MODE */}
-            <div className={`p-6 rounded-3xl border ${isDark ? 'bg-slate-900/25 border-slate-850' : 'bg-white border-slate-200'}`}>
-              <h3 className="font-extrabold text-sm mb-3">AI Revision Notes</h3>
+            <div className={`p-6 rounded-3xl border transition-all duration-300 shadow-sm bg-[var(--db-card-bg)] border-[var(--db-card-border)]`}>
+              <h3 className="font-extrabold text-sm mb-3 text-[var(--db-text-main)]">AI Revision Notes</h3>
               <div className="flex gap-2 mb-4">
                 {[30, 120, 300].map(sec => (
                   <button
                     key={sec}
                     onClick={() => setRevisionMinutes(sec)}
-                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold ${revisionMinutes === sec ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'border border-slate-850 text-slate-400'}`}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 border ${revisionMinutes === sec ? 'bg-emerald-500/10 border-emerald-500/35 text-emerald-600 dark:text-emerald-400' : 'border-[var(--db-card-border)] bg-[var(--db-card-bg-elevated)] text-[var(--db-text-secondary)] hover:bg-[var(--db-btn-secondary-hover)]'}`}
                   >
                     {sec === 30 ? '30s Notes' : sec === 120 ? '2m Notes' : '5m Notes'}
                   </button>
                 ))}
               </div>
 
-              <div className="p-3 bg-black/40 border border-slate-900 rounded-xl text-[11px] leading-relaxed text-slate-450">
+              <div className="p-3 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] rounded-xl text-[11px] leading-relaxed text-[var(--db-text-secondary)] min-h-[72px] flex items-center">
                 {revisionMinutes === 30 && <p><strong>30s Summary:</strong> The derivative represents slope rates. Power rule gives 2x. Newton-Raphson convergence finds root x using - f(x)/f'(x).</p>}
                 {revisionMinutes === 120 && <p><strong>2m Core Guide:</strong> Calculus measures dynamic graphs curves. The limit definition is the foundation of calculus rates. Common mistakes involve forgetting boundary variables during integrals.</p>}
                 {revisionMinutes === 300 && <p><strong>5m Comprehensive revision:</strong> Full list of formulas: Power rules, Chain rule, Matrix determinants, Trapezoidal area summation integrals and Euler numerical simulations step processes.</p>}
@@ -721,11 +730,11 @@ export default function MathTheory({ onBack }) {
             </div>
 
             {/* 15. INTERACTIVE QUIZ */}
-            <div className={`p-6 rounded-3xl border ${isDark ? 'bg-slate-900/25 border-slate-850' : 'bg-white border-slate-200 shadow-sm'}`}>
-              <h3 className="font-extrabold text-sm mb-4">Quick Concept Check</h3>
+            <div className={`p-6 rounded-3xl border transition-all duration-300 shadow-sm bg-[var(--db-card-bg)] border-[var(--db-card-border)]`}>
+              <h3 className="font-extrabold text-sm mb-4 text-[var(--db-text-main)]">Quick Concept Check</h3>
               
               <div className="space-y-3">
-                <p className="text-xs font-bold">What is the derivative of f(x) = x³?</p>
+                <p className="text-xs font-bold text-[var(--db-text-main)]">What is the derivative of f(x) = x³?</p>
                 {['3x²', '2x³', '3x', 'x²'].map((ans, idx) => (
                   <button
                     key={idx}
@@ -739,7 +748,7 @@ export default function MathTheory({ onBack }) {
                         toast.error('Wrong! Use the power rule.');
                       }
                     }}
-                    className={`w-full p-3 rounded-xl border border-slate-800 text-left text-xs transition ${selectedAns === ans ? (ans === '3x²' ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30') : ''}`}
+                    className={`w-full p-3 rounded-xl border border-[var(--db-card-border)] text-left text-xs transition duration-250 hover:bg-[var(--db-card-bg-elevated)] text-[var(--db-text-main)] hover:border-emerald-500/50 ${selectedAns === ans ? (ans === '3x²' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-450' : 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400') : ''}`}
                   >
                     {ans}
                   </button>

@@ -100,13 +100,13 @@ export default function CalculusVisualization() {
   ];
 
   const CARDS = [
-    { 
-      id: 'Gauss Seidel Method', 
-      title: 'Gauss Seidel Method', 
-      desc: 'Solve systems of linear equations iteratively using successive displacement.', 
-      status: 'Advanced', 
-      time: '20 mins', 
-      xp: '150 XP', 
+    {
+      id: 'Gauss Seidel Method',
+      title: 'Gauss Seidel Method',
+      desc: 'Solve systems of linear equations iteratively using successive displacement.',
+      status: 'Advanced',
+      time: '20 mins',
+      xp: '150 XP',
       progress: 40,
       tags: ['Linear Systems', 'Successive', 'Iterative'],
       colorTheme: 'rose',
@@ -114,13 +114,13 @@ export default function CalculusVisualization() {
       badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400',
       icon: '📐'
     },
-    { 
-      id: 'Jacobi Method', 
-      title: 'Jacobi Method', 
-      desc: 'Solve systems of linear equations iteratively using simultaneous displacement.', 
-      status: 'Intermediate', 
-      time: '15 mins', 
-      xp: '100 XP', 
+    {
+      id: 'Jacobi Method',
+      title: 'Jacobi Method',
+      desc: 'Solve systems of linear equations iteratively using simultaneous displacement.',
+      status: 'Intermediate',
+      time: '15 mins',
+      xp: '100 XP',
       progress: 60,
       tags: ['Linear Systems', 'Simultaneous', 'Iterative'],
       colorTheme: 'purple',
@@ -128,13 +128,13 @@ export default function CalculusVisualization() {
       badgeClass: 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400',
       icon: '🧩'
     },
-    { 
-      id: 'Regula Falsi Method', 
-      title: 'Regula Falsi Method', 
-      desc: 'Find real roots of nonlinear equations using the false position (chord) method.', 
-      status: 'Intermediate', 
-      time: '15 mins', 
-      xp: '120 XP', 
+    {
+      id: 'Regula Falsi Method',
+      title: 'Regula Falsi Method',
+      desc: 'Find real roots of nonlinear equations using the false position (chord) method.',
+      status: 'Intermediate',
+      time: '15 mins',
+      xp: '120 XP',
       progress: 50,
       tags: ['Root Finding', 'False Position', 'Brackets'],
       colorTheme: 'violet',
@@ -142,13 +142,13 @@ export default function CalculusVisualization() {
       badgeClass: 'bg-violet-500/10 border-violet-500/20 text-violet-600 dark:text-violet-400',
       icon: '🌀'
     },
-    { 
-      id: 'Iteration Method', 
-      title: 'Iteration Method', 
-      desc: 'Solve f(x)=0 by rewriting as x=φ(x) and repeatedly applying the mapping until convergence.', 
-      status: 'Beginner', 
-      time: '10 mins', 
-      xp: '80 XP', 
+    {
+      id: 'Iteration Method',
+      title: 'Iteration Method',
+      desc: 'Solve f(x)=0 by rewriting as x=φ(x) and repeatedly applying the mapping until convergence.',
+      status: 'Beginner',
+      time: '10 mins',
+      xp: '80 XP',
       progress: 90,
       tags: ['Root Finding', 'x = φ(x)', 'Convergence'],
       colorTheme: 'teal',
@@ -156,13 +156,13 @@ export default function CalculusVisualization() {
       badgeClass: 'bg-teal-500/10 border-teal-500/20 text-teal-650 dark:text-teal-400',
       icon: '📊'
     },
-    { 
-      id: 'Newton-Raphson Method', 
-      title: 'Newton-Raphson Method', 
-      desc: 'Find roots of nonlinear equations using tangent lines for quadratic convergence.', 
-      status: 'Advanced', 
-      time: '15 mins', 
-      xp: '150 XP', 
+    {
+      id: 'Newton-Raphson Method',
+      title: 'Newton-Raphson Method',
+      desc: 'Find roots of nonlinear equations using tangent lines for quadratic convergence.',
+      status: 'Advanced',
+      time: '15 mins',
+      xp: '150 XP',
       progress: 70,
       tags: ['Root Finding', 'Tangent Lines', 'Quadratic'],
       colorTheme: 'amber',
@@ -170,13 +170,13 @@ export default function CalculusVisualization() {
       badgeClass: 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400',
       icon: '📐'
     },
-    { 
-      id: 'Lagrange Interpolation', 
-      title: 'Lagrange Interpolation', 
-      desc: 'Estimate f(x) at any point using a polynomial built from known data pairs.', 
-      status: 'Intermediate', 
-      time: '15 mins', 
-      xp: '100 XP', 
+    {
+      id: 'Lagrange Interpolation',
+      title: 'Lagrange Interpolation',
+      desc: 'Estimate f(x) at any point using a polynomial built from known data pairs.',
+      status: 'Intermediate',
+      time: '15 mins',
+      xp: '100 XP',
       progress: 85,
       tags: ['Interpolation', 'Polynomials', 'Known Pairs'],
       colorTheme: 'blue',
@@ -184,13 +184,13 @@ export default function CalculusVisualization() {
       badgeClass: 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400',
       icon: '📈'
     },
-    { 
-      id: 'Newton General Interpolation', 
-      title: "Newton's General Interpolation", 
-      desc: 'Use divided differences to build a polynomial and interpolate at any argument.', 
-      status: 'Advanced', 
-      time: '20 mins', 
-      xp: '150 XP', 
+    {
+      id: 'Newton General Interpolation',
+      title: "Newton's General Interpolation",
+      desc: 'Use divided differences to build a polynomial and interpolate at any argument.',
+      status: 'Advanced',
+      time: '20 mins',
+      xp: '150 XP',
       progress: 30,
       tags: ['Interpolation', 'Divided Diff', 'Unequal spacing'],
       colorTheme: 'pink',
@@ -198,13 +198,13 @@ export default function CalculusVisualization() {
       badgeClass: 'bg-pink-500/10 border-pink-500/20 text-pink-600 dark:text-pink-400',
       icon: '🧪'
     },
-    { 
-      id: 'Fitting Straight Line', 
-      title: 'Fitting Straight Line', 
-      desc: 'Fit a straight line y = a₀ + a₁x to a set of data points using least squares.', 
-      status: 'Beginner', 
-      time: '12 mins', 
-      xp: '90 XP', 
+    {
+      id: 'Fitting Straight Line',
+      title: 'Fitting Straight Line',
+      desc: 'Fit a straight line y = a₀ + a₁x to a set of data points using least squares.',
+      status: 'Beginner',
+      time: '12 mins',
+      xp: '90 XP',
       progress: 95,
       tags: ['Least Squares', 'Curve Fitting', 'y = a₀ + a₁x'],
       colorTheme: 'sky',
@@ -218,46 +218,46 @@ export default function CalculusVisualization() {
   const FORMULA_DATA = {
     'Gauss Seidel Method': {
       features: [
-        { icon: BookOpen, title: 'Iterative Solver',     desc: 'Find solutions to system of linear equations.' },
-        { icon: Target,   title: 'Successive Displacement', desc: 'Uses newly computed values immediately.' },
-        { icon: Lightbulb, title: 'Photo Problem',        desc: 'Solve 10x₁ - 2x₂ - x₃ - x₄ = 3, etc.' },
+        { icon: BookOpen, title: 'Iterative Solver', desc: 'Find solutions to system of linear equations.' },
+        { icon: Target, title: 'Successive Displacement', desc: 'Uses newly computed values immediately.' },
+        { icon: Lightbulb, title: 'Photo Problem', desc: 'Solve 10x₁ - 2x₂ - x₃ - x₄ = 3, etc.' },
       ],
       formulas: [
         {
           title: 'Gauss-Seidel Iteration Formula',
           formula: 'x_i^(k+1) = (1/a_ii) [ b_i − ∑(j<i) a_ij x_j^(k+1) − ∑(j>i) a_ij x_j^(k) ]',
           variables: [
-            { sym: 'a_ii',       def: 'Diagonal coefficient for equation i' },
-            { sym: 'b_i',        def: 'RHS constant term for equation i' },
-            { sym: 'x_j^(k+1)',  def: 'New values computed in current iteration' },
-            { sym: 'x_j^(k)',    def: 'Old values from previous iteration' },
+            { sym: 'a_ii', def: 'Diagonal coefficient for equation i' },
+            { sym: 'b_i', def: 'RHS constant term for equation i' },
+            { sym: 'x_j^(k+1)', def: 'New values computed in current iteration' },
+            { sym: 'x_j^(k)', def: 'Old values from previous iteration' },
           ],
         },
       ],
     },
     'Jacobi Method': {
       features: [
-        { icon: BookOpen, title: 'Iterative Solver',     desc: 'Find solutions to system of linear equations.' },
-        { icon: Target,   title: 'Simultaneous Displacement', desc: 'Uses old values from previous iteration.' },
-        { icon: Lightbulb, title: 'Photo Problem',        desc: 'Solve 10x₁ - 2x₂ - x₃ - x₄ = 3, etc.' },
+        { icon: BookOpen, title: 'Iterative Solver', desc: 'Find solutions to system of linear equations.' },
+        { icon: Target, title: 'Simultaneous Displacement', desc: 'Uses old values from previous iteration.' },
+        { icon: Lightbulb, title: 'Photo Problem', desc: 'Solve 10x₁ - 2x₂ - x₃ - x₄ = 3, etc.' },
       ],
       formulas: [
         {
           title: 'Jacobi Iteration Formula',
           formula: 'x_i^(k+1) = (1/a_ii) [ b_i − ∑(j≠i) a_ij x_j^(k) ]',
           variables: [
-            { sym: 'a_ii',       def: 'Diagonal coefficient for equation i' },
-            { sym: 'b_i',        def: 'RHS constant term for equation i' },
-            { sym: 'x_j^(k)',    def: 'Values from previous iteration' },
+            { sym: 'a_ii', def: 'Diagonal coefficient for equation i' },
+            { sym: 'b_i', def: 'RHS constant term for equation i' },
+            { sym: 'x_j^(k)', def: 'Values from previous iteration' },
           ],
         },
       ],
     },
     'Regula Falsi Method': {
       features: [
-        { icon: BookOpen,  title: 'False Position',        desc: 'Interpolate a chord between two bracket points to find the root.' },
-        { icon: Target,    title: 'Guaranteed Convergence', desc: 'Always stays bracketed — root never escapes the interval.' },
-        { icon: Lightbulb, title: 'Photo Problem',          desc: 'Solve f(x) = x³ - 2x - 5 = 0 from your exam notebook.' },
+        { icon: BookOpen, title: 'False Position', desc: 'Interpolate a chord between two bracket points to find the root.' },
+        { icon: Target, title: 'Guaranteed Convergence', desc: 'Always stays bracketed — root never escapes the interval.' },
+        { icon: Lightbulb, title: 'Photo Problem', desc: 'Solve f(x) = x³ - 2x - 5 = 0 from your exam notebook.' },
       ],
       formulas: [
         {
@@ -265,7 +265,7 @@ export default function CalculusVisualization() {
           formula: 'x = [ a·f(b) − b·f(a) ] / [ f(b) − f(a) ]',
           variables: [
             { sym: 'a, b', def: 'Current bracket endpoints where f(a)·f(b) < 0' },
-            { sym: 'x',    def: 'New approximation (point where chord crosses x-axis)' },
+            { sym: 'x', def: 'New approximation (point where chord crosses x-axis)' },
             { sym: 'f(a)', def: 'Function value at left bracket a' },
             { sym: 'f(b)', def: 'Function value at right bracket b' },
           ],
@@ -274,17 +274,17 @@ export default function CalculusVisualization() {
     },
     'Iteration Method': {
       features: [
-        { icon: BookOpen,  title: 'Fixed-Point Iteration', desc: 'Rewrite f(x)=0 as x=φ(x) and iterate xₙ₊₁=φ(xₙ).' },
-        { icon: Target,    title: 'Convergence Condition', desc: '|φ′(x)| < 1 in the interval ensures the iterations converge.' },
-        { icon: Lightbulb, title: 'Photo Problems',        desc: 'Solve 2x=cos(x)+3 and xeˣ=1 from your exam notebook.' },
+        { icon: BookOpen, title: 'Fixed-Point Iteration', desc: 'Rewrite f(x)=0 as x=φ(x) and iterate xₙ₊₁=φ(xₙ).' },
+        { icon: Target, title: 'Convergence Condition', desc: '|φ′(x)| < 1 in the interval ensures the iterations converge.' },
+        { icon: Lightbulb, title: 'Photo Problems', desc: 'Solve 2x=cos(x)+3 and xeˣ=1 from your exam notebook.' },
       ],
       formulas: [
         {
           title: 'Iteration (Fixed-Point) Formula',
           formula: 'xₙ₊₁ = φ(xₙ)',
           variables: [
-            { sym: 'xₙ',    def: 'Current approximation at step n' },
-            { sym: 'φ(x)',  def: 'Rearranged form: x = φ(x)  from f(x) = 0' },
+            { sym: 'xₙ', def: 'Current approximation at step n' },
+            { sym: 'φ(x)', def: 'Rearranged form: x = φ(x)  from f(x) = 0' },
             { sym: 'xₙ₊₁', def: 'Next approximation, obtained by applying φ to xₙ' },
             { sym: '|φ′|<1', def: 'Convergence criterion — derivative of φ must be < 1 in magnitude' },
           ],
@@ -293,28 +293,28 @@ export default function CalculusVisualization() {
     },
     'Newton-Raphson Method': {
       features: [
-        { icon: BookOpen,  title: 'Tangent Line Method',   desc: 'Use the tangent at xₙ to project to the x-axis for the next guess.' },
-        { icon: Target,    title: 'Quadratic Convergence', desc: 'Doubles correct decimal places each step — very fast near the root.' },
-        { icon: Lightbulb, title: 'Photo Problem',         desc: 'Solve f(x)=x³-2x-5=0 correct to 3 decimal places (x₀=2.5).' },
+        { icon: BookOpen, title: 'Tangent Line Method', desc: 'Use the tangent at xₙ to project to the x-axis for the next guess.' },
+        { icon: Target, title: 'Quadratic Convergence', desc: 'Doubles correct decimal places each step — very fast near the root.' },
+        { icon: Lightbulb, title: 'Photo Problem', desc: 'Solve f(x)=x³-2x-5=0 correct to 3 decimal places (x₀=2.5).' },
       ],
       formulas: [
         {
           title: 'Newton-Raphson Iteration Formula',
           formula: 'xₙ = xₙ₋₁ − f(xₙ₋₁) / f′(xₙ₋₁)',
           variables: [
-            { sym: 'xₙ₋₁',     def: 'Previous approximation' },
-            { sym: 'f(xₙ₋₁)',  def: 'Function value at current approximation' },
+            { sym: 'xₙ₋₁', def: 'Previous approximation' },
+            { sym: 'f(xₙ₋₁)', def: 'Function value at current approximation' },
             { sym: 'f′(xₙ₋₁)', def: 'Derivative value at current approximation' },
-            { sym: 'xₙ',       def: 'Improved approximation after applying the formula' },
+            { sym: 'xₙ', def: 'Improved approximation after applying the formula' },
           ],
         },
       ],
     },
     'Lagrange Interpolation': {
       features: [
-        { icon: BookOpen,  title: 'Polynomial Fit',      desc: 'Constructs a unique polynomial through n+1 given data points.' },
-        { icon: Target,    title: 'Works for Unequal h', desc: 'No need for equally-spaced nodes — works with any x values.' },
-        { icon: Lightbulb, title: 'Photo Problems',      desc: 'Find log₁₀(301) and √155 from your exam notebook.' },
+        { icon: BookOpen, title: 'Polynomial Fit', desc: 'Constructs a unique polynomial through n+1 given data points.' },
+        { icon: Target, title: 'Works for Unequal h', desc: 'No need for equally-spaced nodes — works with any x values.' },
+        { icon: Lightbulb, title: 'Photo Problems', desc: 'Find log₁₀(301) and √155 from your exam notebook.' },
       ],
       formulas: [
         {
@@ -322,47 +322,47 @@ export default function CalculusVisualization() {
           formula: 'L(x) = Σᵢ yᵢ · ∏ⱼ≠ᵢ (x−xⱼ)/(xᵢ−xⱼ)',
           variables: [
             { sym: 'xᵢ, yᵢ', def: 'Known data point pairs (i = 0, 1, …, n)' },
-            { sym: 'x',       def: 'The argument at which we interpolate' },
-            { sym: 'Lᵢ(x)',   def: 'Lagrange basis polynomial for node i' },
-            { sym: 'L(x)',    def: 'Final interpolated value at x' },
+            { sym: 'x', def: 'The argument at which we interpolate' },
+            { sym: 'Lᵢ(x)', def: 'Lagrange basis polynomial for node i' },
+            { sym: 'L(x)', def: 'Final interpolated value at x' },
           ],
         },
       ],
     },
     'Newton General Interpolation': {
       features: [
-        { icon: BookOpen,  title: 'Divided Differences', desc: 'Builds a difference table [x₀,x₁], [x₀,x₁,x₂], … recursively.' },
-        { icon: Target,    title: 'Unequal Spacing OK',  desc: 'Works for any node spacing — more general than forward/backward.' },
-        { icon: Lightbulb, title: 'Photo Problems',      desc: 'Find log₁₀(301) and express f(x) as a polynomial from notebook.' },
+        { icon: BookOpen, title: 'Divided Differences', desc: 'Builds a difference table [x₀,x₁], [x₀,x₁,x₂], … recursively.' },
+        { icon: Target, title: 'Unequal Spacing OK', desc: 'Works for any node spacing — more general than forward/backward.' },
+        { icon: Lightbulb, title: 'Photo Problems', desc: 'Find log₁₀(301) and express f(x) as a polynomial from notebook.' },
       ],
       formulas: [
         {
           title: "Newton's General (Divided Difference) Formula",
           formula: 'y = y₀ + (x−x₀)[x₀,x₁] + (x−x₀)(x−x₁)[x₀,x₁,x₂] + …',
           variables: [
-            { sym: 'y₀',            def: 'Function value at x₀' },
-            { sym: '[x₀,x₁]',       def: 'First divided difference = (y₁−y₀)/(x₁−x₀)' },
-            { sym: '[x₀,x₁,x₂]',   def: 'Second divided difference (recursive)' },
-            { sym: '(x−xᵢ)',        def: 'Product terms that weight each difference level' },
+            { sym: 'y₀', def: 'Function value at x₀' },
+            { sym: '[x₀,x₁]', def: 'First divided difference = (y₁−y₀)/(x₁−x₀)' },
+            { sym: '[x₀,x₁,x₂]', def: 'Second divided difference (recursive)' },
+            { sym: '(x−xᵢ)', def: 'Product terms that weight each difference level' },
           ],
         },
       ],
     },
     'Fitting Straight Line': {
       features: [
-        { icon: BookOpen,  title: 'Linear Regression',   desc: 'Find the best-fitting straight line through a set of data points.' },
-        { icon: Target,    title: 'Least Squares Method', desc: 'Minimizes the sum of squared residuals (errors).' },
-        { icon: Lightbulb, title: 'Photo Problems',      desc: 'Fit copper rod l vs T and experimental x vs y from your notebook.' },
+        { icon: BookOpen, title: 'Linear Regression', desc: 'Find the best-fitting straight line through a set of data points.' },
+        { icon: Target, title: 'Least Squares Method', desc: 'Minimizes the sum of squared residuals (errors).' },
+        { icon: Lightbulb, title: 'Photo Problems', desc: 'Fit copper rod l vs T and experimental x vs y from your notebook.' },
       ],
       formulas: [
         {
           title: 'Fitting a Straight Line Formula',
           formula: 'y = a₀ + a₁x',
           variables: [
-            { sym: 'a₀',         def: 'y-intercept of the line' },
-            { sym: 'a₁',         def: 'Slope (coefficient of x) of the line' },
-            { sym: 'Σy',         def: 'Sum of all y values' },
-            { sym: 'Σx',         def: 'Sum of all x values' },
+            { sym: 'a₀', def: 'y-intercept of the line' },
+            { sym: 'a₁', def: 'Slope (coefficient of x) of the line' },
+            { sym: 'Σy', def: 'Sum of all y values' },
+            { sym: 'Σx', def: 'Sum of all x values' },
             { sym: 'Normal Eq 1', def: 'Σy = n·a₀ + a₁·Σx' },
             { sym: 'Normal Eq 2', def: 'Σxy = a₀·Σx + a₁·Σx²' },
           ],
@@ -497,7 +497,7 @@ export default function CalculusVisualization() {
         <main className="max-w-7xl mx-auto w-full px-8 py-8 relative z-10">
           <div className="mb-10 text-left flex flex-col gap-2">
             <div className="flex items-center gap-4">
-              <button 
+              <button
                 onClick={() => navigate('/subjects/math-proto', { state: { activeView: 'practical' } })}
                 className="p-3 bg-[var(--db-card-bg)] hover:bg-[var(--db-btn-secondary-hover)] border border-[var(--db-card-border)] rounded-2xl transition shadow-sm text-[var(--db-text-main)] flex items-center justify-center"
                 title="Back to Mathematics Lab"
@@ -560,11 +560,10 @@ export default function CalculusVisualization() {
 
                   {/* Difficulty, Time, XP row */}
                   <div className="flex items-center gap-3 text-[11px] pt-1">
-                    <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] border ${
-                      card.status === 'Beginner' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' :
-                      card.status === 'Intermediate' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400' :
-                      'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
-                    }`}>
+                    <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] border ${card.status === 'Beginner' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' :
+                        card.status === 'Intermediate' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400' :
+                          'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
+                      }`}>
                       {card.status}
                     </span>
                     <span className="text-[var(--db-text-muted)]">•</span>
@@ -581,20 +580,19 @@ export default function CalculusVisualization() {
                     <span>{card.progress}%</span>
                   </div>
                   <div className="w-full bg-slate-200 dark:bg-slate-800/50 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full transition-all duration-500 ${
-                        card.colorTheme === 'blue' ? 'bg-blue-500' :
-                        card.colorTheme === 'cyan' ? 'bg-cyan-500' :
-                        card.colorTheme === 'emerald' ? 'bg-emerald-500' :
-                        card.colorTheme === 'violet' ? 'bg-violet-500' :
-                        card.colorTheme === 'amber' ? 'bg-amber-500' :
-                        card.colorTheme === 'rose' ? 'bg-rose-500' :
-                        card.colorTheme === 'purple' ? 'bg-purple-500' :
-                        card.colorTheme === 'pink' ? 'bg-pink-500' :
-                        'bg-sky-500'
-                      }`}
-                      style={{ width: `${card.progress}%` }} 
-                      />
+                    <div
+                      className={`h-full transition-all duration-500 ${card.colorTheme === 'blue' ? 'bg-blue-500' :
+                          card.colorTheme === 'cyan' ? 'bg-cyan-500' :
+                            card.colorTheme === 'emerald' ? 'bg-emerald-500' :
+                              card.colorTheme === 'violet' ? 'bg-violet-500' :
+                                card.colorTheme === 'amber' ? 'bg-amber-500' :
+                                  card.colorTheme === 'rose' ? 'bg-rose-500' :
+                                    card.colorTheme === 'purple' ? 'bg-purple-500' :
+                                      card.colorTheme === 'pink' ? 'bg-pink-500' :
+                                        'bg-sky-500'
+                        }`}
+                      style={{ width: `${card.progress}%` }}
+                    />
                   </div>
                 </div>
 
@@ -615,9 +613,9 @@ export default function CalculusVisualization() {
   // ─── VIEW 2: FORMULA INTERMEDIATE PAGE ────────────────────────────────────
   if (showFormula && selectedMethod) {
     const methodFormulas = FORMULA_DATA[selectedMethod];
-    const currentCard    = CARDS.find(c => c.id === selectedMethod);
+    const currentCard = CARDS.find(c => c.id === selectedMethod);
     const currentFormula = methodFormulas?.formulas?.[formulaPage] || methodFormulas?.formulas?.[0];
-    const totalPages     = methodFormulas?.formulas?.length || 1;
+    const totalPages = methodFormulas?.formulas?.length || 1;
 
     return (
       <MathBackground>
@@ -932,12 +930,12 @@ export default function CalculusVisualization() {
           {/* Playback Controls */}
           <div className="p-4 pt-2 shrink-0 border-t border-[var(--db-card-border)]">
             <div className="rounded-2xl p-4 flex flex-col gap-3 bg-[var(--db-card-bg-elevated)] shadow-sm">
-              
+
               {/* Speed Controller */}
               <div className="flex justify-between items-center p-1 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-card-border)]">
                 {[0.5, 1, 1.5, 2].map(s => (
-                  <button 
-                    key={s} 
+                  <button
+                    key={s}
                     onClick={() => setSpeed(s)}
                     className={`flex-1 py-1 text-xs font-bold rounded-lg transition-all ${speed === s ? 'bg-emerald-500 text-white shadow' : 'text-[var(--db-text-muted)] hover:text-[var(--db-text-main)]'}`}
                   >
@@ -948,7 +946,7 @@ export default function CalculusVisualization() {
 
               {/* Main Controls Row */}
               <div className="grid grid-cols-4 gap-2">
-                <button 
+                <button
                   onClick={() => setPlaybackState('PREV')}
                   disabled={playbackState === 'IDLE'}
                   title="Previous Step"
@@ -957,7 +955,7 @@ export default function CalculusVisualization() {
                   <SkipBack className="w-4 h-4" />
                 </button>
 
-                <button 
+                <button
                   onClick={handlePlayPause}
                   title={playbackState === 'PLAYING' ? 'Pause' : 'Play'}
                   className="col-span-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 shadow-md shadow-emerald-500/10"
@@ -966,7 +964,7 @@ export default function CalculusVisualization() {
                   <span className="text-xs uppercase tracking-wider">{playbackState === 'PLAYING' ? 'Pause' : 'Solve'}</span>
                 </button>
 
-                <button 
+                <button
                   onClick={() => setPlaybackState('NEXT')}
                   disabled={playbackState === 'FINISHED' || playbackState === 'IDLE'}
                   title="Next Step"
@@ -978,15 +976,15 @@ export default function CalculusVisualization() {
 
               {/* Auxiliary Controls Row */}
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={() => setPlaybackState('SKIP')}
                   disabled={playbackState === 'FINISHED' || playbackState === 'IDLE'}
                   className="flex-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-200/20 py-2 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold tracking-wide uppercase transition active:scale-95 disabled:opacity-40"
                 >
                   <FastForward className="w-3.5 h-3.5" /> Skip Animation
                 </button>
-                <button 
-                  onClick={handleReplay} 
+                <button
+                  onClick={handleReplay}
                   title="Replay Solution"
                   className="w-12 bg-[var(--db-input-bg)] border border-[var(--db-card-border)] hover:border-emerald-500/50 hover:bg-[var(--db-btn-secondary-hover)] text-[var(--db-text-main)] rounded-xl flex items-center justify-center transition active:scale-95"
                 >
