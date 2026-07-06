@@ -520,12 +520,15 @@ export default function CalculusVisualization() {
                 transition={{ delay: index * 0.08, type: 'spring', stiffness: 100 }}
                 whileHover={{ y: -8, scale: 1.02 }}
                 onClick={() => handleCardClick(card.id)}
-                className="relative rounded-[24px] cursor-pointer group overflow-hidden border border-[var(--db-card-border)] bg-[var(--db-card-bg)] hover:bg-[var(--db-card-bg-elevated)] transition-all duration-300 shadow-md p-6 flex flex-col justify-between min-h-[380px]"
+                className="relative rounded-[24px] cursor-pointer group overflow-hidden border border-[var(--db-card-border)]/65 bg-[var(--db-card-bg)]/45 dark:bg-[var(--db-card-bg)]/70 backdrop-blur-xl hover:border-emerald-500/40 hover:scale-[1.01] transition-all duration-500 shadow-lg hover:shadow-emerald-500/5 p-6 flex flex-col justify-between min-h-[380px]"
               >
+                {/* Light flowing background color */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/5 via-blue-500/5 to-teal-500/5 dark:from-emerald-500/10 dark:via-blue-500/10 dark:to-teal-500/10 opacity-70 group-hover:opacity-100 transition-opacity duration-500 bg-loop" style={{ backgroundSize: '200% 200%' }} />
+
                 {/* Top border highlight */}
                 <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-${card.colorTheme === 'amber' ? 'amber-500' : card.colorTheme === 'emerald' ? 'emerald-500' : card.colorTheme}-500/40 to-transparent`} />
 
-                <div className="space-y-4">
+                <div className="relative z-10 space-y-4">
                   {/* Top Row: Icon and Method Number + Title */}
                   <div className="flex gap-4 items-start text-left">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${card.badgeClass}`}>
@@ -535,7 +538,7 @@ export default function CalculusVisualization() {
                       <span className="text-[9px] uppercase tracking-widest font-extrabold text-[var(--db-text-muted)]">
                         METHOD {index + 1}
                       </span>
-                      <h3 className="text-base font-bold text-[var(--db-text-main)] mt-0.5 group-hover:text-emerald-500 transition-colors">
+                      <h3 className="text-base font-bold text-[var(--db-text-main)] mt-0.5 group-hover:text-emerald-550 transition-colors">
                         {card.title}
                       </h3>
                     </div>
@@ -549,7 +552,7 @@ export default function CalculusVisualization() {
                   {/* Tag Pills */}
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {card.tags.map((tag, idx) => (
-                      <span key={idx} className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-[var(--db-card-border)] bg-[var(--db-card-bg-elevated)] text-[var(--db-text-secondary)]">
+                      <span key={idx} className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-[var(--db-card-border)] bg-[var(--db-card-bg-elevated)]/50 text-[var(--db-text-secondary)]">
                         {tag}
                       </span>
                     ))}
@@ -572,7 +575,7 @@ export default function CalculusVisualization() {
                 </div>
 
                 {/* Progress bar section */}
-                <div className="mt-4 pt-3 border-t border-[var(--db-card-border)] space-y-1.5 text-left">
+                <div className="relative z-10 mt-4 pt-3 border-t border-[var(--db-card-border)] space-y-1.5 text-left">
                   <div className="flex items-center justify-between text-[10px] font-bold text-[var(--db-text-muted)]">
                     <span>Progress</span>
                     <span>{card.progress}%</span>
@@ -591,12 +594,12 @@ export default function CalculusVisualization() {
                         'bg-sky-500'
                       }`}
                       style={{ width: `${card.progress}%` }} 
-                    />
+                      />
                   </div>
                 </div>
 
                 {/* Action button at bottom */}
-                <button className={`w-full py-2.5 mt-5 font-bold rounded-xl text-xs transition duration-200 flex items-center justify-center gap-1.5 ${card.btnClass}`}>
+                <button className={`relative z-10 w-full py-2.5 mt-5 font-bold rounded-xl text-xs transition duration-200 flex items-center justify-center gap-1.5 ${card.btnClass}`}>
                   <span>Launch Simulator</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
