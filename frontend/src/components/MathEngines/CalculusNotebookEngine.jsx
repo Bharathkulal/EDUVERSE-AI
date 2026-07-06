@@ -2,8 +2,78 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import TypewriterStep from './TypewriterStep';
 
+const triggerConfetti = () => {
+  const canvas = document.createElement('canvas');
+  canvas.style.position = 'fixed';
+  canvas.style.top = '0';
+  canvas.style.left = '0';
+  canvas.style.width = '100vw';
+  canvas.style.height = '100vh';
+  canvas.style.pointerEvents = 'none';
+  canvas.style.zIndex = '9999';
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  const resizeCanvas = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  };
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  const colors = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#ef4444'];
+  const particles = [];
+  
+  for (let i = 0; i < 120; i++) {
+    particles.push({
+      x: canvas.width / 2 + (Math.random() * 40 - 20),
+      y: canvas.height * 0.75 + (Math.random() * 40 - 20),
+      vx: (Math.random() - 0.5) * 20,
+      vy: -15 - Math.random() * 15,
+      r: Math.random() * 6 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      opacity: 1,
+      angle: Math.random() * Math.PI * 2,
+      rotationSpeed: (Math.random() - 0.5) * 0.2
+    });
+  }
+
+  let animationFrameId;
+  const startTime = Date.now();
+
+  const animate = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.5;
+      p.vx *= 0.98;
+      p.angle += p.rotationSpeed;
+      p.opacity = Math.max(0, 1 - (Date.now() - startTime) / 3000);
+
+      ctx.save();
+      ctx.globalAlpha = p.opacity;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
+      ctx.restore();
+    });
+
+    if (Date.now() - startTime < 3500) {
+      animationFrameId = requestAnimationFrame(animate);
+    } else {
+      window.removeEventListener('resize', resizeCanvas);
+      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+    }
+  };
+
+  animate();
+};
+
 export default function CalculusNotebookEngine({
-  method, playbackState, speed, onExplain, onFinish,
+  method, playbackState, speed, onExplain, onFinish, onPlaybackStateChange,
   // Limit props
   limitFuncId, limitApproachVal,
   // Derivative props
@@ -1285,6 +1355,37 @@ export default function CalculusNotebookEngine({
     }
   }, [playbackState]);
 
+  // Confetti trigger on FINISHED
+  useEffect(() => {
+    if (playbackState === 'FINISHED') {
+      triggerConfetti();
+    }
+  }, [playbackState]);
+
+  // Handle NEXT, PREV, SKIP controls
+  useEffect(() => {
+    if (playbackState === 'NEXT') {
+      if (activeStepIndex < steps.length - 1) {
+        setStepComplete(false);
+        setActiveStepIndex(prev => prev + 1);
+      }
+      onPlaybackStateChange?.('PAUSED');
+    } else if (playbackState === 'PREV') {
+      if (activeStepIndex > 0) {
+        setStepComplete(false);
+        setActiveStepIndex(prev => prev - 1);
+      } else if (activeStepIndex === 0) {
+        setStepComplete(false);
+        setActiveStepIndex(-1);
+      }
+      onPlaybackStateChange?.('PAUSED');
+    } else if (playbackState === 'SKIP') {
+      setStepComplete(true);
+      setActiveStepIndex(steps.length - 1);
+      onPlaybackStateChange?.('FINISHED');
+    }
+  }, [playbackState, steps.length, activeStepIndex]);
+
   useEffect(() => {
     if (playbackState === 'PLAYING' && activeStepIndex === -1) {
       setStepComplete(false);
@@ -1703,7 +1804,11 @@ export default function CalculusNotebookEngine({
               </div>
 
               {step.type === 'result' ? (
-                <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-8 rounded-3xl shadow-lg text-white">
+                <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-8 rounded-3xl shadow-lg text-white shadow-[0_0_30px_rgba(16,185,129,0.3)] border border-emerald-400/30 relative overflow-hidden animate-pulse-subtle">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 text-white font-bold text-lg animate-bounce">✓</span>
+                    <span className="text-xs font-black tracking-[0.2em] uppercase text-emerald-100">Calculation Complete ✓</span>
+                  </div>
                   <TypewriterStep
                     text={step.content}
                     isActive={isCurrent && playbackState === 'PLAYING' && !stepComplete}

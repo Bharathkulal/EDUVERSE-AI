@@ -1,10 +1,370 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import TypewriterStep from './TypewriterStep';
+
+function InteractiveDifferenceTable({ xVals, yVals, diffs, operatorSymbol, playbackState, speed, handleTypingComplete, getDuration, onExplain }) {
+  const count = xVals.length;
+  const numRows = 2 * count - 1;
+  const cols = ['x', 'y', ...Array.from({ length: count - 1 }, (_, k) => `${operatorSymbol}${k + 1 > 1 ? `<sup>${k + 1}</sup>` : ''}`)];
+
+  // Generate list of difference cells to animate in order
+  const animatedCells = useMemo(() => {
+    const cells = [];
+    for (let c = 2; c <= count; c++) {
+      for (let i = 0; i <= count - c; i++) {
+        const r = (c - 1) + 2 * i;
+        cells.push({
+          c, // column index (0 to count)
+          r, // row index in 2*N - 1 rows
+          diffCol: c - 1,
+          diffRow: i,
+          val: diffs[c - 1][i],
+          upperSrc: { c: c - 1, r: r - 1 },
+          lowerSrc: { c: c - 1, r: r + 1 }
+        });
+      }
+    }
+    return cells;
+  }, [count, diffs]);
+
+  const [currentStepIndex, setCurrentStepIndex] = useState(-1);
+  const [isPlaying, setIsPlaying] = useState(playbackState === 'PLAYING');
+  
+  const [typedFormula, setTypedFormula] = useState('');
+  const [typingComplete, setTypingComplete] = useState(false);
+  const [revealedKeys, setRevealedKeys] = useState(new Set());
+
+  useEffect(() => {
+    setIsPlaying(playbackState === 'PLAYING');
+    if (playbackState === 'IDLE') {
+      setCurrentStepIndex(-1);
+      setRevealedKeys(new Set());
+    } else if (playbackState === 'FINISHED') {
+      setCurrentStepIndex(animatedCells.length - 1);
+    }
+  }, [playbackState, animatedCells.length]);
+
+  useEffect(() => {
+    if (!isPlaying) return;
+    if (currentStepIndex >= animatedCells.length - 1) {
+      // Completed construction
+      handleTypingComplete();
+      return;
+    }
+
+    const intervalTime = getDuration(1800); // 1.8 seconds per cell computation
+    const timer = setTimeout(() => {
+      setCurrentStepIndex(prev => prev + 1);
+    }, intervalTime);
+
+    return () => clearTimeout(timer);
+  }, [currentStepIndex, isPlaying, animatedCells.length, handleTypingComplete, getDuration]);
+
+  // Typewriter effect for subtraction calculations
+  useEffect(() => {
+    if (currentStepIndex === -1) {
+      setTypedFormula('');
+      setTypingComplete(false);
+      setRevealedKeys(new Set());
+      return;
+    }
+
+    if (currentStepIndex >= 0 && currentStepIndex < animatedCells.length) {
+      const cell = animatedCells[currentStepIndex];
+      // Get values from already revealed source cells
+      const upperVal = getCellValue(cell.upperSrc.c, cell.upperSrc.r);
+      const lowerVal = getCellValue(cell.lowerSrc.c, cell.lowerSrc.r);
+      const fullFormula = `${lowerVal} − ${upperVal} = ${cell.val}`;
+
+      setTypingComplete(false);
+      setTypedFormula('');
+
+      let index = 0;
+      const typeDelay = Math.max(15, 55 / speed);
+      const intervalId = setInterval(() => {
+        index++;
+        setTypedFormula(fullFormula.slice(0, index));
+        if (index >= fullFormula.length) {
+          clearInterval(intervalId);
+          setTypingComplete(true);
+          setRevealedKeys(prev => {
+            const next = new Set(prev);
+            next.add(`${cell.c}-${cell.r}`);
+            return next;
+          });
+        }
+      }, typeDelay);
+
+      return () => clearInterval(intervalId);
+    }
+  }, [currentStepIndex, animatedCells, speed]);
+
+  // Handle dynamic trace explanations for each calculation
+  useEffect(() => {
+    if (!isPlaying || !onExplain) return;
+    if (currentStepIndex === -1) {
+      onExplain("Constructing the staggered difference table. We start with the given x and y columns.");
+    } else if (currentStepIndex >= 0 && currentStepIndex < animatedCells.length) {
+      const cell = animatedCells[currentStepIndex];
+      const upperVal = getCellValue(cell.upperSrc.c, cell.upperSrc.r);
+      const lowerVal = getCellValue(cell.lowerSrc.c, cell.lowerSrc.r);
+      
+      let colName = "";
+      if (cell.c === 2) colName = "First Difference (Δ)";
+      else if (cell.c === 3) colName = "Second Difference (Δ²)";
+      else if (cell.c === 4) colName = "Third Difference (Δ³)";
+      else if (cell.c === 5) colName = "Fourth Difference (Δ⁴)";
+      else colName = `Difference (Δ^${cell.c - 1})`;
+
+      const exp = `Compute the ${colName} cell at Row ${cell.diffRow + 1} by subtracting the upper-left source value ${upperVal} from the lower-left source value ${lowerVal}: ${lowerVal} − ${upperVal} = ${cell.val}.`;
+      onExplain(exp);
+    }
+  }, [currentStepIndex, isPlaying, animatedCells, onExplain]);
+
+  // Current active step calculation details
+  const activeCell = currentStepIndex >= 0 && currentStepIndex < animatedCells.length ? animatedCells[currentStepIndex] : null;
+
+  // Function to get value at cell (c, r) in grid
+  const getCellValue = (c, r) => {
+    if (c === 0) return r % 2 === 0 ? xVals[Math.floor(r / 2)].toString() : '';
+    if (c === 1) return r % 2 === 0 ? yVals[Math.floor(r / 2)].toString() : '';
+    
+    const diffCol = c - 1;
+    const i = (r - (c - 1)) / 2;
+    // Find if this cell has been animated yet
+    const cellIdx = animatedCells.findIndex(cell => cell.c === c && cell.r === r);
+    if (cellIdx === -1) return '';
+    
+    const isFinished = playbackState === 'FINISHED';
+    if (isFinished || revealedKeys.has(`${c}-${r}`) || cellIdx < currentStepIndex) {
+      return diffs[diffCol][i]?.toString() || '';
+    }
+    return '';
+  };
+
+  // Check if a cell is currently highlighted as source or target
+  const getCellHighlight = (c, r) => {
+    if (!activeCell) return null;
+    if (activeCell.c === c && activeCell.r === r) return 'target';
+    if (activeCell.upperSrc.c === c && activeCell.upperSrc.r === r) return 'upperSrc';
+    if (activeCell.lowerSrc.c === c && activeCell.lowerSrc.r === r) return 'lowerSrc';
+    return null;
+  };
+
+  // Get subtraction text for the active calculation
+  const getSubtractionText = () => {
+    if (!activeCell) return '';
+    // Find values of source cells
+    const upperValStr = getCellValue(activeCell.upperSrc.c, activeCell.upperSrc.r);
+    const lowerValStr = getCellValue(activeCell.lowerSrc.c, activeCell.lowerSrc.r);
+    return `${lowerValStr} − ${upperValStr} = ${activeCell.val}`;
+  };
+
+  return (
+    <div className="flex flex-col gap-4 w-full mt-3">
+      {/* Subtraction steps animation banner */}
+      <div className="h-14 relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          {activeCell && (
+            <motion.div
+              key={`calc-${currentStepIndex}`}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="flex items-center justify-between p-3.5 rounded-xl border border-blue-100 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-950/20 backdrop-blur-sm text-sm w-full"
+            >
+              <div className="flex items-center gap-2">
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+                <span className="font-semibold text-slate-500 dark:text-slate-400 font-sans">
+                  Computing column {activeCell.c - 1} difference ({operatorSymbol}<sup>{activeCell.c - 1 > 1 ? activeCell.c - 1 : ''}</sup>):
+                </span>
+              </div>
+              <div className="font-mono font-bold text-blue-600 dark:text-blue-400 text-base bg-white dark:bg-slate-900 px-3 py-1 rounded-lg shadow-sm border border-slate-100 dark:border-slate-800 flex items-center">
+                <span>{typedFormula}</span>
+                {!typingComplete && (
+                  <motion.span
+                    animate={{ opacity: [1, 0] }}
+                    transition={{ repeat: Infinity, duration: 0.6 }}
+                    className="inline-block w-[3px] h-[1.1em] bg-blue-500 ml-1.5"
+                  />
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-2xl bg-[var(--db-card-bg)] shadow-md p-4 relative">
+        <div className="min-w-[500px] w-full">
+          {/* Header row */}
+          <div 
+            className="grid gap-2 text-center pb-4 border-b border-[var(--db-card-border)] font-bold text-xs uppercase tracking-widest text-[var(--db-text-secondary)]"
+            style={{ gridTemplateColumns: `repeat(${count + 1}, 1fr)` }}
+          >
+            {cols.map((colHeader, idx) => (
+              <div key={idx} dangerouslySetInnerHTML={{ __html: colHeader }} className="py-2" />
+            ))}
+          </div>
+
+          {/* Table body */}
+          <div className="relative mt-4 flex flex-col">
+            {Array.from({ length: numRows }).map((_, rIdx) => {
+              const isEvenRow = rIdx % 2 === 0;
+              return (
+                <div 
+                  key={rIdx} 
+                  className="grid gap-2 items-center h-12 relative"
+                  style={{ gridTemplateColumns: `repeat(${count + 1}, 1fr)` }}
+                >
+                  {Array.from({ length: count + 1 }).map((_, cIdx) => {
+                    const val = getCellValue(cIdx, rIdx);
+                    const highlight = getCellHighlight(cIdx, rIdx);
+                    
+                    // Show difference values staggered
+                    const isVisibleCell = (cIdx === 0 || cIdx === 1) ? isEvenRow : (
+                      (cIdx - 1) % 2 === 0 ? isEvenRow : !isEvenRow
+                    );
+
+                    // Skip cells that aren't part of the staggered layout
+                    if (!isVisibleCell) {
+                      return <div key={cIdx} className="h-full" />;
+                    }
+
+                    // Check if this cell is within the triangular bounds of the dataset
+                    const diffCol = cIdx - 1;
+                    const i = cIdx >= 2 ? (rIdx - (cIdx - 1)) / 2 : Math.floor(rIdx / 2);
+                    const isValidDiffCell = cIdx >= 2 && i < count - diffCol;
+                    const isValidXYCell = cIdx < 2 && rIdx < 2 * count;
+                    const inTriangle = cIdx < 2 ? isValidXYCell : isValidDiffCell;
+
+                    if (!inTriangle) {
+                      return <div key={cIdx} className="h-full" />;
+                    }
+
+                    // Render connector lines for difference cells that are revealed or active
+                    const cellIdx = animatedCells.findIndex(cell => cell.c === cIdx && cell.r === rIdx);
+                    const showConnector = cIdx >= 2 && cellIdx !== -1 && cellIdx <= currentStepIndex;
+
+                    return (
+                      <div
+                        key={cIdx}
+                        className={`h-full flex items-center justify-center relative font-mono text-sm font-semibold transition-all duration-300 rounded-lg ${
+                          highlight === 'target'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500 scale-110 z-20 shadow-md font-bold'
+                            : highlight === 'lowerSrc'
+                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/60 scale-105 z-10 font-bold'
+                            : highlight === 'upperSrc'
+                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/60 scale-105 z-10 font-bold'
+                            : 'text-[var(--db-text-main)]'
+                        }`}
+                      >
+                        {/* Subtle diagonal connector lines */}
+                        {showConnector && (
+                          <svg
+                            className="absolute right-[50%] top-[-50%] w-full h-[200%] pointer-events-none stroke-slate-200 dark:stroke-slate-800 stroke-[1.5] fill-none z-0"
+                            viewBox="0 0 100 100"
+                            preserveAspectRatio="none"
+                          >
+                            <path d="M 0 0 L 100 50 L 0 100" />
+                          </svg>
+                        )}
+                        
+                        {/* Number label container with a background mask to overlap lines cleanly */}
+                        {val && (
+                          <span className="relative z-10 px-2.5 py-1 rounded-md bg-[var(--db-card-bg)] border border-transparent shadow-sm">
+                            {val}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const triggerConfetti = () => {
+  const canvas = document.createElement('canvas');
+  canvas.style.position = 'fixed';
+  canvas.style.top = '0';
+  canvas.style.left = '0';
+  canvas.style.width = '100vw';
+  canvas.style.height = '100vh';
+  canvas.style.pointerEvents = 'none';
+  canvas.style.zIndex = '9999';
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  const resizeCanvas = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  };
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  const colors = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#ef4444'];
+  const particles = [];
+  
+  for (let i = 0; i < 120; i++) {
+    particles.push({
+      x: canvas.width / 2 + (Math.random() * 40 - 20),
+      y: canvas.height * 0.75 + (Math.random() * 40 - 20),
+      vx: (Math.random() - 0.5) * 20,
+      vy: -15 - Math.random() * 15,
+      r: Math.random() * 6 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      opacity: 1,
+      angle: Math.random() * Math.PI * 2,
+      rotationSpeed: (Math.random() - 0.5) * 0.2
+    });
+  }
+
+  let animationFrameId;
+  const startTime = Date.now();
+
+  const animate = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.5;
+      p.vx *= 0.98;
+      p.angle += p.rotationSpeed;
+      p.opacity = Math.max(0, 1 - (Date.now() - startTime) / 3000);
+
+      ctx.save();
+      ctx.globalAlpha = p.opacity;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
+      ctx.restore();
+    });
+
+    if (Date.now() - startTime < 3500) {
+      animationFrameId = requestAnimationFrame(animate);
+    } else {
+      window.removeEventListener('resize', resizeCanvas);
+      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+    }
+  };
+
+  animate();
+};
 
 export default function NotebookEngine({ 
   func, a, b, n, method, playbackState, speed, onExplain, onFinish, dataset, targetX, direction,
-  bisectionProblemId, bisectionIterations, rkX0, rkY0, rkH, rkSteps, rkFuncId, matMulQuestion
+  bisectionProblemId, bisectionIterations, rkX0, rkY0, rkH, rkSteps, rkFuncId, matMulQuestion,
+  onPlaybackStateChange
 }) {
   const [activeStepIndex, setActiveStepIndex] = useState(-1);
   const [stepComplete, setStepComplete] = useState(false);
@@ -2398,6 +2758,37 @@ export default function NotebookEngine({
     }
   }, [playbackState]);
 
+  // Confetti trigger on FINISHED
+  useEffect(() => {
+    if (playbackState === 'FINISHED') {
+      triggerConfetti();
+    }
+  }, [playbackState]);
+
+  // Handle NEXT, PREV, SKIP controls
+  useEffect(() => {
+    if (playbackState === 'NEXT') {
+      if (activeStepIndex < steps.length - 1) {
+        setStepComplete(false);
+        setActiveStepIndex(prev => prev + 1);
+      }
+      onPlaybackStateChange?.('PAUSED');
+    } else if (playbackState === 'PREV') {
+      if (activeStepIndex > 0) {
+        setStepComplete(false);
+        setActiveStepIndex(prev => prev - 1);
+      } else if (activeStepIndex === 0) {
+        setStepComplete(false);
+        setActiveStepIndex(-1);
+      }
+      onPlaybackStateChange?.('PAUSED');
+    } else if (playbackState === 'SKIP') {
+      setStepComplete(true);
+      setActiveStepIndex(steps.length - 1);
+      onPlaybackStateChange?.('FINISHED');
+    }
+  }, [playbackState, steps.length, activeStepIndex]);
+
   // Start first step
   useEffect(() => {
     if (playbackState === 'PLAYING' && activeStepIndex === -1) {
@@ -2436,67 +2827,18 @@ export default function NotebookEngine({
 
   // Render Difference Table Grid Component
   const renderDiffGrid = (xVals, yVals, diffs, operatorSymbol) => {
-    const count = xVals.length;
-    const numRows = 2 * count - 1;
-    const cols = ['x', 'y', ...Array.from({ length: count - 1 }, (_, k) => `${operatorSymbol}${k + 1 > 1 ? `<sup>${k + 1}</sup>` : ''}`)];
-
-    const grid = [];
-    for (let r = 0; r < numRows; r++) {
-      const row = [];
-      const isEvenRow = r % 2 === 0;
-      const i = Math.floor(r / 2);
-
-      for (let col = 0; col <= count; col++) {
-        if (col === 0) {
-          row.push(isEvenRow ? xVals[i].toString() : '');
-        } else if (col === 1) {
-          row.push(isEvenRow ? yVals[i].toString() : '');
-        } else {
-          const diffCol = col - 1;
-          const isDiffColEven = diffCol % 2 === 0;
-          
-          if (isEvenRow && isDiffColEven) {
-            row.push(i < count - diffCol ? diffs[diffCol][i].toString() : '');
-          } else if (!isEvenRow && !isDiffColEven) {
-            row.push(i < count - diffCol ? diffs[diffCol][i].toString() : '');
-          } else {
-            row.push('');
-          }
-        }
-      }
-      grid.push(row);
-    }
-
-    // Call onComplete when table renders
-    setTimeout(() => {
-      if (playbackState === 'PLAYING' && !stepComplete) {
-        handleTypingComplete();
-      }
-    }, getDuration(1000));
-
     return (
-      <div className="overflow-x-auto w-full border border-[var(--db-card-border)] rounded-xl bg-[var(--db-card-bg)] shadow-sm mt-3">
-        <table className="w-full text-center border-collapse text-xs font-mono">
-          <thead>
-            <tr className="bg-[var(--db-card-bg-elevated)] border-b border-[var(--db-card-border)]">
-              {cols.map((colHeader, idx) => (
-                <th key={idx} className="py-2.5 px-3 border-r border-[var(--db-card-border)] font-bold text-[var(--db-text-secondary)]" dangerouslySetInnerHTML={{ __html: colHeader }} />
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {grid.map((row, rIdx) => (
-              <tr key={rIdx} className={`${rIdx % 2 === 0 ? 'bg-[var(--db-card-bg)]' : 'bg-[var(--db-card-bg-elevated)]/40'} border-b border-[var(--db-card-border)]/50 hover:bg-[var(--db-card-bg-elevated)]/80 transition`}>
-                {row.map((val, cIdx) => (
-                  <td key={cIdx} className="py-1 px-3 border-r border-[var(--db-card-border)] font-semibold text-[var(--db-text-main)] h-8 min-w-[70px]">
-                    {val}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <InteractiveDifferenceTable
+        xVals={xVals}
+        yVals={yVals}
+        diffs={diffs}
+        operatorSymbol={operatorSymbol}
+        playbackState={playbackState}
+        speed={speed}
+        handleTypingComplete={handleTypingComplete}
+        getDuration={getDuration}
+        onExplain={onExplain}
+      />
     );
   };
 
@@ -2609,7 +2951,11 @@ export default function NotebookEngine({
                   {renderBisGrid(step.history)}
                 </div>
               ) : step.type === 'result' ? (
-                <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-8 rounded-3xl shadow-lg text-white">
+                <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-8 rounded-3xl shadow-lg text-white shadow-[0_0_30px_rgba(16,185,129,0.3)] border border-emerald-400/30 relative overflow-hidden animate-pulse-subtle">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 text-white font-bold text-lg animate-bounce">✓</span>
+                    <span className="text-xs font-black tracking-[0.2em] uppercase text-emerald-100">Calculation Complete ✓</span>
+                  </div>
                   <TypewriterStep
                     text={step.content}
                     isActive={isCurrent && playbackState === 'PLAYING' && !stepComplete}

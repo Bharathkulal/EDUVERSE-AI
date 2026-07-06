@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, ChevronRight, ChevronLeft, Play, Pause, RotateCcw,
   Settings2, Activity, BrainCircuit, FunctionSquare, Rocket, X,
-  BookOpen, Target, Lightbulb, ArrowRight
+  BookOpen, Target, Lightbulb, ArrowRight,
+  SkipBack, SkipForward, FastForward
 } from 'lucide-react';
 import CalculusNotebookEngine from '../components/MathEngines/CalculusNotebookEngine';
 import MathBackground from '../components/MathBackground';
@@ -413,6 +414,7 @@ export default function CalculusVisualization() {
       speed,
       onExplain: handleExplanationUpdate,
       onFinish: handleExecutionFinished,
+      onPlaybackStateChange: setPlaybackState,
       gaussSeidelProblemId,
       gaussSeidelIterations,
       jacobiProblemId,
@@ -926,11 +928,13 @@ export default function CalculusVisualization() {
 
           {/* Playback Controls */}
           <div className="p-4 pt-2 shrink-0 border-t border-[var(--db-card-border)]">
-            <div className="rounded-2xl p-4 flex flex-col gap-3 bg-[var(--db-card-bg-elevated)]">
+            <div className="rounded-2xl p-4 flex flex-col gap-3 bg-[var(--db-card-bg-elevated)] shadow-sm">
+              
+              {/* Speed Controller */}
               <div className="flex justify-between items-center p-1 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-card-border)]">
-                {[0.5, 1, 2].map(s => (
-                  <button
-                    key={s}
+                {[0.5, 1, 1.5, 2].map(s => (
+                  <button 
+                    key={s} 
                     onClick={() => setSpeed(s)}
                     className={`flex-1 py-1 text-xs font-bold rounded-lg transition-all ${speed === s ? 'bg-emerald-500 text-white shadow' : 'text-[var(--db-text-muted)] hover:text-[var(--db-text-main)]'}`}
                   >
@@ -938,17 +942,55 @@ export default function CalculusVisualization() {
                   </button>
                 ))}
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handlePlayPause}
-                  className="flex-1 bg-emerald-500 hover:bg-emerald-655 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow-md shadow-emerald-500/20"
+
+              {/* Main Controls Row */}
+              <div className="grid grid-cols-4 gap-2">
+                <button 
+                  onClick={() => setPlaybackState('PREV')}
+                  disabled={playbackState === 'IDLE'}
+                  title="Previous Step"
+                  className="bg-[var(--db-input-bg)] border border-[var(--db-card-border)] hover:border-emerald-500/50 hover:bg-[var(--db-btn-secondary-hover)] text-[var(--db-text-main)] font-bold py-2.5 rounded-xl flex items-center justify-center transition active:scale-95 disabled:opacity-40"
                 >
-                  {playbackState === 'PLAYING' ? <><Pause className="w-5 h-5" /> Pause</> : <><Play className="w-5 h-5" /> {playbackState === 'FINISHED' ? 'Restart' : 'Start Solving'}</>}
+                  <SkipBack className="w-4 h-4" />
                 </button>
-                <button onClick={handleReplay} className="w-12 h-[48px] rounded-xl flex items-center justify-center transition active:scale-95 text-[var(--db-text-main)] hover:text-emerald-500 bg-[var(--db-input-bg)] border border-[var(--db-card-border)]">
-                  <RotateCcw className="w-5 h-5" />
+
+                <button 
+                  onClick={handlePlayPause}
+                  title={playbackState === 'PLAYING' ? 'Pause' : 'Play'}
+                  className="col-span-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 shadow-md shadow-emerald-500/10"
+                >
+                  {playbackState === 'PLAYING' ? <Pause className="w-4.5 h-4.5" /> : <Play className="w-4.5 h-4.5" />}
+                  <span className="text-xs uppercase tracking-wider">{playbackState === 'PLAYING' ? 'Pause' : 'Solve'}</span>
+                </button>
+
+                <button 
+                  onClick={() => setPlaybackState('NEXT')}
+                  disabled={playbackState === 'FINISHED' || playbackState === 'IDLE'}
+                  title="Next Step"
+                  className="bg-[var(--db-input-bg)] border border-[var(--db-card-border)] hover:border-emerald-500/50 hover:bg-[var(--db-btn-secondary-hover)] text-[var(--db-text-main)] font-bold py-2.5 rounded-xl flex items-center justify-center transition active:scale-95 disabled:opacity-40"
+                >
+                  <SkipForward className="w-4 h-4" />
                 </button>
               </div>
+
+              {/* Auxiliary Controls Row */}
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setPlaybackState('SKIP')}
+                  disabled={playbackState === 'FINISHED' || playbackState === 'IDLE'}
+                  className="flex-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-200/20 py-2 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold tracking-wide uppercase transition active:scale-95 disabled:opacity-40"
+                >
+                  <FastForward className="w-3.5 h-3.5" /> Skip Animation
+                </button>
+                <button 
+                  onClick={handleReplay} 
+                  title="Replay Solution"
+                  className="w-12 bg-[var(--db-input-bg)] border border-[var(--db-card-border)] hover:border-emerald-500/50 hover:bg-[var(--db-btn-secondary-hover)] text-[var(--db-text-main)] rounded-xl flex items-center justify-center transition active:scale-95"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+              </div>
+
             </div>
           </div>
         </div>

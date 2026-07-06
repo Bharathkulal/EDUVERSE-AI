@@ -45,6 +45,11 @@
   --db-continue-border: rgba(245, 158, 11, 0.25);
   --db-continue-text: #FBBF24;
   
+  /* Math Block Custom Variables (Dark Theme) */
+  --db-math-text: #34D399;
+  --db-math-bg: rgba(6, 78, 59, 0.25);
+  --db-math-border: rgba(16, 185, 129, 0.25);
+  
   /* Theme Toggle (Dark Theme) */
   --db-toggle-bg: #1E293B;
   --db-toggle-border: rgba(255, 255, 255, 0.08);
@@ -94,6 +99,11 @@
   --db-continue-bg: #FFFBEB;
   --db-continue-border: #FDE68A;
   --db-continue-text: #D97706;
+  
+  /* Math Block Custom Variables (Light Theme) */
+  --db-math-text: #065F46;
+  --db-math-bg: rgba(16, 185, 129, 0.08);
+  --db-math-border: rgba(16, 185, 129, 0.25);
   
   /* Theme Toggle (Light Theme) */
   --db-toggle-bg: #FFFFFF;

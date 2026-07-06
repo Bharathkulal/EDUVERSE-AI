@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, cloneElement } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, ChevronRight, ChevronLeft, Play, Pause, RotateCcw, 
   Settings2, Activity, BrainCircuit, FunctionSquare, Rocket, X,
-  Layers, BookOpen, Target, Lightbulb, Zap, ArrowRight
+  Layers, BookOpen, Target, Lightbulb, Zap, ArrowRight,
+  SkipBack, SkipForward, FastForward
 } from 'lucide-react';
 import NotebookEngine from '../components/MathEngines/NotebookEngine';
 import MathBackground from '../components/MathBackground';
@@ -655,90 +656,62 @@ export default function MathVisualization() {
   };
 
   const renderActiveEngine = () => {
+    let engineElement = null;
+
     if (selectedMethod === 'Bisection Method') {
-      return (
+      engineElement = (
         <NotebookEngine
-          method={selectedMethod}
-          playbackState={playbackState}
-          speed={speed}
-          onExplain={handleExplanationUpdate}
-          onFinish={handleExecutionFinished}
           bisectionProblemId={bisectionProblemId}
           bisectionIterations={bisectionIterations}
         />
       );
     } else if (selectedMethod === 'Trapezoidal Rule') {
-      return (
+      engineElement = (
         <NotebookEngine 
           func={activeFunction} 
           a={parseFloat(a)} 
           b={parseFloat(b)} 
           n={parseInt(n)} 
-          method={selectedMethod}
-          playbackState={playbackState}
-          speed={speed}
-          onExplain={handleExplanationUpdate}
-          onFinish={handleExecutionFinished}
         />
       );
     } else if (selectedMethod === 'Newton\u2019s Interpolation') {
-      return (
+      engineElement = (
         <NotebookEngine
           dataset={activeQuestion}
           targetX={parseFloat(newtonTargetX)}
           direction={newtonDirection}
-          method={selectedMethod}
-          playbackState={playbackState}
-          speed={speed}
-          onExplain={handleExplanationUpdate}
-          onFinish={handleExecutionFinished}
         />
       );
     } else if (selectedMethod === 'Newton\u2019s Difference') {
-      return (
+      engineElement = (
         <NotebookEngine
           dataset={activeDiffQuestion}
           targetX={parseFloat(newtonDiffTargetX)}
           direction={newtonDiffDirection}
-          method={selectedMethod}
-          playbackState={playbackState}
-          speed={speed}
-          onExplain={handleExplanationUpdate}
-          onFinish={handleExecutionFinished}
         />
       );
     } else if (selectedMethod === 'Simpson\u2019s 1/3 Rule' || selectedMethod === "Simpson's 1/3 Rule") {
-      return (
+      engineElement = (
         <NotebookEngine
           dataset={activeSimpson13Question}
           func={activeFunction}
           a={parseFloat(simpson13A)}
           b={parseFloat(simpson13B)}
           n={parseInt(simpson13N)}
-          method={selectedMethod}
-          playbackState={playbackState}
-          speed={speed}
-          onExplain={handleExplanationUpdate}
-          onFinish={handleExecutionFinished}
         />
       );
     } else if (selectedMethod === 'Simpson\u2019s 3/8 Rule' || selectedMethod === "Simpson's 3/8 Rule") {
-      return (
+      engineElement = (
         <NotebookEngine
           dataset={activeSimpson38Question}
           func={activeFunction}
           a={parseFloat(simpson38A)}
           b={parseFloat(simpson38B)}
           n={parseInt(simpson38N)}
-          method={selectedMethod}
-          playbackState={playbackState}
-          speed={speed}
-          onExplain={handleExplanationUpdate}
-          onFinish={handleExecutionFinished}
         />
       );
     } else if (selectedMethod === 'RK4') {
-      return (
+      engineElement = (
         <NotebookEngine
           dataset={activeRKQuestion}
           rkX0={parseFloat(rkX0)}
@@ -746,48 +719,44 @@ export default function MathVisualization() {
           rkH={parseFloat(rkH)}
           rkSteps={parseInt(rkSteps)}
           rkFuncId={rkFuncId}
-          method={selectedMethod}
-          playbackState={playbackState}
-          speed={speed}
-          onExplain={handleExplanationUpdate}
-          onFinish={handleExecutionFinished}
         />
       );
     } else if (selectedMethod === "Taylor's Method") {
-      return (
+      engineElement = (
         <NotebookEngine
           dataset={activeTaylorQuestion}
           rkX0={parseFloat(rkX0)}
           rkY0={parseFloat(rkY0)}
           rkH={parseFloat(rkH)}
           rkFuncId={rkFuncId}
-          method={selectedMethod}
-          playbackState={playbackState}
-          speed={speed}
-          onExplain={handleExplanationUpdate}
-          onFinish={handleExecutionFinished}
         />
       );
     } else if (selectedMethod === 'Matrix Multiplication') {
-      return (
+      engineElement = (
         <NotebookEngine
           matMulQuestion={activeMatMulQuestion}
-          method={selectedMethod}
-          playbackState={playbackState}
-          speed={speed}
-          onExplain={handleExplanationUpdate}
-          onFinish={handleExecutionFinished}
         />
       );
     }
-    
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
-        <Activity className="w-16 h-16 mb-4 opacity-20" />
-        <p className="text-xl font-bold">Engine Offline</p>
-        <p className="text-sm">The {selectedMethod} notebook engine is currently under construction.</p>
-      </div>
-    );
+
+    if (!engineElement) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
+          <Activity className="w-16 h-16 mb-4 opacity-20" />
+          <p className="text-xl font-bold">Engine Offline</p>
+          <p className="text-sm">The {selectedMethod} notebook engine is currently under construction.</p>
+        </div>
+      );
+    }
+
+    return cloneElement(engineElement, {
+      method: selectedMethod,
+      playbackState,
+      speed,
+      onExplain: handleExplanationUpdate,
+      onFinish: handleExecutionFinished,
+      onPlaybackStateChange: setPlaybackState
+    });
   };
 
   const getTopQuestionText = () => {
@@ -1568,9 +1537,11 @@ export default function MathVisualization() {
 
           {/* Playback Controls */}
           <div className="p-4 pt-2 shrink-0 border-t border-[var(--db-card-border)]">
-            <div className="rounded-2xl p-4 flex flex-col gap-3 bg-[var(--db-card-bg-elevated)]">
+            <div className="rounded-2xl p-4 flex flex-col gap-3 bg-[var(--db-card-bg-elevated)] shadow-sm">
+              
+              {/* Speed Controller */}
               <div className="flex justify-between items-center p-1 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-card-border)]">
-                {[0.5, 1, 2].map(s => (
+                {[0.5, 1, 1.5, 2].map(s => (
                   <button 
                     key={s} 
                     onClick={() => setSpeed(s)}
@@ -1580,17 +1551,55 @@ export default function MathVisualization() {
                   </button>
                 ))}
               </div>
-              <div className="flex items-center gap-2">
+
+              {/* Main Controls Row */}
+              <div className="grid grid-cols-4 gap-2">
+                <button 
+                  onClick={() => setPlaybackState('PREV')}
+                  disabled={playbackState === 'IDLE'}
+                  title="Previous Step"
+                  className="bg-[var(--db-input-bg)] border border-[var(--db-card-border)] hover:border-emerald-500/50 hover:bg-[var(--db-btn-secondary-hover)] text-[var(--db-text-main)] font-bold py-2.5 rounded-xl flex items-center justify-center transition active:scale-95 disabled:opacity-40"
+                >
+                  <SkipBack className="w-4 h-4" />
+                </button>
+
                 <button 
                   onClick={handlePlayPause}
-                  className="flex-1 bg-emerald-500 hover:bg-emerald-655 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow-md shadow-emerald-500/20"
+                  title={playbackState === 'PLAYING' ? 'Pause' : 'Play'}
+                  className="col-span-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 shadow-md shadow-emerald-500/10"
                 >
-                  {playbackState === 'PLAYING' ? <><Pause className="w-5 h-5"/> Pause</> : <><Play className="w-5 h-5"/> {playbackState === 'FINISHED' ? 'Restart' : 'Start Solving'}</>}
+                  {playbackState === 'PLAYING' ? <Pause className="w-4.5 h-4.5" /> : <Play className="w-4.5 h-4.5" />}
+                  <span className="text-xs uppercase tracking-wider">{playbackState === 'PLAYING' ? 'Pause' : 'Solve'}</span>
                 </button>
-                <button onClick={handleReplay} className="w-12 h-[48px] rounded-xl flex items-center justify-center transition active:scale-95 text-[var(--db-text-main)] hover:text-emerald-500 bg-[var(--db-input-bg)] border border-[var(--db-card-border)]">
-                  <RotateCcw className="w-5 h-5" />
+
+                <button 
+                  onClick={() => setPlaybackState('NEXT')}
+                  disabled={playbackState === 'FINISHED' || playbackState === 'IDLE'}
+                  title="Next Step"
+                  className="bg-[var(--db-input-bg)] border border-[var(--db-card-border)] hover:border-emerald-500/50 hover:bg-[var(--db-btn-secondary-hover)] text-[var(--db-text-main)] font-bold py-2.5 rounded-xl flex items-center justify-center transition active:scale-95 disabled:opacity-40"
+                >
+                  <SkipForward className="w-4 h-4" />
                 </button>
               </div>
+
+              {/* Auxiliary Controls Row */}
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setPlaybackState('SKIP')}
+                  disabled={playbackState === 'FINISHED' || playbackState === 'IDLE'}
+                  className="flex-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-200/20 py-2 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold tracking-wide uppercase transition active:scale-95 disabled:opacity-40"
+                >
+                  <FastForward className="w-3.5 h-3.5" /> Skip Animation
+                </button>
+                <button 
+                  onClick={handleReplay} 
+                  title="Replay Solution"
+                  className="w-12 bg-[var(--db-input-bg)] border border-[var(--db-card-border)] hover:border-emerald-500/50 hover:bg-[var(--db-btn-secondary-hover)] text-[var(--db-text-main)] rounded-xl flex items-center justify-center transition active:scale-95"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+              </div>
+
             </div>
           </div>
         </div>
