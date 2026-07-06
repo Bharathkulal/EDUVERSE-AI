@@ -259,7 +259,21 @@ export default function LinkedListVisualization() {
     const newSteps = [];
     const val = parseInt(inputValue) || 10;
     const pos = parseInt(inputPosition) || 1;
-    const initialNodes = [...nodes];
+    const initialNodes = Array.isArray(nodes) ? [...nodes] : [];
+
+    // If we are not playing/animating, just generate a single static step showing the current nodes.
+    if (!isPlaying && !isAnimatingRef.current) {
+      newSteps.push({
+        label: "Current linked list state.",
+        activeLine: 5,
+        nodes: initialNodes.map(n => ({ ...n, state: 'default' })),
+        wires: initialNodes.map((_, i) => i < initialNodes.length - 1 ? 'default' : 'none'),
+        variables: { head: initialNodes[0]?.address || 'NULL', current: 'NULL', newNode: 'NULL' }
+      });
+      setSteps(newSteps);
+      setCurrentStepIndex(0);
+      return;
+    }
 
     if (operation === 'insertBeginning') {
       newSteps.push({
@@ -581,6 +595,7 @@ export default function LinkedListVisualization() {
     }
 
     pendingNodesRef.current = nextNodes;
+    isAnimatingRef.current = true; // Set animating flag before generating steps
     generateSteps();
     setCurrentStepIndex(0);
     setTimeout(() => {
@@ -1144,7 +1159,7 @@ export default function LinkedListVisualization() {
                               }`}>
                                 <span className={`text-2xl font-black leading-none ${
                                   (isActive || isNew || isHead) 
-                                    ? 'text-[#171717]' 
+                                    ? 'text-white' 
                                     : 'text-slate-800 dark:text-slate-200'
                                 }`}>{node.value}</span>
                               </div>
@@ -1328,7 +1343,7 @@ export default function LinkedListVisualization() {
                             style={{ width: '100px', height: '48px' }}
                           >
                             <div className={`flex-1 flex items-center justify-center ${isHead ? 'bg-blue-600' : 'bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700'}`}>
-                              <span className={`text-base font-black ${isHead ? 'text-[#171717]' : 'text-slate-800 dark:text-slate-200'}`}>{node.value}</span>
+                              <span className={`text-base font-black ${isHead ? 'text-white' : 'text-slate-800 dark:text-slate-200'}`}>{node.value}</span>
                             </div>
                             <div className={`flex items-center justify-center ${isHead ? 'bg-blue-800' : 'bg-slate-50'}`} style={{ width: '30px' }}>
                               <div className={`w-2 h-2 rounded-full ${isHead ? 'bg-white' : 'bg-slate-400'}`} />
@@ -1497,7 +1512,7 @@ export default function LinkedListVisualization() {
                             style={{ width: '100px', height: '48px' }}
                           >
                             <div className={`flex-1 flex items-center justify-center ${isHead ? 'bg-blue-600' : 'bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700'}`}>
-                              <span className={`text-base font-black ${isHead ? 'text-[#171717]' : 'text-slate-800 dark:text-slate-200'}`}>{node.value}</span>
+                              <span className={`text-base font-black ${isHead ? 'text-white' : 'text-slate-800 dark:text-slate-200'}`}>{node.value}</span>
                             </div>
                             <div className={`flex items-center justify-center ${isHead ? 'bg-blue-800' : 'bg-slate-50'}`} style={{ width: '30px' }}>
                               <div className={`w-2 h-2 rounded-full ${isHead ? 'bg-white' : 'bg-slate-400'}`} />
