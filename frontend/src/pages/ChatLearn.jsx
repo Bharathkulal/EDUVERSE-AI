@@ -296,9 +296,16 @@ export default function ChatLearn() {
 
   // Effects to trigger connection checks and polling loops
   useEffect(() => {
+    let checkInterval;
     if (selectedProvider === 'ollama') {
+      console.log('[Ollama Connection] Initializing local health status check...');
       checkOllamaConnection();
+      checkInterval = setInterval(() => {
+        console.log('[Ollama Health Check] Checking server tags endpoint health (30s interval)...');
+        checkOllamaConnection();
+      }, 30000);
     }
+    return () => clearInterval(checkInterval);
   }, [selectedProvider]);
 
   useEffect(() => {
@@ -621,6 +628,18 @@ export default function ChatLearn() {
                     }
                     return prev + data.token;
                   });
+
+                  if (data.metrics) {
+                    setPerformanceStats(prev => ({
+                      ...prev,
+                      tokensSec: data.metrics.tokensSec,
+                      latency: data.metrics.latency,
+                      cpu: data.metrics.cpu,
+                      ram: data.metrics.ram,
+                      gpu: data.metrics.gpu,
+                      vram: data.metrics.vram
+                    }));
+                  }
                 } else if (data.type === 'done') {
                   setMessages(prev => [...prev, data.message]);
                   setCurrentStreamingText('');

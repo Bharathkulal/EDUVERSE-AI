@@ -9,6 +9,7 @@ const { authenticate } = require('../middleware/auth');
 const aiGateway = require('../services/aiGateway');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { decrypt } = require('../utils/crypto');
+const ollamaService = require('../services/ollamaService');
 
 const router = express.Router();
 
@@ -663,11 +664,11 @@ router.post('/generate-file', authenticate, async (req, res) => {
 
 // Get local Ollama models list
 router.get('/ollama/tags', async (req, res) => {
-  try {
-    const response = await axios.get('http://localhost:11434/api/tags', { timeout: 3000 });
-    res.json(response.data);
-  } catch (err) {
-    res.status(503).json({ message: 'Ollama offline or not running', error: err.message });
+  const result = await ollamaService.checkConnection();
+  if (result.connected) {
+    res.json({ models: result.models });
+  } else {
+    res.status(503).json({ message: 'Ollama offline or not running', error: result.error });
   }
 });
 
@@ -675,7 +676,7 @@ router.get('/ollama/tags', async (req, res) => {
 router.post('/ollama/delete', async (req, res) => {
   try {
     const { name } = req.body;
-    await axios.delete('http://localhost:11434/api/delete', { data: { name } });
+    await ollamaService.deleteModel(name);
     res.json({ message: `Model ${name} deleted successfully` });
   } catch (err) {
     res.status(500).json({ message: 'Failed to delete model', error: err.message });
@@ -723,83 +724,21 @@ router.post('/sessions/:id/ollama-stream', authenticate, async (req, res) => {
       messages.push({ role: msg.role, content: msg.content });
     });
 
-    // If there is parsed text context, inject it into the last user message
-    if (parsed_text && messages.length > 0) {
-      const lastMsg = messages[messages.length - 1];
-      if (lastMsg.role === 'user') {
-        lastMsg.content = `Document Context:\n${parsed_text}\n\nUser Question:\n${lastMsg.content}`;
-      }
-    }
-
-    // Convert attached images to base64 if Ollama vision model is used
-    if (multimodal_type === 'image' && file_url && messages.length > 0) {
-      const localPath = path.join(__dirname, '../../', file_url);
-      if (fs.existsSync(localPath)) {
-        const imageBuffer = fs.readFileSync(localPath);
-        const base64Image = imageBuffer.toString('base64');
-        const lastMsg = messages[messages.length - 1];
-        if (lastMsg && lastMsg.role === 'user') {
-          lastMsg.images = [base64Image];
-        }
-      }
-    }
-
-    // Set streaming headers
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-
     // Send the user message details first so the client can render it optimistically
     res.write(`data: ${JSON.stringify({ type: 'user_message', message: userMsgRes.rows[0] })}\n\n`);
 
-    // Call Ollama
-    const ollamaPayload = {
-      model: model || 'deepseek-r1:7b',
-      messages: messages,
-      stream: true,
-      options: options || { temperature: 0.7 }
+    const streamPayload = {
+      model,
+      messages,
+      options,
+      file_url,
+      parsed_text
     };
 
-    const ollamaResponse = await axios.post('http://localhost:11434/api/chat', ollamaPayload, {
-      responseType: 'stream',
-      timeout: 60000
-    });
-
-    let fullText = '';
-    
-    ollamaResponse.data.on('data', chunk => {
-      const chunkStr = chunk.toString();
-      const lines = chunkStr.split('\n');
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const parsed = JSON.parse(line);
-          const token = parsed.message?.content || '';
-          fullText += token;
-          res.write(`data: ${JSON.stringify({ type: 'token', token })}\n\n`);
-        } catch (e) {
-          // ignore parsing error for incomplete chunks
-        }
-      }
-    });
-
-    ollamaResponse.data.on('end', async () => {
-      // Save assistant message to database
-      const assistantMsgRes = await db.query(
-        `INSERT INTO chat_messages (session_id, role, content, detected_metadata) 
-         VALUES ($1, 'assistant', $2, $3) RETURNING *`,
-        [sessionId, fullText, JSON.stringify({ provider: 'ollama', model })]
-      );
-      
-      // Update session timestamp
-      await db.query('UPDATE chat_sessions SET updated_at = NOW() WHERE id = $1', [sessionId]);
-
-      res.write(`data: ${JSON.stringify({ type: 'done', message: assistantMsgRes.rows[0] })}\n\n`);
-      res.end();
-    });
+    await ollamaService.streamChat(sessionId, userMsgRes.rows[0].id, streamPayload, res);
 
   } catch (err) {
-    console.error('Ollama stream error:', err);
+    console.error('Ollama stream routing error:', err);
     res.write(`data: ${JSON.stringify({ type: 'error', message: err.message })}\n\n`);
     res.end();
   }
