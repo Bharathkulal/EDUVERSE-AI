@@ -96,6 +96,14 @@ async function streamChat(sessionId, userMsgId, payload, res) {
       }
     }
 
+    const backendAbortController = new AbortController();
+
+    // Listen for client connection close to clean up background model processing
+    res.on('close', () => {
+      console.log('[Ollama Service] Client closed connection. Aborting Ollama API call...');
+      backendAbortController.abort();
+    });
+
     // Call Ollama stream chat API
     const ollamaResponse = await axios.post(`${OLLAMA_URL}/api/chat`, {
       model: model || 'deepseek-r1:7b',
@@ -104,15 +112,18 @@ async function streamChat(sessionId, userMsgId, payload, res) {
       options: options || { temperature: 0.7 }
     }, {
       responseType: 'stream',
-      timeout: 120000
+      timeout: 120000,
+      signal: backendAbortController.signal
     });
 
     let fullText = '';
     let tokenCount = 0;
+    let streamBuffer = '';
 
     ollamaResponse.data.on('data', chunk => {
-      const chunkStr = chunk.toString();
-      const lines = chunkStr.split('\n');
+      streamBuffer += chunk.toString();
+      const lines = streamBuffer.split('\n');
+      streamBuffer = lines.pop(); // Save the last incomplete line for the next chunk
 
       for (const line of lines) {
         if (!line.trim()) continue;
@@ -140,7 +151,7 @@ async function streamChat(sessionId, userMsgId, payload, res) {
             }
           })}\n\n`);
         } catch (e) {
-          // Keep buffering partial chunks
+          console.error('[Ollama Service] Parse error on line:', e.message);
         }
       }
     });

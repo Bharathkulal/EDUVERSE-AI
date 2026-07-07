@@ -1464,39 +1464,7 @@ export default function ChatLearn() {
         </div>
       </main>
 
-      {/* AI Performance Monitor Overlay */}
-      <div className="fixed bottom-4 right-4 z-50 bg-[var(--db-card-bg)] border border-[var(--db-card-border)] rounded-2xl p-3 shadow-2xl flex flex-col gap-1.5 text-[10px] min-w-[160px] text-left select-none opacity-85 hover:opacity-100 transition-opacity text-[var(--db-text-main)]">
-        <div className="flex items-center justify-between border-b border-[var(--db-sidebar-border)] pb-1 mb-1 font-bold">
-          <span className="text-[11px]">💻 Performance Monitor</span>
-          <span className={`w-1.5 h-1.5 rounded-full ${selectedProvider === 'ollama' ? 'bg-green-500 animate-ping' : 'bg-gray-500'}`} />
-        </div>
-        <div className="flex justify-between text-[var(--db-text-muted)]">
-          <span>CPU Load:</span>
-          <span className="font-mono">{performanceStats.cpu}%</span>
-        </div>
-        <div className="flex justify-between text-[var(--db-text-muted)]">
-          <span>GPU Load:</span>
-          <span className="font-mono">{performanceStats.gpu}%</span>
-        </div>
-        <div className="flex justify-between text-[var(--db-text-muted)]">
-          <span>RAM Available:</span>
-          <span className="font-mono">{performanceStats.ram} GB</span>
-        </div>
-        <div className="flex justify-between text-[var(--db-text-muted)]">
-          <span>Latency:</span>
-          <span className="font-mono">{performanceStats.latency} ms</span>
-        </div>
-        <div className="flex justify-between text-[var(--db-text-muted)]">
-          <span>Speed:</span>
-          <span className="font-mono">{performanceStats.tokensSec} tok/s</span>
-        </div>
-        <div className="flex justify-between text-[var(--db-text-muted)] border-t border-[var(--db-sidebar-border)] pt-1 mt-0.5">
-          <span>Model:</span>
-          <span className="font-mono text-blue-400 truncate max-w-[80px]">
-            {selectedProvider === 'ollama' ? activeOllamaModel || 'None' : 'Cloud API'}
-          </span>
-        </div>
-      </div>
+
 
       {/* SETTINGS DIALOG */}
       <AnimatePresence>
