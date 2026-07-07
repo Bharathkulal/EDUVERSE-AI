@@ -724,6 +724,11 @@ router.post('/sessions/:id/ollama-stream', authenticate, async (req, res) => {
       messages.push({ role: msg.role, content: msg.content });
     });
 
+    // Set streaming headers before any res.write() is executed to prevent auto-commit headers error
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
     // Send the user message details first so the client can render it optimistically
     res.write(`data: ${JSON.stringify({ type: 'user_message', message: userMsgRes.rows[0] })}\n\n`);
 
