@@ -279,3 +279,34 @@ thead .excel-header-cell {
   .presenter-fullscreen-overlay { visibility: visible !important; }
   body > *:not(.presenter-fullscreen-overlay) { visibility: hidden; }
 }
+
+/* Glassmorphism Cards */
+.glass-card-light {
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04) !important;
+}
+
+.dark-theme .glass-card-light {
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Hover effects for glassmorphism cards */
+.glass-card-light:hover {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 10px 40px 0 rgba(31, 38, 135, 0.08) !important;
+}
+
+.dark-theme .glass-card-light:hover {
+  background: rgba(30, 41, 59, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4) !important;
+}
+

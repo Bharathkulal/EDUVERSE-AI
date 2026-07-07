@@ -444,7 +444,7 @@ export default function ITSuiteDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             <div 
               onClick={() => handleCreateDoc('word', 'Blank')}
-              className="p-4 bg-[var(--db-card-bg)] border border-dashed border-[var(--db-sidebar-border)] hover:border-blue-500 rounded-2xl flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:-translate-y-0.5"
+              className="p-4 glass-card-light border border-dashed hover:border-blue-500 rounded-2xl flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:-translate-y-0.5"
             >
               <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center font-bold text-lg mb-2">➕</div>
               <span className="text-xs font-bold">Blank Word Doc</span>
@@ -452,7 +452,7 @@ export default function ITSuiteDashboard() {
             
             <div 
               onClick={() => handleCreateDoc('excel', 'Blank')}
-              className="p-4 bg-[var(--db-card-bg)] border border-dashed border-[var(--db-sidebar-border)] hover:border-emerald-500 rounded-2xl flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:-translate-y-0.5"
+              className="p-4 glass-card-light border border-dashed hover:border-emerald-500 rounded-2xl flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:-translate-y-0.5"
             >
               <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center font-bold text-lg mb-2">➕</div>
               <span className="text-xs font-bold">Blank Spreadsheet</span>
@@ -460,7 +460,7 @@ export default function ITSuiteDashboard() {
 
             <div 
               onClick={() => handleCreateDoc('slides', 'Blank')}
-              className="p-4 bg-[var(--db-card-bg)] border border-dashed border-[var(--db-sidebar-border)] hover:border-amber-500 rounded-2xl flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:-translate-y-0.5"
+              className="p-4 glass-card-light border border-dashed hover:border-amber-500 rounded-2xl flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:-translate-y-0.5"
             >
               <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center font-bold text-lg mb-2">➕</div>
               <span className="text-xs font-bold">Blank Slideshow</span>
@@ -468,7 +468,7 @@ export default function ITSuiteDashboard() {
 
             <div 
               onClick={() => navigate('/it-suite/photo-to-pdf')}
-              className="p-4 bg-[var(--db-card-bg)] border border-dashed border-[var(--db-sidebar-border)] hover:border-violet-500 rounded-2xl flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:-translate-y-0.5 group relative overflow-hidden"
+              className="p-4 glass-card-light border border-dashed hover:border-violet-500 rounded-2xl flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:-translate-y-0.5 group relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-tr from-violet-500/10 to-fuchsia-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-500 to-fuchsia-500 text-white flex items-center justify-center font-bold text-lg mb-2 shadow-md shadow-violet-500/20 group-hover:scale-110 transition duration-300">📄</div>
@@ -478,7 +478,7 @@ export default function ITSuiteDashboard() {
 
             <div 
               onClick={() => navigate('/it-suite/friday-builder')}
-              className="p-4 bg-[var(--db-card-bg)] border border-dashed border-[var(--db-sidebar-border)] hover:border-cyan-500 rounded-2xl flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:-translate-y-0.5 group relative overflow-hidden"
+              className="p-4 glass-card-light border border-dashed hover:border-cyan-500 rounded-2xl flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:-translate-y-0.5 group relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/10 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-500 text-white flex items-center justify-center font-bold text-lg mb-2 shadow-md shadow-cyan-500/20 group-hover:scale-110 transition duration-300">🌐</div>
@@ -490,7 +490,7 @@ export default function ITSuiteDashboard() {
               <div 
                 key={`wt-${idx}`}
                 onClick={() => handleUseTemplate('word', t.name)}
-                className="p-4 bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] hover:border-blue-500 rounded-2xl flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-0.5"
+                className="p-4 glass-card-light border hover:border-blue-500 rounded-2xl flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-0.5"
               >
                 <div className="text-2xl">{t.icon}</div>
                 <div className="mt-4">
@@ -504,7 +504,7 @@ export default function ITSuiteDashboard() {
               <div 
                 key={`et-${idx}`}
                 onClick={() => handleUseTemplate('excel', t.name)}
-                className="p-4 bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] hover:border-emerald-500 rounded-2xl flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-0.5"
+                className="p-4 glass-card-light border hover:border-emerald-500 rounded-2xl flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-0.5"
               >
                 <div className="text-2xl">{t.icon}</div>
                 <div className="mt-4">
@@ -559,7 +559,7 @@ export default function ITSuiteDashboard() {
                 {folders.map((f) => (
                   <div 
                     key={f.id}
-                    className="group relative p-4 bg-[var(--db-card-bg)] hover:bg-[var(--db-card-bg-elevated)] border border-[var(--db-sidebar-border)] hover:border-blue-500/50 rounded-2xl flex items-center gap-3 transition-all cursor-pointer shadow-sm hover:shadow-md"
+                    className="group relative p-4 glass-card-light border hover:border-blue-500/50 rounded-2xl flex items-center gap-3 transition-all cursor-pointer shadow-sm hover:shadow-md"
                     onClick={() => enterFolder(f)}
                   >
                     <Folder className="text-blue-500 fill-blue-500/10" size={24} />
@@ -642,7 +642,7 @@ export default function ITSuiteDashboard() {
                   return (
                     <div 
                       key={d.id}
-                      className={`group relative p-4 bg-[var(--db-card-bg)] hover:bg-[var(--db-card-bg-elevated)] border border-[var(--db-sidebar-border)] ${docColorClass} rounded-2xl flex flex-col justify-between h-36 transition-all cursor-pointer shadow-sm hover:shadow-md`}
+                      className={`group relative p-4 glass-card-light border ${docColorClass} rounded-2xl flex flex-col justify-between h-36 transition-all cursor-pointer shadow-sm hover:shadow-md`}
                       onClick={() => openDocument(d)}
                     >
                       <div className="flex items-start justify-between">
