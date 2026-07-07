@@ -76,6 +76,7 @@ export default function MathVisualization() {
   const [matMulQuestionId, setMatMulQuestionId] = useState('mm_q5');
   const [taylorQuestionId, setTaylorQuestionId] = useState('taylor_q1');
   const [eulerQuestionId, setEulerQuestionId] = useState('euler_q1');
+  const [modifiedEulerQuestionId, setModifiedEulerQuestionId] = useState('me_q1');
 
   // Execution Control State
   const [playbackState, setPlaybackState] = useState('IDLE');
@@ -251,6 +252,24 @@ export default function MathVisualization() {
     }
   ];
 
+  const MODIFIED_EULER_QUESTIONS = [
+    {
+      id: 'me_q1',
+      label: 'Q1: dy/dx = x² + y, y(0)=1, find y(0.1) (h=0.05) (Photo Q1)',
+      question: 'Given dy/dx = x² + y with y(0) = 1 and step size h = 0.05, compute y(0.05) and y(0.1) using Modified Euler\'s Method.'
+    },
+    {
+      id: 'me_q2',
+      label: 'Q2: dy/dx = 2 + √xy, y(1)=1, find y(2.0) (h=0.5) (Photo Q2)',
+      question: 'Given dy/dx = 2 + √xy with y(1) = 1 and step size h = 0.5, compute y(1.5) and y(2.0) using Modified Euler\'s Method.'
+    },
+    {
+      id: 'custom',
+      label: 'Custom ODE',
+      question: 'Custom Modified Euler\'s Method problem.'
+    }
+  ];
+
   // Matrix Multiplication Questions (from photo)
   const MATRIX_MUL_QUESTIONS = [
     {
@@ -417,6 +436,20 @@ export default function MathVisualization() {
       btnClass: 'bg-emerald-500 hover:bg-emerald-600 text-white',
       badgeClass: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
       icon: '📐'
+    },
+    { 
+      id: "Modified Euler's Method", 
+      title: "Modified Euler's Method", 
+      desc: "Solve ordinary differential equations step-by-step using predictor-corrector average slope approximations.", 
+      status: 'Advanced', 
+      time: '20 mins', 
+      xp: '150 XP', 
+      progress: 0,
+      tags: ['ODE Solver', 'Predictor Corrector', 'Second Order'],
+      colorTheme: 'teal',
+      btnClass: 'bg-teal-500 hover:bg-teal-656 text-white',
+      badgeClass: 'bg-teal-500/10 border-teal-500/20 text-teal-650 dark:text-teal-400',
+      icon: '📈'
     }
   ];
 
@@ -618,6 +651,27 @@ export default function MathVisualization() {
         }
       ]
     },
+    "Modified Euler's Method": {
+      features: [
+        { icon: BookOpen, title: 'Predictor-Corrector Solver', desc: 'Solves ordinary differential equations step-by-step using midpoint average slope estimations.' },
+        { icon: Target, title: 'Second-order Accuracy', desc: 'Local truncation error is O(h³), while global error is O(h²).' },
+        { icon: Lightbulb, title: 'Photo Problems', desc: 'Q1: solve dy/dx = x² + y, y(0)=1, h=0.05. Q2: solve dy/dx = 2 + √xy, y(1)=1, h=0.5.' },
+      ],
+      formulas: [
+        {
+          title: 'Modified Euler\'s Iterative Formula',
+          formula: 'y\u2099\u208A\u2081 = y\u2099 + h \u00B7 f(x\u2099 + h/2, y\u2099 + (h/2)f(x\u2099, y\u2099))',
+          variables: [
+            { sym: 'x\u2099, y\u2099', def: 'Coordinates at step n' },
+            { sym: 'h', def: 'Step size' },
+            { sym: 'f(x\u2099, y\u2099)', def: 'Tangent slope evaluating derivative dy/dx at starting point' },
+            { sym: 'y_pred', def: 'Euler predicted y at midpoint: y\u2099 + (h/2)f(x\u2099, y\u2099)' },
+            { sym: 'x\u2099 + h/2', def: 'Midpoint x coordinate' },
+            { sym: 'y\u2099\u208A\u2081', def: 'Approximated value of y at next step coordinate x\u2099 + h' }
+          ]
+        }
+      ]
+    },
     'Matrix Multiplication': {
       features: [
         { icon: BookOpen, title: 'Row × Column Rule', desc: 'Each entry C[i][j] is the dot product of row i of A with column j of B.' },
@@ -669,6 +723,7 @@ export default function MathVisualization() {
   const activeMatMulQuestion = MATRIX_MUL_QUESTIONS.find(q => q.id === matMulQuestionId);
   const activeTaylorQuestion = TAYLOR_QUESTIONS.find(q => q.id === taylorQuestionId);
   const activeEulerQuestion = EULER_QUESTIONS.find(q => q.id === eulerQuestionId);
+  const activeModifiedEulerQuestion = MODIFIED_EULER_QUESTIONS.find(q => q.id === modifiedEulerQuestionId);
 
   // Engine Event Handlers
   const handleExplanationUpdate = (text) => {
@@ -790,6 +845,22 @@ export default function MathVisualization() {
           onFinish={handleExecutionFinished}
         />
       );
+    } else if (selectedMethod === "Modified Euler's Method") {
+      return (
+        <NotebookEngine
+          dataset={activeModifiedEulerQuestion}
+          rkX0={parseFloat(rkX0)}
+          rkY0={parseFloat(rkY0)}
+          rkH={parseFloat(rkH)}
+          rkSteps={parseInt(rkSteps)}
+          rkFuncId={rkFuncId}
+          method={selectedMethod}
+          playbackState={playbackState}
+          speed={speed}
+          onExplain={handleExplanationUpdate}
+          onFinish={handleExecutionFinished}
+        />
+      );
     } else if (selectedMethod === "Taylor's Method") {
       engineElement = (
         <NotebookEngine
@@ -885,6 +956,20 @@ export default function MathVisualization() {
         return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${ (parseFloat(rkX0) + parseInt(rkSteps) * parseFloat(rkH)).toFixed(2) }) in ${rkSteps} step(s) of h = ${rkH} using Euler's Method.`;
       }
       return activeEulerQuestion?.question || '';
+    } else if (selectedMethod === "Modified Euler's Method") {
+      if (modifiedEulerQuestionId === 'custom') {
+        const RK_FUNCTIONS = {
+          'y_minus_x': "dy/dx = y - x",
+          'x_plus_y':  "dy/dx = x + y",
+          'minus_2xy': "dy/dx = -2xy",
+          'y_plus_x2': "dy/dx = y + x\u00B2",
+          'x2_plus_y': "dy/dx = x² + y",
+          'two_plus_sqrt_xy': "dy/dx = 2 + √xy"
+        };
+        const odeStr = RK_FUNCTIONS[rkFuncId] || "dy/dx = y - x";
+        return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${ (parseFloat(rkX0) + parseInt(rkSteps) * parseFloat(rkH)).toFixed(2) }) in ${rkSteps} step(s) of h = ${rkH} using Modified Euler's Method.`;
+      }
+      return activeModifiedEulerQuestion?.question || '';
     } else if (selectedMethod === 'Matrix Multiplication') {
       return activeMatMulQuestion?.question || 'Compute matrix product using row × column dot product rule.';
     }
@@ -1599,6 +1684,60 @@ export default function MathVisualization() {
                         <option value="x_plus_y">dy/dx = x + y</option>
                         <option value="minus_2xy">dy/dx = -2xy</option>
                         <option value="y_plus_x2">dy/dx = y + x\u00B2</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial x₀</label>
+                        <input type="number" step="0.1" value={rkX0} onChange={e => { setRkX0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial y₀</label>
+                        <input type="number" step="0.1" value={rkY0} onChange={e => { setRkY0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Step size (h)</label>
+                        <input type="number" step="0.05" min="0.01" max="1" value={rkH} onChange={e => { setRkH(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Steps Count</label>
+                        <input type="number" min="1" max="10" value={rkSteps} onChange={e => { setRkSteps(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            ) : selectedMethod === "Modified Euler's Method" ? (
+              <>
+                <div className="mb-4">
+                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
+                  <select 
+                    value={modifiedEulerQuestionId}
+                    onChange={(e) => { setModifiedEulerQuestionId(e.target.value); setPlaybackState('IDLE'); }}
+                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
+                  >
+                    {MODIFIED_EULER_QUESTIONS.map(q => (
+                      <option key={q.id} value={q.id}>{q.label}</option>
+                    ))}
+                  </select>
+                </div>
+                {modifiedEulerQuestionId === 'custom' && (
+                  <>
+                    <div className="mb-4">
+                      <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">ODE dy/dx = f(x,y)</label>
+                      <select 
+                        value={rkFuncId}
+                        onChange={(e) => { setRkFuncId(e.target.value); setPlaybackState('IDLE'); }}
+                        className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
+                      >
+                        <option value="y_minus_x">dy/dx = y - x</option>
+                        <option value="x_plus_y">dy/dx = x + y</option>
+                        <option value="minus_2xy">dy/dx = -2xy</option>
+                        <option value="y_plus_x2">dy/dx = y + x²</option>
+                        <option value="x2_plus_y">dy/dx = x² + y</option>
+                        <option value="two_plus_sqrt_xy">dy/dx = 2 + √xy</option>
                       </select>
                     </div>
                     <div className="grid grid-cols-2 gap-3 mb-4">
