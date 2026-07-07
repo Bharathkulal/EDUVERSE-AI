@@ -784,6 +784,11 @@ const db = require('./config/db');
         );
       `);
 
+      await db.query(`
+        ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS selected_provider VARCHAR(50) DEFAULT 'auto';
+        ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS selected_model VARCHAR(100) DEFAULT NULL;
+      `);
+
       // Seed default templates if empty
       const checkPrompts = await db.query('SELECT 1 FROM prompt_templates LIMIT 1');
       if (checkPrompts.rows.length === 0) {

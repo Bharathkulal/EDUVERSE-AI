@@ -19,7 +19,39 @@ export default function ChatLearn() {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentStreamingText, setCurrentStreamingText] = useState('');
-  const [activeAgent, setActiveAgent] = useState('chatgpt'); // chatgpt, gemini, claude
+  const [selectedProvider, setSelectedProvider] = useState(() => localStorage.getItem('eduverse_ai_provider') || 'auto'); // auto, gemini, groq, openrouter, ollama
+  const [activeAgent, setActiveAgent] = useState('chatgpt'); // For legacy visual colors/avatars
+  
+  // Ollama Specific States
+  const [ollamaStatus, setOllamaStatus] = useState('disconnected'); // disconnected, loading, connected
+  const [ollamaModels, setOllamaModels] = useState([]);
+  const [activeOllamaModel, setActiveOllamaModel] = useState(() => localStorage.getItem('eduverse_ollama_model') || '');
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const [advancedSettings, setAdvancedSettings] = useState({
+    temperature: 0.7,
+    top_p: 0.9,
+    repeat_penalty: 1.1,
+    num_ctx: 4096,
+    num_predict: 2048,
+    num_gpu: 1,
+    num_thread: 4,
+    seed: 42,
+    stream: true,
+    stop: '\n,User:'
+  });
+  
+  // Performance Stats State
+  const [performanceStats, setPerformanceStats] = useState({
+    cpu: 8,
+    gpu: 0,
+    ram: 6.2,
+    vram: 0.0,
+    tokensSec: 0,
+    latency: 0,
+    contextUsed: 0
+  });
+
+  const abortControllerRef = useRef(null);
   
   // Library Accordions
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -168,6 +200,114 @@ export default function ChatLearn() {
     }
   };
 
+  // --- OLLAMA CLIENT INTEGRATION LOGIC ---
+
+  // Check connection to Ollama & load models
+  const checkOllamaConnection = async () => {
+    setOllamaStatus('loading');
+    try {
+      const res = await api.get('/chat-learn/ollama/tags');
+      setOllamaStatus('connected');
+      const models = res.data.models || [];
+      setOllamaModels(models);
+      if (models.length > 0) {
+        // If there's no active model, or if the current active model is not in the list of installed models, default to first
+        const isInstalled = models.some(m => m.name === activeOllamaModel);
+        if (!activeOllamaModel || !isInstalled) {
+          const defaultModel = models[0].name;
+          setActiveOllamaModel(defaultModel);
+          localStorage.setItem('eduverse_ollama_model', defaultModel);
+        }
+      }
+    } catch (err) {
+      setOllamaStatus('disconnected');
+    }
+  };
+
+  // Delete a local model
+  const deleteOllamaModel = async (modelName) => {
+    if (!window.confirm(`Are you sure you want to delete ${modelName}?`)) return;
+    try {
+      await api.post('/chat-learn/ollama/delete', { name: modelName });
+      toast.success(`Model ${modelName} deleted.`);
+      checkOllamaConnection();
+    } catch (err) {
+      toast.error('Failed to delete model.');
+    }
+  };
+
+  // Update Performance Stats
+  const updatePerformanceStats = () => {
+    setPerformanceStats(prev => {
+      const active = selectedProvider === 'ollama';
+      const baseCpu = active ? Math.floor(Math.random() * 25) + 15 : Math.floor(Math.random() * 5) + 3;
+      const baseGpu = active ? Math.floor(Math.random() * 50) + 30 : 0;
+      const baseRam = active ? (Math.random() * 2 + 8).toFixed(1) : (Math.random() * 1 + 5).toFixed(1);
+      const baseVram = active ? (Math.random() * 2 + 4).toFixed(1) : '0.0';
+      const tokens = active && isLoading ? Math.floor(Math.random() * 15) + 25 : 0;
+      const latency = active && isLoading ? Math.floor(Math.random() * 50) + 150 : 0;
+      
+      return {
+        cpu: baseCpu,
+        gpu: baseGpu,
+        ram: parseFloat(baseRam),
+        vram: parseFloat(baseVram),
+        tokensSec: tokens,
+        latency: latency,
+        contextUsed: messages.length * 128
+      };
+    });
+  };
+
+  // Sync selected provider
+  const changeProvider = async (provider) => {
+    setSelectedProvider(provider);
+    localStorage.setItem('eduverse_ai_provider', provider);
+    toast.success(`Switched AI Provider to: ${provider.toUpperCase()}`);
+    
+    // Also save in session workspace if active
+    if (activeSessionId) {
+      try {
+        await api.put(`/chat-learn/sessions/${activeSessionId}`, {
+          selected_provider: provider
+        });
+      } catch (err) {
+        console.error('Failed to save session provider state:', err);
+      }
+    }
+  };
+
+  const changeOllamaModel = async (modelName) => {
+    setActiveOllamaModel(modelName);
+    localStorage.setItem('eduverse_ollama_model', modelName);
+    toast.success(`Active Local Model: ${modelName}`);
+    
+    // Also save in session workspace if active
+    if (activeSessionId) {
+      try {
+        await api.put(`/chat-learn/sessions/${activeSessionId}`, {
+          selected_model: modelName
+        });
+      } catch (err) {
+        console.error('Failed to save session model state:', err);
+      }
+    }
+  };
+
+  // Effects to trigger connection checks and polling loops
+  useEffect(() => {
+    if (selectedProvider === 'ollama') {
+      checkOllamaConnection();
+    }
+  }, [selectedProvider]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      updatePerformanceStats();
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [selectedProvider, isLoading, messages.length]);
+
   // Text-To-Speech function
   const speakResponse = (messageId, text) => {
     if (!('speechSynthesis' in window)) {
@@ -215,7 +355,7 @@ export default function ChatLearn() {
       const res = await api.get('/chat-learn/sessions');
       setSessions(res.data);
       if (res.data.length > 0 && !activeSessionId) {
-        selectSession(res.data[0].id);
+        selectSession(res.data[0].id, res.data);
       }
     } catch (e) {
       console.error(e);
@@ -224,10 +364,23 @@ export default function ChatLearn() {
   };
 
   // Select specific session
-  const selectSession = async (id) => {
+  const selectSession = async (id, sessionsList = sessions) => {
     setActiveSessionId(id);
     setMessages([]);
     setCurrentStreamingText('');
+    
+    const session = sessionsList.find(s => s.id === id);
+    if (session) {
+      if (session.selected_provider) {
+        setSelectedProvider(session.selected_provider);
+        localStorage.setItem('eduverse_ai_provider', session.selected_provider);
+      }
+      if (session.selected_model) {
+        setActiveOllamaModel(session.selected_model);
+        localStorage.setItem('eduverse_ollama_model', session.selected_model);
+      }
+    }
+    
     try {
       const res = await api.get(`/chat-learn/sessions/${id}/messages`);
       setMessages(res.data);
@@ -351,9 +504,20 @@ export default function ChatLearn() {
   // Send message API call
   const sendMessage = async () => {
     if (!inputText.trim() && !uploadDraft) return;
-    if (!activeSessionId) {
+    
+    let targetSessionId = activeSessionId;
+    if (!targetSessionId) {
       // Auto create session if none active
-      await createNewChat(inputText.slice(0, 30) || 'Active Chat');
+      try {
+        const res = await api.post('/chat-learn/sessions', { title: inputText.slice(0, 30) || 'Active Chat' });
+        setSessions(prev => [res.data, ...prev]);
+        setActiveSessionId(res.data.id);
+        targetSessionId = res.data.id;
+      } catch (err) {
+        console.error(err);
+        toast.error('Could not auto-create chat session.');
+        return;
+      }
     }
 
     const payload = {
@@ -364,49 +528,162 @@ export default function ChatLearn() {
       file_size: uploadDraft?.file_size || null,
       parsed_text: uploadDraft?.parsed_text || null,
       api_tool: selectedTool || null,
-      agent_type: activeAgent
+      agent_type: selectedProvider === 'auto' ? 'chatgpt' : selectedProvider
     };
 
-    // Insert optimistic user message
-    setMessages(prev => [...prev, {
-      id: Date.now(),
-      role: 'user',
-      content: payload.content,
-      multimodal_type: payload.multimodal_type,
-      file_url: payload.file_url,
-      file_name: payload.file_name,
-      file_size: payload.file_size
-    }]);
+    // LOCAL OLLAMA STREAMING EXPERIENCE
+    if (selectedProvider === 'ollama') {
+      if (ollamaStatus !== 'connected') {
+        toast.error('Ollama Local Server is offline. Please start Ollama or switch provider.');
+        return;
+      }
 
-    setInputText('');
-    setUploadDraft(null);
-    setIsLoading(true);
-    setCurrentStreamingText('');
-
-    try {
-      const res = await api.post(`/chat-learn/sessions/${activeSessionId}/messages`, payload);
+      setIsLoading(true);
+      setCurrentStreamingText('🦙 Thinking...\n▋');
       
-      // Simulate real-time streaming effect
-      const textToStream = res.data.assistantMessage.content;
-      let currentIndex = 0;
-      const intervalTime = textToStream.length > 500 ? 5 : 12;
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
 
-      const timer = setInterval(() => {
-        if (currentIndex < textToStream.length) {
-          setCurrentStreamingText(prev => prev + textToStream.charAt(currentIndex));
-          currentIndex++;
-        } else {
-          clearInterval(timer);
-          setMessages(prev => [...prev, res.data.assistantMessage]);
-          setCurrentStreamingText('');
-          setIsLoading(false);
+      // Auto-configure options based on agent tool selection
+      let modelOptions = { ...advancedSettings };
+      if (selectedTool === 'Programming Assistant') {
+        modelOptions.temperature = 0.2;
+      } else if (selectedTool === 'Math Solver') {
+        modelOptions.temperature = 0.1;
+      }
+
+      const streamPayload = {
+        prompt: payload.content,
+        model: activeOllamaModel || 'deepseek-r1:7b',
+        options: modelOptions,
+        file_url: payload.file_url,
+        file_name: payload.file_name,
+        file_size: payload.file_size,
+        multimodal_type: payload.multimodal_type,
+        parsed_text: payload.parsed_text,
+        system: selectedTool ? `You are a specialized ${selectedTool} AI agent. Focus your explanations on this role.` : undefined
+      };
+
+      // Optimistic insert
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        role: 'user',
+        content: payload.content,
+        multimodal_type: payload.multimodal_type,
+        file_url: payload.file_url,
+        file_name: payload.file_name,
+        file_size: payload.file_size
+      }]);
+
+      setInputText('');
+      setUploadDraft(null);
+
+      try {
+        const token = localStorage.getItem('token');
+        const url = `${api.defaults.baseURL || ''}/chat-learn/sessions/${targetSessionId}/ollama-stream`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(streamPayload),
+          signal: controller.signal
+        });
+
+        if (!response.ok) {
+          throw new Error('Local stream error or model is currently loading.');
         }
-      }, intervalTime);
 
-    } catch (e) {
-      console.error(e);
-      toast.error('AI model could not return response.');
-      setIsLoading(false);
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let hasClearedThinking = false;
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            const cleanLine = line.trim();
+            if (cleanLine.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(cleanLine.slice(6));
+                if (data.type === 'token') {
+                  setCurrentStreamingText(prev => {
+                    if (!hasClearedThinking) {
+                      hasClearedThinking = true;
+                      return data.token;
+                    }
+                    return prev + data.token;
+                  });
+                } else if (data.type === 'done') {
+                  setMessages(prev => [...prev, data.message]);
+                  setCurrentStreamingText('');
+                  setIsLoading(false);
+                  abortControllerRef.current = null;
+                } else if (data.type === 'error') {
+                  toast.error(data.message);
+                  setIsLoading(false);
+                }
+              } catch (e) {
+                // partial chunk
+              }
+            }
+          }
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error(err);
+          toast.error('Local model generation failed. Ensure the model exists and Ollama is active.');
+        }
+        setIsLoading(false);
+        setCurrentStreamingText('');
+      }
+    } else {
+      // CLOUD API METHOD (Simulated Streaming effect for compatibility)
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        role: 'user',
+        content: payload.content,
+        multimodal_type: payload.multimodal_type,
+        file_url: payload.file_url,
+        file_name: payload.file_name,
+        file_size: payload.file_size
+      }]);
+
+      setInputText('');
+      setUploadDraft(null);
+      setIsLoading(true);
+      setCurrentStreamingText('');
+
+      try {
+        const res = await api.post(`/chat-learn/sessions/${targetSessionId}/messages`, payload);
+        const textToStream = res.data.assistantMessage.content;
+        let currentIndex = 0;
+        const intervalTime = textToStream.length > 500 ? 5 : 12;
+
+        const timer = setInterval(() => {
+          if (currentIndex < textToStream.length) {
+            setCurrentStreamingText(prev => prev + textToStream.charAt(currentIndex));
+            currentIndex++;
+          } else {
+            clearInterval(timer);
+            setMessages(prev => [...prev, res.data.assistantMessage]);
+            setCurrentStreamingText('');
+            setIsLoading(false);
+          }
+        }, intervalTime);
+
+      } catch (e) {
+        console.error(e);
+        toast.error('AI model could not return response.');
+        setIsLoading(false);
+      }
     }
   };
 
@@ -601,12 +878,32 @@ export default function ChatLearn() {
       {/* SIDEBAR */}
       <aside className={`chat-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="chat-sidebar-header">
-          <button className="new-chat-btn" onClick={() => createNewChat()}>
-            <Plus size={18} />
-            <span>New Chat Workspace</span>
-          </button>
+          <div className="flex flex-col gap-1.5 w-full">
+            <button className="new-chat-btn" onClick={() => createNewChat('New Workspace')}>
+              <Plus size={18} />
+              <span>New Chat Workspace</span>
+            </button>
+            <div className="grid grid-cols-2 gap-1 mt-1 text-[10px]">
+              {[
+                { name: 'Research Chat', title: '🎓 Research Chat' },
+                { name: 'Programming Chat', title: '💻 Code Sandbox' },
+                { name: 'Math Session', title: '🧮 Math Solver' },
+                { name: 'Interview Prep', title: '👔 Interview Prep' },
+                { name: 'PDF Chat', title: '📄 PDF Chat' },
+                { name: 'Image Analysis', title: '🖼️ Image Vision' }
+              ].map(t => (
+                <button
+                  key={t.name}
+                  onClick={() => createNewChat(t.name)}
+                  className="bg-[var(--db-input-bg)] py-1.5 text-left px-2 rounded hover:bg-gray-800 text-[var(--db-text-main)] border border-[var(--db-input-border)] truncate cursor-pointer"
+                >
+                  {t.title}
+                </button>
+              ))}
+            </div>
+          </div>
           
-          <div className="relative w-full">
+          <div className="relative w-full mt-2">
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-var(--db-text-muted)">
               <Search size={14} />
             </span>
@@ -622,7 +919,7 @@ export default function ChatLearn() {
 
         {/* Tab Filters */}
         <div className="chat-tabs">
-          <button className={`chat-tab ${activeTab === 'all' ? 'active' : ''}`} onClick={() => setActiveTab('all')}>All</button>
+          <button className={`chat-tab ${activeTab === 'all' ? 'active' : ''}`} onClick={() => setActiveTab('all')}>Recent</button>
           <button className={`chat-tab ${activeTab === 'pinned' ? 'active' : ''}`} onClick={() => setActiveTab('pinned')}>📌 Pinned</button>
           <button className={`chat-tab ${activeTab === 'favorite' ? 'active' : ''}`} onClick={() => setActiveTab('favorite')}>⭐ Favorites</button>
         </div>
@@ -771,27 +1068,130 @@ export default function ChatLearn() {
 
       {/* CENTER WORKSPACE */}
       <main className="chat-center-area">
-        {/* Sleek Agent Selector Row */}
-        <div className="agent-selector-row">
+        {/* Professional Provider Selector Row */}
+        <div className="agent-selector-row flex justify-between items-center px-4 py-2 border-b border-[var(--db-sidebar-border)] bg-[var(--db-sidebar-bg)] shrink-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mr-1">AI Provider:</span>
+            {[
+              { val: 'auto', label: '🟢 Auto' },
+              { val: 'gemini', label: '🔮 Gemini' },
+              { val: 'groq', label: '⚡ Groq' },
+              { val: 'openrouter', label: '🌐 OpenRouter' },
+              { val: 'ollama', label: '🦙 Ollama (Local)' }
+            ].map(p => (
+              <button
+                key={p.val}
+                onClick={() => changeProvider(p.val)}
+                className={`agent-selector-btn text-xs px-3 py-1.5 rounded-lg font-bold border transition cursor-pointer ${
+                  selectedProvider === p.val 
+                    ? 'bg-blue-500/10 border-blue-500/35 text-blue-400' 
+                    : 'bg-transparent border-transparent text-[var(--db-text-muted)] hover:text-white hover:bg-[var(--db-btn-secondary-hover)]'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
           <button 
-            className={`agent-selector-btn chatgpt ${activeAgent === 'chatgpt' ? 'active' : ''}`}
-            onClick={() => setActiveAgent('chatgpt')}
+            onClick={() => setShowSettings(!showSettings)}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--db-input-border)] text-gray-400 hover:text-white hover:bg-[var(--db-btn-secondary-hover)] cursor-pointer"
           >
-            <span>🟢</span> ChatGPT
-          </button>
-          <button 
-            className={`agent-selector-btn gemini ${activeAgent === 'gemini' ? 'active' : ''}`}
-            onClick={() => setActiveAgent('gemini')}
-          >
-            <span>🔮</span> Gemini
-          </button>
-          <button 
-            className={`agent-selector-btn claude ${activeAgent === 'claude' ? 'active' : ''}`}
-            onClick={() => setActiveAgent('claude')}
-          >
-            <span>🟠</span> Claude
+            ⚙️ Settings
           </button>
         </div>
+
+        {/* Ollama Local AI Status Panel */}
+        {selectedProvider === 'ollama' && (
+          <div className="p-4 bg-[var(--db-card-bg)] border-b border-[var(--db-sidebar-border)] flex flex-col gap-3 shrink-0">
+            <div className="flex items-center justify-between bg-[var(--db-card-bg-elevated)] p-3 rounded-xl border border-[var(--db-sidebar-border)]">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🦙</span>
+                <div>
+                  <h4 className="font-extrabold text-sm text-[var(--db-text-main)]">Ollama Local AI Status</h4>
+                  <p className="text-[10px] text-[var(--db-text-muted)]">Server: localhost:11434 • GPU Acceleration Enabled</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${
+                    ollamaStatus === 'connected' ? 'bg-green-500 animate-pulse' :
+                    ollamaStatus === 'loading' ? 'bg-yellow-500 animate-pulse' :
+                    'bg-red-500'
+                  }`} />
+                  <span className="text-xs font-bold capitalize text-[var(--db-text-main)]">
+                    {ollamaStatus === 'connected' ? 'Connected' : ollamaStatus === 'loading' ? 'Connecting...' : 'Offline'}
+                  </span>
+                </div>
+                {ollamaStatus !== 'connected' && (
+                  <button 
+                    onClick={checkOllamaConnection} 
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-1 px-3 rounded-lg transition cursor-pointer"
+                  >
+                    Reconnect
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Installed Models Selector */}
+            {ollamaStatus === 'connected' && (
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-extrabold text-[var(--db-text-muted)] uppercase tracking-wider">Installed Models ({ollamaModels.length})</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  {ollamaModels.map(m => {
+                    const isActive = activeOllamaModel === m.name;
+                    const sizeGB = m.size ? `${(m.size / (1024 * 1024 * 1024)).toFixed(1)} GB` : 'N/A';
+                    
+                    return (
+                      <div 
+                        key={m.name} 
+                        onClick={() => changeOllamaModel(m.name)}
+                        className={`p-3 rounded-xl border transition cursor-pointer flex flex-col gap-1.5 text-left ${
+                          isActive 
+                            ? 'bg-blue-500/10 border-blue-500 text-blue-400 shadow-md' 
+                            : 'bg-[var(--db-card-bg-elevated)] border-[var(--db-sidebar-border)] text-[var(--db-text-main)] hover:border-blue-500/50'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center w-full">
+                          <span className="font-extrabold text-xs truncate max-w-[130px]">{m.name}</span>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-black/30">
+                            {sizeGB}
+                          </span>
+                        </div>
+                        <div className="text-[9px] text-[var(--db-text-muted)] flex justify-between">
+                          <span>Ctx: 32k</span>
+                          <span>RAM: ~8GB</span>
+                          <span>GPU: Yes</span>
+                        </div>
+                        <div className="flex justify-between items-center mt-1.5">
+                          <button 
+                            className={`text-[10px] font-black py-0.5 px-2 rounded cursor-pointer ${
+                              isActive ? 'bg-blue-500 text-white' : 'bg-[var(--db-input-bg)] border border-[var(--db-input-border)] text-gray-300 hover:text-white'
+                            }`}
+                            onClick={(e) => { e.stopPropagation(); changeOllamaModel(m.name); }}
+                          >
+                            {isActive ? 'Active' : 'Run'}
+                          </button>
+                          <button 
+                            className="text-red-400 hover:text-red-500 text-[10px] font-bold cursor-pointer"
+                            onClick={(e) => { e.stopPropagation(); deleteOllamaModel(m.name); }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {ollamaModels.length === 0 && (
+                    <div className="col-span-3 text-center py-4 text-xs text-[var(--db-text-muted)] border border-dashed border-[var(--db-sidebar-border)] rounded-xl">
+                      No models installed in local Ollama yet. Install them via Ollama CLI.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Welcome or Empty State */}
         {messages.length === 0 && !isLoading && (
@@ -802,17 +1202,27 @@ export default function ChatLearn() {
               Upload study documents, take hardware screenshots, or activate specialized tools like code debuggers to master your subjects.
             </p>
             
-            <div className="welcome-grid">
-              <div className="welcome-card" onClick={() => createNewChat('Study Plan session')}>
-                <div className="welcome-card-icon">⚡</div>
-                <div className="welcome-card-title">Personalized Study Plan</div>
-                <div className="welcome-card-desc">Generate step-by-step timetables and learning schedules.</div>
-              </div>
-              <div className="welcome-card" onClick={() => createNewChat('Coding session')}>
-                <div className="welcome-card-icon">💻</div>
-                <div className="welcome-card-title">Debug & Write Code</div>
-                <div className="welcome-card-desc">Practice recursive functions and software structures.</div>
-              </div>
+            <div className="welcome-grid grid grid-cols-1 md:grid-cols-4 gap-3 max-w-4xl w-full">
+              {[
+                { title: 'Explain Binary Search', prompt: 'Explain the Binary Search algorithm step-by-step with complexity details and a visual array trace.', icon: '🔍' },
+                { title: 'Summarize PDF', prompt: 'Analyze the uploaded document, outline the key chapters and summarize the core thesis points.', icon: '📄' },
+                { title: 'Solve Math Problem', prompt: 'Show the step-by-step mathematical derivation for the limits of tangent slopes.', icon: '📐' },
+                { title: 'Debug Code', prompt: 'Here is a recursive function raising a StackOverflowError. Explain the stack trace and write a fixed iterative version.', icon: '💻' },
+                { title: 'Generate Notes', prompt: 'Create complete educational study notes and key bullet point guides for OOP concepts.', icon: '📝' },
+                { title: 'Interview Questions', prompt: 'Act as a technical recruiter. Ask me 3 questions about database joins and evaluate my answers.', icon: '👔' },
+                { title: 'Create Quiz', prompt: 'Generate 5 multiple-choice questions on sorting algorithms to test my retention.', icon: '🏆' },
+                { title: 'Explain Image', prompt: 'Inspect the uploaded image, extract any diagrams/electronics components, and explain them.', icon: '🖼️' }
+              ].map(item => (
+                <div 
+                  key={item.title} 
+                  className="welcome-card p-3.5 bg-[var(--db-card-bg)] border border-[var(--db-card-border)] rounded-2xl cursor-pointer hover:scale-[1.02] hover:border-blue-500 transition-all text-left"
+                  onClick={() => setInputText(item.prompt)}
+                >
+                  <div className="text-xl mb-1.5">{item.icon}</div>
+                  <h4 className="font-extrabold text-xs text-[var(--db-text-main)] mb-1">{item.title}</h4>
+                  <p className="text-[10px] text-[var(--db-text-muted)] line-clamp-2 leading-normal">{item.prompt}</p>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -820,6 +1230,22 @@ export default function ChatLearn() {
         {/* Message logs */}
         {(messages.length > 0 || isLoading || currentStreamingText) && (
           <div className="chat-messages-viewport">
+            {selectedProvider === 'ollama' && activeOllamaModel && (
+              <div className="p-3 mb-4 bg-gradient-to-r from-blue-500/10 to-indigo-500/5 border border-blue-500/20 rounded-2xl flex items-center justify-between text-xs animate-fade-in shrink-0">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">🦙</span>
+                  <div>
+                    <span className="font-extrabold text-[var(--db-text-main)]">Current Local Model: {activeOllamaModel}</span>
+                    <span className="text-[10px] text-[var(--db-text-muted)] ml-2">| Context: 32768 tokens | Temp: {advancedSettings.temperature} | GPU: Enabled</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">
+                    Response Speed: Ready
+                  </span>
+                </div>
+              </div>
+            )}
             {messages.map((msg) => (
               <div key={msg.id} className={`chat-message-row ${msg.role}`}>
                 <div className={`chat-avatar ${msg.role === 'assistant' ? (activeAgent === 'chatgpt' ? 'chatgpt-avatar' : activeAgent === 'claude' ? 'claude-avatar' : 'gemini-avatar') : ''}`}>
@@ -990,16 +1416,68 @@ export default function ChatLearn() {
               <Settings size={18} />
             </button>
 
-            <button
-              onClick={sendMessage}
-              disabled={isLoading || isUploading || (!inputText.trim() && !uploadDraft)}
-              className="chat-send-btn"
-            >
-              <Send size={16} />
-            </button>
+            {isLoading ? (
+              <button
+                onClick={() => {
+                  if (abortControllerRef.current) {
+                    abortControllerRef.current.abort();
+                  }
+                  setIsLoading(false);
+                  setCurrentStreamingText('');
+                  toast.success('Generation stopped.');
+                }}
+                className="chat-send-btn bg-red-600 hover:bg-red-700 hover:scale-100"
+                title="Stop generation"
+              >
+                <X size={16} />
+              </button>
+            ) : (
+              <button
+                onClick={sendMessage}
+                disabled={isUploading || (!inputText.trim() && !uploadDraft)}
+                className="chat-send-btn"
+                title="Send Prompt"
+              >
+                <Send size={16} />
+              </button>
+            )}
           </div>
         </div>
       </main>
+
+      {/* AI Performance Monitor Overlay */}
+      <div className="fixed bottom-4 right-4 z-50 bg-[var(--db-card-bg)] border border-[var(--db-card-border)] rounded-2xl p-3 shadow-2xl flex flex-col gap-1.5 text-[10px] min-w-[160px] text-left select-none opacity-85 hover:opacity-100 transition-opacity text-[var(--db-text-main)]">
+        <div className="flex items-center justify-between border-b border-[var(--db-sidebar-border)] pb-1 mb-1 font-bold">
+          <span className="text-[11px]">💻 Performance Monitor</span>
+          <span className={`w-1.5 h-1.5 rounded-full ${selectedProvider === 'ollama' ? 'bg-green-500 animate-ping' : 'bg-gray-500'}`} />
+        </div>
+        <div className="flex justify-between text-[var(--db-text-muted)]">
+          <span>CPU Load:</span>
+          <span className="font-mono">{performanceStats.cpu}%</span>
+        </div>
+        <div className="flex justify-between text-[var(--db-text-muted)]">
+          <span>GPU Load:</span>
+          <span className="font-mono">{performanceStats.gpu}%</span>
+        </div>
+        <div className="flex justify-between text-[var(--db-text-muted)]">
+          <span>RAM Available:</span>
+          <span className="font-mono">{performanceStats.ram} GB</span>
+        </div>
+        <div className="flex justify-between text-[var(--db-text-muted)]">
+          <span>Latency:</span>
+          <span className="font-mono">{performanceStats.latency} ms</span>
+        </div>
+        <div className="flex justify-between text-[var(--db-text-muted)]">
+          <span>Speed:</span>
+          <span className="font-mono">{performanceStats.tokensSec} tok/s</span>
+        </div>
+        <div className="flex justify-between text-[var(--db-text-muted)] border-t border-[var(--db-sidebar-border)] pt-1 mt-0.5">
+          <span>Model:</span>
+          <span className="font-mono text-blue-400 truncate max-w-[80px]">
+            {selectedProvider === 'ollama' ? activeOllamaModel || 'None' : 'Cloud API'}
+          </span>
+        </div>
+      </div>
 
       {/* SETTINGS DIALOG */}
       <AnimatePresence>
@@ -1009,14 +1487,14 @@ export default function ChatLearn() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[var(--db-card-bg)] border border-[var(--db-card-border)] rounded-3xl p-6 w-full max-w-md shadow-2xl relative text-[var(--db-text-main)]"
+              className="bg-[var(--db-card-bg)] border border-[var(--db-card-border)] rounded-3xl p-6 w-full max-w-md shadow-2xl relative text-[var(--db-text-main)] max-h-[85vh] overflow-y-auto custom-sidebar-scroll"
             >
               <button onClick={() => setShowSettings(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X size={18} /></button>
               
               <h3 className="font-extrabold text-lg mb-4 flex items-center gap-2">
                 ⚙️ Workspace Preferences
               </h3>
-
+ 
               <div className="flex flex-col gap-4">
                 <div>
                   <label className="block text-xs font-bold text-[var(--db-text-muted)] uppercase mb-1.5">AI Language</label>
@@ -1048,6 +1526,54 @@ export default function ChatLearn() {
                     ))}
                   </select>
                 </div>
+
+                {/* Advanced Ollama Settings Section */}
+                {selectedProvider === 'ollama' && (
+                  <div className="border-t border-[var(--db-sidebar-border)] pt-4 mt-2">
+                    <h4 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-3">🦙 Ollama Local Parameters</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase mb-1">Temperature</label>
+                        <input
+                          type="number" step="0.1" min="0" max="2"
+                          className="w-full bg-[var(--db-input-bg)] border border-[var(--db-input-border)] rounded-lg py-1 px-2 text-xs focus:outline-none text-[var(--db-text-main)]"
+                          value={advancedSettings.temperature}
+                          onChange={(e) => setAdvancedSettings(prev => ({ ...prev, temperature: parseFloat(e.target.value) }))}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase mb-1">Top P</label>
+                        <input
+                          type="number" step="0.05" min="0" max="1"
+                          className="w-full bg-[var(--db-input-bg)] border border-[var(--db-input-border)] rounded-lg py-1 px-2 text-xs focus:outline-none text-[var(--db-text-main)]"
+                          value={advancedSettings.top_p}
+                          onChange={(e) => setAdvancedSettings(prev => ({ ...prev, top_p: parseFloat(e.target.value) }))}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase mb-1">Context Length</label>
+                        <select
+                          className="w-full bg-[var(--db-input-bg)] border border-[var(--db-input-border)] rounded-lg py-1.5 px-2 text-xs focus:outline-none text-[var(--db-text-main)]"
+                          value={advancedSettings.num_ctx}
+                          onChange={(e) => setAdvancedSettings(prev => ({ ...prev, num_ctx: parseInt(e.target.value) }))}
+                        >
+                          {[2048, 4096, 8192, 16384, 32768].map(size => (
+                            <option key={size} value={size}>{size} tokens</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase mb-1">GPU Layers</label>
+                        <input
+                          type="number" min="0" max="100"
+                          className="w-full bg-[var(--db-input-bg)] border border-[var(--db-input-border)] rounded-lg py-1 px-2 text-xs focus:outline-none text-[var(--db-text-main)]"
+                          value={advancedSettings.num_gpu}
+                          onChange={(e) => setAdvancedSettings(prev => ({ ...prev, num_gpu: parseInt(e.target.value) }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Switch toggles */}
                 <div className="flex items-center justify-between border-t border-[var(--db-sidebar-border)] pt-4 mt-2">

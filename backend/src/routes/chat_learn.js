@@ -123,6 +123,14 @@ router.put('/sessions/:id', authenticate, async (req, res) => {
       updates.push(`collection_name = $${paramIndex++}`);
       values.push(collection_name);
     }
+    if (selected_provider !== undefined) {
+      updates.push(`selected_provider = $${paramIndex++}`);
+      values.push(selected_provider);
+    }
+    if (selected_model !== undefined) {
+      updates.push(`selected_model = $${paramIndex++}`);
+      values.push(selected_model);
+    }
 
     if (updates.length === 0) {
       return res.status(400).json({ message: 'No fields to update.' });
@@ -648,6 +656,152 @@ router.post('/generate-file', authenticate, async (req, res) => {
   } catch (err) {
     console.error('File generation error:', err);
     res.status(500).json({ message: 'Error generating file asset.' });
+  }
+});
+
+// --- OLLAMA LOCAL AI INTEGRATION ENDPOINTS ---
+
+// Get local Ollama models list
+router.get('/ollama/tags', async (req, res) => {
+  try {
+    const response = await axios.get('http://localhost:11434/api/tags', { timeout: 3000 });
+    res.json(response.data);
+  } catch (err) {
+    res.status(503).json({ message: 'Ollama offline or not running', error: err.message });
+  }
+});
+
+// Delete a local model
+router.post('/ollama/delete', async (req, res) => {
+  try {
+    const { name } = req.body;
+    await axios.delete('http://localhost:11434/api/delete', { data: { name } });
+    res.json({ message: `Model ${name} deleted successfully` });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete model', error: err.message });
+  }
+});
+
+// Stream chat session with local Ollama
+router.post('/sessions/:id/ollama-stream', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const sessionId = req.params.id;
+    const { prompt, model, system, options, file_url, file_name, file_size, multimodal_type, parsed_text } = req.body;
+
+    // Check if session exists
+    const sessionCheck = await db.query(
+      'SELECT id FROM chat_sessions WHERE id = $1 AND student_id = $2',
+      [sessionId, studentId]
+    );
+    if (sessionCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Chat session not found.' });
+    }
+
+    // Insert user message into database
+    const userMsgRes = await db.query(
+      `INSERT INTO chat_messages (session_id, role, content, multimodal_type, file_url, file_name, file_size) 
+       VALUES ($1, 'user', $2, $3, $4, $5, $6) RETURNING *`,
+      [sessionId, prompt, multimodal_type || null, file_url || null, file_name || null, file_size || null]
+    );
+
+    // Get previous messages for history (limit to 10)
+    const historyRes = await db.query(
+      'SELECT role, content FROM chat_messages WHERE session_id = $1 ORDER BY created_at DESC LIMIT 10',
+      [sessionId]
+    );
+    const chatMemory = historyRes.rows.reverse();
+
+    // Prepare messages array for Ollama
+    const messages = [];
+    if (system) {
+      messages.push({ role: 'system', content: system });
+    }
+    
+    // Add chat memory
+    chatMemory.forEach(msg => {
+      messages.push({ role: msg.role, content: msg.content });
+    });
+
+    // If there is parsed text context, inject it into the last user message
+    if (parsed_text && messages.length > 0) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg.role === 'user') {
+        lastMsg.content = `Document Context:\n${parsed_text}\n\nUser Question:\n${lastMsg.content}`;
+      }
+    }
+
+    // Convert attached images to base64 if Ollama vision model is used
+    if (multimodal_type === 'image' && file_url && messages.length > 0) {
+      const localPath = path.join(__dirname, '../../', file_url);
+      if (fs.existsSync(localPath)) {
+        const imageBuffer = fs.readFileSync(localPath);
+        const base64Image = imageBuffer.toString('base64');
+        const lastMsg = messages[messages.length - 1];
+        if (lastMsg && lastMsg.role === 'user') {
+          lastMsg.images = [base64Image];
+        }
+      }
+    }
+
+    // Set streaming headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    // Send the user message details first so the client can render it optimistically
+    res.write(`data: ${JSON.stringify({ type: 'user_message', message: userMsgRes.rows[0] })}\n\n`);
+
+    // Call Ollama
+    const ollamaPayload = {
+      model: model || 'deepseek-r1:7b',
+      messages: messages,
+      stream: true,
+      options: options || { temperature: 0.7 }
+    };
+
+    const ollamaResponse = await axios.post('http://localhost:11434/api/chat', ollamaPayload, {
+      responseType: 'stream',
+      timeout: 60000
+    });
+
+    let fullText = '';
+    
+    ollamaResponse.data.on('data', chunk => {
+      const chunkStr = chunk.toString();
+      const lines = chunkStr.split('\n');
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const parsed = JSON.parse(line);
+          const token = parsed.message?.content || '';
+          fullText += token;
+          res.write(`data: ${JSON.stringify({ type: 'token', token })}\n\n`);
+        } catch (e) {
+          // ignore parsing error for incomplete chunks
+        }
+      }
+    });
+
+    ollamaResponse.data.on('end', async () => {
+      // Save assistant message to database
+      const assistantMsgRes = await db.query(
+        `INSERT INTO chat_messages (session_id, role, content, detected_metadata) 
+         VALUES ($1, 'assistant', $2, $3) RETURNING *`,
+        [sessionId, fullText, JSON.stringify({ provider: 'ollama', model })]
+      );
+      
+      // Update session timestamp
+      await db.query('UPDATE chat_sessions SET updated_at = NOW() WHERE id = $1', [sessionId]);
+
+      res.write(`data: ${JSON.stringify({ type: 'done', message: assistantMsgRes.rows[0] })}\n\n`);
+      res.end();
+    });
+
+  } catch (err) {
+    console.error('Ollama stream error:', err);
+    res.write(`data: ${JSON.stringify({ type: 'error', message: err.message })}\n\n`);
+    res.end();
   }
 });
 
