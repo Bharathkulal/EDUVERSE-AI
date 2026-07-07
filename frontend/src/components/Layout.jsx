@@ -370,7 +370,7 @@ export default function Layout({ children }) {
           </div>
         </header>
 
-        <main className={`db-content-body overflow-y-auto custom-sidebar-scroll ${location.pathname === '/coding' ? '!p-0 !max-w-none !m-0 !h-full' : ''}`}>
+        <main className={`db-content-body overflow-y-auto custom-sidebar-scroll ${['/coding', '/chat-learn'].includes(location.pathname) ? '!p-0 !max-w-none !m-0 !h-full' : ''}`}>
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, x: 20 }}
