@@ -77,6 +77,7 @@ export default function MathVisualization() {
   const [taylorQuestionId, setTaylorQuestionId] = useState('taylor_q1');
   const [eulerQuestionId, setEulerQuestionId] = useState('euler_q1');
   const [modifiedEulerQuestionId, setModifiedEulerQuestionId] = useState('me_q1');
+  const [adamsMoultonQuestionId, setAdamsMoultonQuestionId] = useState('am_q1');
 
   // Execution Control State
   const [playbackState, setPlaybackState] = useState('IDLE');
@@ -270,6 +271,24 @@ export default function MathVisualization() {
     }
   ];
 
+  const ADAMS_MOULTON_QUESTIONS = [
+    {
+      id: 'am_q1',
+      label: 'Q1: dy/dx = 1 + y², y(0)=0, find y(0.8) (h=0.2) (Photo Q1)',
+      question: 'Given dy/dx = 1 + y² with y(0) = 0 and step size h = 0.2, compute y(0.8) using Adams-Moulton Predictor-Corrector Method given starting values y(0.2)=0.2027, y(0.4)=0.4228, y(0.6)=0.6891.'
+    },
+    {
+      id: 'am_q2',
+      label: 'Q2: dy/dx = x² + y, y(0)=1, find y(0.5) (h=0.1) (Photo Q2)',
+      question: 'Given dy/dx = x² + y with y(0) = 1 and step size h = 0.1, compute y(0.5) using Adams-Moulton Predictor-Corrector Method with starting values calculated via RK4.'
+    },
+    {
+      id: 'custom',
+      label: 'Custom ODE',
+      question: 'Custom Adams-Moulton Predictor-Corrector Method problem.'
+    }
+  ];
+
   // Matrix Multiplication Questions (from photo)
   const MATRIX_MUL_QUESTIONS = [
     {
@@ -449,6 +468,20 @@ export default function MathVisualization() {
       colorTheme: 'teal',
       btnClass: 'bg-teal-500 hover:bg-teal-656 text-white',
       badgeClass: 'bg-teal-500/10 border-teal-500/20 text-teal-650 dark:text-teal-400',
+      icon: '📈'
+    },
+    { 
+      id: "Adams-Moulton Method", 
+      title: "Adams-Moulton Method", 
+      desc: "Solve ordinary differential equations step-by-step using 4th-order predictor-corrector multi-step methods.", 
+      status: 'Advanced', 
+      time: '25 mins', 
+      xp: '180 XP', 
+      progress: 0,
+      tags: ['ODE Solver', 'Predictor Corrector', 'Multi-Step'],
+      colorTheme: 'indigo',
+      btnClass: 'bg-indigo-500 hover:bg-indigo-600 text-white',
+      badgeClass: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-650 dark:text-indigo-400',
       icon: '📈'
     }
   ];
@@ -672,6 +705,33 @@ export default function MathVisualization() {
         }
       ]
     },
+    "Adams-Moulton Method": {
+      features: [
+        { icon: BookOpen, title: '4-Step Predictor-Corrector', desc: 'Solves ordinary differential equations numerically using an explicit predictor and an implicit corrector.' },
+        { icon: Target, title: 'Fourth-order Accuracy', desc: 'Local truncation error is O(h⁵), while global error is O(h⁴).' },
+        { icon: Lightbulb, title: 'Photo Problems', desc: 'Q1: solve dy/dx = 1 + y², y(0)=0, h=0.2, target y(0.8) with given starting values. Q2: solve dy/dx = x² + y, y(0)=1, h=0.1, target y(0.5).' },
+      ],
+      formulas: [
+        {
+          title: 'Adams-Bashforth Predictor Formula (Explicit)',
+          formula: 'y\u2099\u208A\u2081\u1D56 = y\u2099 + (h/24) [55 f\u2099 - 59 f\u2099\u208B\u2081 + 37 f\u2099\u208B\u2082 - 9 f\u2099\u208B\u2083]',
+          variables: [
+            { sym: 'x\u2099, y\u2099', def: 'Coordinates at current step n' },
+            { sym: 'h', def: 'Step size' },
+            { sym: 'f\u2099, f\u2099\u208B\u2081, ...', def: 'Evaluated derivative values at current and past points' },
+            { sym: 'y\u2099\u208A\u2081\u1D56', def: 'Adams-Bashforth predicted y value at step n+1' }
+          ]
+        },
+        {
+          title: 'Adams-Moulton Corrector Formula (Implicit)',
+          formula: 'y\u2099\u208A\u2081\u1D9c = y\u2099 + (h/24) [9 f(x\u2099\u208A\u2081, y\u2099\u208A\u2081\u1D56) + 19 f\u2099 - 5 f\u2099\u208B\u2081 + f\u2099\u208B\u2082]',
+          variables: [
+            { sym: 'f(x\u2099\u208A\u2081, y\u2099\u208A\u2081\u1D56)', def: 'Derivative evaluated at predicted next point' },
+            { sym: 'y\u2099\u208A\u2081\u1D9c', def: 'Corrected final y value at step n+1' }
+          ]
+        }
+      ]
+    },
     'Matrix Multiplication': {
       features: [
         { icon: BookOpen, title: 'Row × Column Rule', desc: 'Each entry C[i][j] is the dot product of row i of A with column j of B.' },
@@ -724,6 +784,7 @@ export default function MathVisualization() {
   const activeTaylorQuestion = TAYLOR_QUESTIONS.find(q => q.id === taylorQuestionId);
   const activeEulerQuestion = EULER_QUESTIONS.find(q => q.id === eulerQuestionId);
   const activeModifiedEulerQuestion = MODIFIED_EULER_QUESTIONS.find(q => q.id === modifiedEulerQuestionId);
+  const activeAdamsMoultonQuestion = ADAMS_MOULTON_QUESTIONS.find(q => q.id === adamsMoultonQuestionId);
 
   // Engine Event Handlers
   const handleExplanationUpdate = (text) => {
@@ -861,6 +922,22 @@ export default function MathVisualization() {
           onFinish={handleExecutionFinished}
         />
       );
+    } else if (selectedMethod === "Adams-Moulton Method") {
+      return (
+        <NotebookEngine
+          dataset={activeAdamsMoultonQuestion}
+          rkX0={parseFloat(rkX0)}
+          rkY0={parseFloat(rkY0)}
+          rkH={parseFloat(rkH)}
+          rkSteps={parseInt(rkSteps)}
+          rkFuncId={rkFuncId}
+          method={selectedMethod}
+          playbackState={playbackState}
+          speed={speed}
+          onExplain={handleExplanationUpdate}
+          onFinish={handleExecutionFinished}
+        />
+      );
     } else if (selectedMethod === "Taylor's Method") {
       engineElement = (
         <NotebookEngine
@@ -970,6 +1047,20 @@ export default function MathVisualization() {
         return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${ (parseFloat(rkX0) + parseInt(rkSteps) * parseFloat(rkH)).toFixed(2) }) in ${rkSteps} step(s) of h = ${rkH} using Modified Euler's Method.`;
       }
       return activeModifiedEulerQuestion?.question || '';
+    } else if (selectedMethod === "Adams-Moulton Method") {
+      if (adamsMoultonQuestionId === 'custom') {
+        const RK_FUNCTIONS = {
+          'y_minus_x': "dy/dx = y - x",
+          'x_plus_y':  "dy/dx = x + y",
+          'minus_2xy': "dy/dx = -2xy",
+          'y_plus_x2': "dy/dx = y + x\u00B2",
+          'x2_plus_y': "dy/dx = x² + y",
+          'two_plus_sqrt_xy': "dy/dx = 2 + √xy"
+        };
+        const odeStr = RK_FUNCTIONS[rkFuncId] || "dy/dx = y - x";
+        return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${ (parseFloat(rkX0) + 4 * parseFloat(rkH)).toFixed(2) }) using Adams-Moulton predictor-corrector.`;
+      }
+      return activeAdamsMoultonQuestion?.question || '';
     } else if (selectedMethod === 'Matrix Multiplication') {
       return activeMatMulQuestion?.question || 'Compute matrix product using row × column dot product rule.';
     }

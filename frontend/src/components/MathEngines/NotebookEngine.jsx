@@ -2958,17 +2958,183 @@ export default function NotebookEngine({
         finalPoints.push({ x: currentX, y: currentY });
       }
 
-      // Final summary
-      let summaryContent = `Modified Euler's method completed successfully after ${steps_count} step(s).\n\nCalculated values:\n`;
-      finalPoints.forEach((pt, idx) => {
-        summaryContent += `  y(${pt.x.toFixed(4)}) ≈ ${pt.y.toFixed(4)} (exact: ${pt.y.toFixed(6)})\n`;
+      sequence.push({
+        type: 'result',
+        title: 'FINAL RESULT SUMMARY',
+        content: summaryContent,
+        explanation: "Modified Euler's method simulation is now complete. The final calculated coordinate values are displayed above."
+      });
+    }
+    else if (method === "Adams-Moulton Method") {
+      const isQ1 = dataset?.id === 'am_q1';
+      const isQ2 = dataset?.id === 'am_q2';
+
+      let x0_val = 0;
+      let y0_val = 0;
+      let h_val = 0.2;
+      let steps_count = 1;
+      let expr = (x, y) => 1 + y * y;
+      let odeLabel = "dy/dx = 1 + y²";
+      let pts = [];
+
+      if (isQ1) {
+        odeLabel = "dy/dx = 1 + y²";
+        expr = (x, y) => 1 + y * y;
+        x0_val = 0;
+        y0_val = 0;
+        h_val = 0.2;
+        steps_count = 1;
+        pts = [
+          { x: 0.0, y: 0.0 },
+          { x: 0.2, y: 0.2027 },
+          { x: 0.4, y: 0.4228 },
+          { x: 0.6, y: 0.6891 }
+        ];
+      } else if (isQ2) {
+        odeLabel = "dy/dx = x² + y";
+        expr = (x, y) => x * x + y;
+        x0_val = 0;
+        y0_val = 1;
+        h_val = 0.1;
+        steps_count = 2;
+        pts = [
+          { x: 0.0, y: 1.0000 },
+          { x: 0.1, y: 1.1103 },
+          { x: 0.2, y: 1.2428 },
+          { x: 0.3, y: 1.3997 }
+        ];
+      } else {
+        // Custom ODE: calculate starting values dynamically using RK4
+        const funcKey = rkFuncId || 'y_minus_x';
+        if (funcKey === 'y_minus_x') {
+          odeLabel = "dy/dx = y - x";
+          expr = (x, y) => y - x;
+        } else if (funcKey === 'x_plus_y') {
+          odeLabel = "dy/dx = x + y";
+          expr = (x, y) => x + y;
+        } else if (funcKey === 'minus_2xy') {
+          odeLabel = "dy/dx = -2xy";
+          expr = (x, y) => -2 * x * y;
+        } else if (funcKey === 'y_plus_x2') {
+          odeLabel = "dy/dx = y + x²";
+          expr = (x, y) => y + x * x;
+        } else if (funcKey === 'x2_plus_y') {
+          odeLabel = "dy/dx = x² + y";
+          expr = (x, y) => x * x + y;
+        } else if (funcKey === 'two_plus_sqrt_xy') {
+          odeLabel = "dy/dx = 2 + √xy";
+          expr = (x, y) => 2 + Math.sqrt(x * y);
+        }
+        x0_val = rkX0 !== undefined ? parseFloat(rkX0) : 0;
+        y0_val = rkY0 !== undefined ? parseFloat(rkY0) : 0;
+        h_val = rkH !== undefined ? parseFloat(rkH) : 0.2;
+        steps_count = 1;
+        
+        let cx = x0_val;
+        let cy = y0_val;
+        pts = [{ x: cx, y: cy }];
+        for (let i = 0; i < 3; i++) {
+          const k1 = h_val * expr(cx, cy);
+          const k2 = h_val * expr(cx + h_val / 2, cy + k1 / 2);
+          const k3 = h_val * expr(cx + h_val / 2, cy + k2 / 2);
+          const k4 = h_val * expr(cx + h_val, cy + k3);
+          const ny = cy + (k1 + 2 * k2 + 2 * k3 + k4) / 6;
+          cx = cx + h_val;
+          cy = ny;
+          pts.push({ x: cx, y: cy });
+        }
+      }
+
+      sequence.push({
+        type: 'header',
+        title: 'PROBLEM STATEMENT',
+        content: `Given Differential Equation:\n  ${odeLabel}\n\n` +
+                 `Initial Conditions & Starting Points:\n` +
+                 pts.map((p, idx) => `  x${idx} = ${p.x.toFixed(2)}, y${idx} = ${p.y.toFixed(4)}`).join('\n') + `\n\n` +
+                 `Step size h = ${h_val}\n` +
+                 `Target: Find y after ${steps_count} Predictor-Corrector step(s) (at x = ${(pts[3].x + steps_count * h_val).toFixed(2)})\n\n` +
+                 `Adams-Bashforth 4th-Order Predictor Formula:\n` +
+                 `  yₙ₊₁⁽ᵖ⁾ = yₙ + (h/24) · [55fₙ - 59fₙ₋₁ + 37fₙ₋₂ - 9fₙ₋₃]\n\n` +
+                 `Adams-Moulton 4th-Order Corrector Formula:\n` +
+                 `  yₙ₊₁⁽ᶜ⁾ = yₙ + (h/24) · [9f(xₙ₊₁, yₙ₊₁⁽ᵖ⁾) + 19fₙ - 5fₙ₋₁ + fₙ₋₂]`,
+        explanation: "Set up Adams-Moulton Predictor-Corrector parameters. We need 4 starting points (x₀, x₁, x₂, x₃) and their slopes to begin the 4th-order multi-step solver."
+      });
+
+      if (!isQ1) {
+        sequence.push({
+          type: 'math',
+          title: 'INITIALIZATION: OBTAIN STARTING POINTS',
+          content: `To run Adams-Moulton method, we bootstrap the initial values using Runge-Kutta (RK4) method:\n` +
+                   pts.map((p, idx) => `  • x${idx} = ${p.x.toFixed(2)}  →  y${idx} = ${p.y.toFixed(4)}  →  f${idx} = ${expr(p.x, p.y).toFixed(4)}`).join('\n'),
+          explanation: "Initialization step completed. We now have the four starting coordinates and slopes required to launch the explicit/implicit multi-step algorithm."
+        });
+      }
+
+      let currentPts = [...pts];
+
+      for (let s = 1; s <= steps_count; s++) {
+        const n = currentPts.length - 1;
+        const y_n = currentPts[n].y;
+        const x_n = currentPts[n].x;
+        const x_next = x_n + h_val;
+
+        const fn = expr(currentPts[n].x, currentPts[n].y);
+        const fn_minus_1 = expr(currentPts[n-1].x, currentPts[n-1].y);
+        const fn_minus_2 = expr(currentPts[n-2].x, currentPts[n-2].y);
+        const fn_minus_3 = expr(currentPts[n-3].x, currentPts[n-3].y);
+
+        const pred_bracket = 55 * fn - 59 * fn_minus_1 + 37 * fn_minus_2 - 9 * fn_minus_3;
+        const y_next_pred = y_n + (h_val / 24) * pred_bracket;
+
+        const fn_next_pred = expr(x_next, y_next_pred);
+
+        const corr_bracket = 9 * fn_next_pred + 19 * fn - 5 * fn_minus_1 + fn_minus_2;
+        const y_next_corr = y_n + (h_val / 24) * corr_bracket;
+
+        let detailsString = "";
+        if (isQ1) {
+          detailsString = `\n\nNote: In the workbook, the student had some rounding/arithmetic errors:\n` +
+                          `  • Student Predictor: y⁽ᵖ⁾(0.8) ≈ 1.0234 (derived from bracket 58.7082)\n` +
+                          `  • Student Corrector: y⁽ᶜ⁾(0.8) ≈ 1.0296`;
+        }
+
+        sequence.push({
+          type: 'math',
+          title: `STEP ${s}: SOLVE FOR y(${x_next.toFixed(2)})`,
+          content: `Slopes evaluated at previous steps:\n` +
+                   `  • fₙ₋₃ = f(${currentPts[n-3].x.toFixed(2)}, ${currentPts[n-3].y.toFixed(4)}) = ${fn_minus_3.toFixed(4)}\n` +
+                   `  • fₙ₋₂ = f(${currentPts[n-2].x.toFixed(2)}, ${currentPts[n-2].y.toFixed(4)}) = ${fn_minus_2.toFixed(4)}\n` +
+                   `  • fₙ₋₁ = f(${currentPts[n-1].x.toFixed(2)}, ${currentPts[n-1].y.toFixed(4)}) = ${fn_minus_1.toFixed(4)}\n` +
+                   `  • fₙ   = f(${currentPts[n].x.toFixed(2)}, ${currentPts[n].y.toFixed(4)}) = ${fn.toFixed(4)}\n\n` +
+                   `1. Predictor Step (Adams-Bashforth):\n` +
+                   `   y⁽ᵖ⁾ = yₙ + (h/24) · [55fₙ - 59fₙ₋₁ + 37fₙ₋₂ - 9fₙ₋₃]\n` +
+                   `   y⁽ᵖ⁾ = ${y_n.toFixed(4)} + (${h_val}/24) · [55(${fn.toFixed(4)}) - 59(${fn_minus_1.toFixed(4)}) + 37(${fn_minus_2.toFixed(4)}) - 9(${fn_minus_3.toFixed(4)})]\n` +
+                   `   y⁽ᵖ⁾ = ${y_n.toFixed(4)} + (${h_val}/24) · [${pred_bracket.toFixed(4)}]\n` +
+                   `   y⁽ᵖ⁾ = ${y_next_pred.toFixed(6)}\n\n` +
+                   `2. Predicted Slope:\n` +
+                   `   f⁽ᵖ⁾ = f(${x_next.toFixed(2)}, ${y_next_pred.toFixed(4)}) = ${fn_next_pred.toFixed(4)}\n\n` +
+                   `3. Corrector Step (Adams-Moulton):\n` +
+                   `   y⁽ᶜ⁾ = yₙ + (h/24) · [9f⁽ᵖ⁾ + 19fₙ - 5fₙ₋₁ + fₙ₋₂]\n` +
+                   `   y⁽ᶜ⁾ = ${y_n.toFixed(4)} + (${h_val}/24) · [9(${fn_next_pred.toFixed(4)}) + 19(${fn.toFixed(4)}) - 5(${fn_minus_1.toFixed(4)}) + ${fn_minus_2.toFixed(4)}]\n` +
+                   `   y⁽ᶜ⁾ = ${y_n.toFixed(4)} + (${h_val}/24) · [${corr_bracket.toFixed(4)}]\n` +
+                   `   y⁽ᶜ⁾ = ${y_next_corr.toFixed(6)}${detailsString}`,
+          explanation: `We apply the 4th-order Adams-Bashforth predictor step to find a predicted value y⁽ᵖ⁾ = ${y_next_pred.toFixed(4)}, then we apply the Adams-Moulton implicit corrector step to compute the corrected step y⁽ᶜ⁾ = ${y_next_corr.toFixed(4)}.`
+        });
+
+        currentPts.push({ x: x_next, y: y_next_corr });
+      }
+
+      let summaryContent = `Adams-Moulton multi-step method completed successfully.\n\nCalculated values:\n`;
+      currentPts.forEach((p, idx) => {
+        const typeStr = idx < 4 ? "Initial/Starting" : "Adams-Moulton";
+        summaryContent += `  y(${p.x.toFixed(2)}) ≈ ${p.y.toFixed(4)} (${typeStr})\n`;
       });
 
       sequence.push({
         type: 'result',
         title: 'FINAL RESULT SUMMARY',
         content: summaryContent,
-        explanation: "Modified Euler's method simulation is now complete. The final calculated coordinate values are displayed above."
+        explanation: "Adams-Moulton predictor-corrector simulation complete. The starting values and predicted/corrected steps are summarized above."
       });
     }
 
@@ -3192,7 +3358,7 @@ export default function NotebookEngine({
                     onComplete={handleTypingComplete}
                   />
                   <div className="mt-4 text-emerald-200 text-sm font-medium">
-                    {method === 'Matrix Multiplication' || method === 'Symmetric & Skew Symmetric' || method === 'Inverse Matrix' || method === 'Gauss Elimination' || method === 'Gauss-Jordan Elimination' ? 'Linear Algebra complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : method.includes('Taylor') ? "Taylor's Method ODE solving complete." : method.includes('Modified Euler') ? "Modified Euler's Method ODE solving complete." : method.includes('Euler') ? "Euler's Method ODE solving complete." : 'Numerical interpolation/differentiation/ODE complete.'}
+                    {method === 'Matrix Multiplication' || method === 'Symmetric & Skew Symmetric' || method === 'Inverse Matrix' || method === 'Gauss Elimination' || method === 'Gauss-Jordan Elimination' ? 'Linear Algebra complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : method.includes('Taylor') ? "Taylor's Method ODE solving complete." : method.includes('Modified Euler') ? "Modified Euler's Method ODE solving complete." : method.includes('Euler') ? "Euler's Method ODE solving complete." : method.includes('Adams-Moulton') ? "Adams-Moulton Method ODE solving complete." : 'Numerical interpolation/differentiation/ODE complete.'}
                   </div>
                 </div>
               ) : step.type === 'header' ? (
