@@ -8,6 +8,7 @@ import {
   Binary, Terminal, RefreshCw, Send, Zap, Award, Edit3,
   Info, Lightbulb, Hash, ArrowRight, Star, AlertCircle
 } from 'lucide-react';
+import logoImg from '../assets/logo.png';
 
 // Core topics
 const FOC_TOPICS = [
@@ -194,6 +195,42 @@ const COMPUTER_ARCH_NOTES = `📘 COMPUTER ARCHITECTURE — COMPLETE STUDY NOTES
 
 `;
 
+const OS_BASICS_NOTES = `📘 OPERATING SYSTEM BASICS — COMPLETE STUDY NOTES
+═══════════════════════════════════════
+ 
+1️⃣ WHAT IS AN OS?
+   • Software that acts as a bridge between computer hardware and the user.
+   • Manages resources (CPU, memory, devices) so applications can run.
+
+2️⃣ THE KERNEL (The Core)
+   • Heart of the OS. Runs with highest privileges.
+   • Handles memory management, process scheduling, and hardware communication.
+
+3️⃣ PROCESS MANAGEMENT
+   • A "process" is a program in execution.
+   • The OS schedules when each process gets CPU time.
+   • Multitasking allows multiple processes to appear to run simultaneously.
+
+4️⃣ MEMORY MANAGEMENT
+   • Keeps track of which parts of RAM are in use.
+   • Allocates memory to processes when they start.
+   • Swapping/Paging: Moves inactive data to disk to free up RAM.
+
+5️⃣ FILE SYSTEM
+   • Organizes data on storage drives into files and directories (folders).
+   • Handles permissions (who can read/write what).
+
+═══════════════════════════════════════
+⚡ COMMON OS TYPES
+   • Windows: Dominant in desktop/gaming.
+   • macOS: Built on Unix, optimized for Apple hardware.
+   • Linux: Open-source, powers most servers and Android.
+ 
+═══════════════════════════════════════
+✍️ MY PERSONAL NOTES:
+ 
+`;
+
 export default function FocVisualization() {
   const navigate = useNavigate();
   
@@ -256,6 +293,9 @@ export default function FocVisualization() {
       } else if (selectedTopic.id === 'computer-arch') {
         setOperation('data-path');
         setUserNotes(COMPUTER_ARCH_NOTES);
+      } else if (selectedTopic.id === 'os-basics') {
+        setOperation('os-layers');
+        setUserNotes(OS_BASICS_NOTES);
       }
       setAnimationStep(0);
       setIsAnimating(false);
@@ -481,6 +521,19 @@ export default function FocVisualization() {
     formula: 'Fetch-Decode-Execute Cycle: The fundamental operating sequence of all modern computers.'
   };
 
+  const OS_BASICS_EXPLANATION = {
+    title: 'Operating System Core',
+    concept: 'An Operating System acts as the chief manager of a computer. It sits between the user/applications and the physical hardware, ensuring everything runs smoothly without crashing into each other.',
+    keyPoints: [
+      'Kernel: The absolute core of the OS that has complete control over everything in the system.',
+      'Process Management: Decides which application gets to use the CPU and for how long.',
+      'Memory Management: Allocates RAM to running programs safely so they don\'t overwrite each other.',
+      'File System: Organizes how data is stored and retrieved from the hard drive.'
+    ],
+    realWorld: '🌾 Farmer Analogy: Imagine a massive, busy restaurant. The Hardware is the kitchen equipment. The Apps are the customers ordering food. The OS is the General Manager ensuring chefs (CPU) cook the right meals, ingredients (RAM) are tracked, and waiters deliver food without chaos.',
+    formula: 'Resource Allocation: OS = Hardware Abstraction + Resource Management.'
+  };
+
   // Dynamic steps generator per operation
   const getNumberSystemSteps = () => {
     const val = parseInt(inputValue, 10) || 0;
@@ -503,7 +556,7 @@ export default function FocVisualization() {
       });
       const binary = val.toString(2);
       steps.push({ label: 'Collect', detail: `Read remainders bottom → top: ${binary}`, icon: '📋' });
-      steps.push({ label: 'Result', detail: `Decimal ${val} = Binary ${binary}`, icon: '✅' });
+      steps.push({ label: 'Result', detail: `Decimal ${val} = Binary ${binary}`, icon: '✔️' });
       return steps;
     }
     
@@ -517,7 +570,7 @@ export default function FocVisualization() {
         steps.push({ label: `Bit ${i + 1}`, detail: `${bit} × 2^${power} = ${bit} × ${Math.pow(2, power)} = ${contribution}`, icon: bit === '1' ? '🌾' : '⬜' });
       });
       steps.push({ label: 'Sum', detail: `Add all: ${bits.map((b, i) => parseInt(b) * Math.pow(2, bits.length - 1 - i)).join(' + ')} = ${val}`, icon: '➕' });
-      steps.push({ label: 'Result', detail: `Binary ${binary} = Decimal ${val}`, icon: '✅' });
+      steps.push({ label: 'Result', detail: `Binary ${binary} = Decimal ${val}`, icon: '✔️' });
       return steps;
     }
     
@@ -537,7 +590,7 @@ export default function FocVisualization() {
       });
       const octal = val.toString(8);
       steps.push({ label: 'Collect', detail: `Read remainders bottom → top: ${octal}`, icon: '📋' });
-      steps.push({ label: 'Result', detail: `Decimal ${val} = Octal ${octal}`, icon: '✅' });
+      steps.push({ label: 'Result', detail: `Decimal ${val} = Octal ${octal}`, icon: '✔️' });
       return steps;
     }
     
@@ -558,7 +611,7 @@ export default function FocVisualization() {
       });
       const hex = val.toString(16).toUpperCase();
       steps.push({ label: 'Collect', detail: `Read remainders bottom → top: ${hex}`, icon: '📋' });
-      steps.push({ label: 'Result', detail: `Decimal ${val} = Hexadecimal 0x${hex}`, icon: '✅' });
+      steps.push({ label: 'Result', detail: `Decimal ${val} = Hexadecimal 0x${hex}`, icon: '✔️' });
       return steps;
     }
     
@@ -570,7 +623,7 @@ export default function FocVisualization() {
         { label: 'Rule 3', detail: '1 + 1 = 10 → write 0, carry 1 to next column', icon: '📝' },
         { label: 'Rule 4', detail: '1 + 1 + 1 (with carry) = 11 → write 1, carry 1', icon: '📝' },
         { label: 'Process', detail: 'Add column by column from rightmost bit to left.', icon: '⚡' },
-        { label: 'Done', detail: 'Include final carry bit if present.', icon: '✅' }
+        { label: 'Done', detail: 'Include final carry bit if present.', icon: '✔️' }
       ];
     }
     
@@ -581,7 +634,7 @@ export default function FocVisualization() {
         { label: 'Start', detail: `Find 1\'s complement of decimal ${val}.`, icon: '🚀' },
         { label: 'Convert', detail: `Decimal ${val} in binary = ${binary}`, icon: '🔄' },
         ...binary.split('').map((b, i) => ({ label: `Flip bit ${i + 1}`, detail: `Bit ${b} → ${b === '0' ? '1' : '0'}`, icon: b === '0' ? '🌾' : '⬜' })),
-        { label: 'Result', detail: `1\'s complement of ${binary} = ${flipped}`, icon: '✅' }
+        { label: 'Result', detail: `1\'s complement of ${binary} = ${flipped}`, icon: '✔️' }
       ];
     }
     
@@ -595,14 +648,14 @@ export default function FocVisualization() {
         { label: 'Convert', detail: `Decimal ${val} in binary = ${binary}`, icon: '🔄' },
         { label: "1's Complement", detail: `Flip all bits: ${binary} → ${onesComp}`, icon: '🔁' },
         { label: 'Add 1', detail: `${onesComp} + 1 = ${twosComp}`, icon: '➕' },
-        { label: 'Result', detail: `2\'s complement of ${val} = ${twosComp}`, icon: '✅' }
+        { label: 'Result', detail: `2\'s complement of ${val} = ${twosComp}`, icon: '✔️' }
       ];
     }
     
     return [
       { label: 'Start', detail: 'Select an operation and input a value to see steps.', icon: '🚀' },
       { label: 'Process', detail: 'The conversion will be shown step by step.', icon: '⚙️' },
-      { label: 'Result', detail: 'Final result will appear here.', icon: '✅' }
+      { label: 'Result', detail: 'Final result will appear here.', icon: '✔️' }
     ];
   };
 
@@ -1151,7 +1204,7 @@ export default function FocVisualization() {
                                     animate={{ y: 0, opacity: 1, scale: 1 }}
                                     className="text-3xl filter drop-shadow-[0_0_10px_rgba(22,163,74,0.3)]"
                                   >
-                                    🌾
+                                    ✔️
                                   </motion.div>
                                 )}
                                 {isCurrentActive && !basket.active && (
@@ -1378,7 +1431,7 @@ export default function FocVisualization() {
                                     animate={{ y: 0, opacity: 1, scale: 1 }}
                                     className="text-2xl filter drop-shadow-[0_0_8px_rgba(22,163,74,0.3)]"
                                   >
-                                    🌾
+                                    ✔️
                                   </motion.div>
                                 )}
                                 {isCurrentActive && !bitActive && (
@@ -1830,6 +1883,55 @@ export default function FocVisualization() {
                               </p>
                             </div>
                           </>
+                        ) : selectedTopic.id === 'os-basics' ? (
+                          <>
+                            {/* Title & Concept */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-7 h-7 bg-cyan-50 border border-cyan-200 rounded-lg flex items-center justify-center">
+                                  <Layers className="w-3.5 h-3.5 text-cyan-600" />
+                                </div>
+                                <h4 className="text-sm font-black text-black tracking-tight">
+                                  {OS_BASICS_EXPLANATION.title}
+                                </h4>
+                              </div>
+                              <p className="text-[11.5px] text-neutral-700 leading-relaxed font-medium">
+                                {OS_BASICS_EXPLANATION.concept}
+                              </p>
+                            </div>
+
+                            {/* Key Points */}
+                            <div className="bg-gradient-to-br from-cyan-50 to-blue-50 border border-cyan-200 rounded-xl p-3 space-y-2">
+                              <div className="flex items-center gap-1.5">
+                                <Lightbulb className="w-3.5 h-3.5 text-cyan-600" />
+                                <span className="text-[10px] font-black text-cyan-700 uppercase tracking-widest">Key Points</span>
+                              </div>
+                              <ul className="space-y-1.5">
+                                {OS_BASICS_EXPLANATION.keyPoints.map((point, i) => (
+                                  <li key={i} className="flex items-start gap-2 text-[11px] text-cyan-900 font-medium leading-relaxed">
+                                    <span className="text-cyan-500 font-black mt-0.5">•</span>
+                                    {point}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            {/* Farmer Analogy */}
+                            <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-3">
+                              <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest block mb-1">🌾 Farmer Analogy</span>
+                              <p className="text-[11px] text-emerald-900 leading-relaxed font-medium">
+                                {OS_BASICS_EXPLANATION.realWorld}
+                              </p>
+                            </div>
+
+                            {/* Formula Box */}
+                            <div className="bg-neutral-900 text-white rounded-xl p-3">
+                              <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">📐 Principle</span>
+                              <p className="text-[11px] font-mono font-bold text-emerald-400 leading-relaxed">
+                                {OS_BASICS_EXPLANATION.formula}
+                              </p>
+                            </div>
+                          </>
                         ) : (
                           /* Default explanation for non-number-system topics */
                           <div className="space-y-3">
@@ -1888,7 +1990,7 @@ export default function FocVisualization() {
                                     }`}
                                   >
                                     <span className="text-sm flex-shrink-0 mt-0.5">
-                                      {isDone ? '✅' : isActive ? '▶️' : step.icon}
+                                      {isDone ? '✔️' : isActive ? '▶️' : step.icon}
                                     </span>
                                     <div className="flex-1 min-w-0">
                                       <span className={`text-[9px] font-black uppercase tracking-widest block ${
@@ -1943,7 +2045,7 @@ export default function FocVisualization() {
                                 { label: 'CPU Request', detail: 'CPU needs data, checks Cache (L1/L2) first. (~0.5ns)', icon: '👖' },
                                 { label: 'Cache Miss', detail: 'Data not in Cache. CPU checks RAM. (~15ns)', icon: '🎒' },
                                 { label: 'Page Fault', detail: 'Data not in RAM. OS fetches from SSD/HDD. (~100μs / 5ms)', icon: '🚪' },
-                                { label: 'Data Loaded', detail: 'Data moved to RAM, then Cache, then CPU Register.', icon: '✅' }
+                                { label: 'Data Loaded', detail: 'Data moved to RAM, then Cache, then CPU Register.', icon: '✔️' }
                               ].map((step, i) => {
                                 const isActive = animationStep === i;
                                 const isDone = animationStep > i;
@@ -1962,7 +2064,7 @@ export default function FocVisualization() {
                                     }`}
                                   >
                                     <span className="text-sm flex-shrink-0 mt-0.5">
-                                      {isDone ? '✅' : isActive ? '▶️' : step.icon}
+                                      {isDone ? '✔️' : isActive ? '▶️' : step.icon}
                                     </span>
                                     <div className="flex-1 min-w-0">
                                       <span className={`text-[9px] font-black uppercase tracking-widest block ${
@@ -2021,7 +2123,7 @@ export default function FocVisualization() {
                                     }`}
                                   >
                                     <span className="text-sm flex-shrink-0 mt-0.5">
-                                      {isDone ? '✅' : isActive ? '▶️' : step.icon}
+                                      {isDone ? '✔️' : isActive ? '▶️' : step.icon}
                                     </span>
                                     <div className="flex-1 min-w-0">
                                       <span className={`text-[9px] font-black uppercase tracking-widest block ${
@@ -2115,7 +2217,7 @@ export default function FocVisualization() {
                                     setQuizScore(prev => prev + 1);
                                   }
                                 }}
-                                className={`w-full text-left p-2.5 rounded-lg text-xs font-mono transition-all border ${
+                                className={`w-full text-left p-2.5 rounded-lg text-xs font-mono transition-all border flex items-center justify-between ${
                                   quizAnswered
                                     ? oIdx === getQuizQuestions()[quizIndex].a
                                       ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
@@ -2127,8 +2229,13 @@ export default function FocVisualization() {
                                       : 'bg-white hover:bg-neutral-100 border-neutral-200 hover:border-black text-black'
                                 }`}
                               >
-                                <span className="font-bold mr-2 text-[10px]">{String.fromCharCode(65 + oIdx)}.</span>
-                                {opt}
+                                <div>
+                                  <span className="font-bold mr-2 text-[10px]">{String.fromCharCode(65 + oIdx)}.</span>
+                                  {opt}
+                                </div>
+                                {quizAnswered && oIdx === getQuizQuestions()[quizIndex].a && (
+                                  <img src={logoImg} alt="Correct" className="h-4 object-contain" />
+                                )}
                               </button>
                             ))}
                           </div>
@@ -2141,7 +2248,7 @@ export default function FocVisualization() {
                                 : 'bg-red-50 border border-red-200 text-red-800'
                             }`}>
                               {selectedAnswer === getQuizQuestions()[quizIndex].a 
-                                ? '🎉 Correct! Great understanding!'
+                                ? <div className="flex items-center gap-1.5"><img src={logoImg} alt="Correct" className="h-4 object-contain" /> Correct! Great understanding!</div>
                                 : `❌ Not quite. The correct answer is: ${getQuizQuestions()[quizIndex].o[getQuizQuestions()[quizIndex].a]}`
                               }
                             </div>
