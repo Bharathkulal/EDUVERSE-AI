@@ -346,6 +346,13 @@ export default function FocVisualization() {
     return () => clearTimeout(timer);
   }, [isAnimating, animationStep, playbackSpeed, selectedTopic, mode]);
 
+  // Sync memory org animation with active index
+  useEffect(() => {
+    if (selectedTopic?.id === 'memory-org' && isAnimating) {
+      setActiveStorageIndex(animationStep);
+    }
+  }, [animationStep, isAnimating, selectedTopic]);
+
   // Helper values for number conversion representation
   const getBinaryBaskets = (valStr) => {
     const val = parseInt(valStr, 10) || 0;
@@ -1488,6 +1495,52 @@ export default function FocVisualization() {
                       <h4 className="text-2xl font-extrabold mt-1">Speed vs. Capacity Model</h4>
                     </div>
 
+                    {/* Middle Dynamic Explanation */}
+                    <motion.div 
+                      key={activeStorageIndex}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="w-full bg-indigo-50 border border-indigo-200 text-indigo-900 p-4 rounded-xl shadow-sm"
+                    >
+                      <h5 className="font-bold text-sm mb-2 flex items-center justify-center gap-2">
+                        <Info className="w-4 h-4 text-indigo-600" />
+                        {activeStorageIndex === 0 && 'Cache: The Fastest, Closest Memory'}
+                        {activeStorageIndex === 1 && 'RAM: The Main Working Area'}
+                        {activeStorageIndex === 2 && 'SSD: Fast Long-term Storage'}
+                        {activeStorageIndex === 3 && 'HDD: Slowest, Highest Capacity'}
+                        {activeStorageIndex === -1 && 'Select a memory layer to explore, or press Run'}
+                      </h5>
+                      <div className="text-[11px] text-indigo-800 leading-relaxed max-w-xl mx-auto space-y-2">
+                        {activeStorageIndex === 0 && (
+                          <>
+                            <p><strong>👖 The Pocket Analogy:</strong> Like keeping an item in your front pocket, Cache is incredibly small but you can reach into it instantly without moving.</p>
+                            <p><strong>💻 Technical Reality:</strong> Located directly inside the CPU chip. It holds the absolute most urgent data and instructions being processed right now, ensuring the CPU never has to idle waiting for data.</p>
+                          </>
+                        )}
+                        {activeStorageIndex === 1 && (
+                          <>
+                            <p><strong>🎒 The Backpack Analogy:</strong> Like a backpack, RAM holds all the books (apps) you need for today. It's much bigger than a pocket, but takes a few seconds to take off and open.</p>
+                            <p><strong>💻 Technical Reality:</strong> The main active workspace of the computer. It holds all currently running applications and active files. When power is lost, it is wiped completely clean (volatile memory).</p>
+                          </>
+                        )}
+                        {activeStorageIndex === 2 && (
+                          <>
+                            <p><strong>🚪 The Store Room Analogy:</strong> Like a store room in your house, you can fit lots of boxes (files) here. It takes a moment to walk down the hall, but everything stays exactly where you left it.</p>
+                            <p><strong>💻 Technical Reality:</strong> Solid State Drives use advanced flash memory (no moving parts) for permanent storage. Your Operating System and installed programs live here permanently.</p>
+                          </>
+                        )}
+                        {activeStorageIndex === 3 && (
+                          <>
+                            <p><strong>🏭 The Warehouse Analogy:</strong> Like a massive industrial warehouse, you can store nearly infinite items for very cheap, but driving a forklift to retrieve a specific box takes significant time.</p>
+                            <p><strong>💻 Technical Reality:</strong> Traditional Mechanical Hard Disks use spinning magnetic platters. They offer vast capacity for backups and large media files, but are the slowest layer to access.</p>
+                          </>
+                        )}
+                        {activeStorageIndex === -1 && (
+                          <p className="text-center mt-2">Memory is structured in a hierarchy based on the trade-off between <strong>Speed</strong> and <strong>Capacity</strong>. Faster memory is expensive and small, while slower memory is cheap and massive.</p>
+                        )}
+                      </div>
+                    </motion.div>
+
                     <div className="w-full flex flex-col gap-4">
                       {/* Pocket (Cache) */}
                       <motion.div 
@@ -2201,73 +2254,100 @@ export default function FocVisualization() {
                           </div>
                         )}
 
-                        <div className="bg-neutral-50 border border-neutral-200 p-3 rounded-xl space-y-3">
-                          <p className="text-xs font-bold leading-relaxed text-black">
-                            {getQuizQuestions()[quizIndex]?.q}
-                          </p>
-                          <div className="space-y-1.5">
-                            {getQuizQuestions()[quizIndex]?.o.map((opt, oIdx) => (
-                              <button
-                                key={opt}
-                                onClick={() => {
-                                  if (quizAnswered) return;
-                                  setSelectedAnswer(oIdx);
-                                  setQuizAnswered(true);
-                                  if (oIdx === getQuizQuestions()[quizIndex].a) {
-                                    setQuizScore(prev => prev + 1);
-                                  }
-                                }}
-                                className={`w-full text-left p-2.5 rounded-lg text-xs font-mono transition-all border flex items-center justify-between ${
-                                  quizAnswered
-                                    ? oIdx === getQuizQuestions()[quizIndex].a
-                                      ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                        {quizIndex < getQuizQuestions().length ? (
+                          <div className="bg-neutral-50 border border-neutral-200 p-3 rounded-xl space-y-3">
+                            <p className="text-xs font-bold leading-relaxed text-black">
+                              {getQuizQuestions()[quizIndex]?.q}
+                            </p>
+                            <div className="space-y-1.5">
+                              {getQuizQuestions()[quizIndex]?.o.map((opt, oIdx) => (
+                                <button
+                                  key={opt}
+                                  onClick={() => {
+                                    if (quizAnswered) return;
+                                    setSelectedAnswer(oIdx);
+                                    setQuizAnswered(true);
+                                    if (oIdx === getQuizQuestions()[quizIndex].a) {
+                                      setQuizScore(prev => prev + 1);
+                                    }
+                                  }}
+                                  className={`w-full text-left p-2.5 rounded-lg text-xs font-mono transition-all border flex items-center justify-between ${
+                                    quizAnswered
+                                      ? oIdx === getQuizQuestions()[quizIndex].a
+                                        ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                                        : selectedAnswer === oIdx
+                                          ? 'bg-red-50 border-red-500 text-red-700'
+                                          : 'bg-white border-neutral-200 text-neutral-300'
                                       : selectedAnswer === oIdx
-                                        ? 'bg-red-50 border-red-500 text-red-700'
-                                        : 'bg-white border-neutral-200 text-neutral-300'
-                                    : selectedAnswer === oIdx
-                                      ? 'bg-black text-white border-black'
-                                      : 'bg-white hover:bg-neutral-100 border-neutral-200 hover:border-black text-black'
-                                }`}
+                                        ? 'bg-black text-white border-black'
+                                        : 'bg-white hover:bg-neutral-100 border-neutral-200 hover:border-black text-black'
+                                  }`}
+                                >
+                                  <div>
+                                    <span className="font-bold mr-2 text-[10px]">{String.fromCharCode(65 + oIdx)}.</span>
+                                    {opt}
+                                  </div>
+                                  {quizAnswered && oIdx === getQuizQuestions()[quizIndex].a && (
+                                    <img src={logoImg} alt="Correct" className="h-4 object-contain" />
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Answer feedback for specific topics */}
+                            {quizAnswered && (selectedTopic.id === 'number-system' || selectedTopic.id === 'memory-org') && (
+                              <div className={`p-2.5 rounded-lg text-[11px] font-semibold ${
+                                selectedAnswer === getQuizQuestions()[quizIndex].a 
+                                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                                  : 'bg-red-50 border border-red-200 text-red-800'
+                              }`}>
+                                {selectedAnswer === getQuizQuestions()[quizIndex].a 
+                                  ? <div className="flex items-center gap-1.5"><img src={logoImg} alt="Correct" className="h-4 object-contain" /> Correct! Great understanding!</div>
+                                  : `❌ Not quite. The correct answer is: ${getQuizQuestions()[quizIndex].o[getQuizQuestions()[quizIndex].a]}`
+                                }
+                              </div>
+                            )}
+
+                            {quizAnswered && (
+                              <button
+                                onClick={() => {
+                                  setQuizAnswered(false);
+                                  setSelectedAnswer(null);
+                                  setQuizIndex((prev) => prev + 1);
+                                }}
+                                className="w-full bg-white text-black border border-neutral-300 font-bold text-[10px] py-2 rounded-lg mt-2 transition-all uppercase tracking-wider hover:bg-neutral-50 hover:border-black flex items-center justify-center gap-1.5 shadow-sm"
                               >
-                                <div>
-                                  <span className="font-bold mr-2 text-[10px]">{String.fromCharCode(65 + oIdx)}.</span>
-                                  {opt}
-                                </div>
-                                {quizAnswered && oIdx === getQuizQuestions()[quizIndex].a && (
-                                  <img src={logoImg} alt="Correct" className="h-4 object-contain" />
+                                {quizIndex + 1 >= getQuizQuestions().length ? (
+                                  <><Award className="w-3 h-3" /> Show Marks</>
+                                ) : (
+                                  <><ArrowRight className="w-3 h-3" /> Next Question</>
                                 )}
                               </button>
-                            ))}
+                            )}
                           </div>
-
-                          {/* Answer feedback for specific topics */}
-                          {quizAnswered && (selectedTopic.id === 'number-system' || selectedTopic.id === 'memory-org') && (
-                            <div className={`p-2.5 rounded-lg text-[11px] font-semibold ${
-                              selectedAnswer === getQuizQuestions()[quizIndex].a 
-                                ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
-                                : 'bg-red-50 border border-red-200 text-red-800'
-                            }`}>
-                              {selectedAnswer === getQuizQuestions()[quizIndex].a 
-                                ? <div className="flex items-center gap-1.5"><img src={logoImg} alt="Correct" className="h-4 object-contain" /> Correct! Great understanding!</div>
-                                : `❌ Not quite. The correct answer is: ${getQuizQuestions()[quizIndex].o[getQuizQuestions()[quizIndex].a]}`
-                              }
+                        ) : (
+                          <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-xl flex flex-col items-center justify-center text-center space-y-4">
+                            <Award className="w-12 h-12 text-amber-500" />
+                            <div>
+                              <h4 className="font-extrabold text-lg text-black">Quiz Completed!</h4>
+                              <p className="text-sm font-semibold text-neutral-500 mt-1">
+                                You scored {quizScore} out of {getQuizQuestions().length}
+                              </p>
                             </div>
-                          )}
-
-                          {quizAnswered && (
+                            
                             <button
                               onClick={() => {
+                                setQuizIndex(0);
+                                setQuizScore(0);
                                 setQuizAnswered(false);
                                 setSelectedAnswer(null);
-                                setQuizIndex((prev) => (prev + 1) % getQuizQuestions().length);
                               }}
-                              className="w-full bg-black text-white font-bold text-[10px] py-2 rounded-lg mt-2 transition-all uppercase tracking-wider hover:bg-neutral-800 flex items-center justify-center gap-1.5"
+                              className="w-full bg-white text-black border border-neutral-300 font-bold text-[11px] py-2.5 rounded-lg mt-2 transition-all uppercase tracking-wider hover:bg-neutral-50 hover:border-black flex items-center justify-center gap-1.5 shadow-sm"
                             >
-                              <ArrowRight className="w-3 h-3" />
-                              {quizIndex + 1 >= getQuizQuestions().length ? 'Restart Quiz' : 'Next Question'}
+                              <RotateCcw className="w-4 h-4" /> Restart Quiz
                             </button>
-                          )}
-                        </div>
+                          </div>
+                        )}
 
                         {/* Reset quiz button */}
                         {(selectedTopic.id === 'number-system' || selectedTopic.id === 'memory-org') && (quizIndex > 0 || quizScore > 0) && (
