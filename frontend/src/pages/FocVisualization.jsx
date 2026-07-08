@@ -353,6 +353,14 @@ export default function FocVisualization() {
     }
   }, [animationStep, isAnimating, selectedTopic]);
 
+  // Sync computer architecture animation with active node
+  useEffect(() => {
+    if (selectedTopic?.id === 'computer-arch' && isAnimating) {
+      const archNodes = ['keyboard', 'cpu', 'ram', 'monitor'];
+      setActiveArchNode(archNodes[Math.min(animationStep, archNodes.length - 1)] || null);
+    }
+  }, [animationStep, isAnimating, selectedTopic]);
+
   // Helper values for number conversion representation
   const getBinaryBaskets = (valStr) => {
     const val = parseInt(valStr, 10) || 0;
@@ -1614,75 +1622,186 @@ export default function FocVisualization() {
                 )}
 
                 {/* 5. COMPUTER ARCHITECTURE ANIMATION */}
-                {selectedTopic.id === 'computer-arch' && (
-                  <div className="flex flex-col items-center justify-center w-full max-w-2xl space-y-8">
+                {selectedTopic.id === 'computer-arch' && (() => {
+                  const archNodes = ['keyboard', 'cpu', 'ram', 'monitor'];
+                  const currentNode = archNodes[Math.min(animationStep, archNodes.length - 1)] || null;
+                  const displayNode = activeArchNode || currentNode;
+                  return (
+                  <div className="flex flex-col items-center justify-center w-full max-w-2xl space-y-6">
                     <div className="text-center">
                       <span className="text-[11px] text-neutral-400 font-mono tracking-widest uppercase block">HARDWARE DATA-PATHWAYS</span>
-                      <h4 className="text-2xl font-extrabold mt-1">Bus Line Data Packet simulation</h4>
+                      <h4 className="text-2xl font-extrabold mt-1">CPU Data Flow Simulation</h4>
                     </div>
 
-                    <div className="flex items-center justify-between w-full px-6 relative h-40">
-                      {/* Keyboard */}
+                    {/* Dynamic Explanation Box */}
+                    <motion.div
+                      key={displayNode}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="w-full bg-pink-50 border border-pink-200 text-pink-900 p-4 rounded-xl shadow-sm"
+                    >
+                      <h5 className="font-bold text-sm mb-2 flex items-center justify-center gap-2">
+                        <Info className="w-4 h-4 text-pink-600" />
+                        {displayNode === 'keyboard' && 'Step 1: Input Device (Keyboard)'}
+                        {displayNode === 'cpu' && 'Step 2: Central Processing Unit (CPU)'}
+                        {displayNode === 'ram' && 'Step 3: Main Memory (RAM)'}
+                        {displayNode === 'monitor' && 'Step 4: Output Device (Monitor)'}
+                        {!displayNode && 'Click a component or press Run to start'}
+                      </h5>
+                      <div className="text-[11px] text-pink-800 leading-relaxed max-w-xl mx-auto space-y-2">
+                        {displayNode === 'keyboard' && (
+                          <>
+                            <p><strong>⌨️ What happens:</strong> User presses a key on the keyboard. The keyboard controller converts the physical keypress into an electrical signal (scan code).</p>
+                            <p><strong>🔌 Data flow:</strong> The scan code travels through the <strong>Input Bus</strong> to the CPU's I/O controller. The CPU is interrupted to process this new input event.</p>
+                          </>
+                        )}
+                        {displayNode === 'cpu' && (
+                          <>
+                            <p><strong>⚙️ What happens:</strong> The CPU receives the data. The <strong>Control Unit (CU)</strong> decodes the instruction and decides what operation to perform.</p>
+                            <p><strong>🧮 ALU Processing:</strong> The <strong>Arithmetic Logic Unit (ALU)</strong> performs any required calculations or logical comparisons on the data.</p>
+                            <p><strong>📋 Registers:</strong> Temporary ultra-fast storage inside the CPU holds intermediate results during processing.</p>
+                          </>
+                        )}
+                        {displayNode === 'ram' && (
+                          <>
+                            <p><strong>💾 What happens:</strong> The CPU fetches instructions and data from RAM via the <strong>Address Bus</strong> and <strong>Data Bus</strong>.</p>
+                            <p><strong>🔄 Read/Write:</strong> RAM provides fast temporary storage. The CPU stores processed results back into RAM for the running program to use.</p>
+                          </>
+                        )}
+                        {displayNode === 'monitor' && (
+                          <>
+                            <p><strong>🖥️ What happens:</strong> The processed result is sent from the CPU through the <strong>Output Bus</strong> to the display controller (GPU).</p>
+                            <p><strong>📺 Rendering:</strong> The GPU converts digital data into pixel signals, and the monitor renders the final visual output for the user to see.</p>
+                          </>
+                        )}
+                        {!displayNode && (
+                          <p className="text-center">The computer processes data in a cycle: <strong>Input → Process → Store → Output</strong>. Click any component to learn more, or press Run to see the full data flow.</p>
+                        )}
+                      </div>
+                    </motion.div>
+
+                    {/* Flow Diagram */}
+                    <div className="w-full flex flex-col items-center gap-0">
+                      
+                      {/* Row 1: Input Devices */}
+                      <div className="flex items-center gap-6">
+                        <motion.div 
+                          onClick={() => setActiveArchNode('keyboard')}
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl w-28 cursor-pointer transition-all ${
+                            displayNode === 'keyboard' ? 'bg-white border-2 border-pink-500 shadow-lg ring-2 ring-pink-500/20 scale-[1.05]' : 'bg-neutral-50 border border-neutral-200 hover:bg-white hover:border-neutral-300'
+                          }`}
+                        >
+                          <span className="text-2xl">⌨️</span>
+                          <span className="text-[10px] font-bold font-mono">Keyboard</span>
+                          <span className="text-[8px] text-neutral-400 font-mono">Input Device</span>
+                        </motion.div>
+
+                        <motion.div 
+                          onClick={() => setActiveArchNode('keyboard')}
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl w-28 cursor-pointer transition-all ${
+                            displayNode === 'keyboard' ? 'bg-white border-2 border-pink-500 shadow-lg ring-2 ring-pink-500/20 scale-[1.05]' : 'bg-neutral-50 border border-neutral-200 hover:bg-white hover:border-neutral-300'
+                          }`}
+                        >
+                          <span className="text-2xl">🖱️</span>
+                          <span className="text-[10px] font-bold font-mono">Mouse</span>
+                          <span className="text-[8px] text-neutral-400 font-mono">Input Device</span>
+                        </motion.div>
+                      </div>
+
+                      {/* Arrow Down */}
                       <motion.div 
-                        onClick={() => setActiveArchNode('keyboard')}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-xl w-28 cursor-pointer transition-all ${
-                          activeArchNode === 'keyboard' ? 'bg-white border-2 border-pink-500 shadow-md ring-2 ring-pink-500/20 scale-[1.05]' : 'bg-neutral-50 border border-neutral-200 hover:bg-white hover:border-neutral-300'
-                        }`}
+                        animate={isAnimating && animationStep === 0 ? { scale: [1, 1.3, 1], color: ['#a3a3a3', '#ec4899', '#a3a3a3'] } : {}}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="text-neutral-400 text-xl my-1 flex flex-col items-center"
                       >
-                        <span className="text-3xl">⌨️</span>
-                        <span className="text-xs font-bold font-mono">Keyboard</span>
+                        <div className="w-px h-4 bg-neutral-300"></div>
+                        <span className="text-[8px] font-mono font-bold text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded-full">INPUT BUS ▼</span>
+                        <div className="w-px h-4 bg-neutral-300"></div>
                       </motion.div>
 
-                      {/* CPU / ALU */}
+                      {/* Row 2: CPU */}
                       <motion.div 
                         onClick={() => setActiveArchNode('cpu')}
-                        className={`flex flex-col items-center gap-2 p-4 rounded-2xl w-36 shadow-sm relative cursor-pointer transition-all ${
-                          activeArchNode === 'cpu' ? 'bg-white border-2 border-pink-500 shadow-lg ring-4 ring-pink-500/20 scale-[1.05]' : 'bg-white border-2 border-black hover:border-neutral-800 hover:scale-[1.02]'
+                        className={`flex items-center gap-4 p-4 rounded-2xl w-80 cursor-pointer transition-all ${
+                          displayNode === 'cpu' ? 'bg-white border-2 border-pink-500 shadow-xl ring-4 ring-pink-500/20 scale-[1.03]' : 'bg-white border-2 border-black hover:scale-[1.01]'
                         }`}
                       >
                         <span className="text-3xl">⚙️</span>
-                        <span className="text-xs font-extrabold font-mono">CPU Core</span>
-                        <div className="text-[9px] text-neutral-500 bg-white border border-neutral-200 px-1.5 py-0.5 rounded font-mono">
-                          ALU + Control Unit
+                        <div className="flex-1">
+                          <span className="text-sm font-extrabold font-mono block">CPU (Central Processing Unit)</span>
+                          <div className="flex gap-2 mt-1.5">
+                            <span className="text-[8px] bg-blue-50 border border-blue-200 text-blue-700 px-1.5 py-0.5 rounded font-mono font-bold">Control Unit</span>
+                            <span className="text-[8px] bg-amber-50 border border-amber-200 text-amber-700 px-1.5 py-0.5 rounded font-mono font-bold">ALU</span>
+                            <span className="text-[8px] bg-purple-50 border border-purple-200 text-purple-700 px-1.5 py-0.5 rounded font-mono font-bold">Registers</span>
+                          </div>
                         </div>
                       </motion.div>
 
-                      {/* Memory */}
+                      {/* Arrow Down (bidirectional to RAM) */}
+                      <motion.div 
+                        animate={isAnimating && animationStep >= 1 && animationStep <= 2 ? { scale: [1, 1.3, 1], color: ['#a3a3a3', '#ec4899', '#a3a3a3'] } : {}}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="text-neutral-400 text-xl my-1 flex flex-col items-center"
+                      >
+                        <div className="w-px h-4 bg-neutral-300"></div>
+                        <span className="text-[8px] font-mono font-bold text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded-full">DATA BUS ▼▲</span>
+                        <div className="w-px h-4 bg-neutral-300"></div>
+                      </motion.div>
+
+                      {/* Row 3: RAM */}
                       <motion.div 
                         onClick={() => setActiveArchNode('ram')}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-xl w-28 cursor-pointer transition-all ${
-                          activeArchNode === 'ram' ? 'bg-white border-2 border-pink-500 shadow-md ring-2 ring-pink-500/20 scale-[1.05]' : 'bg-neutral-50 border border-neutral-200 hover:bg-white hover:border-neutral-300'
+                        className={`flex items-center gap-4 p-4 rounded-2xl w-72 cursor-pointer transition-all ${
+                          displayNode === 'ram' ? 'bg-white border-2 border-pink-500 shadow-lg ring-2 ring-pink-500/20 scale-[1.03]' : 'bg-neutral-50 border border-neutral-200 hover:bg-white hover:border-neutral-300'
                         }`}
                       >
                         <span className="text-3xl">💾</span>
-                        <span className="text-xs font-bold font-mono">RAM</span>
+                        <div>
+                          <span className="text-sm font-bold font-mono block">RAM (Main Memory)</span>
+                          <span className="text-[9px] text-neutral-500 font-mono">Temporary data & instruction storage</span>
+                        </div>
                       </motion.div>
 
-                      {/* Monitor */}
+                      {/* Arrow Down */}
                       <motion.div 
-                        onClick={() => setActiveArchNode('monitor')}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-xl w-28 cursor-pointer transition-all ${
-                          activeArchNode === 'monitor' ? 'bg-white border-2 border-pink-500 shadow-md ring-2 ring-pink-500/20 scale-[1.05]' : 'bg-neutral-50 border border-neutral-200 hover:bg-white hover:border-neutral-300'
-                        }`}
+                        animate={isAnimating && animationStep >= 3 ? { scale: [1, 1.3, 1], color: ['#a3a3a3', '#ec4899', '#a3a3a3'] } : {}}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="text-neutral-400 text-xl my-1 flex flex-col items-center"
                       >
-                        <span className="text-3xl">🖥️</span>
-                        <span className="text-xs font-bold font-mono">Monitor</span>
+                        <div className="w-px h-4 bg-neutral-300"></div>
+                        <span className="text-[8px] font-mono font-bold text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded-full">OUTPUT BUS ▼</span>
+                        <div className="w-px h-4 bg-neutral-300"></div>
                       </motion.div>
 
-                      {/* Glowing dot packet travel */}
-                      <AnimatePresence>
-                        {isAnimating && (
-                          <motion.div 
-                            initial={{ left: '10%' }}
-                            animate={{ left: ['10%', '35%', '65%', '85%', '85%'] }}
-                            transition={{ duration: 4, repeat: Infinity }}
-                            className="absolute top-[45%] w-4 h-4 bg-black rounded-full border border-white shadow-sm"
-                          />
-                        )}
-                      </AnimatePresence>
+                      {/* Row 4: Output Devices */}
+                      <div className="flex items-center gap-6">
+                        <motion.div 
+                          onClick={() => setActiveArchNode('monitor')}
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl w-28 cursor-pointer transition-all ${
+                            displayNode === 'monitor' ? 'bg-white border-2 border-pink-500 shadow-lg ring-2 ring-pink-500/20 scale-[1.05]' : 'bg-neutral-50 border border-neutral-200 hover:bg-white hover:border-neutral-300'
+                          }`}
+                        >
+                          <span className="text-2xl">🖥️</span>
+                          <span className="text-[10px] font-bold font-mono">Monitor</span>
+                          <span className="text-[8px] text-neutral-400 font-mono">Output Device</span>
+                        </motion.div>
+
+                        <motion.div 
+                          onClick={() => setActiveArchNode('monitor')}
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl w-28 cursor-pointer transition-all ${
+                            displayNode === 'monitor' ? 'bg-white border-2 border-pink-500 shadow-lg ring-2 ring-pink-500/20 scale-[1.05]' : 'bg-neutral-50 border border-neutral-200 hover:bg-white hover:border-neutral-300'
+                          }`}
+                        >
+                          <span className="text-2xl">🖨️</span>
+                          <span className="text-[10px] font-bold font-mono">Printer</span>
+                          <span className="text-[8px] text-neutral-400 font-mono">Output Device</span>
+                        </motion.div>
+                      </div>
+
                     </div>
                   </div>
-                )}
+                  );
+                })()}
 
                 {/* 6. GENERAL FALLBACK */}
                 {['os-basics', 'number-rep'].includes(selectedTopic.id) && (
