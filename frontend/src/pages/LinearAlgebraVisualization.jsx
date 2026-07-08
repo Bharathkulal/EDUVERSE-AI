@@ -157,6 +157,34 @@ export default function LinearAlgebraVisualization() {
         ' x + 2y -  z = 2'
       ],
       description: 'Convert augmented matrix to diagonal form using row operations, then solve directly for the variables.'
+    },
+    {
+      id: 'fdm_q1',
+      label: 'Q17: Solve y" + y + 1 = 0 with y(0)=0, y(1)=0, h=0.25 (Photo Problem)',
+      question: 'Solve the boundary value problem y" + y + 1 = 0, y(0) = 0, y(1) = 0 using the Finite Difference Method with step size h = 0.25. Find y(0.5).',
+      type: 'finite_difference_1',
+      matA: [[-31, 16, 0], [16, -31, 16], [0, 16, -31]],
+      matB: [[-1], [-1], [-1]],
+      equations: [
+        '16y_2 - 31y_1 + 16y_0 + 1 = 0',
+        '16y_3 - 31y_2 + 16y_1 + 1 = 0',
+        '16y_4 - 31y_3 + 16y_2 + 1 = 0'
+      ],
+      description: 'Discretize the differential equation using the second-order central difference formula, set up a tridiagonal linear system, and solve using Gauss elimination.'
+    },
+    {
+      id: 'fdm_q2',
+      label: 'Q18: Solve y" - y = x with y(0)=0, y(1)=0, h=0.25',
+      question: 'Solve the boundary value problem y" - y = x, y(0) = 0, y(1) = 0 using the Finite Difference Method with step size h = 0.25. Find y(0.5).',
+      type: 'finite_difference_2',
+      matA: [[-33, 16, 0], [16, -33, 16], [0, 16, -33]],
+      matB: [[0.25], [0.5], [0.75]],
+      equations: [
+        '16y_2 - 33y_1 + 16y_0 = 0.25',
+        '16y_3 - 33y_2 + 16y_1 = 0.50',
+        '16y_4 - 33y_3 + 16y_2 = 0.75'
+      ],
+      description: 'Discretize the differential equation using the second-order central difference formula, set up a tridiagonal linear system, and solve using Gauss elimination.'
     }
   ];
 
@@ -214,7 +242,7 @@ export default function LinearAlgebraVisualization() {
       tags: ['Linear Algebra', 'Inverse', 'Determinant', 'Adjoint'],
       colorTheme: 'amber',
       btnClass: 'bg-amber-500 hover:bg-amber-600 text-white',
-      badgeClass: 'bg-amber-500/10 border-amber-500/20 text-amber-650 dark:text-amber-455',
+      badgeClass: 'bg-amber-500/10 border-amber-500/20 text-amber-655 dark:text-amber-455',
       icon: '🔄'
     },
     { 
@@ -228,7 +256,7 @@ export default function LinearAlgebraVisualization() {
       tags: ['Linear Algebra', 'Echelon Form', 'Back Substitution', 'Augmented Matrix'],
       colorTheme: 'violet',
       btnClass: 'bg-violet-500 hover:bg-violet-600 text-white',
-      badgeClass: 'bg-violet-500/10 border-violet-500/20 text-violet-650 dark:text-violet-455',
+      badgeClass: 'bg-violet-500/10 border-violet-500/20 text-violet-655 dark:text-violet-455',
       icon: '📈'
     },
     { 
@@ -242,8 +270,22 @@ export default function LinearAlgebraVisualization() {
       tags: ['Linear Algebra', 'Diagonal Form', 'Augmented Matrix', 'Row Operations'],
       colorTheme: 'teal',
       btnClass: 'bg-teal-500 hover:bg-teal-600 text-white',
-      badgeClass: 'bg-teal-500/10 border-teal-500/20 text-teal-650 dark:text-teal-455',
+      badgeClass: 'bg-teal-500/10 border-teal-500/20 text-teal-655 dark:text-teal-455',
       icon: '📊'
+    },
+    { 
+      id: 'Finite Difference Method', 
+      title: 'Finite Difference Method', 
+      desc: 'Solve second-order boundary value problems (BVP) by converting the differential equation to a tridiagonal system of linear equations using finite differences, then solve using Gauss elimination.', 
+      status: 'Advanced', 
+      time: '25 mins', 
+      xp: '200 XP', 
+      progress: 0,
+      tags: ['Linear Algebra', 'Boundary Value Problem', 'Finite Differences', 'Tridiagonal System'],
+      colorTheme: 'cyan',
+      btnClass: 'bg-cyan-500 hover:bg-cyan-600 text-white',
+      badgeClass: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-655 dark:text-cyan-455',
+      icon: '📐'
     }
   ];
 
@@ -371,6 +413,35 @@ export default function LinearAlgebraVisualization() {
           ]
         }
       ]
+    },
+    'Finite Difference Method': {
+      features: [
+        { icon: BookOpen, title: 'Discretization', desc: 'Approximates derivatives by finite differences at discrete grid points.' },
+        { icon: Target, title: 'Central Difference', desc: 'Uses second-order central difference: y"(x) \u2248 (y_{i+1} - 2y_i + y_{i-1})/h².' },
+        { icon: Lightbulb, title: 'Linear System Solver', desc: 'Transforms a continuous BVP into a tridiagonal system Ax = B solved via Gauss elimination.' }
+      ],
+      formulas: [
+        {
+          title: 'Second-Order Central Difference',
+          formula: 'y"(x_i) \u2248 [ y_{i+1} \u2212 2y_i + y_{i-1} ] / h\u00B2',
+          variables: [
+            { sym: 'y"(x_i)', def: 'Second derivative of y at node x_i' },
+            { sym: 'h', def: 'Grid step size (x_{i} - x_{i-1})' },
+            { sym: 'y_{i-1}', def: 'Function value at previous node' },
+            { sym: 'y_i', def: 'Function value at current node' },
+            { sym: 'y_{i+1}', def: 'Function value at next node' }
+          ]
+        },
+        {
+          title: 'BVP Discretization: y" + P(x)y\' + Q(x)y = R(x)',
+          formula: '[y_{i+1} - 2y_i + y_{i-1}]/h\u00B2 + P(x_i)[y_{i+1} - y_{i-1}]/(2h) + Q(x_i)y_i = R(x_i)',
+          variables: [
+            { sym: 'P(x), Q(x)', def: 'Coefficient functions of the differential equation' },
+            { sym: 'R(x)', def: 'Right-hand side function' },
+            { sym: 'y_0, y_n', def: 'Given boundary values (Dirichlet boundary conditions)' }
+          ]
+        }
+      ]
     }
   };
 
@@ -386,6 +457,8 @@ export default function LinearAlgebraVisualization() {
       return q.type.startsWith('gauss_elim');
     } else if (selectedMethod === 'Gauss-Jordan Elimination') {
       return q.type.startsWith('gauss_jordan');
+    } else if (selectedMethod === 'Finite Difference Method') {
+      return q.type.startsWith('finite_difference');
     } else {
       return q.type === 'square' || q.type === 'product';
     }
@@ -406,6 +479,8 @@ export default function LinearAlgebraVisualization() {
       setMatMulQuestionId('gauss_q1');
     } else if (selectedMethod === 'Gauss-Jordan Elimination') {
       setMatMulQuestionId('gj_q1');
+    } else if (selectedMethod === 'Finite Difference Method') {
+      setMatMulQuestionId('fdm_q1');
     }
   }, [selectedMethod]);
 
@@ -448,7 +523,7 @@ export default function LinearAlgebraVisualization() {
   };
 
   const renderActiveEngine = () => {
-    if (selectedMethod === 'Matrix Multiplication' || selectedMethod === 'Orthogonal Verification' || selectedMethod === 'Symmetric & Skew Symmetric' || selectedMethod === 'Inverse Matrix' || selectedMethod === 'Gauss Elimination' || selectedMethod === 'Gauss-Jordan Elimination') {
+    if (selectedMethod === 'Matrix Multiplication' || selectedMethod === 'Orthogonal Verification' || selectedMethod === 'Symmetric & Skew Symmetric' || selectedMethod === 'Inverse Matrix' || selectedMethod === 'Gauss Elimination' || selectedMethod === 'Gauss-Jordan Elimination' || selectedMethod === 'Finite Difference Method') {
       return (
         <NotebookEngine
           matMulQuestion={activeMatMulQuestion}

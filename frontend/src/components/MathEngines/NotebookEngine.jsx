@@ -2578,6 +2578,288 @@ export default function NotebookEngine({
         }
       }
     }
+    else if (method === 'Finite Difference Method') {
+      const q = matMulQuestion;
+      if (q) {
+        const isProblem1 = q.type === 'finite_difference_1';
+
+        if (isProblem1) {
+          // --- Problem 1 (Handwritten Notes) ---
+          // Step 0: Discretization & Problem Statement
+          sequence.push({
+            type: 'header',
+            title: 'PROBLEM STATEMENT & DISCRETIZATION',
+            content: `Solve the Boundary Value Problem (BVP):\n` +
+                     `  y" + y + 1 = 0,   y(0) = 0,  y(1) = 0\n\n` +
+                     `Step size: h = 0.25 (grid points: x₀=0, x₁=0.25, x₂=0.5, x₃=0.75, x₄=1)\n` +
+                     `Boundary values: y₀ = y(0) = 0,  y₄ = y(1) = 0\n\n` +
+                     `Central Difference Approximation for Second Derivative:\n` +
+                     `  y"(x) ≈ [ yᵢ₊₁ - 2yᵢ + yᵢ₋₁ ] / h²\n\n` +
+                     `Substitute this into the BVP at any interior node x\u1d62:\n` +
+                     `  [ yᵢ₊₁ - 2yᵢ + yᵢ₋₁ ] / h² + yᵢ + 1 = 0\n\n` +
+                     `Multiply by h² = 0.0625 (or 1/16) throughout:\n` +
+                     `  (yᵢ₊₁ - 2yᵢ + yᵢ₋₁) + 0.0625yᵢ + 0.0625 = 0\n\n` +
+                     `Or, multiplying by 16 throughout (since 1/h² = 16):\n` +
+                     `  16(yᵢ₊₁ - 2yᵢ + yᵢ₋₁) + yᵢ + 1 = 0\n` +
+                     `  16yᵢ₋₁ - 31yᵢ + 16yᵢ₊₁ = -1`,
+            explanation: 'Discretize the differential equation using the second-order central difference formula and simplify into a general linear node equation.'
+          });
+
+          // Step 1: Set up Linear System
+          sequence.push({
+            type: 'math',
+            title: 'STEP 1: DEVELOP THE LINEAR EQUATIONS',
+            content: `Apply the general node equation 16yᵢ₋₁ - 31yᵢ + 16yᵢ₊₁ = -1 for interior nodes i = 1, 2, 3:\n\n` +
+                     `For i = 1 (x₁ = 0.25):\n` +
+                     `  16y₀ - 31y₁ + 16y₂ = -1\n` +
+                     `  Substitute y₀ = 0:\n` +
+                     `  -31y₁ + 16y₂ = -1  (Equation 1)\n\n` +
+                     `For i = 2 (x₂ = 0.50):\n` +
+                     `  16y₁ - 31y₂ + 16y₃ = -1  (Equation 2)\n\n` +
+                     `For i = 3 (x₃ = 0.75):\n` +
+                     `  16y₂ - 31y₃ + 16y₄ = -1\n` +
+                     `  Substitute y₄ = 0:\n` +
+                     `  16y₂ - 31y₃ = -1  (Equation 3)\n\n` +
+                     `Let's represent the system as an augmented matrix [A : B]:\n\n` +
+                     `  [ -31   16    0  |  -1 ]\n` +
+                     `  [  16  -31   16  |  -1 ]\n` +
+                     `  [   0   16  -31  |  -1 ]`,
+            explanation: 'Evaluate the node equations at interior grid points, substitute boundaries, and construct the augmented matrix.'
+          });
+
+          // Step 2: Row operation 1
+          sequence.push({
+            type: 'math',
+            title: 'STEP 2: ELIMINATE COLUMN 1 (ROW 2)',
+            content: `Eliminate entry below pivot A\u2081\u2081 = -31 by performing row operation:\n` +
+                     `  • R\u2082 ← R\u2082 - (16/-31)R\u2081   →   R\u2082 ← R\u2082 + 0.51613 R\u2081\n\n` +
+                     `Calculations:\n` +
+                     `  Row 2 Col 2: -31 + 0.51613(16) = -31 + 8.25806 = -22.7419\n` +
+                     `  Row 2 Col 3:  16 + 0.51613(0)  = 16\n` +
+                     `  Row 2 Const:  -1 + 0.51613(-1) = -1.5161\n\n` +
+                     `Augmented Matrix:\n` +
+                     `  [ -31     16      0   |   -1    ]\n` +
+                     `  [   0  -22.7419  16   | -1.5161 ]\n` +
+                     `  [   0     16    -31   |   -1    ]`,
+            explanation: 'Eliminate y₁ coefficient in row 2 by adding a scalar multiple of row 1.'
+          });
+
+          // Step 3: Row operation 2
+          sequence.push({
+            type: 'math',
+            title: 'STEP 3: ELIMINATE COLUMN 2 (ROW 3)',
+            content: `Eliminate entry below pivot A\u2082\u2082 = -22.7419 by performing row operation:\n` +
+                     `  • R\u2083 ← R\u2083 - (16/-22.7419)R\u2082   →   R\u2083 ← R\u2083 + 0.70355 R\u2082\n\n` +
+                     `Calculations:\n` +
+                     `  Row 3 Col 3: -31 + 0.70355(16) = -31 + 11.2568 = -19.7432\n` +
+                     `  Row 3 Const:  -1 + 0.70355(-1.5161) = -1 - 1.0667 = -2.0667\n\n` +
+                     `Augmented Matrix (Upper Triangular Form):\n` +
+                     `  [ -31     16        0     |   -1    ]\n` +
+                     `  [   0  -22.7419    16     | -1.5161 ]\n` +
+                     `  [   0      0    -19.7432  | -2.0667 ]`,
+            explanation: 'Eliminate y₂ coefficient in row 3 to finish upper triangular reduction.'
+          });
+
+          // Step 4: Back Substitution y3
+          sequence.push({
+            type: 'math',
+            title: 'STEP 4: BACK SUBSTITUTION FOR Y₃ (x = 0.75)',
+            content: `From Row 3:\n` +
+                     `  -19.7432 y₃ = -2.0667\n` +
+                     `    y₃ = -2.0667 / -19.7432\n` +
+                     `    y₃ ≈ 0.1047`,
+            explanation: 'Solve for the node value y₃ at x = 0.75 using the simplified row 3 equation.'
+          });
+
+          // Step 5: Back Substitution y2
+          sequence.push({
+            type: 'math',
+            title: 'STEP 5: BACK SUBSTITUTION FOR Y₂ (x = 0.50)',
+            content: `From Row 2:\n` +
+                     `  -22.7419 y₂ + 16 y₃ = -1.5161\n\n` +
+                     `Substitute y₃ = 0.1047:\n` +
+                     `  -22.7419 y₂ + 16(0.1047) = -1.5161\n` +
+                     `  -22.7419 y₂ + 1.6752 = -1.5161\n` +
+                     `  -22.7419 y₂ = -1.5161 - 1.6752\n` +
+                     `  -22.7419 y₂ = -3.1913\n` +
+                     `    y₂ = -3.1913 / -22.7419\n` +
+                     `    y₂ ≈ 0.1403`,
+            explanation: 'Substitute y₃ into row 2 equation to solve for the middle node value y₂ at x = 0.5.'
+          });
+
+          // Step 6: Back Substitution y1
+          sequence.push({
+            type: 'math',
+            title: 'STEP 6: BACK SUBSTITUTION FOR Y₁ (x = 0.25)',
+            content: `From Row 1:\n` +
+                     `  -31 y₁ + 16 y₂ = -1\n\n` +
+                     `Substitute y₂ = 0.1403:\n` +
+                     `  -31 y₁ + 16(0.1403) = -1\n` +
+                     `  -31 y₁ + 2.2448 = -1\n` +
+                     `  -31 y₁ = -1 - 2.2448\n` +
+                     `  -31 y₁ = -3.2448\n` +
+                     `    y₁ = -3.2448 / -31\n` +
+                     `    y₁ ≈ 0.1047`,
+            explanation: 'Substitute y₂ into row 1 equation to solve for the node value y₁ at x = 0.25.'
+          });
+
+          // Step 7: Verification & Final Answer
+          sequence.push({
+            type: 'result',
+            title: 'FINAL ANSWER & VERIFICATION',
+            content: `BVP solutions at node points:\n` +
+                     `  • y(0)    = y₀ = 0.0000\n` +
+                     `  • y(0.25) = y₁ ≈ 0.1047\n` +
+                     `  • y(0.50) = y₂ ≈ 0.1403  (y(0.5) solved!)\n` +
+                     `  • y(0.75) = y₃ ≈ 0.1047\n` +
+                     `  • y(1)    = y₄ = 0.0000\n\n` +
+                     `Verification checks:\n` +
+                     `  1) -31(0.1047) + 16(0.1403) = -3.2457 + 2.2448 = -1.0009 ≈ -1  ✓\n` +
+                     `  2) 16(0.1047) - 31(0.1403) + 16(0.1047) = 1.6752 - 4.3493 + 1.6752 = -0.9989 ≈ -1  ✓\n` +
+                     `  3) 16(0.1403) - 31(0.1047) = 2.2448 - 3.2457 = -1.0009 ≈ -1  ✓\n\n` +
+                     `Calculated coordinates match handwritten notebook entries exactly!`,
+            explanation: 'Verify that the solved node values satisfy the starting tridiagonal system of discretized BVP equations.'
+          });
+        } else {
+          // --- Problem 2 (y" - y = x) ---
+          // Step 0: Discretization & Problem Statement
+          sequence.push({
+            type: 'header',
+            title: 'PROBLEM STATEMENT & DISCRETIZATION',
+            content: `Solve the Boundary Value Problem (BVP):\n` +
+                     `  y" - y = x,   y(0) = 0,  y(1) = 0\n\n` +
+                     `Step size: h = 0.25 (grid points: x₀=0, x₁=0.25, x₂=0.5, x₃=0.75, x₄=1)\n` +
+                     `Boundary values: y₀ = y(0) = 0,  y₄ = y(1) = 0\n\n` +
+                     `Central Difference Approximation for Second Derivative:\n` +
+                     `  y"(x) ≈ [ y\u1d62\u208a\u2081 - 2y\u1d62 + y\u1d62\u208b\u2081 ] / h²\n\n` +
+                     `Substitute this into the BVP at any interior node x\u1d62:\n` +
+                     `  [ y\u1d62\u208a\u2081 - 2y\u1d62 + y\u1d62\u208b\u2081 ] / h² - y\u1d62 = x\u1d62\n\n` +
+                     `Multiply by h² = 0.0625 (or 1/16) throughout:\n` +
+                     `  (y\u1d62\u208a\u2081 - 2y\u1d62 + y\u1d62\u208b\u2081) - 0.0625y\u1d62 = 0.0625x\u1d62\n\n` +
+                     `Or, multiplying by 16 throughout (since 1/h² = 16):\n` +
+                     `  16(y\u1d62\u208a\u2081 - 2y\u1d62 + y\u1d62\u208b\u2081) - y\u1d62 = x\u1d62\n` +
+                     `  16y\u1d62\u208b\u2081 - 33y\u1d62 + 16y\u1d62\u208a\u2081 = x\u1d62`,
+            explanation: 'Discretize the differential equation using the second-order central difference formula and simplify into a general linear node equation.'
+          });
+
+          // Step 1: Set up Linear System
+          sequence.push({
+            type: 'math',
+            title: 'STEP 1: DEVELOP THE LINEAR EQUATIONS',
+            content: `Apply the general node equation 16y\u1d62\u208b\u2081 - 33y\u1d62 + 16y\u1d62\u208a\u2081 = x\u1d62 for interior nodes i = 1, 2, 3:\n\n` +
+                     `For i = 1 (x₁ = 0.25):\n` +
+                     `  16y₀ - 33y₁ + 16y₂ = 0.25\n` +
+                     `  Substitute y₀ = 0:\n` +
+                     `  -33y₁ + 16y₂ = 0.25  (Equation 1)\n\n` +
+                     `For i = 2 (x₂ = 0.50):\n` +
+                     `  16y₁ - 33y₂ + 16y₃ = 0.50  (Equation 2)\n\n` +
+                     `For i = 3 (x₃ = 0.75):\n` +
+                     `  16y₂ - 33y₃ + 16y₄ = 0.75\n` +
+                     `  Substitute y₄ = 0:\n` +
+                     `  16y₂ - 33y₃ = 0.75  (Equation 3)\n\n` +
+                     `Let's represent the system as an augmented matrix [A : B]:\n\n` +
+                     `  [ -33   16    0  |  0.25 ]\n` +
+                     `  [  16  -33   16  |  0.50 ]\n` +
+                     `  [   0   16  -33  |  0.75 ]`,
+            explanation: 'Evaluate the node equations at interior grid points, substitute boundaries, and construct the augmented matrix.'
+          });
+
+          // Step 2: Row operation 1
+          sequence.push({
+            type: 'math',
+            title: 'STEP 2: ELIMINATE COLUMN 1 (ROW 2)',
+            content: `Eliminate entry below pivot A\u2081\u2081 = -33 by performing row operation:\n` +
+                     `  • R\u2082 ← R\u2082 - (16/-33)R\u2081   →   R\u2082 ← R\u2082 + 0.48485 R\u2081\n\n` +
+                     `Calculations:\n` +
+                     `  Row 2 Col 2: -33 + 0.48485(16) = -33 + 7.7576 = -25.2424\n` +
+                     `  Row 2 Col 3:  16 + 0.48485(0)  = 16\n` +
+                     `  Row 2 Const:  0.5 + 0.48485(0.25) = 0.5 + 0.1212 = 0.6212\n\n` +
+                     `Augmented Matrix:\n` +
+                     `  [ -33     16      0   |   0.25  ]\n` +
+                     `  [   0  -25.2424  16   |   0.6212]\n` +
+                     `  [   0     16    -33   |   0.75  ]`,
+            explanation: 'Eliminate y₁ coefficient in row 2 by adding a scalar multiple of row 1.'
+          });
+
+          // Step 3: Row operation 2
+          sequence.push({
+            type: 'math',
+            title: 'STEP 3: ELIMINATE COLUMN 2 (ROW 3)',
+            content: `Eliminate entry below pivot A\u2082\u2082 = -25.2424 by performing row operation:\n` +
+                     `  • R\u2083 ← R\u2083 - (16/-25.2424)R\u2082   →   R\u2083 ← R\u2083 + 0.63385 R\u2082\n\n` +
+                     `Calculations:\n` +
+                     `  Row 3 Col 3: -33 + 0.63385(16) = -33 + 10.1416 = -22.8584\n` +
+                     `  Row 3 Const:  0.75 + 0.63385(0.6212) = 0.75 + 0.3938 = 1.1438\n\n` +
+                     `Augmented Matrix (Upper Triangular Form):\n` +
+                     `  [ -33     16        0     |   0.25  ]\n` +
+                     `  [   0  -25.2424    16     |   0.6212]\n` +
+                     `  [   0      0    -22.8584  |   1.1438]`,
+            explanation: 'Eliminate y₂ coefficient in row 3 to finish upper triangular reduction.'
+          });
+
+          // Step 4: Back Substitution y3
+          sequence.push({
+            type: 'math',
+            title: 'STEP 4: BACK SUBSTITUTION FOR Y₃ (x = 0.75)',
+            content: `From Row 3:\n` +
+                     `  -22.8584 y₃ = 1.1438\n` +
+                     `    y₃ = 1.1438 / -22.8584\n` +
+                     `    y₃ ≈ -0.0500`,
+            explanation: 'Solve for the node value y₃ at x = 0.75 using the simplified row 3 equation.'
+          });
+
+          // Step 5: Back Substitution y2
+          sequence.push({
+            type: 'math',
+            title: 'STEP 5: BACK SUBSTITUTION FOR Y₂ (x = 0.50)',
+            content: `From Row 2:\n` +
+                     `  -25.2424 y₂ + 16 y₃ = 0.6212\n\n` +
+                     `Substitute y₃ = -0.0500:\n` +
+                     `  -25.2424 y₂ + 16(-0.0500) = 0.6212\n` +
+                     `  -25.2424 y₂ - 0.8000 = 0.6212\n` +
+                     `  -25.2424 y₂ = 0.6212 + 0.8000\n` +
+                     `  -25.2424 y₂ = 1.4212\n` +
+                     `    y₂ = 1.4212 / -25.2424\n` +
+                     `    y₂ ≈ -0.0563`,
+            explanation: 'Substitute y₃ into row 2 equation to solve for the middle node value y₂ at x = 0.5.'
+          });
+
+          // Step 6: Back Substitution y1
+          sequence.push({
+            type: 'math',
+            title: 'STEP 6: BACK SUBSTITUTION FOR Y₁ (x = 0.25)',
+            content: `From Row 1:\n` +
+                     `  -33 y₁ + 16 y₂ = 0.25\n\n` +
+                     `Substitute y₂ = -0.0563:\n` +
+                     `  -33 y₁ + 16(-0.0563) = 0.25\n` +
+                     `  -33 y₁ - 0.9008 = 0.25\n` +
+                     `  -33 y₁ = 0.25 + 0.9008\n` +
+                     `  -33 y₁ = 1.1508\n` +
+                     `    y₁ = 1.1508 / -33\n` +
+                     `    y₁ ≈ -0.0349`,
+            explanation: 'Substitute y₂ into row 1 equation to solve for the node value y₁ at x = 0.25.'
+          });
+
+          // Step 7: Verification & Final Answer
+          sequence.push({
+            type: 'result',
+            title: 'FINAL ANSWER & VERIFICATION',
+            content: `BVP solutions at node points:\n` +
+                     `  • y(0)    = y₀ = 0.0000\n` +
+                     `  • y(0.25) = y₁ ≈ -0.0349\n` +
+                     `  • y(0.50) = y₂ ≈ -0.0563  (y(0.5) solved!)\n` +
+                     `  • y(0.75) = y₃ ≈ -0.0500\n` +
+                     `  • y(1)    = y₄ = 0.0000\n\n` +
+                     `Verification checks:\n` +
+                     `  1) -33(-0.0349) + 16(-0.0563) = 1.1517 - 0.9008 = 0.2509 ≈ 0.25  ✓\n` +
+                     `  2) 16(-0.0349) - 33(-0.0563) + 16(-0.0500) = -0.5584 + 1.8579 - 0.8 = 0.4995 ≈ 0.50  ✓\n` +
+                     `  3) 16(-0.0563) - 33(-0.0500) = -0.9008 + 1.6500 = 0.7492 ≈ 0.75  ✓\n\n` +
+                     `The discretized system equations are successfully verified.`,
+            explanation: 'Verify that the solved node values satisfy the starting tridiagonal system of discretized BVP equations.'
+          });
+        }
+      }
+    }
     else if (method === "Taylor's Method") {
       const isQ1 = dataset?.id === 'taylor_q1';
       const isQ2 = dataset?.id === 'taylor_q2';
@@ -3358,7 +3640,7 @@ export default function NotebookEngine({
                     onComplete={handleTypingComplete}
                   />
                   <div className="mt-4 text-emerald-200 text-sm font-medium">
-                    {method === 'Matrix Multiplication' || method === 'Symmetric & Skew Symmetric' || method === 'Inverse Matrix' || method === 'Gauss Elimination' || method === 'Gauss-Jordan Elimination' ? 'Linear Algebra complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : method.includes('Taylor') ? "Taylor's Method ODE solving complete." : method.includes('Modified Euler') ? "Modified Euler's Method ODE solving complete." : method.includes('Euler') ? "Euler's Method ODE solving complete." : method.includes('Adams-Moulton') ? "Adams-Moulton Method ODE solving complete." : 'Numerical interpolation/differentiation/ODE complete.'}
+                    {method === 'Matrix Multiplication' || method === 'Symmetric & Skew Symmetric' || method === 'Inverse Matrix' || method === 'Gauss Elimination' || method === 'Gauss-Jordan Elimination' || method === 'Finite Difference Method' ? 'Linear Algebra complete.' : method.includes('Rule') ? 'Numerical integration complete.' : method.includes('Bisection') ? 'Bisection Method root finding complete.' : method.includes('Taylor') ? "Taylor's Method ODE solving complete." : method.includes('Modified Euler') ? "Modified Euler's Method ODE solving complete." : method.includes('Euler') ? "Euler's Method ODE solving complete." : method.includes('Adams-Moulton') ? "Adams-Moulton Method ODE solving complete." : 'Numerical interpolation/differentiation/ODE complete.'}
                   </div>
                 </div>
               ) : step.type === 'header' ? (
