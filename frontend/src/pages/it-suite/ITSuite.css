@@ -1,0 +1,312 @@
+/* IT Suite Global & Custom Styles */
+
+/* Word print page preview styling */
+.word-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 70px);
+  overflow: hidden;
+}
+
+.word-page-sheet {
+  background: white;
+  color: #1a1a1a;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--db-sidebar-border);
+  min-height: 297mm; /* A4 Ratio */
+  width: 210mm;
+  padding: 25mm; /* Margins */
+  margin: 20px auto;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+}
+
+.word-page-sheet h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 0.8rem;
+  color: #111;
+}
+
+.word-page-sheet h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.6rem;
+  color: #222;
+}
+
+.word-page-sheet p {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.word-page-sheet ul, .word-page-sheet ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  list-style-type: disc;
+}
+
+.word-page-sheet table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+
+.word-page-sheet table td, .word-page-sheet table th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+/* Excel spreadsheet grid */
+.excel-spreadsheet-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 70px);
+  overflow: hidden;
+}
+
+.excel-grid-viewport {
+  overflow: auto;
+  flex: 1;
+  position: relative;
+  border-radius: 12px;
+  border: 1px solid var(--db-sidebar-border);
+  background: var(--db-card-bg);
+}
+
+.excel-header-cell {
+  background: var(--db-input-bg);
+  border-right: 1px solid var(--db-sidebar-border);
+  border-bottom: 1px solid var(--db-sidebar-border);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--db-text-muted);
+  user-select: none;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.excel-header-cell.row-index {
+  position: sticky;
+  left: 0;
+  z-index: 12;
+  border-right: 2px solid var(--db-sidebar-border);
+}
+
+.excel-header-cell.corner-cell {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 20;
+}
+
+.excel-grid-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.excel-cell {
+  border-right: 1px solid var(--db-sidebar-border);
+  border-bottom: 1px solid var(--db-sidebar-border);
+  padding: 4px 6px;
+  font-size: 12px;
+  outline: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: cell;
+}
+
+.excel-cell.selected {
+  outline: 2px solid #2563eb !important;
+  outline-offset: -2px;
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.excel-cell.editing {
+  background: white !important;
+  color: black !important;
+  outline: 2px solid #10b981 !important;
+}
+
+/* Slides presentation slides list */
+.slides-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 70px);
+  overflow: hidden;
+}
+
+.slides-canvas {
+  width: 100%;
+  aspect-ratio: 16/9;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--db-sidebar-border);
+  border-radius: 16px;
+}
+
+.slide-element {
+  position: absolute;
+  cursor: move;
+  padding: 4px;
+}
+
+.slide-element.selected {
+  outline: 2px dashed #2563eb;
+  border-radius: 4px;
+}
+
+/* Presenter Mode Fullscreen styling */
+.presenter-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #111111;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: sans-serif;
+}
+
+.presenter-laser-pointer {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: red;
+  box-shadow: 0 0 12px red, 0 0 20px red;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 99999;
+}
+
+.presentation-pen-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+/* Collaborator tags & cursor outlines */
+.collaborator-presence-dot {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 2px;
+  transition: all 0.1s ease-out;
+  z-index: 999;
+}
+
+.collaborator-cursor-tag {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  padding: 2px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  color: white;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Print Preview Styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .word-page-sheet, .word-page-sheet * {
+    visibility: visible;
+  }
+  .word-page-sheet {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+/* ── Excel sort arrows – reveal on th hover ── */
+.excel-header-cell:hover button {
+  opacity: 1 !important;
+}
+.excel-header-cell button {
+  opacity: 0;
+  transition: opacity 0.15s;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--db-text-muted);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ── Excel sticky header shadow ── */
+thead .excel-header-cell {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+/* ── Slide canvas center area dark mode ── */
+@media (prefers-color-scheme: dark) {
+  .bg-zinc-100 { background: #18181b; }
+}
+
+/* ── IT Suite shimmer loading ── */
+@keyframes it-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.it-shimmer-block {
+  background: linear-gradient(90deg, var(--db-input-bg) 25%, var(--db-card-bg) 50%, var(--db-input-bg) 75%);
+  background-size: 800px 100%;
+  animation: it-shimmer 1.4s infinite;
+  border-radius: 8px;
+}
+
+/* ── Presenter mode print isolation ── */
+@media print {
+  .presenter-fullscreen-overlay { visibility: visible !important; }
+  body > *:not(.presenter-fullscreen-overlay) { visibility: hidden; }
+}
+
+/* Glassmorphism Cards */
+.glass-card-light {
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04) !important;
+}
+
+.dark-theme .glass-card-light {
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Hover effects for glassmorphism cards */
+.glass-card-light:hover {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 10px 40px 0 rgba(31, 38, 135, 0.08) !important;
+}
+
+.dark-theme .glass-card-light:hover {
+  background: rgba(30, 41, 59, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4) !important;
+}
+

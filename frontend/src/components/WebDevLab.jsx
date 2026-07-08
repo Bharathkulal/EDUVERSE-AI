@@ -418,6 +418,19 @@ const WEB_DEV_MODULES = [
 
 export default function WebDevLab() {
   const [selectedModule, setSelectedModule] = useState(null);
+  
+  useEffect(() => {
+    const handleBack = (e) => {
+      if (e.defaultPrevented) return;
+      if (selectedModule !== null) {
+        e.preventDefault();
+        setSelectedModule(null);
+      }
+    };
+    window.addEventListener('eduverse-back', handleBack);
+    return () => window.removeEventListener('eduverse-back', handleBack);
+  }, [selectedModule]);
+
   const [activeTab, setActiveTab] = useState('learn'); // learn, visualize, code, practice, assignment, quiz, project, mastery
   const [selectedTopicIdx, setSelectedTopicIdx] = useState(0);
   const [userCode, setUserCode] = useState('');

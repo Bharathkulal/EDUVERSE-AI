@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../context/ThemeContext';
 import { 
   ArrowLeft, Play, Pause, SkipForward, RotateCcw, 
   BookOpen, HelpCircle, CheckCircle, ChevronDown, 
@@ -233,6 +234,7 @@ const OS_BASICS_NOTES = `📘 OPERATING SYSTEM BASICS — COMPLETE STUDY NOTES
 
 export default function FocVisualization() {
   const navigate = useNavigate();
+  const { isDarkMode: isDark } = useTheme();
   
   // App states
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -728,7 +730,216 @@ export default function FocVisualization() {
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] w-full overflow-hidden bg-[#FAFAFA] text-black flex flex-col font-sans select-none relative">
+    <div className={`h-[calc(100vh-64px)] w-full overflow-hidden bg-[#FAFAFA] text-black flex flex-col font-sans select-none relative ${isDark ? 'foc-dark-theme' : ''}`}>
+      <style>{`
+        .foc-dark-theme {
+          background-color: #070313 !important;
+          color: #f1f5f9 !important;
+        }
+        .foc-dark-theme header {
+          background-color: rgba(12, 8, 36, 0.95) !important;
+          border-color: rgba(255, 255, 255, 0.05) !important;
+          color: #ffffff !important;
+        }
+        .foc-dark-theme header button {
+          border-color: rgba(255, 255, 255, 0.1) !important;
+          color: #ffffff !important;
+        }
+        .foc-dark-theme header button:hover {
+          background-color: rgba(255, 255, 255, 0.05) !important;
+          border-color: rgba(139, 92, 246, 0.5) !important;
+        }
+        .foc-dark-theme header button * {
+          color: #ffffff !important;
+        }
+        .foc-dark-theme header span {
+          color: #a78bfa !important;
+        }
+        .foc-dark-theme header .text-black,
+        .foc-dark-theme header .text-neutral-505,
+        .foc-dark-theme header .text-neutral-500 {
+          color: #ffffff !important;
+        }
+        .foc-dark-theme header .bg-neutral-100 {
+          background-color: rgba(255, 255, 255, 0.05) !important;
+          border-color: rgba(255, 255, 255, 0.05) !important;
+          color: #ffffff !important;
+        }
+        .foc-dark-theme .bg-white {
+          background-color: #120e2a !important;
+          border-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        .foc-dark-theme .border-neutral-200 {
+          border-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        .foc-dark-theme .text-neutral-800 {
+          color: #f1f5f9 !important;
+        }
+        .foc-dark-theme .text-neutral-705,
+        .foc-dark-theme .text-neutral-600 {
+          color: #cbd5e1 !important;
+        }
+        .foc-dark-theme .text-neutral-500 {
+          color: #94a3b8 !important;
+        }
+        .foc-dark-theme .text-neutral-400 {
+          color: #64748b !important;
+        }
+        .foc-dark-theme .text-black {
+          color: #ffffff !important;
+        }
+        .foc-dark-theme .bg-neutral-50 {
+          background-color: #1d183d !important;
+          border-color: rgba(255, 255, 255, 0.05) !important;
+          color: #ffffff !important;
+        }
+        .foc-dark-theme .bg-neutral-100 {
+          background-color: #1d183d !important;
+          border-color: rgba(255, 255, 255, 0.05) !important;
+          color: #ffffff !important;
+        }
+        .foc-dark-theme input,
+        .foc-dark-theme select,
+        .foc-dark-theme textarea {
+          background-color: #1d183d !important;
+          color: #ffffff !important;
+          border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        .foc-dark-theme input:focus,
+        .foc-dark-theme select:focus,
+        .foc-dark-theme textarea:focus {
+          border-color: #8b5cf6 !important;
+        }
+        .foc-dark-theme option {
+          background-color: #120e2a !important;
+          color: #ffffff !important;
+        }
+        .foc-dark-theme .border-t-neutral-100,
+        .foc-dark-theme .border-t-neutral-200,
+        .foc-dark-theme .border-t {
+          border-top-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        .foc-dark-theme .border-b {
+          border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        .foc-dark-theme .bg-[#FAFAFA] {
+          background-color: #070313 !important;
+        }
+        .foc-dark-theme .border-neutral-100 {
+          border-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        .foc-dark-theme .border-neutral-300 {
+          border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        /* Buttons styling */
+        .foc-dark-theme button.bg-white {
+          background-color: #1d183d !important;
+          color: #ffffff !important;
+          border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        .foc-dark-theme button.bg-white:hover {
+          background-color: #26214c !important;
+        }
+        .foc-dark-theme button.bg-neutral-100 {
+          background-color: #1d183d !important;
+          color: #ffffff !important;
+          border-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        .foc-dark-theme button.bg-neutral-100:hover {
+          background-color: #26214c !important;
+        }
+        /* Mode switch buttons */
+        .foc-dark-theme .bg-neutral-100 button {
+          background-color: transparent !important;
+          color: #94a3b8 !important;
+          border: none !important;
+        }
+        .foc-dark-theme .bg-neutral-100 button.bg-white {
+          background-color: #8b5cf6 !important;
+          color: #ffffff !important;
+        }
+        /* Dot grid dark mode color */
+        .foc-dark-theme .bg-\\[radial-gradient\\(\\#e5e5e5_1px\\,transparent_1px\\)\\] {
+          background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px) !important;
+        }
+        /* Scrollbar dark mode override */
+        .foc-dark-theme ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        .foc-dark-theme ::-webkit-scrollbar-track {
+          background: #070313;
+        }
+        .foc-dark-theme ::-webkit-scrollbar-thumb {
+          background: #1d183d;
+          border-radius: 4px;
+        }
+        .foc-dark-theme ::-webkit-scrollbar-thumb:hover {
+          background: #26214c;
+        }
+        /* Formula card overrides */
+        .foc-dark-theme .bg-blue-50 {
+          background-color: rgba(59, 130, 246, 0.05) !important;
+          border-color: rgba(59, 130, 246, 0.2) !important;
+          color: #93c5fd !important;
+        }
+        .foc-dark-theme .text-blue-800 {
+          color: #93c5fd !important;
+        }
+        .foc-dark-theme .bg-purple-50 {
+          background-color: rgba(139, 92, 246, 0.05) !important;
+          border-color: rgba(139, 92, 246, 0.2) !important;
+          color: #c084fc !important;
+        }
+        .foc-dark-theme .text-purple-800 {
+          color: #c084fc !important;
+        }
+        .foc-dark-theme .bg-emerald-50 {
+          background-color: rgba(16, 185, 129, 0.05) !important;
+          border-color: rgba(16, 185, 129, 0.2) !important;
+          color: #34d399 !important;
+        }
+        .foc-dark-theme .text-emerald-800 {
+          color: #34d399 !important;
+        }
+        .foc-dark-theme .bg-amber-50 {
+          background-color: rgba(245, 158, 11, 0.05) !important;
+          border-color: rgba(245, 158, 11, 0.2) !important;
+          color: #fbbf24 !important;
+        }
+        .foc-dark-theme .text-amber-800 {
+          color: #fbbf24 !important;
+        }
+        /* Step list nodes */
+        .foc-dark-theme .border-neutral-100 {
+          border-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        .foc-dark-theme .border-l-2 {
+          border-left-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        /* Timeline connections */
+        .foc-dark-theme .bg-neutral-100 {
+          background-color: #120e2a !important;
+        }
+        .foc-dark-theme .bg-neutral-100.h-\\[2px\\] {
+          background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        /* Subheading links in dashboard list */
+        .foc-dark-theme .border-2 {
+          border-width: 1px !important;
+          border-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        .foc-dark-theme .border-2:hover {
+          border-color: rgba(139, 92, 246, 0.4) !important;
+        }
+        .foc-dark-theme .text-neutral-800.group-hover\\:text-black {
+          color: #ffffff !important;
+        }
+        .foc-dark-theme .bg-neutral-100.text-neutral-600 {
+          background-color: rgba(255, 255, 255, 0.05) !important;
+          color: #cbd5e1 !important;
+        }
+      `}</style>
       
       {/* Subtle light background dot grid */}
       <div className="absolute inset-0 bg-[radial-gradient(#e5e5e5_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none z-0" />

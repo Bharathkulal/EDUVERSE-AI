@@ -101,4 +101,37 @@ router.get('/all', authenticate, authorizeAdmin, async (req, res) => {
   }
 });
 
+const mlEngine = require('../services/ml_engine');
+
+// 4. GET /api/predictions/modules/:type - Get module prediction from ML Engine
+router.get('/modules/:type', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { type } = req.params;
+    const { language } = req.query;
+    
+    const result = await mlEngine.predict(studentId, type, { language });
+    res.json(result);
+  } catch (err) {
+    console.error('Error fetching module prediction:', err);
+    res.status(500).json({ message: 'Error generating module prediction' });
+  }
+});
+
+// 5. GET /api/predictions/history - Get prediction history logs
+router.get('/history', authenticate, authorizeAdmin, async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT h.*, u.name, u.email 
+       FROM ml_predictions_history h
+       JOIN users u ON u.id = h.student_id
+       ORDER BY h.created_at DESC LIMIT 100`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching prediction history:', err);
+    res.status(500).json({ message: 'Error retrieving prediction history' });
+  }
+});
+
 module.exports = router;

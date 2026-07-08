@@ -1,207 +1,102 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { useSessionTracker } from '../utils/sessionTracker';
+import ThemeToggleButton from './ThemeToggleButton';
+import VoiceAssistantWidget from './VoiceAssistantWidget';
+import { Mic } from 'lucide-react';
 import '../pages/DashboardTheme.css';
 
 const studentNav = [
-  {
-    path: '/dashboard',
-    label: 'Dashboard',
-    icon: '⚡',
-    children: [
-      { path: '/dashboard', label: 'Overview' },
-      { path: '/dashboard/goals', label: 'Daily Goals' },
-      { path: '/dashboard/xp', label: 'XP & Level' },
-      { path: '/dashboard/streaks', label: 'Streaks' },
-      { path: '/dashboard/activity', label: 'Recent Activity' },
-      { path: '/dashboard/continue', label: 'Quick Continue' }
-    ]
-  },
-  {
-    path: '/subjects',
-    label: 'Learn',
-    icon: '📚',
-    children: [
-      { path: '/subjects', label: 'Subjects' },
-      { path: '/subjects#courses', label: 'Courses' },
-      { path: '/subjects#roadmaps', label: 'Learning Roadmaps' },
-      { path: '/subjects#notes', label: 'Notes' },
-      { path: '/subjects#resources', label: 'Resource Library' },
-      { path: '/subjects#studio', label: 'Learning Studio' },
-      { path: '/subjects#bookmarks', label: 'Bookmarks' }
-    ]
-  },
-  {
-    path: '/practice-hub',
-    label: 'Practice',
-    icon: '🧪',
-    children: [
-      { path: '/practice-hub', label: 'Practice Hub' },
-      { path: '/question-bank', label: 'Question Bank' },
-      { path: '/practice-hub#challenges', label: 'Daily Challenges' },
-      { path: '/practice-hub#flashcards', label: 'Flash Cards' },
-      { path: '/practice-hub#mcq', label: 'MCQ Practice' },
-      { path: '/practice-hub#topic', label: 'Topic-wise Practice' },
-      { path: '/practice-hub#mock', label: 'Mock Tests' }
-    ]
-  },
-  {
-    path: '/coding',
-    label: 'Code',
-    icon: '💻',
-    children: [
-      { path: '/coding', label: 'Coding Labs' },
-      { path: '/coding#challenges', label: 'Coding Challenges' },
-      { path: '/coding#projects', label: 'Projects' },
-      { path: '/coding#playground', label: 'Code Playground' },
-      { path: '/coding#compiler', label: 'Compiler' },
-      { path: '/coding#cp', label: 'Competitive Programming' },
-      { path: '/coding#builder', label: 'Project Builder' }
-    ]
-  },
-  {
-    path: '/dsa',
-    label: 'Visualizers',
-    icon: '🧩',
-    children: [
-      { path: '/dsa/linked-list', label: 'Linked List' },
-      { path: '/dsa/stack', label: 'Stack' },
-      { path: '/dsa/queue', label: 'Queue' },
-      { path: '/dsa/tree', label: 'Tree' },
-      { path: '/dsa/graph', label: 'Graph' },
-      { path: '/dsa/sorting', label: 'Sorting' },
-      { path: '/dsa/pathfinding', label: 'Pathfinding' }
-    ]
-  },
-  {
-    path: '/ai-tutor',
-    label: 'AI Center',
-    icon: '🧠',
-    children: [
-      { path: '/ai-tutor#mentor', label: 'AI Mentor' },
-      { path: '/ai-tutor', label: 'AI Tutor' },
-      { path: '/ai-tutor#career', label: 'AI Career Guide' },
-      { path: '/ai-tutor#interviewer', label: 'AI Interviewer' },
-      { path: '/ai-tutor#resume', label: 'AI Resume Reviewer' },
-      { path: '/ai-tutor#planner', label: 'AI Study Planner' },
-      { path: '/voice-assistant', label: 'Voice Assistant' }
-    ]
-  },
-  {
-    path: '/quizzes',
-    label: 'Arena',
-    icon: '🏆',
-    children: [
-      { path: '/quizzes#battles', label: 'Quiz Battles' },
-      { path: '/coding#battles', label: 'Coding Battles' },
-      { path: '/dsa#battles', label: 'DSA Battles' },
-      { path: '/ai-tutor#battles', label: 'AI Battles' },
-      { path: '/quizzes#tournaments', label: 'Tournaments' },
-      { path: '/quizzes#leaderboards', label: 'Leaderboards' },
-      { path: '/progress#achievements', label: 'Achievements' }
-    ]
-  },
-  {
-    path: '/career-hub',
-    label: 'Career Hub',
-    icon: '🔥',
-    children: [
-      { path: '/career-hub#resume', label: 'Resume Builder' },
-      { path: '/career-hub#placement', label: 'Placement Prep' },
-      { path: '/career-hub#company', label: 'Company Questions' },
-      { path: '/career-hub#interview', label: 'Interview Prep' },
-      { path: '/career-hub#aptitude', label: 'Aptitude Practice' },
-      { path: '/career-hub#portfolio', label: 'Portfolio Builder' },
-      { path: '/career-hub#certifications', label: 'Certifications' }
-    ]
-  },
-  {
-    path: '/community',
-    label: 'Community',
-    icon: '🌐',
-    children: [
-      { path: '/community#forum', label: 'Discussion Forum' },
-      { path: '/community#groups', label: 'Study Groups' },
-      { path: '/community#clubs', label: 'Coding Clubs' },
-      { path: '/community#teams', label: 'Project Teams' },
-      { path: '/community#challenges', label: 'Challenges' },
-      { path: '/community#doubt', label: 'Doubt Solving' }
-    ]
-  },
-  {
-    path: '/progress',
-    label: 'Progress',
-    icon: '📊',
-    children: [
-      { path: '/progress', label: 'Analytics' },
-      { path: '/progress#skill-graph', label: 'Skill Graph' },
-      { path: '/progress#heatmap', label: 'Learning Heatmap' },
-      { path: '/progress#reports', label: 'Reports' },
-      { path: '/progress#achievements', label: 'Achievements' },
-      { path: '/progress#certificates', label: 'Certificates' },
-      { path: '/progress#ranking', label: 'Ranking History' }
-    ]
-  },
-  {
-    path: '/ai-profile',
-    label: 'Profile',
-    icon: '👤',
-    children: [
-      { path: '/ai-profile', label: 'AI Profile' },
-      { path: '/settings', label: 'Settings' },
-      { path: '/settings#subscription', label: 'Subscription' },
-      { path: '/settings#theme', label: 'Theme Customizer' },
-      { path: '/settings#notifications', label: 'Notifications' },
-      { path: '/settings#account', label: 'Account' }
-    ]
-  }
+  { path: '/dashboard', label: 'Dashboard', icon: '⚡' },
+  { path: '/chat-learn', label: 'Chat & Learn', icon: '💬' },
+  { path: '/it-suite', label: 'IT Suite', icon: '🏢' },
+  { path: '/subjects', label: 'Learn', icon: '📚' },
+  { path: '/practice-hub', label: 'Practice', icon: '🧪' },
+  { path: '/coding', label: 'Code', icon: '💻' },
+  { path: '/ai-tutor', label: 'AI Center', icon: '🧠' },
+  { path: '/quizzes', label: 'Arena', icon: '🏆' },
+  { path: '/career-hub', label: 'Career Hub', icon: '🔥' },
+  { path: '/community', label: 'Community', icon: '🌐' },
+  { path: '/progress', label: 'Progress', icon: '📊' },
+  { path: '/certificates', label: 'Certificates', icon: '🎓' },
+  { path: '/study-report', label: 'Study Report', icon: '📈' },
+  { path: '/ai-profile', label: 'Profile', icon: '👤' },
 ];
 
+
 const adminNav = [
-  { path: '/admin', label: 'Dashboard', icon: '⚡' },
-  { path: '/admin/students', label: 'Students', icon: '👥' },
-  { path: '/admin/content', label: 'Content', icon: '📝' },
-  { path: '/admin/quizzes', label: 'Quizzes', icon: '✅' },
-  { path: '/admin/dataset', label: 'Dataset', icon: '📁' },
-  { path: '/admin/ml', label: 'ML Training', icon: '⚙️' },
-  { path: '/admin/questions', label: 'Question Bank', icon: '❓' },
-  { path: '/admin/api-settings', label: 'API Settings', icon: '🔑' },
-  { path: '/admin/logs', label: 'Logs', icon: '📋' },
-  { path: '/admin/analytics', label: 'Analytics', icon: '📈' },
+  { path: '/admin', label: 'Dashboard', icon: '🏠' },
+  { path: '/admin/students', label: 'Students', icon: '👨‍🎓' },
+  { path: '/admin/content', label: 'Content Studio', icon: '📚' },
+  { path: '/admin/quizzes', label: 'Quiz Intelligence', icon: '📝' },
+  { path: '/admin/dataset', label: 'AI Data Center', icon: '🗂' },
+  { path: '/admin/ml', label: 'ML Studio', icon: '🤖' },
+  { path: '/admin/analytics', label: 'Analytics', icon: '📊' },
+  { path: '/admin/predictions', label: 'Prediction Center', icon: '📈' },
+  { path: '/admin/logs', label: 'Logs & Audit', icon: '📋' },
   { path: '/admin/alerts', label: 'Alerts', icon: '🚨' },
+  { path: '/admin/settings', label: 'Settings', icon: '⚙' },
 ];
 
 // All top-level nav paths — back button hidden on these
 const TOP_LEVEL_PATHS = [
-  '/dashboard', '/dashboard/goals', '/dashboard/xp', '/dashboard/streaks',
+  '/dashboard', '/dashboard/xp', '/dashboard/streaks',
   '/dashboard/activity', '/dashboard/continue',
   '/subjects', '/practice-hub', '/quizzes', '/coding', '/dbms-lab', '/ai-tutor',
-  '/progress', '/ml-analytics', '/ai-profile', '/question-bank',
-  '/voice-assistant', '/settings', '/community', '/career-hub',
+  '/progress', '/certificates', '/study-report', '/ml-analytics', '/ai-profile', '/question-bank',
+  '/voice-assistant', '/settings', '/community', '/career-hub', '/it-suite', '/techverse', '/chat-learn',
   '/admin', '/admin/students', '/admin/content', '/admin/quizzes',
-  '/admin/dataset', '/admin/ml', '/admin/questions', '/admin/api-settings',
+  '/admin/dataset', '/admin/ml', '/admin/questions',
   '/admin/logs', '/admin/analytics', '/admin/alerts',
+  '/admin/predictions', '/admin/settings',
 ];
 
 export default function Layout({ children }) {
   const { user, logout, isAdmin } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
   useSessionTracker(user);
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [openMenus, setOpenMenus] = useState({});
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('theme') !== 'light';
-  });
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+
+  const navRef = useRef(null);
+
+  // Restore sidebar scroll position on navigation
+  useEffect(() => {
+    const savedScroll = sessionStorage.getItem('sidebar-scroll');
+    if (savedScroll && navRef.current) {
+      navRef.current.scrollTop = parseInt(savedScroll, 10);
+    }
+  }, [location.pathname]);
+
+  const handleSidebarScroll = (e) => {
+    sessionStorage.setItem('sidebar-scroll', e.currentTarget.scrollTop);
+  };
+
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    const days = [];
+    for (let i = 0; i < firstDay; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(year, month, i));
+    }
+    return days;
+  };
 
   const isSubPage = !TOP_LEVEL_PATHS.includes(location.pathname);
 
-  // Toggle dropdown menu
-  const toggleMenu = (label) => {
-    setOpenMenus(prev => ({ ...prev, [label]: !prev[label] }));
-  };
+
 
   // Derive a readable page title from the path
   const getPageTitle = () => {
@@ -215,42 +110,30 @@ export default function Layout({ children }) {
 
   const navItems = isAdmin ? adminNav : studentNav;
 
-  // Auto-expand menu on load based on active path
-  useEffect(() => {
-    if (!navItems) return;
-    const activeParent = navItems.find(item => {
-      if (!item) return false;
-      const childMatch = item.children?.some(child => {
-        if (!child || !child.path) return false;
-        return location.pathname === child.path || 
-               (child.path.includes('#') && location.pathname + location.hash === child.path);
-      });
-      if (childMatch) return true;
-      if (!item.path) return false;
-      return location.pathname === item.path || 
-             (item.path !== '/' && location.pathname.startsWith(item.path + '/'));
-    });
-    if (activeParent) {
-      setOpenMenus(prev => ({ ...prev, [activeParent.label]: true }));
-    }
-  }, [location.pathname, location.hash, isAdmin]);
 
-  // Apply theme class to html element for global access
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode]);
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/?login=true');
   };
 
-  const toggleTheme = () => {
-    setIsDarkMode((prev) => {
-      const nextTheme = !prev;
-      localStorage.setItem('theme', nextTheme ? 'dark' : 'light');
-      return nextTheme;
-    });
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [commandQuery, setCommandQuery] = useState('');
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowCommandPalette(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const getBreadcrumbs = () => {
+    const parts = location.pathname.split('/').filter(Boolean);
+    return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1));
   };
 
   const getInitials = (name) => {
@@ -265,14 +148,14 @@ export default function Layout({ children }) {
         <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col justify-between p-6`}
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 h-screen lg:h-full transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col justify-between p-6`}
         style={{ 
           background: 'var(--db-sidebar-bg)', 
           borderRight: '1px solid var(--db-sidebar-border)' 
         }}
       >
-        <div className="flex flex-col h-full justify-between overflow-y-auto pr-1 custom-sidebar-scroll">
-          <div className="flex flex-col flex-1">
+        <div className="flex flex-col h-full justify-between overflow-hidden">
+          <div className="flex flex-col flex-1 min-h-0">
             {/* Logo */}
             <div className="db-sidebar-logo flex flex-col items-start gap-1 pb-4 border-b border-[var(--db-sidebar-border)] mb-4 flex-shrink-0">
               <div className="flex items-center gap-3">
@@ -283,71 +166,28 @@ export default function Layout({ children }) {
             </div>
 
             {/* Navigation Links */}
-            <nav className="db-nav-list flex-1 overflow-y-auto pr-1 my-2 space-y-1 custom-sidebar-scroll">
+            <nav 
+              ref={navRef}
+              onScroll={handleSidebarScroll}
+              className="db-nav-list flex-1 overflow-y-auto pr-1 my-2 space-y-1 custom-sidebar-scroll"
+            >
               {navItems.map((item) => {
-                const isMenuOpen = !!openMenus[item.label];
-                const isParentActive = (item.path && (location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path + '/')))) || 
-                                       item.children?.some(child => {
-                                         if (!child || !child.path) return false;
-                                         return location.pathname === child.path || 
-                                                (child.path.includes('#') && location.pathname + location.hash === child.path);
-                                       });
+                const isActive = item.path && (location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path + '/')));
 
                 return (
                   <div key={item.label} className="db-nav-group">
                     <div
                       onClick={() => {
-                        if (item.children) {
-                          toggleMenu(item.label);
-                        } else {
-                          navigate(item.path);
-                          setSidebarOpen(false);
-                        }
+                        navigate(item.path);
+                        setSidebarOpen(false);
                       }}
-                      className={`db-nav-item ${isParentActive ? 'active' : ''} flex items-center justify-between cursor-pointer py-2 px-3 rounded-xl`}
+                      className={`db-nav-item ${isActive ? 'active' : ''} flex items-center justify-between cursor-pointer py-2 px-3 rounded-xl`}
                     >
                       <div className="flex items-center gap-3">
                         <span className="db-nav-icon">{item.icon}</span>
                         <span>{item.label}</span>
                       </div>
-                      {item.children && (
-                        <motion.span
-                          animate={{ rotate: isMenuOpen ? 90 : 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="text-[9px] opacity-60 mr-1"
-                        >
-                          ▶
-                        </motion.span>
-                      )}
                     </div>
-
-                    {item.children && (
-                      <AnimatePresence initial={false}>
-                        {isMenuOpen && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2, ease: 'easeInOut' }}
-                            className="db-sub-nav-list pl-4 ml-4 border-l border-[var(--db-sidebar-border)] flex flex-col gap-1 mt-1 overflow-hidden"
-                          >
-                            {item.children.map((child) => {
-                              const isChildActive = location.pathname === child.path || (child.path.includes('#') && location.pathname + location.hash === child.path);
-                              return (
-                                <Link
-                                  key={child.path}
-                                  to={child.path}
-                                  onClick={() => setSidebarOpen(false)}
-                                  className={`db-sub-nav-item py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-between ${isChildActive ? 'active-child font-semibold text-[var(--db-text-accent)] bg-[var(--db-badge-bg)]' : 'text-[var(--db-text-muted)] hover:text-[var(--db-text-accent)] hover:bg-[var(--db-btn-secondary-hover)]'}`}
-                                >
-                                  <span>{child.label}</span>
-                                </Link>
-                              );
-                            })}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    )}
                   </div>
                 );
               })}
@@ -355,17 +195,6 @@ export default function Layout({ children }) {
           </div>
 
           <div className="mt-auto">
-            {/* Upgrade to Pro Card */}
-            <div className="mt-8 p-4 rounded-2xl bg-gradient-to-br from-[#2563EB]/5 to-[#60A5FA]/5 border border-[#2563EB]/10 hidden lg:block mb-4">
-              <h4 className="text-xs font-bold text-[#2563EB] uppercase tracking-wider mb-1">⚡ Upgrade to Pro</h4>
-              <p className="text-[11px] text-[var(--db-text-muted)] leading-relaxed mb-3">Unlock advanced AI insights, unlimited quizzes, mock tests & more.</p>
-              <button className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold py-2 px-3 rounded-xl transition flex items-center justify-center gap-1.5">
-                <span>Upgrade Now</span>
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </button>
-            </div>
 
             {/* XP Progress Card */}
             <div className="p-4 rounded-2xl bg-[var(--db-card-bg-elevated)] border border-[var(--db-sidebar-border)] hidden lg:block mb-4">
@@ -386,21 +215,11 @@ export default function Layout({ children }) {
             </div>
 
             {/* Footer Profile Detail */}
-            <div className="db-sidebar-footer">
-              <div className="db-profile-info">
-                <div className="db-profile-avatar">
-                  {getInitials(user?.name)}
-                </div>
-                <div className="db-profile-details">
-                  <span className="db-profile-name">{user?.name || 'User Profile'}</span>
-                  <span className="db-profile-email">{user?.email || 'user@eduverse.ai'}</span>
-                </div>
+            <div className="db-sidebar-footer" style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+              <div className="flex items-center gap-2 text-[var(--db-text-muted)] text-[11px] font-bold leading-normal pr-2">
+                <Mic className="w-4 h-4 text-purple-500 animate-pulse flex-shrink-0" />
+                <span>Double tap on screen for Voice Agent</span>
               </div>
-              <button onClick={handleLogout} className="db-settings-btn" title="Sign Out">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
             </div>
           </div>
         </div>
@@ -423,7 +242,13 @@ export default function Layout({ children }) {
             {/* Smart Back Button — shown only on sub-pages */}
             {isSubPage && (
               <button
-                onClick={() => navigate(-1)}
+                onClick={() => {
+                  const backEvent = new CustomEvent('eduverse-back', { cancelable: true });
+                  const handled = !window.dispatchEvent(backEvent);
+                  if (!handled) {
+                    navigate(-1);
+                  }
+                }}
                 aria-label="Go back"
                 style={{
                   display: 'flex',
@@ -471,20 +296,50 @@ export default function Layout({ children }) {
               </span>
               <input 
                 type="text" 
-                placeholder="Search subjects, quizzes, notes..." 
-                className="w-full bg-[var(--db-input-bg)] border border-[var(--db-input-border)] text-[var(--db-text-main)] placeholder-[var(--db-text-muted)] text-sm rounded-xl py-2 pl-10 pr-4 focus:outline-none focus:border-[var(--db-text-accent)] focus:ring-1 focus:ring-[var(--db-text-accent)] transition-all duration-200"
+                placeholder="Search command palette... (Ctrl+K)" 
+                className="w-full bg-[var(--db-input-bg)] border border-[var(--db-input-border)] text-[var(--db-text-main)] placeholder-[var(--db-text-muted)] text-sm rounded-xl py-2 pl-10 pr-4 focus:outline-none focus:border-[var(--db-text-accent)] focus:ring-1 focus:ring-[var(--db-text-accent)] transition-all duration-200 cursor-pointer"
+                onClick={() => setShowCommandPalette(true)}
+                readOnly
               />
             </div>
           </div>
 
           {/* Right part: Actions + Profile */}
           <div className="flex items-center gap-4">
-            {/* Calendar Indicator Icon */}
-            <Link to="/settings" className="p-2 text-[var(--db-text-muted)] hover:text-[var(--db-text-accent)] hover:bg-[var(--db-btn-secondary-hover)] rounded-xl transition hidden sm:flex items-center justify-center" title="View Calendar">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            {/* Open Learning Command Center Pill Button */}
+            {!isAdmin && (
+              <button
+                onClick={() => navigate('/dashboard/goals')}
+                className="px-4 py-2 bg-[#3b82f6] text-[#1e293b] font-bold rounded-full shadow-md hover:bg-[#2563eb] hover:text-white transition-all duration-200 flex items-center gap-1.5 text-xs md:text-sm cursor-pointer whitespace-nowrap"
+              >
+                <span>🚀 Open Learning Command Center</span>
+                <span className="font-semibold">→</span>
+              </button>
+            )}
+
+            {/* Logout Button */}
+            <button 
+              onClick={handleLogout} 
+              className="p-2 text-[var(--db-text-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-xl transition flex items-center justify-center cursor-pointer" 
+              title="Sign Out"
+            >
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-            </Link>
+            </button>
+
+            {/* Calendar Indicator Icon */}
+            {!isAdmin && (
+              <button 
+                onClick={() => navigate('/dashboard/goals')} 
+                className="p-2 text-[var(--db-text-muted)] hover:text-[var(--db-text-accent)] hover:bg-[var(--db-btn-secondary-hover)] rounded-xl transition hidden sm:flex items-center justify-center cursor-pointer" 
+                title="Learning Command Center"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </button>
+            )}
 
             {/* Mock Notifications Icon with badge */}
             <div className="relative">
@@ -497,52 +352,7 @@ export default function Layout({ children }) {
             </div>
 
             {/* Theme Toggle Button */}
-            <button 
-              onClick={toggleTheme} 
-              className="db-theme-toggle-switch" 
-              style={{
-                background: 'var(--db-input-bg)',
-                border: '1.5px solid var(--db-input-border)',
-                cursor: 'pointer',
-                padding: '2px',
-                height: '32px',
-                width: '58px',
-                borderRadius: '9999px',
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                transition: 'all 300ms ease-in-out',
-                boxShadow: 'var(--db-shadow-sm)'
-              }}
-              aria-label="Toggle Bright/Dark Theme"
-              title={isDarkMode ? 'Switch to Bright Mode' : 'Switch to Dark Mode'}
-            >
-              <span
-                style={{
-                  transform: isDarkMode ? 'translateX(26px)' : 'translateX(2px)',
-                  width: '24px',
-                  height: '24px',
-                  background: 'var(--db-text-accent)',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#FFFFFF',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                  transition: 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1), background-color 300ms ease-in-out'
-                }}
-              >
-                {isDarkMode ? (
-                  <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                  </svg>
-                ) : (
-                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
-                  </svg>
-                )}
-              </span>
-            </button>
+            <ThemeToggleButton />
 
             {/* Divider */}
             <span className="h-6 w-[1px] bg-[var(--db-header-border)] hidden sm:block"></span>
@@ -560,7 +370,7 @@ export default function Layout({ children }) {
           </div>
         </header>
 
-        <main className="db-content-body overflow-y-auto custom-sidebar-scroll">
+        <main className={`db-content-body overflow-y-auto custom-sidebar-scroll ${['/coding', '/chat-learn'].includes(location.pathname) ? '!p-0 !max-w-none !m-0 !h-full' : ''}`}>
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, x: 20 }}
@@ -573,6 +383,153 @@ export default function Layout({ children }) {
           </motion.div>
         </main>
       </div>
+
+      {/* Dynamic Study Calendar Modal */}
+      {showCalendarModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div 
+            className="relative w-full max-w-md p-6 rounded-3xl border shadow-2xl flex flex-col justify-between"
+            style={{
+              background: 'var(--db-card-bg)',
+              borderColor: 'var(--db-card-border)',
+              color: 'var(--db-text-main)'
+            }}
+          >
+            <div className="flex justify-between items-center border-b border-[var(--db-header-border)] pb-3 mb-4">
+              <h3 className="font-extrabold text-lg flex items-center gap-2" style={{ color: 'var(--db-text-main)' }}>
+                📅 Study Calendar
+              </h3>
+              <button
+                onClick={() => setShowCalendarModal(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition hover:bg-[var(--db-btn-secondary-hover)] cursor-pointer"
+                style={{ color: 'var(--db-text-muted)' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Month Picker Header */}
+            <div className="flex justify-between items-center mb-4 px-2">
+              <button 
+                onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1))}
+                className="p-1.5 px-3 rounded-lg border border-[var(--db-input-border)] bg-[var(--db-input-bg)] text-xs font-bold hover:bg-[var(--db-btn-secondary-hover)] cursor-pointer"
+                style={{ color: 'var(--db-text-main)' }}
+              >
+                ◀
+              </button>
+              <span className="font-bold text-sm" style={{ color: 'var(--db-text-main)' }}>
+                {calendarDate.toLocaleString('default', { month: 'long' })} {calendarDate.getFullYear()}
+              </span>
+              <button 
+                onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1))}
+                className="p-1.5 px-3 rounded-lg border border-[var(--db-input-border)] bg-[var(--db-input-bg)] text-xs font-bold hover:bg-[var(--db-btn-secondary-hover)] cursor-pointer"
+                style={{ color: 'var(--db-text-main)' }}
+              >
+                ▶
+              </button>
+            </div>
+
+            {/* Weekday Labels */}
+            <div className="grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: 'var(--db-text-muted)' }}>
+              <span>Sun</span>
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+            </div>
+
+            {/* Days Grid */}
+            <div className="grid grid-cols-7 gap-1 text-center text-xs mb-4">
+              {getDaysInMonth(calendarDate).map((day, idx) => {
+                if (!day) return <div key={`empty-${idx}`} />;
+                
+                const isToday = day.toDateString() === new Date().toDateString();
+                const isStreakDay = [1, 2, 4].includes(day.getDay()) && day.getDate() < new Date().getDate();
+
+                return (
+                  <div 
+                    key={idx}
+                    className={`p-2 rounded-xl flex items-center justify-center font-semibold relative transition ${
+                      isToday ? 'ring-2 ring-[#2563EB] text-[#2563EB] font-black bg-[#2563EB]/5' :
+                      isStreakDay ? 'bg-[#2563EB]/10 text-[#2563EB]' :
+                      'hover:bg-[var(--db-btn-secondary-hover)]'
+                    }`}
+                    style={{ color: isToday ? '#2563EB' : 'var(--db-text-main)' }}
+                    title={isToday ? "Today: Learning session active!" : isStreakDay ? "Streak maintained!" : ""}
+                  >
+                    <span>{day.getDate()}</span>
+                    {isStreakDay && (
+                      <span className="absolute bottom-1 w-1 h-1 rounded-full bg-[#2563EB]"></span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer Info */}
+            <div className="p-3 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] rounded-2xl text-[11px] leading-relaxed text-left" style={{ color: 'var(--db-text-muted)' }}>
+              <strong>💡 Tip:</strong> Keep up your daily streak! Completed topics and quiz attempts automatically sync to your Study Calendar timeline.
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Command Palette Modal */}
+      {showCommandPalette && (
+        <div className="fixed inset-0 z-[110] flex items-start justify-center pt-[15vh] p-4 bg-black/70 backdrop-blur-md">
+          <div className="relative w-full max-w-xl p-5 rounded-2xl border shadow-2xl flex flex-col justify-between"
+            style={{
+              background: 'var(--db-card-bg)',
+              borderColor: 'var(--db-card-border)',
+              color: 'var(--db-text-main)'
+            }}
+          >
+            <div className="flex justify-between items-center border-b border-[var(--db-header-border)] pb-3 mb-4">
+              <h3 className="font-extrabold text-sm flex items-center gap-2">
+                ⌨️ Command Center
+              </h3>
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[var(--db-input-bg)]" style={{ color: 'var(--db-text-muted)' }}>Esc to close</span>
+            </div>
+            
+            <input
+              type="text"
+              placeholder="Search actions, models, datasets or modules..."
+              className="w-full px-3.5 py-2 border text-xs rounded-lg outline-none mb-4"
+              style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}
+              value={commandQuery}
+              onChange={(e) => setCommandQuery(e.target.value)}
+              autoFocus
+            />
+
+            <div className="max-h-60 overflow-y-auto space-y-2 pr-1 text-left text-xs">
+              {[
+                { name: 'Go to AI Data Center', path: '/admin/dataset', icon: '🗂' },
+                { name: 'Go to ML Studio', path: '/admin/ml', icon: '🤖' },
+                { name: 'Go to Prediction Center', path: '/admin/predictions', icon: '📈' },
+                { name: 'Go to Student Management', path: '/admin/students', icon: '👨‍🎓' },
+                { name: 'Go to Quiz Intelligence', path: '/admin/quizzes', icon: '📝' },
+                { name: 'Go to Content Studio', path: '/admin/content', icon: '📚' },
+                { name: 'Go to Settings', path: '/admin/settings', icon: '⚙' },
+                { name: 'Run Model Train Iteration', path: '/admin/ml', icon: '⚡' },
+              ].filter(cmd => cmd.name.toLowerCase().includes(commandQuery.toLowerCase())).map((cmd, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => {
+                    if (cmd.path) navigate(cmd.path);
+                    else if (cmd.action) cmd.action();
+                    setShowCommandPalette(false);
+                  }}
+                  className="p-2.5 rounded-xl hover:bg-blue-500 hover:text-white transition cursor-pointer flex items-center gap-2.5"
+                >
+                  <span>{cmd.icon}</span>
+                  <span className="font-bold">{cmd.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

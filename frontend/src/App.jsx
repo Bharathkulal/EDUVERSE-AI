@@ -1,14 +1,16 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import AIChatLayer from './components/AIChatLayer';
+import { useVoiceAssistant } from './context/VoiceContext';
+import toast from 'react-hot-toast';
+
 
 // Authentication & Core pages (fast start)
 import LandingPage from './pages/LandingPage';
-import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 
@@ -27,9 +29,12 @@ const QuizTake = lazy(() => import('./pages/QuizTake'));
 const Coding = lazy(() => import('./pages/Coding'));
 const AITutor = lazy(() => import('./pages/AITutor'));
 const Progress = lazy(() => import('./pages/Progress'));
+const Certificates = lazy(() => import('./pages/Certificates'));
+const StudyReport = lazy(() => import('./pages/StudyReport'));
 const MLAnalytics = lazy(() => import('./pages/MLAnalytics'));
 const Settings = lazy(() => import('./pages/Settings'));
 const AIProfile = lazy(() => import('./pages/AIProfile'));
+const ChatLearn = lazy(() => import('./pages/ChatLearn'));
 const QuestionBank = lazy(() => import('./pages/QuestionBank'));
 const VoiceAssistant = lazy(() => import('./pages/VoiceAssistant'));
 const StudentOnboarding = lazy(() => import('./pages/StudentOnboarding'));
@@ -37,6 +42,24 @@ const TypingQuest = lazy(() => import('./pages/TypingQuest'));
 const CodingBattleSystem = lazy(() => import('./pages/CodingBattleSystem'));
 const Community = lazy(() => import('./pages/Community'));
 const CareerHub = lazy(() => import('./pages/CareerHub'));
+// Python AI Learning Platform
+const PythonLessonPage = lazy(() => import('./python/PythonLessonPage'));
+// Advanced Java AI Learning Platform
+const JavaLessonPage = lazy(() => import('./advanced-java/JavaLessonPage'));
+// Core Java AI Learning Platform
+const CoreJavaLessonPage = lazy(() => import('./core-java/CoreJavaLessonPage'));
+// Web Dev AI Learning Platform
+const WebDevLessonPage = lazy(() => import('./web-dev/WebDevLessonPage'));
+// DSA AI Learning Platform
+const DsaLessonPage = lazy(() => import('./dsa-theory/DsaLessonPage'));
+
+// IT Suite pages
+const ITSuiteDashboard = lazy(() => import('./pages/it-suite/ITSuiteDashboard'));
+const WordEditor = lazy(() => import('./pages/it-suite/WordEditor'));
+const ExcelSpreadsheet = lazy(() => import('./pages/it-suite/ExcelSpreadsheet'));
+const SlidesEditor = lazy(() => import('./pages/it-suite/SlidesEditor'));
+const AIPhotoToPDF = lazy(() => import('./pages/it-suite/AIPhotoToPDF'));
+const FridayWebBuilder = lazy(() => import('./pages/it-suite/FridayWebBuilder.jsx'));
 
 // Lazy Loaded DSA/Math Visualizer Pages
 const StackVisualization = lazy(() => import('./pages/StackVisualization'));
@@ -44,9 +67,14 @@ const QueueVisualization = lazy(() => import('./pages/QueueVisualization'));
 const LinkedListVisualization = lazy(() => import('./pages/LinkedListVisualization'));
 const TreeVisualization = lazy(() => import('./pages/TreeVisualization'));
 const GraphVisualization = lazy(() => import('./pages/GraphVisualization'));
+const SortingVisualization = lazy(() => import('./pages/SortingVisualization'));
+const SearchingVisualization = lazy(() => import('./pages/SearchingVisualization'));
 const MathVisualization = lazy(() => import('./pages/MathVisualization'));
+const CalculusVisualization = lazy(() => import('./pages/CalculusVisualization'));
+const LinearAlgebraVisualization = lazy(() => import('./pages/LinearAlgebraVisualization'));
 const ExecutionSimulator = lazy(() => import('./pages/ExecutionSimulator'));
 const FocVisualization = lazy(() => import('./pages/FocVisualization'));
+const TechVerse = lazy(() => import('./pages/TechVerse'));
 
 // Lazy Loaded Admin Pages
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -60,7 +88,8 @@ const AdminApiSettings = lazy(() => import('./pages/admin/AdminApiSettings'));
 const AdminSystemLogs = lazy(() => import('./pages/admin/AdminSystemLogs'));
 const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 const AdminAlerts = lazy(() => import('./pages/admin/AdminAlerts'));
-
+const AdminPredictions = lazy(() => import('./pages/admin/AdminPredictions'));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 // Other Components
 const DBMSLab = lazy(() => import('./components/DBMSLab'));
 
@@ -82,6 +111,9 @@ const PageLoader = () => (
 
 export default function App() {
   const location = useLocation();
+  const { startListening, toggleEnabled, isEnabled } = useVoiceAssistant();
+
+
 
   return (
     <>
@@ -89,7 +121,6 @@ export default function App() {
       <AnimatePresence mode="wait">
         <Suspense fallback={<PageLoader />}>
           <Routes location={location} key={location.pathname + location.hash}>
-            <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/" element={<HomeRedirect />} />
@@ -109,11 +140,16 @@ export default function App() {
             <Route path="/dsa/stack" element={<ProtectedRoute><StackVisualization /></ProtectedRoute>} />
             <Route path="/dsa/queue" element={<ProtectedRoute><QueueVisualization /></ProtectedRoute>} />
             <Route path="/dsa/linked-list" element={<ProtectedRoute><LinkedListVisualization /></ProtectedRoute>} />
+            <Route path="/dsa/sorting" element={<ProtectedRoute><SortingVisualization /></ProtectedRoute>} />
+            <Route path="/dsa/searching" element={<ProtectedRoute><SearchingVisualization /></ProtectedRoute>} />
             <Route path="/dsa/tree" element={<ProtectedRoute><TreeVisualization /></ProtectedRoute>} />
             <Route path="/dsa/graph" element={<ProtectedRoute><GraphVisualization /></ProtectedRoute>} />
             <Route path="/mathematics/numerical-methods" element={<ProtectedRoute><MathVisualization /></ProtectedRoute>} />
+            <Route path="/mathematics/calculus" element={<ProtectedRoute><CalculusVisualization /></ProtectedRoute>} />
+            <Route path="/mathematics/linear-algebra" element={<ProtectedRoute><LinearAlgebraVisualization /></ProtectedRoute>} />
             <Route path="/dsa/stack/simulator" element={<ProtectedRoute><Layout><ExecutionSimulator /></Layout></ProtectedRoute>} />
             <Route path="/foc" element={<ProtectedRoute><Layout><FocVisualization /></Layout></ProtectedRoute>} />
+            <Route path="/techverse" element={<ProtectedRoute><Layout><TechVerse /></Layout></ProtectedRoute>} />
 
             <Route path="/practice-hub" element={<ProtectedRoute><Layout><PracticeHub /></Layout></ProtectedRoute>} />
 
@@ -122,7 +158,10 @@ export default function App() {
             <Route path="/coding" element={<ProtectedRoute><Layout><Coding /></Layout></ProtectedRoute>} />
             <Route path="/dbms-lab" element={<ProtectedRoute><Layout><DBMSLab /></Layout></ProtectedRoute>} />
             <Route path="/ai-tutor" element={<ProtectedRoute><Layout><AITutor /></Layout></ProtectedRoute>} />
+            <Route path="/chat-learn" element={<ProtectedRoute><Layout><ChatLearn /></Layout></ProtectedRoute>} />
             <Route path="/progress" element={<ProtectedRoute><Layout><Progress /></Layout></ProtectedRoute>} />
+            <Route path="/certificates" element={<ProtectedRoute><Layout><Certificates /></Layout></ProtectedRoute>} />
+            <Route path="/study-report" element={<ProtectedRoute><Layout><StudyReport /></Layout></ProtectedRoute>} />
             <Route path="/ml-analytics" element={<ProtectedRoute><Layout><MLAnalytics /></Layout></ProtectedRoute>} />
             <Route path="/ai-profile" element={<ProtectedRoute><Layout><AIProfile /></Layout></ProtectedRoute>} />
             <Route path="/question-bank" element={<ProtectedRoute><Layout><QuestionBank /></Layout></ProtectedRoute>} />
@@ -135,9 +174,32 @@ export default function App() {
             <Route path="/career-hub" element={<ProtectedRoute><Layout><CareerHub /></Layout></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><Layout><Community /></Layout></ProtectedRoute>} />
 
+            {/* Python AI Learning Platform */}
+            <Route path="/python/course/:lessonSlug" element={<ProtectedRoute><Layout><PythonLessonPage /></Layout></ProtectedRoute>} />
+
+            {/* Core Java AI Learning Platform */}
+            <Route path="/core-java/course/:lessonSlug" element={<ProtectedRoute><Layout><CoreJavaLessonPage /></Layout></ProtectedRoute>} />
+
+            {/* Web Dev AI Learning Platform */}
+            <Route path="/web-dev/course/:lessonSlug" element={<ProtectedRoute><Layout><WebDevLessonPage /></Layout></ProtectedRoute>} />
+
+            {/* Advanced Java AI Learning Platform */}
+            <Route path="/advanced-java/course/:lessonSlug" element={<ProtectedRoute><Layout><JavaLessonPage /></Layout></ProtectedRoute>} />
+
+            {/* DSA AI Learning Platform */}
+            <Route path="/dsa/course/:lessonSlug" element={<ProtectedRoute><Layout><DsaLessonPage /></Layout></ProtectedRoute>} />
+
+            {/* IT Suite Routes */}
+            <Route path="/it-suite" element={<ProtectedRoute><Layout><ITSuiteDashboard /></Layout></ProtectedRoute>} />
+            <Route path="/it-suite/word/:id" element={<ProtectedRoute><Layout><WordEditor /></Layout></ProtectedRoute>} />
+            <Route path="/it-suite/excel/:id" element={<ProtectedRoute><Layout><ExcelSpreadsheet /></Layout></ProtectedRoute>} />
+            <Route path="/it-suite/slides/:id" element={<ProtectedRoute><Layout><SlidesEditor /></Layout></ProtectedRoute>} />
+            <Route path="/it-suite/photo-to-pdf" element={<ProtectedRoute><Layout><AIPhotoToPDF /></Layout></ProtectedRoute>} />
+            <Route path="/it-suite/friday-builder" element={<ProtectedRoute><Layout><FridayWebBuilder /></Layout></ProtectedRoute>} />
+
             {/* DSA index route — redirect to first visualizer */}
             <Route path="/dsa" element={<Navigate to="/dsa/stack" replace />} />
-            <Route path="/dsa/sorting" element={<ProtectedRoute><Layout><Overview /></Layout></ProtectedRoute>} />
+            <Route path="/dsa/sorting" element={<ProtectedRoute><SortingVisualization /></ProtectedRoute>} />
             <Route path="/dsa/pathfinding" element={<ProtectedRoute><Layout><Overview /></Layout></ProtectedRoute>} />
 
             <Route path="/admin" element={<ProtectedRoute adminOnly><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
@@ -147,10 +209,11 @@ export default function App() {
             <Route path="/admin/dataset" element={<ProtectedRoute adminOnly><Layout><AdminDataset /></Layout></ProtectedRoute>} />
             <Route path="/admin/ml" element={<ProtectedRoute adminOnly><Layout><AdminML /></Layout></ProtectedRoute>} />
             <Route path="/admin/questions" element={<ProtectedRoute adminOnly><Layout><AdminQuestions /></Layout></ProtectedRoute>} />
-            <Route path="/admin/api-settings" element={<ProtectedRoute adminOnly><Layout><AdminApiSettings /></Layout></ProtectedRoute>} />
             <Route path="/admin/logs" element={<ProtectedRoute adminOnly><Layout><AdminSystemLogs /></Layout></ProtectedRoute>} />
             <Route path="/admin/analytics" element={<ProtectedRoute adminOnly><Layout><AdminAnalytics /></Layout></ProtectedRoute>} />
             <Route path="/admin/alerts" element={<ProtectedRoute adminOnly><Layout><AdminAlerts /></Layout></ProtectedRoute>} />
+            <Route path="/admin/predictions" element={<ProtectedRoute adminOnly><Layout><AdminPredictions /></Layout></ProtectedRoute>} />
+            <Route path="/admin/settings" element={<ProtectedRoute adminOnly><Layout><AdminSettings /></Layout></ProtectedRoute>} />
 
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>

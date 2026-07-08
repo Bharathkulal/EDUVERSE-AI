@@ -61,25 +61,51 @@ Present your answers using rich formatting, bullet points, and clear code blocks
 
     const finalPrompt = `${systemInstruction}\n\nUser Question: ${message}`;
 
-    let apiCallResult = null;
+    // --- 1. Search in Question Bank (Admin Added Questions) first ---
+    let questionBankAnswer = '';
     try {
-      apiCallResult = await aiGateway.generateResponse(finalPrompt, { enableSearch: category === 'search' });
-    } catch (apiErr) {
-      console.error('All failovers exhausted:', apiErr);
+      const normalizedQuery = message.toLowerCase().trim();
+      const qbResult = await db.query(
+        `SELECT qb.answer, qb.question, s.subject_name 
+         FROM question_bank qb
+         LEFT JOIN subjects s ON qb.subject_id = s.id
+         WHERE LOWER(qb.question) LIKE $1 OR LOWER(qb.answer) LIKE $1
+         LIMIT 1`,
+        [`%${normalizedQuery}%`]
+      );
+
+      if (qbResult.rows.length > 0) {
+        const match = qbResult.rows[0];
+        questionBankAnswer = `[Protocol: Question Bank Match - Subject: ${match.subject_name || 'General'}]\n\nSir, I found an official answer for your inquiry regarding "${match.question}":\n\n${match.answer}`;
+      }
+    } catch (err) {
+      console.error('Error searching question bank in Friday chat:', err);
     }
 
-    if (apiCallResult) {
-      responseText = apiCallResult.text;
+    let apiCallResult = null;
+    if (questionBankAnswer) {
+      responseText = questionBankAnswer;
     } else {
-      // Demo fallback mode
-      responseText = `[F.R.I.D.A.Y. Demo Mode - Please configure GEMINI_API_KEY]
+      // --- 2. Fallback to AI API Providers with automatic failover (OpenAI -> Gemini -> Groq) ---
+      try {
+        apiCallResult = await aiGateway.generateResponse(finalPrompt, { enableSearch: category === 'search' });
+      } catch (apiErr) {
+        console.error('All failovers exhausted in Friday chat:', apiErr);
+      }
 
+      if (apiCallResult) {
+        responseText = apiCallResult.text;
+      } else {
+        // Demo fallback mode
+        responseText = `[F.R.I.D.A.Y. Demo Mode - Please configure GEMINI_API_KEY]
+  
 Regarding your request: "${message}"
-
+  
 Here is my simulated response:
 1. Core explanation: This topic forms an essential part of the curriculum.
 2. Structure & details: To master this, you should focus on the key components.
 3. F.R.I.D.A.Y. Tip: Keep practicing! I will be ready to give you live answers once the API key is active.`;
+      }
     }
 
     // Save to AI chat history

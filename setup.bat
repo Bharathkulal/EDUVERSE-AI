@@ -51,10 +51,10 @@ if %ERRORLEVEL% neq 0 (
 )
 
 if not exist "venv" (
-    echo Creating python virtual environment (venv)...
+    echo Creating python virtual environment venv...
     python -m venv venv
 ) else (
-    echo Python virtual environment (venv) already exists.
+    echo Python virtual environment venv already exists.
 )
 
 echo Activating virtual environment and installing packages...

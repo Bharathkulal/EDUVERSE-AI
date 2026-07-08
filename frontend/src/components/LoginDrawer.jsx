@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginDrawer({ isOpen, onClose, onOpenRegister }) {
@@ -53,39 +54,29 @@ export default function LoginDrawer({ isOpen, onClose, onOpenRegister }) {
     }
   };
 
-  const handleSocialLogin = async (platform) => {
-    setLoading(true);
-    const selectedEmail = platform === 'Google' ? 'student@eduverse.ai' : 'admin@eduverse.ai';
-    const selectedPassword = platform === 'Google' ? 'student123' : 'admin123';
-    
-    toast.loading(`Signing in with ${platform}...`, { id: 'drawer-social' });
-    try {
-      const data = await login(selectedEmail, selectedPassword);
-      toast.success(`Welcome back! Authenticated via ${platform}`, { id: 'drawer-social' });
-      onClose();
-      navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Social authentication failed', { id: 'drawer-social' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[999] flex justify-end">
-      {/* Dark Blur Backdrop Overlay */}
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
-        onClick={onClose}
-      />
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[999] flex justify-end">
+          {/* Dark Blur Backdrop Overlay */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
 
-      {/* Login Drawer Container */}
-      <div 
-        ref={drawerRef}
-        className="relative w-full max-w-[420px] h-full bg-[#0a0a2e]/95 border-l border-indigo-500/20 backdrop-blur-xl shadow-2xl flex flex-col justify-between p-6 sm:p-8 animate-[drawerSlideIn_0.35s_cubic-bezier(0.16,1,0.3,1)_both]"
-      >
+          {/* Login Drawer Container */}
+          <motion.div 
+            ref={drawerRef}
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 26, stiffness: 220 }}
+            className="relative w-full max-w-[420px] h-full bg-[#0a0a2e]/95 border-l border-indigo-500/20 backdrop-blur-xl shadow-2xl flex flex-col justify-between p-6 sm:p-8"
+          >
         {/* Top Header section */}
         <div>
           <div className="flex justify-between items-center mb-8">
@@ -161,30 +152,6 @@ export default function LoginDrawer({ isOpen, onClose, onOpenRegister }) {
               {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : 'Sign In'}
             </button>
           </form>
-
-          {/* Social login divider */}
-          <div className="flex items-center text-center text-indigo-100/20 text-xs my-6">
-            <span className="flex-1 border-b border-indigo-500/10"></span>
-            <span className="px-3">or continue with</span>
-            <span className="flex-1 border-b border-indigo-500/10"></span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button 
-              type="button" 
-              className="flex items-center justify-center gap-2 py-2 border border-indigo-500/10 bg-indigo-500/5 hover:bg-indigo-500/10 rounded-xl text-white text-xs font-semibold transition"
-              onClick={() => handleSocialLogin('Google')}
-            >
-              Google
-            </button>
-            <button 
-              type="button" 
-              className="flex items-center justify-center gap-2 py-2 border border-indigo-500/10 bg-indigo-500/5 hover:bg-indigo-500/10 rounded-xl text-white text-xs font-semibold transition"
-              onClick={() => handleSocialLogin('GitHub')}
-            >
-              GitHub
-            </button>
-          </div>
         </div>
 
         {/* Bottom footer section */}
@@ -208,7 +175,9 @@ export default function LoginDrawer({ isOpen, onClose, onOpenRegister }) {
             </button>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
+  )}
+</AnimatePresence>
   );
 }

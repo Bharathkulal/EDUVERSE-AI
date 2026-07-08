@@ -284,11 +284,18 @@ router.post('/test', authenticate, authorizeAdmin, async (req, res) => {
       const response = await axios.post(
         'https://openrouter.ai/api/v1/chat/completions',
         {
-          model: 'google/gemini-2.5-flash',
+          model: 'google/gemini-2.5-flash:free',
           messages: [{ role: 'user', content: prompt }],
           max_tokens: 20
         },
-        { headers: { Authorization: `Bearer ${keyToUse}`, 'Content-Type': 'application/json' } }
+        { 
+          headers: { 
+            Authorization: `Bearer ${keyToUse}`, 
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://eduverse.ai',
+            'X-Title': 'EduVerse AI'
+          } 
+        }
       );
       responseSnippet = response.data?.choices?.[0]?.message?.content || JSON.stringify(response.data);
       success = true;

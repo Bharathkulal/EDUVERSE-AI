@@ -154,4 +154,45 @@ router.post('/stop', authenticate, authorizeAdmin, async (req, res) => {
   }
 });
 
+// 6. GET /api/ml/export/:version - Export a trained model metadata
+router.get('/export/:version', authenticate, authorizeAdmin, async (req, res) => {
+  try {
+    const { version } = req.params;
+    const model = await db.query('SELECT * FROM ml_training_jobs WHERE model_version = $1', [version]);
+    if (model.rows.length === 0) {
+      return res.status(404).json({ message: 'Model version not found' });
+    }
+    
+    // Simulate model export by returning JSON manifest
+    res.setHeader('Content-disposition', `attachment; filename=model-${version}.json`);
+    res.setHeader('Content-type', 'application/json');
+    res.write(JSON.stringify(model.rows[0], null, 2));
+    res.end();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error exporting model version' });
+  }
+});
+
+// 7. POST /api/ml/import - Import a trained model version
+router.post('/import', authenticate, authorizeAdmin, async (req, res) => {
+  try {
+    const { model_version, accuracy, loss, dataset_size } = req.body;
+    if (!model_version || !accuracy) {
+      return res.status(400).json({ message: 'Missing model metadata' });
+    }
+
+    const newJob = await db.query(
+      `INSERT INTO ml_training_jobs (model_version, status, dataset_size, accuracy, loss, epochs) 
+       VALUES ($1, 'Completed', $2, $3, $4, 100) RETURNING *`,
+      [model_version, parseInt(dataset_size || 1000), parseFloat(accuracy), parseFloat(loss || 0.05)]
+    );
+
+    res.status(201).json({ message: 'Model version imported successfully', job: newJob.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error importing model version' });
+  }
+});
+
 module.exports = router;

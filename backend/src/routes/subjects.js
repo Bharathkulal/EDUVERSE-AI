@@ -14,7 +14,18 @@ router.get('/', authenticate, async (req, res) => {
         (SELECT COUNT(*) FROM units u WHERE u.subject_id = s.id) as unit_count
        FROM subjects s ORDER BY s.subject_name`
     );
-    res.json(result.rows);
+    
+    // Deduplicate subjects by name, keeping the one with most topics
+    const uniqueSubjectsMap = {};
+    result.rows.forEach(s => {
+      const existing = uniqueSubjectsMap[s.subject_name];
+      const count = parseInt(s.topic_count) || 0;
+      const existingCount = existing ? (parseInt(existing.topic_count) || 0) : -1;
+      if (count > existingCount) {
+        uniqueSubjectsMap[s.subject_name] = s;
+      }
+    });
+    res.json(Object.values(uniqueSubjectsMap));
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

@@ -2,10 +2,18 @@ import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { 
   Search, RefreshCw, Plus, Edit, Trash2, CheckCircle, XCircle, FileText, 
-  Video, FileUp, Sparkles, BookOpen, Layers, Check, Clock, Eye
+  Video, FileUp, Sparkles, BookOpen, Layers, Check, Clock, Eye, Library
 } from 'lucide-react';
 import api from '../../api/axios';
+import AdminTabBar from '../../components/AdminTabBar';
+import AdminPageLayout from '../../components/AdminPageLayout';
 import './AdminApiSettings.css';
+
+const CONTENT_TABS = [
+  { id: 'catalog', label: 'Courses', icon: '📚' },
+  { id: 'topics', label: 'Modules', icon: '📦' },
+  { id: 'approvals', label: 'Videos & Notes', icon: '🎬' },
+];
 
 export default function AdminContent() {
   const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' | 'topics' | 'approvals'
@@ -144,41 +152,38 @@ export default function AdminContent() {
     { id: 'approvals', label: 'Approvals Queue', icon: <CheckCircle className="w-4 h-4" /> }
   ];
 
-  return (
-    <div className="friday-admin-container relative space-y-6">
-      <div className="friday-grid-overlay" />
-      <div className="friday-hud-scanline" />
+  const contentKpis = [
+    { label: 'Subjects Registered', value: data.subjects?.length || 0, icon: <BookOpen className="w-4 h-4" />, color: 'text-blue-500' },
+    { label: 'Active Modules', value: data.topics?.length || 0, icon: <Layers className="w-4 h-4" />, color: 'text-violet-500' },
+    { label: 'Notes Pending', value: data.notes?.filter(n => !n.approved).length || 0, icon: <FileText className="w-4 h-4" />, color: 'text-amber-500' },
+    { label: 'Video Catalog Size', value: '45 videos', icon: <Video className="w-4 h-4" />, color: 'text-emerald-500' },
+  ];
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="friday-hud-logo text-2xl font-black text-white flex items-center gap-2 tracking-wider">
-            📝 CONTENT CATALOG MANAGER
-          </h1>
-          <p className="text-slate-400 text-[10px] uppercase tracking-widest mt-0.5 font-mono">Create subjects, compile lessons, and manage validation workflows</p>
-        </div>
-        <button onClick={fetchContent} className="px-3.5 py-1.5 bg-slate-900 border border-white/5 text-xs text-cyan-300 rounded-lg hover:border-cyan-500/30 transition flex items-center gap-2">
-          <RefreshCw className="w-3.5 h-3.5" /> Synchronize Catalog
+  const contentInsights = [
+    'AI generator completed notes synthesis for "Calculus Integrations". Schema checks completed successfully.',
+    'Approvals backlog is currently clean. All uploaded draft documents are reviewed.'
+  ];
+
+  const contentActivities = [
+    { time: '14:15', title: 'New Unit Registered', desc: 'Linear Algebra Unit 3 published.' },
+    { time: '09:00', title: 'AI Generator Completed', desc: 'Synthesized 5 review questions.' }
+  ];
+
+  return (
+    <AdminPageLayout
+      title="📚 Content Studio"
+      breadcrumbs={['Content']}
+      kpis={contentKpis}
+      aiInsights={contentInsights}
+      activities={contentActivities}
+    >
+      <div className="flex justify-end gap-2">
+        <button onClick={fetchContent} className="px-3.5 py-1.5 border text-xs font-bold rounded-lg transition flex items-center gap-2 cursor-pointer" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}>
+          <RefreshCw className="w-3.5 h-3.5" /> Reload
         </button>
       </div>
 
-      {/* Tab Switcher */}
-      <div className="flex border-b border-white/5 gap-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
-              activeTab === tab.id 
-                ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5' 
-                : 'border-transparent text-slate-400 hover:text-white'
-            }`}
-          >
-            {tab.icon}
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <AdminTabBar tabs={CONTENT_TABS} activeTab={activeTab} onTabChange={setActiveTab} />
 
       {loading ? (
         <div className="flex items-center justify-center min-h-[300px]">
@@ -402,6 +407,6 @@ export default function AdminContent() {
         </div>
       )}
 
-    </div>
+    </AdminPageLayout>
   );
 }

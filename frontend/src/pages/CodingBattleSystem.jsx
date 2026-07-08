@@ -300,13 +300,64 @@ export default function CodingBattleSystem({ onExit }) {
             </div>
           </div>
 
-          <div className="matchmaking-launchpad">
-            <h2 className="match-prompt">Ready to Duel?</h2>
-            <p className="match-desc">Match against online players or advanced AI bots scaled to your current ELO level.</p>
-            <button onClick={() => setBattleState('matchmaking')} className="match-btn">
-              <Zap className="mr-2" size={18} />
-              Find Match
-            </button>
+          {/* Operations & Launch Grid */}
+          <div className="lobby-operations-grid">
+            {/* Left: Operations Configuration */}
+            <div className="stat-card operations-config">
+              <div className="stat-header">
+                <Sparkles className="text-purple-400" size={20} />
+                <span className="stat-label">Match Configuration</span>
+              </div>
+              
+              <div className="space-y-4 mt-2">
+                <div>
+                  <label className="text-[10px] text-slate-400 uppercase tracking-wider block mb-1 font-bold">Select Game Mode</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button className="op-tab active">Ranked 1v1</button>
+                    <button className="op-tab">AI Practice</button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-slate-400 uppercase tracking-wider block mb-1 font-bold">Difficulty Scaling</label>
+                  <div className="grid grid-cols-3 gap-1">
+                    <button className="op-difficulty active">Dynamic</button>
+                    <button className="op-difficulty">Apprentice</button>
+                    <button className="op-difficulty">Grandmaster</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Middle: Launchpad */}
+            <div className="matchmaking-launchpad">
+              <h2 className="match-prompt">Ready to Duel?</h2>
+              <p className="match-desc">Match against online players or advanced AI bots scaled to your ELO.</p>
+              <button onClick={() => setBattleState('matchmaking')} className="match-btn">
+                <Zap className="mr-2" size={18} />
+                Find Match
+              </button>
+            </div>
+
+            {/* Right: Operations & Recent Logs */}
+            <div className="stat-card operations-log">
+              <div className="stat-header">
+                <Code2 className="text-blue-400" size={20} />
+                <span className="stat-label">Recent Duel Logs</span>
+              </div>
+              <div className="mt-2 space-y-2 max-h-[140px] overflow-y-auto scrollbar-thin">
+                <div className="flex justify-between items-center text-xs p-2 rounded bg-slate-800/40 border border-slate-700/50">
+                  <span className="text-emerald-400 font-semibold">Victory</span>
+                  <span className="text-slate-300">vs NullPointer_Ninja</span>
+                  <span className="text-slate-400">+25 ELO</span>
+                </div>
+                <div className="flex justify-between items-center text-xs p-2 rounded bg-slate-800/40 border border-slate-700/50">
+                  <span className="text-rose-400 font-semibold">Defeat</span>
+                  <span className="text-slate-300">vs Java_Jedi</span>
+                  <span className="text-slate-400">-15 ELO</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

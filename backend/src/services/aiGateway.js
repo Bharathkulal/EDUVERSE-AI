@@ -5,35 +5,27 @@ const { decrypt } = require('../utils/crypto');
 
 // Helper to decrypt keys securely
 const getProviderConfig = async (providerName) => {
+  const envMap = {
+    gemini: 'GEMINI_API_KEY',
+    openrouter: 'OPENROUTER_API_KEY',
+    groq: 'GROQ_API_KEY',
+    together: 'TOGETHER_API_KEY',
+    deepgram: 'DEEPGRAM_API_KEY',
+    elevenlabs: 'ELEVENLABS_API_KEY',
+    assemblyai: 'ASSEMBLYAI_API_KEY',
+    azure_speech: 'AZURE_SPEECH_KEY',
+    openai: 'OPENAI_API_KEY',
+    anthropic: 'ANTHROPIC_API_KEY'
+  };
+  const envVar = envMap[providerName];
+  const key = envVar ? process.env[envVar] || '' : '';
+
   const result = await db.query(
-    'SELECT api_key, model_name, priority, disabled, status FROM api_configurations WHERE provider = $1',
+    'SELECT model_name, priority, disabled FROM api_configurations WHERE provider = $1',
     [providerName]
   );
   if (result.rows.length > 0) {
     const row = result.rows[0];
-    let key = '';
-    if (row.api_key) {
-      try {
-        key = decrypt(row.api_key);
-      } catch (err) {
-        console.error(`Failed to decrypt key for ${providerName}:`, err.message);
-      }
-    }
-    // Env fallback if empty in DB
-    if (!key) {
-      const envMap = {
-        gemini: 'GEMINI_API_KEY',
-        openrouter: 'OPENROUTER_API_KEY',
-        groq: 'GROQ_API_KEY',
-        together: 'TOGETHER_API_KEY',
-        deepgram: 'DEEPGRAM_API_KEY',
-        elevenlabs: 'ELEVENLABS_API_KEY',
-        assemblyai: 'ASSEMBLYAI_API_KEY',
-        azure_speech: 'AZURE_SPEECH_KEY',
-      };
-      const envVar = envMap[providerName];
-      key = envVar ? process.env[envVar] || '' : '';
-    }
     return {
       provider: providerName,
       key,
@@ -42,7 +34,13 @@ const getProviderConfig = async (providerName) => {
       priority: row.priority
     };
   }
-  return null;
+  return {
+    provider: providerName,
+    key,
+    modelName: '',
+    disabled: false,
+    priority: 1
+  };
 };
 
 // Fetch active providers ordered by priority
@@ -52,9 +50,9 @@ const getActiveProviders = async (type = 'llm') => {
      WHERE disabled = false AND (cooldown_until IS NULL OR cooldown_until < NOW())
      ORDER BY priority ASC`
   );
-  
+
   const providers = [];
-  const llmTypes = ['gemini', 'openrouter', 'groq', 'together', 'custom'];
+  const llmTypes = ['gemini', 'openrouter', 'groq', 'together', 'custom', 'openai', 'anthropic'];
   const speechTypes = ['deepgram', 'assemblyai', 'elevenlabs', 'azure_speech'];
 
   for (const row of result.rows) {
@@ -76,9 +74,19 @@ const getActiveProviders = async (type = 'llm') => {
   return providers;
 };
 
-// Core response generator with automatic failover
 const generateResponse = async (prompt, options = {}) => {
-  const providers = await getActiveProviders('llm');
+  let providers = await getActiveProviders('llm');
+  if (options.provider) {
+    const matched = providers.filter(p => p.provider === options.provider);
+    if (matched.length > 0) {
+      providers = matched;
+    } else {
+      const directConfig = await getProviderConfig(options.provider);
+      if (directConfig && directConfig.key) {
+        providers = [directConfig];
+      }
+    }
+  }
   if (providers.length === 0) {
     throw new Error('No active AI providers configured.');
   }
@@ -109,10 +117,19 @@ const generateResponse = async (prompt, options = {}) => {
           const res = await axios.post(
             'https://openrouter.ai/api/v1/chat/completions',
             {
-              model: item.modelName || 'google/gemini-2.5-flash',
+              model: item.modelName && !item.modelName.includes('free') ? item.modelName : 'google/gemini-2.5-flash',
               messages: [{ role: 'user', content: finalPrompt }],
+              max_tokens: 1500
             },
-            { headers: { Authorization: `Bearer ${item.key}`, 'Content-Type': 'application/json' }, timeout: 15000 }
+            {
+              headers: {
+                Authorization: `Bearer ${item.key}`,
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://eduverse.ai',
+                'X-Title': 'EduVerse AI'
+              },
+              timeout: 15000
+            }
           );
           text = res.data?.choices?.[0]?.message?.content;
           if (!text) throw new Error('Empty response from OpenRouter');
@@ -120,7 +137,7 @@ const generateResponse = async (prompt, options = {}) => {
           const res = await axios.post(
             'https://api.groq.com/openai/v1/chat/completions',
             {
-              model: item.modelName || 'llama3-8b-8192',
+              model: item.modelName && item.modelName !== 'llama3-8b-8192' ? item.modelName : 'llama-3.1-8b-instant',
               messages: [{ role: 'user', content: finalPrompt }],
             },
             { headers: { Authorization: `Bearer ${item.key}`, 'Content-Type': 'application/json' }, timeout: 15000 }
@@ -138,6 +155,36 @@ const generateResponse = async (prompt, options = {}) => {
           );
           text = res.data?.choices?.[0]?.message?.content;
           if (!text) throw new Error('Empty response from Together AI');
+        } else if (item.provider === 'openai') {
+          const res = await axios.post(
+            'https://api.openai.com/v1/chat/completions',
+            {
+              model: item.modelName || 'gpt-4o-mini',
+              messages: [{ role: 'user', content: finalPrompt }],
+            },
+            { headers: { Authorization: `Bearer ${item.key}`, 'Content-Type': 'application/json' }, timeout: 15000 }
+          );
+          text = res.data?.choices?.[0]?.message?.content;
+          if (!text) throw new Error('Empty response from OpenAI');
+        } else if (item.provider === 'anthropic') {
+          const res = await axios.post(
+            'https://api.anthropic.com/v1/messages',
+            {
+              model: item.modelName || 'claude-3-5-sonnet-20241022',
+              max_tokens: 1500,
+              messages: [{ role: 'user', content: finalPrompt }],
+            },
+            {
+              headers: {
+                'x-api-key': item.key,
+                'anthropic-version': '2023-06-01',
+                'Content-Type': 'application/json'
+              },
+              timeout: 15000
+            }
+          );
+          text = res.data?.content?.[0]?.text;
+          if (!text) throw new Error('Empty response from Anthropic');
         } else if (item.provider === 'custom') {
           // Fallback / mock/ custom endpoint
           text = `[Custom Provider Response] ${prompt}`;
@@ -146,7 +193,7 @@ const generateResponse = async (prompt, options = {}) => {
         }
 
         success = true;
-        break; 
+        break;
       } catch (err) {
         attemptError = err;
         if (attempt < maxRetries) {

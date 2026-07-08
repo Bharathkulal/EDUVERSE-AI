@@ -17,21 +17,14 @@ const generateContentWithFailover = async (prompt, enableSearch = false) => {
   
   // Decrypt saved DB keys
   for (const row of result.rows) {
-    let key = '';
-    if (row.api_key) {
-      key = decrypt(row.api_key);
-    }
-    // Fallback to env key if not configured in DB
-    if (!key) {
-      const envMap = {
-        gemini: 'GEMINI_API_KEY',
-        openrouter: 'OPENROUTER_API_KEY',
-        groq: 'GROQ_API_KEY',
-        together: 'TOGETHER_API_KEY',
-      };
-      const envVar = envMap[row.provider];
-      key = envVar ? process.env[envVar] || '' : '';
-    }
+    const envMap = {
+      gemini: 'GEMINI_API_KEY',
+      openrouter: 'OPENROUTER_API_KEY',
+      groq: 'GROQ_API_KEY',
+      together: 'TOGETHER_API_KEY',
+    };
+    const envVar = envMap[row.provider];
+    const key = envVar ? process.env[envVar] || '' : '';
     
     if (key) {
       providers.push({ provider: row.provider, key });
@@ -69,10 +62,17 @@ const generateContentWithFailover = async (prompt, enableSearch = false) => {
           const res = await axios.post(
             'https://openrouter.ai/api/v1/chat/completions',
             {
-              model: 'google/gemini-2.5-flash',
+              model: 'google/gemini-2.5-flash:free',
               messages: [{ role: 'user', content: prompt }],
             },
-            { headers: { Authorization: `Bearer ${item.key}`, 'Content-Type': 'application/json' } }
+            { 
+              headers: { 
+                Authorization: `Bearer ${item.key}`, 
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://eduverse.ai',
+                'X-Title': 'EduVerse AI'
+              } 
+            }
           );
           text = res.data?.choices?.[0]?.message?.content;
           if (!text) throw new Error('Empty response from OpenRouter');

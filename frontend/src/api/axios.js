@@ -53,8 +53,8 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+      if (window.location.pathname !== '/' || !window.location.search.includes('login=true')) {
+        window.location.href = '/?login=true';
       }
     }
     return Promise.reject(err);

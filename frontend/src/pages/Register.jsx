@@ -50,31 +50,6 @@ export default function Register() {
     }
   };
 
-  const handleSocialSignup = async (platform) => {
-    setLoading(true);
-    const mockEmail = `social.${platform.toLowerCase()}@eduverse.ai`;
-    const mockName = `Demo ${platform} User`;
-    const mockPass = 'demouser123';
-    
-    toast.loading(`Creating account with ${platform}...`, { id: 'social-reg' });
-    try {
-      const data = await register({ name: mockName, email: mockEmail, password: mockPass, role: 'student' });
-      toast.success(`Account created! Welcomed via ${platform}`, { id: 'social-reg' });
-      navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
-    } catch (err) {
-      // If user already exists, log them in automatically
-      try {
-        const data = await login(mockEmail, mockPass);
-        toast.success(`Welcome back! Authenticated via ${platform}`, { id: 'social-reg' });
-        navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
-      } catch (authErr) {
-        toast.error(err.response?.data?.message || 'Social Registration failed', { id: 'social-reg' });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="auth-page-wrapper">
       <div className="auth-orb-1"></div>
@@ -249,22 +224,8 @@ export default function Register() {
           )}
         </form>
 
-        {step < 3 && (
-          <>
-            <div className="auth-divider">or signup with</div>
-            <div className="grid grid-cols-2 gap-3">
-              <button type="button" className="auth-social-btn" onClick={() => handleSocialSignup('Google')}>
-                Google
-              </button>
-              <button type="button" className="auth-social-btn" onClick={() => handleSocialSignup('GitHub')}>
-                GitHub
-              </button>
-            </div>
-          </>
-        )}
-
         <p className="text-center text-sm text-emerald-100/50 mt-6">
-          Already have an account? <Link to="/login" className="text-emerald-400 font-semibold hover:text-emerald-300 hover:underline transition">Sign In</Link>
+          Already have an account? <Link to="/?login=true" className="text-emerald-400 font-semibold hover:text-emerald-300 hover:underline transition">Sign In</Link>
         </p>
 
         <p className="text-center text-[10px] text-emerald-100/30 uppercase tracking-widest mt-6">

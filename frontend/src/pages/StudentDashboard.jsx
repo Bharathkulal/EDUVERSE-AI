@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import heroCharacter from '../assets/hero_character.png';
+import { FileText, FileSpreadsheet, Presentation, Plus, Upload, FolderOpen, ArrowRight } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 // ── Animated Counter Hook ──────────────────────────────
 function CountUp({ end, duration = 800 }) {
@@ -36,7 +38,7 @@ function CircularProgress({ percentage, size = 70, strokeWidth = 6, color = '#a7
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+    <div className="relative flex items-center justify-center flex-shrink-0" style={{ width: size, height: size }}>
       <svg className="transform -rotate-90" width={size} height={size}>
         <circle
           cx={size / 2}
@@ -61,8 +63,8 @@ function CircularProgress({ percentage, size = 70, strokeWidth = 6, color = '#a7
         />
       </svg>
       <div className="absolute text-center flex flex-col justify-center items-center">
-        <span className="text-base font-black" style={{ color: '#FFFFFF' }}>{percentage}%</span>
-        <span className="text-[7px] uppercase tracking-wider font-bold leading-none" style={{ color: 'rgba(255,255,255,0.7)' }}>Overall</span>
+        <span className="text-base font-black text-white">{percentage}%</span>
+        <span className="text-[7px] uppercase tracking-wider font-bold leading-none text-white/70">Overall</span>
       </div>
     </div>
   );
@@ -73,27 +75,183 @@ export default function StudentDashboard() {
   const { user } = useAuth();
   const [dbData, setDbData] = useState(null);
   const [analytics, setAnalytics] = useState(null);
+  const [goals, setGoals] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [heatmapData, setHeatmapData] = useState([]);
+  const [itDocs, setItDocs] = useState([]);
+
+  const wordUploadRef = useRef(null);
+  const excelUploadRef = useRef(null);
+  const slidesUploadRef = useRef(null);
+  
+  // Local state for goals management
+  const [newGoalTitle, setNewGoalTitle] = useState('');
+  const [newGoalPriority, setNewGoalPriority] = useState('medium');
+  const [addingGoal, setAddingGoal] = useState(false);
+  const [generatingGoals, setGeneratingGoals] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Fetch real database progress and analytics
-  useEffect(() => {
+  const fetchAllData = () => {
     Promise.all([
       api.get('/progress/dashboard'),
-      api.get('/progress/analytics')
+      api.get('/progress/analytics'),
+      api.get('/progress/goals'),
+      api.get('/progress/leaderboard'),
+      api.get('/progress/heatmap'),
+      api.get('/it-suite/files')
     ])
-      .then(([dashRes, analyticsRes]) => {
+      .then(([dashRes, analyticsRes, goalsRes, leaderboardRes, heatmapRes, itRes]) => {
         setDbData(dashRes.data);
         setAnalytics(analyticsRes.data);
+        setGoals(goalsRes.data);
+        setLeaderboard(leaderboardRes.data.leaderboard || []);
+        setHeatmapData(heatmapRes.data.heatmapData || []);
+        setItDocs(itRes.data.documents || []);
       })
       .catch((err) => {
         console.error('Error fetching dashboard data:', err);
         setError('Failed to load dashboard data');
       })
       .finally(() => setLoading(false));
+  };
+
+  const handleLaunchApp = async (type) => {
+    const typedDocs = itDocs.filter(d => d.type === type && !d.is_in_recycle_bin);
+    if (typedDocs.length > 0) {
+      navigate(`/it-suite/${type}/${typedDocs[0].id}`);
+    } else {
+      await handleNewDocument(type);
+    }
+  };
+
+  const handleNewDocument = async (type) => {
+    try {
+      const res = await api.post('/it-suite/documents', {
+        name: `Untitled ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+        type
+      });
+      toast.success(`Created new ${type.toUpperCase()} document`);
+      navigate(`/it-suite/${type}/${res.data.id}`);
+    } catch (err) {
+      toast.error('Failed to create new document');
+    }
+  };
+
+  const handleUploadDocument = async (type, event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      let content = e.target.result;
+      const name = file.name;
+      
+      if (type === 'excel' && file.name.endsWith('.csv')) {
+        const rows = content.split('\n');
+        const sheetData = {};
+        rows.forEach((row, rIdx) => {
+          const cols = row.split(',');
+          cols.forEach((colVal, cIdx) => {
+            const cellRef = `${String.fromCharCode(65 + cIdx)}${rIdx + 1}`;
+            sheetData[cellRef] = { value: colVal.trim() };
+          });
+        });
+        content = JSON.stringify({
+          activeSheet: 'Sheet1',
+          sheets: {
+            'Sheet1': {
+              data: sheetData,
+              cols: {},
+              rows: {},
+              frozenRows: 0,
+              frozenCols: 0
+            }
+          }
+        });
+      }
+      
+      try {
+        const res = await api.post('/it-suite/documents', {
+          name: name.substring(0, name.lastIndexOf('.')) || name,
+          type,
+          content
+        });
+        toast.success(`Uploaded ${name} successfully!`);
+        const itRes = await api.get('/it-suite/files');
+        setItDocs(itRes.data.documents || []);
+        navigate(`/it-suite/${type}/${res.data.id}`);
+      } catch (err) {
+        toast.error('Failed to upload document');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  useEffect(() => {
+    fetchAllData();
   }, []);
 
-  // All values derived from real API data
+  // Handle Goal CRUD
+  const handleAddGoal = async (e) => {
+    e.preventDefault();
+    if (!newGoalTitle.trim() || addingGoal) return;
+    setAddingGoal(true);
+    try {
+      const res = await api.post('/progress/goals', {
+        title: newGoalTitle,
+        priority: newGoalPriority,
+        xp_reward: newGoalPriority === 'high' ? 40 : newGoalPriority === 'medium' ? 20 : 10
+      });
+      setGoals([res.data, ...goals]);
+      setNewGoalTitle('');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAddingGoal(false);
+    }
+  };
+
+  const handleToggleGoal = async (id, currentCompleted) => {
+    try {
+      const res = await api.put(`/progress/goals/${id}`, {
+        completed: !currentCompleted
+      });
+      // Update goals list state
+      setGoals(goals.map(g => g.id === id ? res.data : g));
+      // Refresh user stats (XP, level) in background
+      const dashRes = await api.get('/progress/dashboard');
+      setDbData(dashRes.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteGoal = async (id) => {
+    try {
+      await api.delete(`/progress/goals/${id}`);
+      setGoals(goals.filter(g => g.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleGenerateAiGoals = async () => {
+    if (generatingGoals) return;
+    setGeneratingGoals(true);
+    try {
+      const res = await api.post('/progress/goals/ai-generate');
+      setGoals([...res.data.goals, ...goals]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setGeneratingGoals(false);
+    }
+  };
+
+  // Values derived from database APIs
   const totalXP = dbData?.profile?.xp || 0;
   const userStreak = dbData?.profile?.streak || 0;
   const userCoins = Math.round(totalXP * 0.1);
@@ -117,9 +275,27 @@ export default function StudentDashboard() {
   const strengths = analytics?.strengths || 'None yet';
   const studyTimeChart = analytics?.studyTimeStats || { labels: [], data: [] };
   const roadmap = analytics?.roadmap || [];
-
-  // Recent activity from XP history or roadmap — derived from real data
   const recentQuizzes = dbData?.recentQuizzes || [];
+
+  // Heatmap generation for last 60 days
+  const recentHeatmapDays = (() => {
+    const days = [];
+    const today = new Date();
+    for (let i = 59; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const activity = heatmapData.find(h => {
+        const itemDate = new Date(h.date).toISOString().split('T')[0];
+        return itemDate === dateStr;
+      });
+      days.push({
+        date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        count: activity ? activity.count : 0
+      });
+    }
+    return days;
+  })();
 
   // Greeting by hour
   const greeting = (() => {
@@ -129,33 +305,6 @@ export default function StudentDashboard() {
     return 'Good Evening';
   })();
 
-  // Dynamic daily missions based on real activity
-  const missions = [
-    { id: 1, label: 'Solve a coding problem', xp: 50, done: (analytics?.codingStats?.total || 0) > 0 },
-    { id: 2, label: 'Complete a theory topic', xp: 30, done: completedLessons > 0 },
-    { id: 3, label: 'Take a quiz', xp: 20, done: (analytics?.quizStats?.attempts || 0) > 0 }
-  ];
-  const completedMissionsCount = missions.filter(m => m.done).length;
-
-  // Continue Learning Path from real roadmap data
-  const continuePathSteps = (() => {
-    if (!roadmap || roadmap.length === 0) return [];
-    // Group by subject, pick last completed + in-progress + next 2 locked per subject
-    const uniqueSubjects = [...new Set(roadmap.map(r => r.subject))];
-    const steps = [];
-    for (const sub of uniqueSubjects) {
-      const subNodes = roadmap.filter(r => r.subject === sub);
-      for (const node of subNodes) {
-        steps.push(node);
-      }
-    }
-    // Show the most relevant 5 nodes centered around in-progress
-    const inProgressIdx = steps.findIndex(s => s.status === 'In Progress');
-    if (inProgressIdx === -1) return steps.slice(0, 5);
-    const start = Math.max(0, inProgressIdx - 2);
-    return steps.slice(start, start + 5);
-  })();
-
   // Recent Activity from real quiz data
   const recentActivity = recentQuizzes.map((q) => ({
     label: `Scored ${q.score}% on ${q.title || 'Quiz'}`,
@@ -163,6 +312,23 @@ export default function StudentDashboard() {
     time: new Date(q.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     icon: '📝'
   }));
+
+  // Continue Learning Path from real roadmap data
+  const continuePathSteps = (() => {
+    if (!roadmap || roadmap.length === 0) return [];
+    const steps = [];
+    const uniqueSubjects = [...new Set(roadmap.map(r => r.subject))];
+    for (const sub of uniqueSubjects) {
+      const subNodes = roadmap.filter(r => r.subject === sub);
+      for (const node of subNodes) {
+        steps.push(node);
+      }
+    }
+    const inProgressIdx = steps.findIndex(s => s.status === 'In Progress');
+    if (inProgressIdx === -1) return steps.slice(0, 5);
+    const start = Math.max(0, inProgressIdx - 2);
+    return steps.slice(start, start + 5);
+  })();
 
   if (loading) {
     return (
@@ -188,84 +354,83 @@ export default function StudentDashboard() {
     );
   }
 
+  const isDataAvailable = totalXP > 0 || completedTopicsCount > 0 || recentQuizzes.length > 0;
+
   return (
-    <div className="space-y-6 pb-12 pr-2">
+    <div className="space-y-6 pb-12 pr-2 text-left">
       
       {/* ── HERO OVERVIEW SECTION ── */}
-      <div className="relative overflow-hidden rounded-3xl border border-violet-950/60 bg-gradient-to-r from-[#0b071a] via-[#120c2b] to-[#060412]">
-        {/* Glow Effects */}
+      <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-[#161720]">
         <div className="absolute top-0 right-0 w-72 h-72 bg-violet-600/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="relative z-10 grid lg:grid-cols-12 gap-6 items-center p-6 md:p-8">
-          {/* Hero text & action */}
-          <div className="lg:col-span-6 space-y-5 text-left">
+          <div className="lg:col-span-6 space-y-5">
             <div>
-              <h1 className="text-3xl font-extrabold flex items-center gap-2" style={{ color: '#FFFFFF' }}>
+              <h1 className="text-3xl font-extrabold flex items-center gap-2 text-white">
                 {greeting}, {user?.name?.split(' ')[0] || 'Student'}! 👋
               </h1>
-              <p className="text-sm mt-1" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Keep learning, keep growing. You're doing great! 🚀</p>
+              <p className="text-sm mt-1 text-slate-400">Welcome to your AI Learning Command Center. Here is your dashboard overview.</p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
-              <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider" style={{ color: '#a78bfa' }}>
-                <span className="w-2 h-2 rounded-full bg-violet-400 animate-ping"></span>
-                Continue Learning
-              </div>
-              <div>
-                <h3 className="text-lg font-bold" style={{ color: '#FFFFFF' }}>{currentTopicName}</h3>
-                <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.65)' }}>{currentSubject}</p>
-              </div>
-              <div className="space-y-1">
-                <div className="flex justify-between text-[10px] font-bold" style={{ color: 'rgba(255, 255, 255, 0.65)' }}>
-                  <span>Progress</span>
-                  <span>{overallProgress}% Complete ({completedTopicsCount}/{totalTopicsCount} topics)</span>
+            {completedTopicsCount > 0 ? (
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-3">
+                <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-violet-400">
+                  <span className="w-2 h-2 rounded-full bg-violet-400 animate-ping"></span>
+                  Continue Learning
                 </div>
-                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-violet-500 rounded-full transition-all duration-700" style={{ width: `${overallProgress}%` }} />
+                <div>
+                  <h3 className="text-lg font-bold text-white">{currentTopicName}</h3>
+                  <p className="text-xs text-slate-400">{currentSubject}</p>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                    <span>Progress</span>
+                    <span>{overallProgress}% Complete ({completedTopicsCount}/{totalTopicsCount} topics)</span>
+                  </div>
+                  <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-violet-500 rounded-full transition-all duration-700" style={{ width: `${overallProgress}%` }} />
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2">
+                <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-violet-400">
+                  <span>⚡ Get Started</span>
+                </div>
+                <p className="text-sm text-slate-400">Start exploring your learning modules to begin tracking your progress!</p>
+              </div>
+            )}
 
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => navigate('/subjects')} 
-                className="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-violet-600/20 cursor-pointer"
-                style={{ color: '#FFFFFF' }}
+                className="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-violet-600/20 cursor-pointer text-white"
               >
                 <span>▶ Resume Learning</span>
-              </button>
-              <button 
-                className="p-2.5 rounded-xl border border-white/10 hover:border-white/20 transition-all bg-white/5 cursor-pointer"
-                style={{ color: '#FFFFFF' }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                </svg>
               </button>
             </div>
           </div>
 
-          {/* Hero 3D character illustration */}
-          <div className="lg:col-span-3 flex justify-center">
+          <div className="lg:col-span-3 flex justify-center items-end self-stretch pt-4 lg:pt-0">
             <img 
               src={heroCharacter} 
               alt="Student developer illustration" 
-              className="max-h-[176px] object-contain drop-shadow-[0_10px_20px_rgba(139,92,246,0.3)]"
+              className="max-h-[240px] md:max-h-[260px] object-contain drop-shadow-[0_10px_25px_rgba(139,92,246,0.25)] transition-all duration-300 hover:scale-105"
             />
           </div>
 
-          {/* Hero overall progress gauge with REAL weekly study chart */}
-          <div className="lg:col-span-3 p-5 rounded-2xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-md flex flex-col justify-between h-full space-y-4">
+          {/* Hero overall progress gauge */}
+          <div className="lg:col-span-3 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between h-full space-y-4">
             <div className="flex justify-between items-start">
               <div>
-                <h4 className="text-xs font-bold" style={{ color: '#FFFFFF' }}>Your Progress</h4>
-                <p className="text-[10px]" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>This Week</p>
+                <h4 className="text-xs font-bold text-white">Your Progress</h4>
+                <p className="text-[10px] text-slate-400">Overall Course</p>
               </div>
               <CircularProgress percentage={overallProgress} size={70} strokeWidth={6} color="#c084fc" />
             </div>
 
-            {/* Real sparkline from study_sessions weekly data */}
+            {/* Sparkline from study weekly data */}
             <div className="space-y-1">
               <div className="h-10 w-full flex items-end justify-between px-1">
                 {(studyTimeChart.data.length > 0 ? studyTimeChart.data : [0,0,0,0,0,0,0]).map((val, i) => {
@@ -278,7 +443,7 @@ export default function StudentDashboard() {
                   );
                 })}
               </div>
-              <div className="flex justify-between text-[8px] font-bold uppercase tracking-wider px-0.5" style={{ color: 'rgba(255,255,255,0.65)' }}>
+              <div className="flex justify-between text-[8px] font-bold uppercase tracking-wider px-0.5 text-slate-400">
                 {(studyTimeChart.labels.length > 0 ? studyTimeChart.labels : ['M','T','W','T','F','S','S']).map((label, i) => (
                   <span key={i}>{label}</span>
                 ))}
@@ -287,8 +452,7 @@ export default function StudentDashboard() {
 
             <button 
               onClick={() => navigate('/progress')} 
-              className="w-full py-2 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-bold transition-all border border-white/10 flex items-center justify-center gap-1 cursor-pointer"
-              style={{ color: '#FFFFFF' }}
+              className="w-full py-2 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-bold transition-all border border-white/10 flex items-center justify-center gap-1 cursor-pointer text-white"
             >
               View Analytics →
             </button>
@@ -299,62 +463,268 @@ export default function StudentDashboard() {
       {/* ── STATISTICS CARDS ROW ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Total XP */}
-        <div 
-          className="p-4 rounded-2xl border flex items-center gap-4 hover:shadow-md transition-all"
-          style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
-        >
-          <div className="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm" style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-text-accent)' }}>
+        <div className="p-4 rounded-2xl border border-slate-800 bg-[#161720] flex items-center gap-4 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm bg-violet-500/10 text-violet-400">
             XP
           </div>
-          <div className="text-left">
-            <span className="text-[12px] font-semibold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>Total XP</span>
-            <span className="text-2xl font-bold block leading-none mt-0.5" style={{ color: 'var(--db-text-main)' }}><CountUp end={totalXP} /></span>
-            <span className="text-[12px] font-bold block mt-1" style={{ color: '#059669' }}>Level {computedLevel}</span>
+          <div>
+            <span className="text-[12px] font-semibold uppercase tracking-wider block text-slate-400">Total XP</span>
+            <span className="text-2xl font-bold block leading-none mt-0.5 text-white"><CountUp end={totalXP} /></span>
+            <span className="text-[12px] font-bold block mt-1 text-emerald-500">Level {computedLevel}</span>
           </div>
         </div>
 
         {/* Day Streak */}
-        <div 
-          className="p-4 rounded-2xl border flex items-center gap-4 hover:shadow-md transition-all"
-          style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
-        >
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg animate-pulse" style={{ backgroundColor: 'rgba(245, 158, 11, 0.08)' }}>
+        <div className="p-4 rounded-2xl border border-slate-800 bg-[#161720] flex items-center gap-4 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg bg-amber-500/10 text-amber-500">
             🔥
           </div>
-          <div className="text-left">
-            <span className="text-[12px] font-semibold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>Day Streak</span>
-            <span className="text-2xl font-bold block leading-none mt-0.5" style={{ color: 'var(--db-text-main)' }}><CountUp end={userStreak} /></span>
-            <span className="text-[12px] font-bold block mt-1" style={{ color: 'var(--db-amber-accent)' }}>{userStreak > 0 ? 'Keep it going! 🔥' : 'Start today!'}</span>
+          <div>
+            <span className="text-[12px] font-semibold uppercase tracking-wider block text-slate-400">Day Streak</span>
+            <span className="text-2xl font-bold block leading-none mt-0.5 text-white"><CountUp end={userStreak} /></span>
+            <span className="text-[12px] font-bold block mt-1 text-amber-500">{userStreak > 0 ? 'Keep it going! 🔥' : 'Start today!'}</span>
           </div>
         </div>
 
         {/* Coins */}
-        <div 
-          className="p-4 rounded-2xl border flex items-center gap-4 hover:shadow-md transition-all"
-          style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
-        >
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)' }}>
+        <div className="p-4 rounded-2xl border border-slate-800 bg-[#161720] flex items-center gap-4 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg bg-emerald-500/10 text-emerald-500">
             🪙
           </div>
-          <div className="text-left">
-            <span className="text-[12px] font-semibold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>Coins</span>
-            <span className="text-2xl font-bold block leading-none mt-0.5" style={{ color: 'var(--db-text-main)' }}><CountUp end={userCoins} /></span>
-            <span className="text-[12px] font-bold block mt-1" style={{ color: '#059669' }}>From {totalXP} XP earned</span>
+          <div>
+            <span className="text-[12px] font-semibold uppercase tracking-wider block text-slate-400">Coins</span>
+            <span className="text-2xl font-bold block leading-none mt-0.5 text-white"><CountUp end={userCoins} /></span>
+            <span className="text-[12px] font-bold block mt-1 text-emerald-500">Earned</span>
           </div>
         </div>
 
         {/* Study Hours */}
-        <div 
-          className="p-4 rounded-2xl border flex items-center gap-4 hover:shadow-md transition-all"
-          style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
-        >
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: 'rgba(59, 130, 246, 0.08)' }}>
+        <div className="p-4 rounded-2xl border border-slate-800 bg-[#161720] flex items-center gap-4 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg bg-blue-500/10 text-blue-500">
             ⏱️
           </div>
-          <div className="text-left">
-            <span className="text-[12px] font-semibold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>Study Hours</span>
-            <span className="text-2xl font-bold block leading-none mt-0.5" style={{ color: 'var(--db-text-main)' }}>{studyHours.toFixed(1)}h</span>
-            <span className="text-[12px] font-bold block mt-1" style={{ color: '#2563EB' }}>{completedLessons} topics done</span>
+          <div>
+            <span className="text-[12px] font-semibold uppercase tracking-wider block text-slate-400">Study Hours</span>
+            <span className="text-2xl font-bold block leading-none mt-0.5 text-white">{studyHours.toFixed(1)}h</span>
+            <span className="text-[12px] font-bold block mt-1 text-blue-500">{completedLessons} topics done</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── INFORMATION TECHNOLOGY SECTION ── */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
+            🖥️ INFORMATION TECHNOLOGY
+          </h2>
+          <button 
+            onClick={() => navigate('/it-suite')}
+            className="text-xs font-bold text-violet-400 hover:text-violet-300 transition-all cursor-pointer flex items-center gap-1"
+          >
+            Go to IT Suite Dashboard <ArrowRight size={14} />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Card 1: EduVerse Word */}
+          <div className="p-5 rounded-2xl border border-slate-800 bg-[#161720] hover:border-blue-500/50 flex flex-col justify-between hover:shadow-md transition-all min-h-[350px]">
+            <div className="space-y-4 text-left">
+              <div className="flex items-start justify-between">
+                <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center shadow-sm">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => handleLaunchApp('word')}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition"
+                  >
+                    Open
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-bold text-white">EduVerse Word</h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Create, edit, and collaborate on essays, resumes, and formal reports with AI writing assistance.
+                </p>
+              </div>
+
+              {/* Recent Files */}
+              <div className="space-y-2 pt-2">
+                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Recent Files</h4>
+                {itDocs.filter(d => d.type === 'word' && !d.is_in_recycle_bin).slice(0, 3).length > 0 ? (
+                  itDocs.filter(d => d.type === 'word' && !d.is_in_recycle_bin).slice(0, 3).map(doc => (
+                    <div 
+                      key={doc.id}
+                      onClick={() => navigate(`/it-suite/word/${doc.id}`)}
+                      className="text-xs font-medium text-slate-350 hover:text-blue-400 cursor-pointer flex items-center gap-1.5 truncate"
+                    >
+                      📄 <span className="truncate">{doc.name}</span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-600 block italic">No recent documents</span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-800/85">
+              <button 
+                onClick={() => handleNewDocument('word')}
+                className="flex-1 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 border border-white/10"
+              >
+                <Plus size={14} /> New Document
+              </button>
+              <button 
+                onClick={() => wordUploadRef.current?.click()}
+                className="p-2 bg-white/5 hover:bg-white/10 text-slate-355 rounded-xl text-xs font-bold transition border border-white/10"
+                title="Upload Document"
+              >
+                <Upload size={14} />
+              </button>
+              <input 
+                type="file" 
+                ref={wordUploadRef} 
+                onChange={(e) => handleUploadDocument('word', e)} 
+                accept=".txt,.html,.md,.docx" 
+                className="hidden" 
+              />
+            </div>
+          </div>
+
+          {/* Card 2: EduVerse Excel */}
+          <div className="p-5 rounded-2xl border border-slate-800 bg-[#161720] hover:border-emerald-500/50 flex flex-col justify-between hover:shadow-md transition-all min-h-[350px]">
+            <div className="space-y-4 text-left">
+              <div className="flex items-start justify-between">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shadow-sm">
+                  <FileSpreadsheet className="w-6 h-6" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => handleLaunchApp('excel')}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition"
+                  >
+                    Open
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-bold text-white">EduVerse Excel</h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Build budgets, sort data grids, generate charts, and solve mathematical formulas instantly.
+                </p>
+              </div>
+
+              {/* Recent Files */}
+              <div className="space-y-2 pt-2">
+                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Recent Files</h4>
+                {itDocs.filter(d => d.type === 'excel' && !d.is_in_recycle_bin).slice(0, 3).length > 0 ? (
+                  itDocs.filter(d => d.type === 'excel' && !d.is_in_recycle_bin).slice(0, 3).map(doc => (
+                    <div 
+                      key={doc.id}
+                      onClick={() => navigate(`/it-suite/excel/${doc.id}`)}
+                      className="text-xs font-medium text-slate-350 hover:text-emerald-400 cursor-pointer flex items-center gap-1.5 truncate"
+                    >
+                      📊 <span className="truncate">{doc.name}</span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-600 block italic">No recent documents</span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-800/85">
+              <button 
+                onClick={() => handleNewDocument('excel')}
+                className="flex-1 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 border border-white/10"
+              >
+                <Plus size={14} /> New Spreadsheet
+              </button>
+              <button 
+                onClick={() => excelUploadRef.current?.click()}
+                className="p-2 bg-white/5 hover:bg-white/10 text-slate-355 rounded-xl text-xs font-bold transition border border-white/10"
+                title="Upload Document"
+              >
+                <Upload size={14} />
+              </button>
+              <input 
+                type="file" 
+                ref={excelUploadRef} 
+                onChange={(e) => handleUploadDocument('excel', e)} 
+                accept=".csv,.xlsx" 
+                className="hidden" 
+              />
+            </div>
+          </div>
+
+          {/* Card 3: EduVerse Slides */}
+          <div className="p-5 rounded-2xl border border-slate-800 bg-[#161720] hover:border-amber-500/50 flex flex-col justify-between hover:shadow-md transition-all min-h-[350px]">
+            <div className="space-y-4 text-left">
+              <div className="flex items-start justify-between">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shadow-sm">
+                  <Presentation className="w-6 h-6" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => handleLaunchApp('slides')}
+                    className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg transition"
+                  >
+                    Open
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-bold text-white">EduVerse Slides</h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Design beautiful slide decks, present concepts visually, and generate custom presentations with AI.
+                </p>
+              </div>
+
+              {/* Recent Files */}
+              <div className="space-y-2 pt-2">
+                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Recent Files</h4>
+                {itDocs.filter(d => d.type === 'slides' && !d.is_in_recycle_bin).slice(0, 3).length > 0 ? (
+                  itDocs.filter(d => d.type === 'slides' && !d.is_in_recycle_bin).slice(0, 3).map(doc => (
+                    <div 
+                      key={doc.id}
+                      onClick={() => navigate(`/it-suite/slides/${doc.id}`)}
+                      className="text-xs font-medium text-slate-355 hover:text-amber-400 cursor-pointer flex items-center gap-1.5 truncate"
+                    >
+                      🚀 <span className="truncate">{doc.name}</span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-600 block italic">No recent documents</span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-800/85">
+              <button 
+                onClick={() => handleNewDocument('slides')}
+                className="flex-1 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 border border-white/10"
+              >
+                <Plus size={14} /> New Slideshow
+              </button>
+              <button 
+                onClick={() => slidesUploadRef.current?.click()}
+                className="p-2 bg-white/5 hover:bg-white/10 text-slate-355 rounded-xl text-xs font-bold transition border border-white/10"
+                title="Upload Document"
+              >
+                <Upload size={14} />
+              </button>
+              <input 
+                type="file" 
+                ref={slidesUploadRef} 
+                onChange={(e) => handleUploadDocument('slides', e)} 
+                accept=".json,.pptx" 
+                className="hidden" 
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -362,236 +732,300 @@ export default function StudentDashboard() {
       {/* ── MIDDLE ROW split GRID ── */}
       <div className="grid md:grid-cols-3 gap-6">
         
-        {/* Today's Mission */}
-        <div 
-          className="rounded-2xl p-5 border text-left flex flex-col justify-between hover:shadow-md transition-all"
-          style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
-        >
+        {/* Interactive Daily Goals (Database Linked) */}
+        <div className="rounded-2xl p-5 border border-slate-800 bg-[#161720] flex flex-col justify-between hover:shadow-md transition-all md:col-span-2">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-[16px] font-bold" style={{ color: 'var(--db-text-main)' }}>Today's Mission</h3>
-              <span 
-                className="text-xs px-2.5 py-1 font-bold rounded-lg border"
-                style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)', borderColor: 'var(--db-badge-border)' }}
+              <h3 className="text-[16px] font-bold text-white">Daily Learning Goals</h3>
+              <button 
+                onClick={handleGenerateAiGoals}
+                disabled={generatingGoals}
+                className="text-xs px-2.5 py-1 bg-violet-600/20 text-violet-400 border border-violet-500/30 rounded-lg font-bold hover:bg-violet-600/30 transition-all disabled:opacity-50 cursor-pointer"
               >
-                {completedMissionsCount}/{missions.length} Completed
-              </span>
-            </div>
-            
-            <div className="space-y-2">
-              {missions.map(item => (
-                <div 
-                  key={item.id} 
-                  className="flex items-center justify-between p-2.5 rounded-xl border"
-                  style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)' }}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs text-white ${item.done ? 'bg-emerald-600' : 'bg-slate-500'}`}>
-                      {item.done ? '✓' : '·'}
-                    </span>
-                    <span 
-                      className={`text-[14px] font-semibold ${item.done ? 'line-through' : ''}`}
-                      style={{ color: item.done ? 'var(--db-text-muted)' : 'var(--db-text-secondary)', opacity: item.done ? 0.6 : 1 }}
-                    >
-                      {item.label}
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold" style={{ color: 'var(--db-text-accent)' }}>+{item.xp} XP</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <button onClick={() => navigate('/subjects')} className="w-full mt-4 text-xs font-bold text-center hover:opacity-85 transition-all cursor-pointer" style={{ color: 'var(--db-text-accent)' }}>
-            View All Missions →
-          </button>
-        </div>
-
-        {/* Daily Challenge - connected to real API data */}
-        <div 
-          className="rounded-2xl p-5 border text-left flex flex-col justify-between hover:shadow-md transition-all"
-          style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
-        >
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[16px] font-bold" style={{ color: 'var(--db-text-main)' }}>Daily Challenge</h3>
-              <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md" style={{ backgroundColor: 'rgba(245,158,11,0.08)', color: 'var(--db-amber-accent)' }}>
-                {analytics?.codingStats?.total || 0} Solved
-              </span>
-            </div>
-
-            <div>
-              <h4 className="text-base font-extrabold" style={{ color: 'var(--db-text-main)' }}>
-                {nextRecommendedTopic !== 'All Completed! Keep Practicing.' ? `Practice: ${currentSubject}` : 'All Caught Up! 🎉'}
-              </h4>
-              <p className="text-[14px] mt-1 leading-relaxed" style={{ color: 'var(--db-text-secondary)' }}>
-                {analytics?.aiSummary ? analytics.aiSummary.substring(0, 120) + '...' : 'Complete topics and quizzes to unlock AI-powered challenge recommendations.'}
-              </p>
-            </div>
-
-            <div className="flex gap-2">
-              <div className="flex-1 py-2 px-3 text-center rounded-xl border" style={{ backgroundColor: 'var(--db-badge-bg)', borderColor: 'var(--db-badge-border)' }}>
-                <span className="text-sm font-bold block" style={{ color: 'var(--db-text-accent)' }}>+{Math.round((analytics?.codingStats?.solved || 0) * 50)}</span>
-                <span className="text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>XP Earned</span>
-              </div>
-              <div className="flex-1 py-2 px-3 text-center rounded-xl border" style={{ backgroundColor: 'rgba(245, 158, 11, 0.05)', borderColor: 'rgba(245, 158, 11, 0.15)' }}>
-                <span className="text-sm font-bold block" style={{ color: 'var(--db-amber-accent)' }}>{analytics?.codingStats?.successRate || 0}%</span>
-                <span className="text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--db-text-muted)' }}>Success Rate</span>
-              </div>
-            </div>
-          </div>
-
-          <button onClick={() => navigate('/practice-hub')} className="w-full mt-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer">
-            &lt;/&gt; Start Challenge
-          </button>
-        </div>
-
-        {/* AI Coach - connected to real weaknesses/strengths */}
-        <div 
-          className="rounded-2xl p-5 border text-left flex flex-col justify-between hover:shadow-md transition-all"
-          style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
-        >
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="text-base">🤖</span>
-                <h3 className="text-[16px] font-bold" style={{ color: 'var(--db-text-main)' }}>AI Coach</h3>
-              </div>
-              <span 
-                className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md border"
-                style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)', borderColor: 'var(--db-badge-border)' }}
-              >
-                Live
-              </span>
-            </div>
-
-            <div className="p-3.5 rounded-xl border" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-              <p className="text-[14px] leading-relaxed font-semibold" style={{ color: 'var(--db-text-main)' }}>
-                {nextRecommendedTopic !== 'All Completed! Keep Practicing.'
-                  ? <>I recommend focusing on <span style={{ color: 'var(--db-text-accent)' }}>{nextRecommendedTopic}</span> next!</>
-                  : <>Amazing work! You've completed all available topics. Keep practicing to maintain your skills! 🎯</>
-                }
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--db-text-muted)' }}>Performance Areas</p>
-              <div className="flex flex-wrap gap-1.5">
-                <span 
-                  className="px-2.5 py-1 border text-[12px] font-bold rounded-lg"
-                  style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.2)' }}
-                >
-                  ✓ {strengths}
-                </span>
-                <span 
-                  className="px-2.5 py-1 border text-[12px] font-bold rounded-lg"
-                  style={{ backgroundColor: 'rgba(239, 68, 68, 0.08)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.2)' }}
-                >
-                  ↑ {weaknesses}
-                </span>
-              </div>
-              {/* Subject breakdown from real data */}
-              <div className="space-y-1 mt-2">
-                {subjectProgress.slice(0, 3).map((sp, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="text-[11px] font-semibold w-16 truncate" style={{ color: 'var(--db-text-muted)' }}>{sp.name}</span>
-                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--db-sidebar-border)' }}>
-                      <div className="h-full bg-violet-500 rounded-full" style={{ width: `${sp.percentage}%` }} />
-                    </div>
-                    <span className="text-[10px] font-bold w-8 text-right" style={{ color: 'var(--db-text-accent)' }}>{sp.percentage}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <button 
-            onClick={() => navigate('/ai-tutor')} 
-            className="w-full mt-4 py-2 border rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1 cursor-pointer"
-            style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-secondary)' }}
-          >
-            ✨ Chat with AI Coach →
-          </button>
-        </div>
-      </div>
-
-      {/* ── BOTTOM ROW: Continue Learning Path & Recent Activity ── */}
-      <div className="grid md:grid-cols-3 gap-6">
-        
-        {/* Continue Learning Path — from real roadmap */}
-        <div 
-          className="md:col-span-2 rounded-2xl p-5 border text-left flex flex-col justify-between hover:shadow-md transition-all"
-          style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
-        >
-          <div className="space-y-5">
-            <div className="flex justify-between items-center">
-              <h3 className="text-[16px] font-bold" style={{ color: 'var(--db-text-main)' }}>Continue Learning Path</h3>
-              <button onClick={() => navigate('/subjects')} className="text-xs font-bold hover:opacity-85 transition-all cursor-pointer" style={{ color: 'var(--db-text-accent)' }}>
-                View Roadmap →
+                {generatingGoals ? 'Generating...' : '✨ Auto-Generate Goals'}
               </button>
             </div>
 
-            {/* Path timeline from real roadmap */}
-            <div className="relative flex justify-between items-center py-4 px-2">
-              <div className="absolute top-1/2 left-0 right-0 h-0.5 -translate-y-1/2 z-0" style={{ backgroundColor: 'var(--db-sidebar-border)' }} />
-              {continuePathSteps.length > 0 ? continuePathSteps.map((step, idx) => {
-                const getStepStyle = () => {
-                  if (step.status === 'Completed') return { bg: 'bg-emerald-600 text-white ring-4 ring-emerald-500/20', nameCol: 'var(--db-text-main)' };
-                  if (step.status === 'In Progress') return { bg: 'bg-violet-600 text-white ring-4 ring-violet-500/20 font-bold', nameCol: 'var(--db-text-main)' };
-                  return { bg: 'bg-slate-700 text-slate-400', nameCol: 'var(--db-text-muted)' };
-                };
-                const styleObj = getStepStyle();
-                return (
-                  <div key={idx} className="relative z-10 flex flex-col items-center gap-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold ${styleObj.bg}`}>
-                      {step.status === 'Completed' ? '✓' : idx + 1}
+            {/* Goals creation input */}
+            <form onSubmit={handleAddGoal} className="flex gap-2">
+              <input 
+                type="text"
+                placeholder="What do you want to learn today?"
+                value={newGoalTitle}
+                onChange={(e) => setNewGoalTitle(e.target.value)}
+                className="flex-1 bg-white/5 border border-slate-800 text-white placeholder-slate-500 text-sm rounded-xl py-2 px-3 focus:outline-none focus:border-violet-500"
+              />
+              <select 
+                value={newGoalPriority}
+                onChange={(e) => setNewGoalPriority(e.target.value)}
+                className="bg-white/5 border border-slate-800 text-slate-300 text-sm rounded-xl px-2 focus:outline-none focus:border-violet-500"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+              <button 
+                type="submit" 
+                disabled={addingGoal}
+                className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+              >
+                Add
+              </button>
+            </form>
+            
+            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+              {goals.length > 0 ? (
+                goals.map(item => (
+                  <div 
+                    key={item.id} 
+                    className="flex items-center justify-between p-2.5 rounded-xl border border-slate-800/80 bg-white/[0.01]"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <input 
+                        type="checkbox"
+                        checked={item.completed}
+                        disabled={item.is_ai}
+                        onChange={() => !item.is_ai && handleToggleGoal(item.id, item.completed)}
+                        className={`w-4 h-4 rounded text-violet-600 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-2 ${item.is_ai ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                      />
+                      <span 
+                        className={`text-sm font-medium ${item.completed ? 'line-through text-slate-500' : 'text-slate-300'}`}
+                      >
+                        {item.title} {item.is_ai && <span className="text-[10px] text-violet-400 font-bold ml-1.5 px-2 py-0.5 rounded-full bg-violet-600/10 border border-violet-500/20">🤖 AI Tracked</span>}
+                      </span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-extrabold tracking-wider ${
+                        item.priority === 'high' ? 'bg-red-500/10 text-red-400' :
+                        item.priority === 'medium' ? 'bg-amber-500/10 text-amber-400' :
+                        'bg-blue-500/10 text-blue-400'
+                      }`}>
+                        {item.priority}
+                      </span>
                     </div>
-                    <span className="text-[11px] font-bold whitespace-nowrap max-w-[80px] truncate text-center" style={{ color: styleObj.nameCol }}>{step.title}</span>
-                    <span className="text-[8px] font-extrabold uppercase tracking-widest leading-none" style={{ color: 'var(--db-text-muted)' }}>{step.subject}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-bold text-violet-400">+{item.xp_reward} XP</span>
+                      <button 
+                        onClick={() => handleDeleteGoal(item.id)}
+                        className="text-slate-500 hover:text-red-400 transition-colors text-sm cursor-pointer"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </div>
-                );
-              }) : (
-                <div className="w-full text-center py-4 z-10">
-                  <span className="text-sm font-semibold" style={{ color: 'var(--db-text-muted)' }}>Start a topic to see your learning path!</span>
+                ))
+              ) : (
+                <div className="text-center py-6 text-slate-500 text-xs">
+                  No goals set for today. Type a goal above or hit Auto-Generate!
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Recent Activity — from real quiz results */}
-        <div 
-          className="rounded-2xl p-5 border text-left flex flex-col justify-between hover:shadow-md transition-all"
-          style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
-        >
+        {/* AI Recommendations */}
+        <div className="rounded-2xl p-5 border border-slate-800 bg-[#161720] flex flex-col justify-between hover:shadow-md transition-all">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base">🤖</span>
+                <h3 className="text-[16px] font-bold text-white">AI Recommendations</h3>
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-violet-600/10 text-violet-400 border border-violet-500/20">
+                AI Coach
+              </span>
+            </div>
+
+            {isDataAvailable ? (
+              <div className="space-y-3">
+                <div className="p-3.5 rounded-xl border border-slate-800 bg-white/[0.01]">
+                  <p className="text-sm leading-relaxed text-slate-300">
+                    Based on your analytics, you should focus on <span className="text-violet-400 font-semibold">{nextRecommendedTopic}</span> next!
+                  </p>
+                </div>
+                <div className="text-xs text-slate-400 border-t border-slate-800/80 pt-3">
+                  <p className="font-bold uppercase text-[9px] mb-1">Coach Summary</p>
+                  <p className="italic leading-normal">
+                    "{analytics?.aiSummary || 'Keep doing quizzes and study modules to get customized feedback.'}"
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <span className="text-3xl block mb-2">📊</span>
+                <span className="text-xs text-slate-500 font-semibold">No Data Available Yet</span>
+                <p className="text-[11px] text-slate-600 mt-1 max-w-[200px] mx-auto">Complete a quiz or log study time to generate dynamic AI coaching recommendations!</p>
+              </div>
+            )}
+          </div>
+
+          <button 
+            onClick={() => navigate('/ai-tutor')} 
+            className="w-full mt-4 py-2 border border-slate-800 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1 bg-white/5 hover:bg-white/10 text-slate-300 cursor-pointer"
+          >
+            ✨ Consult AI Coach →
+          </button>
+        </div>
+      </div>
+
+      {/* ── BOTTOM GRID: Heatmap, Subject Performance & Leaderboard ── */}
+      <div className="grid md:grid-cols-3 gap-6">
+        
+        {/* Streak Heatmap widget */}
+        <div className="rounded-2xl p-5 border border-slate-800 bg-[#161720] flex flex-col justify-between hover:shadow-md transition-all md:col-span-2">
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-[16px] font-bold text-white">Streak & Activity Heatmap</h3>
+              <p className="text-xs text-slate-400 mt-1">Your learning commitment over the last 60 days</p>
+            </div>
+
+            <div className="grid grid-cols-10 gap-2.5 py-2">
+              {recentHeatmapDays.map((day, idx) => (
+                <div 
+                  key={idx} 
+                  className={`aspect-square rounded-lg flex flex-col items-center justify-center relative group border ${
+                    day.count === 0 ? 'bg-white/[0.02] border-slate-900/60' :
+                    day.count === 1 ? 'bg-violet-900/40 border-violet-800/40 text-violet-300' :
+                    day.count <= 3 ? 'bg-violet-700/60 border-violet-600/40 text-violet-200' :
+                    'bg-violet-500 border-violet-400/50 text-white'
+                  }`}
+                >
+                  <span className="text-[10px] font-extrabold">{day.count}</span>
+                  {/* Tooltip */}
+                  <div
+                    className="absolute bottom-full mb-1 hidden group-hover:block text-[9px] px-2 py-1 rounded whitespace-nowrap z-30 border border-slate-800 shadow-md"
+                    style={{ color: '#ffffff', backgroundColor: '#000000' }}
+                  >
+                    {day.date}: {day.count} action{day.count !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-4 text-[10px] text-slate-400 font-bold border-t border-slate-800/80 pt-3">
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-white/[0.02] border border-slate-900"></span> No Activity</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-violet-900/40 border border-violet-800/40"></span> Light</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-violet-700/60 border border-violet-600/40"></span> Medium</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-violet-500 border border-violet-400"></span> High</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Real-time Leaderboard widget */}
+        <div className="rounded-2xl p-5 border border-slate-800 bg-[#161720] flex flex-col justify-between hover:shadow-md transition-all">
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-[16px] font-bold" style={{ color: 'var(--db-text-main)' }}>Recent Activity</h3>
-              <button onClick={() => navigate('/progress')} className="text-xs font-bold hover:text-white transition-all cursor-pointer" style={{ color: 'var(--db-text-muted)' }}>
-                View All
+              <h3 className="text-[16px] font-bold text-white">Top Students Leaderboard</h3>
+              <button 
+                onClick={() => navigate('/quizzes')} 
+                className="text-xs font-bold text-violet-400 hover:opacity-85 transition-all cursor-pointer"
+              >
+                View Hub
+              </button>
+            </div>
+
+            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+              {leaderboard.length > 0 ? (
+                leaderboard.slice(0, 5).map((row, idx) => (
+                  <div 
+                    key={row.id} 
+                    className={`flex justify-between items-center p-2 rounded-xl border ${
+                      row.isCurrentUser 
+                        ? 'bg-violet-600/10 border-violet-500/40 text-violet-200' 
+                        : 'bg-white/[0.01] border-slate-800 text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                        idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
+                        idx === 1 ? 'bg-slate-400/20 text-slate-300' :
+                        idx === 2 ? 'bg-amber-600/20 text-amber-600' :
+                        'bg-slate-800 text-slate-500'
+                      }`}>
+                        {idx + 1}
+                      </span>
+                      <span className="text-xs font-bold truncate max-w-[100px]">{row.name}</span>
+                      {row.isCurrentUser && <span className="text-[8px] bg-violet-600 text-white px-1 rounded uppercase">You</span>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-500">🔥 {row.streak}d</span>
+                      <span className="text-xs font-bold text-emerald-500">{row.totalXp} XP</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 text-slate-500 text-xs">
+                  No students ranked yet. Start earning XP to rank up!
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── ADDITIONAL STATS: Subject Performance & Recent Activity ── */}
+      <div className="grid md:grid-cols-3 gap-6">
+        {/* Subject Performance */}
+        <div className="rounded-2xl p-5 border border-slate-800 bg-[#161720] flex flex-col justify-between hover:shadow-md transition-all md:col-span-2">
+          <div className="space-y-4">
+            <h3 className="text-[16px] font-bold text-white">Curriculum Subject Performance</h3>
+            
+            {subjectProgress.length > 0 ? (
+              <div className="space-y-3">
+                {subjectProgress.map((sp, idx) => (
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-slate-300">{sp.name}</span>
+                      <span className="text-violet-400">{sp.percentage}% ({sp.completedTopics}/{sp.totalTopics} topics)</span>
+                    </div>
+                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-violet-600 to-indigo-500 rounded-full" style={{ width: `${sp.percentage}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <span className="text-xs text-slate-500 font-semibold block">No Data Available Yet</span>
+                <p className="text-[11px] text-slate-600 mt-1 max-w-[240px] mx-auto">Complete subject topics in the Learn section to populate this curriculum performance tracker.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Activity Timeline */}
+        <div className="rounded-2xl p-5 border border-slate-800 bg-[#161720] flex flex-col justify-between hover:shadow-md transition-all">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-[16px] font-bold text-white">Recent Activity Timeline</h3>
+              <button 
+                onClick={() => navigate('/progress')} 
+                className="text-xs font-bold text-slate-400 hover:text-white transition-all cursor-pointer"
+              >
+                All Stats
               </button>
             </div>
 
             <div className="space-y-2">
-              {recentActivity.length > 0 ? recentActivity.slice(0, 3).map((act, i) => (
-                <div 
-                  key={i} 
-                  className="flex justify-between items-center p-2 rounded-xl border"
-                  style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)' }}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-sm">{act.icon}</span>
-                    <div className="truncate text-left">
-                      <span className="text-[12px] font-bold block leading-none" style={{ color: 'var(--db-text-main)' }}>{act.label}</span>
-                      <span className="text-[10px] block mt-0.5" style={{ color: 'var(--db-text-muted)' }}>{act.time}</span>
+              {recentActivity.length > 0 ? (
+                recentActivity.slice(0, 3).map((act, i) => (
+                  <div 
+                    key={i} 
+                    className="flex justify-between items-center p-2 rounded-xl border border-slate-800 bg-white/[0.01]"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-sm">{act.icon}</span>
+                      <div className="truncate text-left">
+                        <span className="text-[12px] font-bold block text-white leading-none">{act.label}</span>
+                        <span className="text-[10px] block mt-1 text-slate-500">{act.time}</span>
+                      </div>
                     </div>
+                    <span className="text-xs font-bold text-emerald-500 shrink-0">{act.xp}</span>
                   </div>
-                  <span className="text-xs font-bold text-emerald-600 shrink-0">{act.xp}</span>
-                </div>
-              )) : (
-                <div className="text-center py-6">
+                ))
+              ) : (
+                <div className="text-center py-8">
                   <span className="text-3xl block mb-2">📊</span>
-                  <span className="text-sm font-semibold" style={{ color: 'var(--db-text-muted)' }}>No activity yet. Take a quiz to get started!</span>
+                  <span className="text-xs text-slate-500 font-semibold block">No Data Available Yet</span>
+                  <p className="text-[11px] text-slate-600 mt-1 max-w-[180px] mx-auto">Take quizzes or solve coding problems to generate activity events.</p>
                 </div>
               )}
             </div>

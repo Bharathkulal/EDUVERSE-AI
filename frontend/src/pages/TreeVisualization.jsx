@@ -6,6 +6,9 @@ import {
   Plus, Minus, Search, Trash2, Code2, Cpu, Database, Info, GitMerge,
   ToggleLeft, ToggleRight, Layers
 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import ThemeToggleButton from '../components/ThemeToggleButton';
+import './DashboardTheme.css';
 
 // ─── BST / Binary Tree / AVL Engine ──────────────────────────────
 class TreeNode {
@@ -282,6 +285,8 @@ function cloneTree(node) {
 // ─── MAIN COMPONENT ──────────────────────────────────────────────
 export default function TreeVisualization() {
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
+  const [isGameRotated, setIsGameRotated] = useState(localStorage.getItem('dsa_game_mode') === 'true');
   const canvasRef = useRef(null);
   const [canvasSize, setCanvasSize] = useState({ w: 600, h: 400 });
 
@@ -676,29 +681,54 @@ export default function TreeVisualization() {
   };
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-[#F8FAFC] flex flex-col font-sans">
+    <div className={`w-full flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'} ${isGameRotated ? 'rotate-landscape-mode' : 'min-h-screen lg:h-screen lg:overflow-hidden'}`}>
 
       {/* HEADER BREADCRUMB */}
-      <header className="h-16 shrink-0 bg-white border-b border-slate-200 flex items-center px-8 shadow-sm relative z-10">
-        <button onClick={() => navigate(-1)} className="mr-4 p-2 hover:bg-slate-100 rounded-full transition">
-          <ArrowLeft className="w-5 h-5 text-slate-600" />
+      <header className="h-16 shrink-0 flex items-center justify-between px-4 lg:px-8 shadow-sm relative z-10" style={{ background: 'var(--db-card-bg)', borderBottom: '1px solid var(--db-header-border)' }}>
+        <div className="flex items-center overflow-hidden">
+        <button onClick={() => navigate(-1)} className="mr-2 lg:mr-4 p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-full transition shrink-0">
+          <ArrowLeft className="w-5 h-5" style={{ color: 'var(--db-text-main)' }} />
         </button>
-        <div className="flex items-center text-sm font-medium text-slate-500 gap-2">
-          <span>Home</span> <ChevronRight className="w-4 h-4" />
-          <span>Subjects</span> <ChevronRight className="w-4 h-4" />
-          <span>DSA</span> <ChevronRight className="w-4 h-4" />
-          <span className="text-blue-600 font-bold">Trees</span> <ChevronRight className="w-4 h-4 text-slate-400" />
-          <span className="text-slate-800">Visual Lab</span>
+        <div className="flex items-center text-xs lg:text-sm font-medium gap-1.5 lg:gap-2 truncate" style={{ color: 'var(--db-text-muted)' }}>
+          <span>Home</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
+          <span>Subjects</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
+          <span>DSA</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
+          <span className="text-blue-500 font-bold">Trees</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
+          <span style={{ color: 'var(--db-text-main)' }} className="truncate">Visual Lab</span>
+        </div>
+        </div>
+        
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Game Mode Rotate Button */}
+          <button 
+            onClick={() => {
+              const nextVal = !isGameRotated;
+              setIsGameRotated(nextVal);
+              localStorage.setItem('dsa_game_mode', nextVal ? 'true' : 'false');
+            }}
+            className="px-2.5 py-1.5 lg:px-3.5 lg:py-1.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl text-[10px] lg:text-xs font-black shadow flex items-center gap-1 lg:gap-1.5 cursor-pointer"
+          >
+            <span>🎮 Game Mode</span>
+          </button>
+          <ThemeToggleButton />
         </div>
       </header>
 
       {/* MAIN 3-PANEL LAYOUT */}
-      <main className="flex-1 p-5 gap-5 flex h-[calc(100vh-64px)] max-w-[1920px] mx-auto w-full overflow-hidden">
+      <main className={`flex-1 p-4 lg:p-5 gap-5 flex max-w-[1920px] mx-auto w-full ${
+        isGameRotated 
+          ? 'flex-row h-[calc(100vw-64px)] overflow-hidden' 
+          : 'flex-col lg:flex-row h-auto lg:h-[calc(100vh-64px)] overflow-y-auto lg:overflow-hidden'
+      }`}>
 
         {/* ═══════════════════════════════════════════════
             LEFT PANEL: CONTROL CENTER (22%)
         ═══════════════════════════════════════════════ */}
-        <div className="w-[22%] min-w-[280px] h-full bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg p-5 flex flex-col justify-between overflow-y-auto">
+        <div className={`bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg p-5 flex flex-col justify-between overflow-y-auto shrink-0 ${
+          isGameRotated 
+            ? 'w-[22%] min-w-[240px] h-full gap-2 p-4' 
+            : 'w-full lg:w-[22%] lg:min-w-[280px] h-auto lg:h-full gap-6 lg:gap-0'
+        }`}>
           <div className="space-y-5">
 
             {/* Header */}
@@ -882,7 +912,11 @@ export default function TreeVisualization() {
         {/* ═══════════════════════════════════════════════
             CENTER PANEL: TREE CANVAS (45%)
         ═══════════════════════════════════════════════ */}
-        <div className="w-[45%] h-full bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg flex flex-col relative overflow-hidden">
+        <div className={`bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg flex flex-col relative overflow-hidden shrink-0 ${
+          isGameRotated 
+            ? 'w-[45%] h-full' 
+            : 'w-full lg:w-[45%] h-[580px] lg:h-full'
+        }`}>
 
           {/* Top bar */}
           <div className="h-12 border-b border-slate-200 bg-slate-50/80 px-6 flex items-center justify-between text-xs font-mono text-slate-500 shrink-0">
@@ -1047,7 +1081,11 @@ export default function TreeVisualization() {
         {/* ═══════════════════════════════════════════════
             RIGHT PANEL: CODE / CALL STACK (33%)
         ═══════════════════════════════════════════════ */}
-        <div className="w-[33%] min-w-[300px] h-full bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg flex flex-col overflow-hidden">
+        <div className={`bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg flex flex-col overflow-hidden shrink-0 ${
+          isGameRotated 
+            ? 'w-[33%] h-full' 
+            : 'w-full lg:w-[33%] lg:min-w-[300px] h-auto lg:h-full'
+        }`}>
 
           {/* Tabs */}
           <div className="grid grid-cols-3 border-b border-slate-200 shrink-0 bg-slate-50">

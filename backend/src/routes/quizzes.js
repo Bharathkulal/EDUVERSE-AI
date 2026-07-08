@@ -3,6 +3,7 @@ const { body } = require('express-validator');
 const db = require('../config/db');
 const validate = require('../middleware/validate');
 const { authenticate, authorizeAdmin } = require('../middleware/auth');
+const { checkAndCompleteAiGoal } = require('../utils/goalTracker');
 
 const router = express.Router();
 
@@ -138,6 +139,9 @@ router.post(
         'INSERT INTO quiz_results (student_id, quiz_id, score, total_questions) VALUES ($1, $2, $3, $4)',
         [studentId, quizId, percentScore, total]
       );
+
+      // Trigger automatic AI goal completion
+      await checkAndCompleteAiGoal(studentId, 'quiz', { score: percentScore });
 
       res.json({ score: percentScore, correct: score, total, message: 'Quiz submitted successfully' });
     } catch (err) {
