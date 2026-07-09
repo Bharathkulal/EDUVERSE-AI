@@ -358,7 +358,7 @@ export default function Layout({ children }) {
             <span className="h-6 w-[1px] bg-[var(--db-header-border)] hidden sm:block"></span>
 
             {/* User Profile Section */}
-            <Link to="/settings" className="flex items-center gap-3 hover:bg-[var(--db-btn-secondary-hover)] p-1.5 rounded-xl transition text-left" style={{ textDecoration: 'none' }}>
+            <Link to={isAdmin ? "/admin/settings" : "/ai-profile"} className="flex items-center gap-3 hover:bg-[var(--db-btn-secondary-hover)] p-1.5 rounded-xl transition text-left" style={{ textDecoration: 'none' }}>
               <div className="w-9 h-9 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm flex-shrink-0">
                 {getInitials(user?.name)}
               </div>
