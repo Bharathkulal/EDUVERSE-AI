@@ -131,6 +131,13 @@ router.post('/documents', authenticate, async (req, res) => {
       defaultContent = JSON.stringify([
         { id: 'slide-1', title: 'Welcome Title', elements: [{ id: 'el-1', type: 'text', value: 'Double-click to edit title', x: 100, y: 150, width: 600, height: 100, fontSize: 32, bold: true, color: '#333333' }] }
       ]);
+    } else if (type === 'whiteboard') {
+      defaultContent = JSON.stringify({
+        objects: [],
+        zoom: 1,
+        panX: 0,
+        panY: 0
+      });
     } else {
       // Word document
       defaultContent = '<h1>Welcome to EduVerse Word</h1><p>Start typing your document here...</p>';
@@ -526,6 +533,37 @@ router.post('/ai', authenticate, async (req, res) => {
         }
       ]
       Make sure to return at least 4 slides. Output raw JSON ONLY.`;
+    } else if (action === 'whiteboard_draw' || action === 'whiteboard_mindmap' || action === 'whiteboard_flowchart') {
+      systemInstruction = "You are a professional diagramming and whiteboard node generator. Return ONLY a valid, parseable JSON array of objects representing nodes, shapes, sticky notes, and lines. No markdown block formatting, no extra explanation text, just pure raw JSON output.";
+      generatedPrompt = `You need to generate a visual diagram for the following prompt: "${prompt}".
+      Return exactly a JSON array of board objects.
+      Each object must match this schema:
+      {
+        "id": "unique-id-string",
+        "type": "rect" | "circle" | "text" | "arrow" | "sticky",
+        "x": number,
+        "y": number,
+        "width": number,
+        "height": number,
+        "text": "label or content text",
+        "color": "css hex color string matching dark mode theme",
+        "from": "optional connected object id",
+        "to": "optional connected object id"
+      }
+      For a flowchart, connect steps using arrows with correct "from" and "to" IDs.
+      For a mind map, have a central node connecting to child sticky nodes.
+      Provide at least 8 elements to make a detailed and rich illustration of: "${prompt}".
+      Output raw JSON ONLY.`;
+    } else if (action === 'whiteboard_explain') {
+      systemInstruction = "You are an expert tutor. Provide an educational explanation, study notes, quiz questions, and flashcards for the given whiteboard text description.";
+      generatedPrompt = `Analyze this whiteboard content:
+      "${contextText}"
+      
+      Provide a response with:
+      1. Comprehensive explanation
+      2. 3 revision points
+      3. A 3-question MCQ quiz (include Options A, B, C, D and indicate the Correct Option with explanation)
+      4. 2 flashcards (Question & Answer pairs)`;
     } else {
       // General writing helper
       generatedPrompt = `Help writing/completing this section:\n${contextText}\n\nInstructions: ${prompt}`;

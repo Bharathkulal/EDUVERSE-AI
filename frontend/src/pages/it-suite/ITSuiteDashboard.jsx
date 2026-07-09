@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Folder, FileText, FileSpreadsheet, Presentation, Star, Trash2, 
   Search, Plus, ChevronRight, CornerDownRight, MoreVertical, 
-  Edit3, Trash, RotateCcw, FolderPlus, Upload, Grid, List, CheckCircle 
+  Edit3, Trash, RotateCcw, FolderPlus, Upload, Grid, List, CheckCircle, Palette 
 } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
@@ -467,6 +467,14 @@ export default function ITSuiteDashboard() {
             </div>
 
             <div 
+              onClick={() => handleCreateDoc('whiteboard', 'Blank Whiteboard')}
+              className="p-4 glass-card-light border border-dashed hover:border-violet-500 rounded-2xl flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:-translate-y-0.5"
+            >
+              <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-500 flex items-center justify-center font-bold text-lg mb-2">➕</div>
+              <span className="text-xs font-bold">Blank Whiteboard</span>
+            </div>
+
+            <div 
               onClick={() => navigate('/it-suite/photo-to-pdf')}
               className="p-4 glass-card-light border border-dashed hover:border-violet-500 rounded-2xl flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:-translate-y-0.5 group relative overflow-hidden"
             >
@@ -484,6 +492,16 @@ export default function ITSuiteDashboard() {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-500 text-white flex items-center justify-center font-bold text-lg mb-2 shadow-md shadow-cyan-500/20 group-hover:scale-110 transition duration-300">🌐</div>
               <span className="text-xs font-bold bg-gradient-to-r from-cyan-500 to-purple-500 bg-clip-text text-transparent group-hover:text-cyan-500 transition">Friday Web Builder</span>
               <p className="text-[9px] text-[var(--db-text-muted)] mt-1 font-semibold leading-tight max-w-[120px]">Create premium websites with AI inside minutes</p>
+            </div>
+
+            <div 
+              onClick={() => navigate('/it-suite/smart-whiteboard')}
+              className="p-4 glass-card-light border border-dashed hover:border-violet-500 rounded-2xl flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:-translate-y-0.5 group relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-tr from-violet-500/10 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-500 to-indigo-500 text-white flex items-center justify-center font-bold text-lg mb-2 shadow-md shadow-violet-500/20 group-hover:scale-110 transition duration-300">🎨</div>
+              <span className="text-xs font-bold bg-gradient-to-r from-violet-500 to-indigo-500 bg-clip-text text-transparent group-hover:text-violet-600 transition">Smart Whiteboard</span>
+              <p className="text-[9px] text-[var(--db-text-muted)] mt-1 font-semibold leading-tight max-w-[120px]">Think • Draw • Learn • Collaborate with AI</p>
             </div>
 
             {templates.word.map((t, idx) => (
@@ -637,6 +655,9 @@ export default function ITSuiteDashboard() {
                   } else if (d.type === 'slides') {
                     docIcon = <Presentation className="text-amber-500" />;
                     docColorClass = "hover:border-amber-500/50";
+                  } else if (d.type === 'whiteboard') {
+                    docIcon = <Palette className="text-violet-500" />;
+                    docColorClass = "hover:border-violet-500/50";
                   }
 
                   return (
@@ -767,7 +788,7 @@ export default function ITSuiteDashboard() {
                   className="border-b border-[var(--db-sidebar-border)] hover:bg-[var(--db-btn-secondary-hover)] text-sm cursor-pointer transition"
                 >
                   <td className="p-4 font-bold flex items-center gap-2">
-                    {d.type === 'excel' ? <FileSpreadsheet size={18} className="text-emerald-500" /> : d.type === 'slides' ? <Presentation size={18} className="text-amber-500" /> : <FileText size={18} className="text-blue-500" />}
+                    {d.type === 'excel' ? <FileSpreadsheet size={18} className="text-emerald-500" /> : d.type === 'slides' ? <Presentation size={18} className="text-amber-500" /> : d.type === 'whiteboard' ? <Palette size={18} className="text-violet-500" /> : <FileText size={18} className="text-blue-500" />}
                     <span>{d.name}</span>
                   </td>
                   <td className="p-4 text-xs text-[var(--db-text-muted)] uppercase">{d.type}</td>

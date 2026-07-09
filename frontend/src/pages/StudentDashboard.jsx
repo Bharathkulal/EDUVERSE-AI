@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import heroCharacter from '../assets/hero_character.png';
-import { FileText, FileSpreadsheet, Presentation, Plus, Upload, FolderOpen, ArrowRight } from 'lucide-react';
+import { FileText, FileSpreadsheet, Presentation, Plus, Upload, FolderOpen, ArrowRight, Palette } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // ── Animated Counter Hook ──────────────────────────────
@@ -525,7 +525,7 @@ export default function StudentDashboard() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Card 1: EduVerse Word */}
           <div className="p-5 rounded-2xl border border-slate-800 bg-[#161720] hover:border-blue-500/50 flex flex-col justify-between hover:shadow-md transition-all min-h-[350px]">
             <div className="space-y-4 text-left">
@@ -724,6 +724,59 @@ export default function StudentDashboard() {
                 accept=".json,.pptx" 
                 className="hidden" 
               />
+            </div>
+          </div>
+
+          {/* Card 4: Smart Whiteboard */}
+          <div className="p-5 rounded-2xl border border-slate-800 bg-[#161720] hover:border-violet-500/50 flex flex-col justify-between hover:shadow-md transition-all min-h-[350px]">
+            <div className="space-y-4 text-left">
+              <div className="flex items-start justify-between">
+                <div className="w-12 h-12 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center shadow-sm">
+                  <Palette className="w-6 h-6" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => handleLaunchApp('whiteboard')}
+                    className="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-lg transition"
+                  >
+                    Open Smart Board
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-white">Smart Board</h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Collaborative infinite vector canvas with AI drawing assistants, LaTeX formula recognition, mind maps and flowchart generators.
+                </p>
+              </div>
+
+              {/* Recent Files */}
+              <div className="space-y-2 pt-2">
+                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Recent Boards</h4>
+                {itDocs.filter(d => d.type === 'whiteboard' && !d.is_in_recycle_bin).slice(0, 3).length > 0 ? (
+                  itDocs.filter(d => d.type === 'whiteboard' && !d.is_in_recycle_bin).slice(0, 3).map(doc => (
+                    <div 
+                      key={doc.id}
+                      onClick={() => navigate(`/it-suite/whiteboard/${doc.id}`)}
+                      className="text-xs font-medium text-slate-355 hover:text-violet-400 cursor-pointer flex items-center gap-1.5 truncate"
+                    >
+                      🎨 <span className="truncate">{doc.name}</span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-600 block italic">No recent boards</span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-800/85">
+              <button 
+                onClick={() => handleNewDocument('whiteboard')}
+                className="flex-1 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 border border-white/10"
+              >
+                <Plus size={14} /> New Smart Board
+              </button>
             </div>
           </div>
         </div>
