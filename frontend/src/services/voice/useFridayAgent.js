@@ -331,9 +331,36 @@ export function useFridayAgent(options = {}) {
     initSpeechLoop();
   }, [stopSpeakPlayback, initSpeechLoop, updateAgentState]);
 
+  const [hasInteracted, setHasInteracted] = useState(false);
+
+  useEffect(() => {
+    // If browser marks session active, set interacted immediately
+    if (navigator.userActivation && navigator.userActivation.hasBeenActive) {
+      setHasInteracted(true);
+      return;
+    }
+
+    const handleInteraction = () => {
+      setHasInteracted(true);
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('keydown', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+    };
+
+    window.addEventListener('click', handleInteraction);
+    window.addEventListener('keydown', handleInteraction);
+    window.addEventListener('touchstart', handleInteraction);
+
+    return () => {
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('keydown', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+    };
+  }, []);
+
   // Effect to manage active listener states
   useEffect(() => {
-    if (isEnabled) {
+    if (isEnabled && hasInteracted) {
       modeRef.current = 'WAKE';
       initSpeechLoop();
     } else {
@@ -352,7 +379,7 @@ export function useFridayAgent(options = {}) {
         } catch (e) {}
       }
     };
-  }, [isEnabled, initSpeechLoop, stopSpeakPlayback]);
+  }, [isEnabled, hasInteracted, initSpeechLoop, stopSpeakPlayback]);
 
   return {
     agentState,
