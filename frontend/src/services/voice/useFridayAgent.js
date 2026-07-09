@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
+import React from 'react';
 
-// Synthesize a futuristic notification chime using Web Audio API
+// Synthesize a notification chime
 function playChime(type = 'wake') {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -39,7 +40,7 @@ function playChime(type = 'wake') {
       osc.stop(ctx.currentTime + 0.15);
     }
   } catch (e) {
-    console.warn('[useFridayAgent] Could not play notification chime:', e);
+    console.warn('[useFridayAgent] Chime playback failed:', e);
   }
 }
 
@@ -53,13 +54,11 @@ export function useFridayAgent(options = {}) {
   const recognitionRef = useRef(null);
   const activeAudioRef = useRef(null);
   
-  // Track current mode: 'WAKE' (waiting for wake word) or 'COMMAND' (capturing user request)
   const modeRef = useRef('WAKE'); 
   const isEnabledRef = useRef(isEnabled);
   const finalTranscriptRef = useRef('');
   const speakActiveRef = useRef(false);
 
-  // Sync isEnabled to ref to prevent stale closures in recognition callbacks
   useEffect(() => {
     isEnabledRef.current = isEnabled;
   }, [isEnabled]);
@@ -69,7 +68,6 @@ export function useFridayAgent(options = {}) {
     if (onStateChange) onStateChange(state);
   }, [onStateChange]);
 
-  // Stop active audio playbacks
   const stopSpeakPlayback = useCallback(() => {
     if (activeAudioRef.current) {
       activeAudioRef.current.pause();
@@ -83,7 +81,6 @@ export function useFridayAgent(options = {}) {
     if (onSpeakEnd) onSpeakEnd();
   }, [updateAgentState, onSpeakEnd]);
 
-  // Fallback to browser Speech Synthesis
   const speakFallback = useCallback((text) => {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
@@ -116,7 +113,6 @@ export function useFridayAgent(options = {}) {
     window.speechSynthesis.speak(utterance);
   }, [updateAgentState, onSpeakStart, onSpeakEnd]);
 
-  // Play ElevenLabs audio
   const playAudioResponse = useCallback((base64Audio, textFallback) => {
     try {
       stopSpeakPlayback();
@@ -139,12 +135,12 @@ export function useFridayAgent(options = {}) {
       };
 
       audio.onerror = (e) => {
-        console.warn('ElevenLabs play error, falling back to browser synthesis:', e);
+        console.warn('ElevenLabs audio error, using Web Speech fallback:', e);
         speakFallback(textFallback);
       };
 
       audio.play().catch(err => {
-        console.warn('Playback blocked, using fallback:', err);
+        console.warn('Play blocked, using fallback:', err);
         speakFallback(textFallback);
       });
     } catch (err) {
@@ -153,28 +149,28 @@ export function useFridayAgent(options = {}) {
     }
   }, [stopSpeakPlayback, speakFallback, updateAgentState, onSpeakStart, onSpeakEnd]);
 
-  // Route navigation commands
+  // Navigate/Execute action commands locally
   const executeAgentCommand = useCallback((action) => {
     if (!action) return;
     const { command, params } = action;
-    console.log('[useFridayAgent] Executing tool command:', command, params);
+    console.log('[useFridayAgent] Command instruction received:', command, params);
 
     switch (command) {
       case 'open_lesson': {
         const lesson = params.lesson_name || '';
-        toast.success(`Opening lesson: "${lesson}"`);
+        toast.success(`Opening course path: "${lesson}"`);
         navigate('/subjects');
         break;
       }
       case 'start_quiz': {
         const topic = params.topic || '';
-        toast.success(`Starting quiz: "${topic}"`);
+        toast.success(`Starting chapter quiz: "${topic}"`);
         navigate('/practice-hub');
         break;
       }
       case 'set_reminder': {
         const { task, time } = params;
-        toast.success(`Study Reminder set: "${task}" for ${time}`);
+        toast.success(`Reminder saved: "${task}" for ${time}`);
         break;
       }
       case 'navigate_to_screen': {
@@ -186,19 +182,71 @@ export function useFridayAgent(options = {}) {
           settings: '/settings'
         };
         if (routes[screen]) {
-          toast.success(`Navigating to: ${screen}`);
+          toast.success(`Navigating to ${screen}`);
           navigate(routes[screen]);
         } else {
-          toast.error(`Unknown screen destination: ${screen}`);
+          toast.error(`Unknown destination: ${screen}`);
         }
         break;
       }
+      case 'open_app': {
+        toast.success(`Launching desktop application: ${params.appName}`);
+        break;
+      }
+      case 'generate_document': {
+        toast.success(`Document created successfully!`);
+        break;
+      }
       default:
-        console.warn('Unknown voice command:', command);
+        console.warn('[useFridayAgent] Action unhandled:', command);
     }
   }, [navigate]);
 
-  // Main SpeechRecognition initializer
+  // Send action authorization confirmation back to backend
+  const confirmAction = useCallback(async (taskId, confirmed) => {
+    updateAgentState('thinking');
+    try {
+      const response = await api.post('/friday/action-confirm', { taskId, confirmed });
+      const { response: textResponse } = response.data;
+      speakFallback(textResponse);
+      updateAgentState('idle');
+      modeRef.current = 'WAKE';
+      initSpeechLoop();
+    } catch (err) {
+      console.error('[useFridayAgent] Confirmation failure:', err);
+      toast.error('Action permission failed');
+      updateAgentState('idle');
+      modeRef.current = 'WAKE';
+      initSpeechLoop();
+    }
+  }, [updateAgentState, speakFallback]);
+
+  // Request user validation for sensitive OS commands
+  const requestUserPermission = useCallback((taskId, textResponse) => {
+    toast((t) => {
+      return React.createElement('div', { className: 'flex flex-col gap-2 p-2' },
+        React.createElement('span', { className: 'text-sm font-semibold text-gray-800 dark:text-gray-100' }, textResponse),
+        React.createElement('div', { className: 'flex gap-2 justify-end' },
+          React.createElement('button', {
+            onClick: async () => {
+              toast.dismiss(t.id);
+              await confirmAction(taskId, true);
+            },
+            className: 'px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold'
+          }, 'Authorize'),
+          React.createElement('button', {
+            onClick: async () => {
+              toast.dismiss(t.id);
+              await confirmAction(taskId, false);
+            },
+            className: 'px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-xs font-semibold'
+          }, 'Cancel')
+        )
+      );
+    }, { duration: 10000, id: 'friday-auth-confirm' });
+  }, [confirmAction]);
+
+  // Speech Recognition loop
   const initSpeechLoop = useCallback(() => {
     if (!isEnabledRef.current) return;
 
@@ -208,7 +256,6 @@ export function useFridayAgent(options = {}) {
       return;
     }
 
-    // Cancel previous instance if running
     if (recognitionRef.current) {
       try {
         recognitionRef.current.abort();
@@ -220,55 +267,52 @@ export function useFridayAgent(options = {}) {
     rec.interimResults = (modeRef.current === 'COMMAND');
     rec.lang = 'en-US';
 
-    rec.onstart = () => {
-      console.log(`[useFridayAgent] Speech Recognition started in mode: ${modeRef.current}`);
-    };
-
     rec.onresult = (event) => {
       const lastIndex = event.resultIndex;
       const text = event.results[lastIndex][0].transcript.toLowerCase().trim();
 
       if (modeRef.current === 'WAKE') {
-        console.log('[useFridayAgent] Wake phrase monitor:', text);
+        console.log('[useFridayAgent] Wake-phrase listener:', text);
         const hasWakeWord = [
           'friday', 'hey friday', 'hello friday', 'hi friday', 'okay friday', 'hey eduverse', 
           'hay friday', 'hi friday', 'ok friday', 'wake up friday', 'hey edu verse'
         ].some(wake => text.includes(wake));
 
         if (hasWakeWord) {
-          console.log('[useFridayAgent] Hotword detected!');
+          console.log('[useFridayAgent] Wake word heard!');
           playChime('wake');
           modeRef.current = 'COMMAND';
           finalTranscriptRef.current = '';
           updateAgentState('listening');
-          
-          // Switch to command input mode
           try {
             rec.stop();
           } catch (e) {}
         }
       } else if (modeRef.current === 'COMMAND') {
-        const currentInterim = event.results[lastIndex][0].transcript;
-        console.log('[useFridayAgent] Live transcript interim:', currentInterim);
-        setTranscriptText(currentInterim);
-        if (onTranscript) onTranscript(currentInterim);
+        const interim = event.results[lastIndex][0].transcript;
+        setTranscriptText(interim);
+        if (onTranscript) onTranscript(interim);
 
         if (event.results[lastIndex].isFinal) {
-          finalTranscriptRef.current = currentInterim;
+          finalTranscriptRef.current = interim;
         }
       }
     };
 
     rec.onend = async () => {
-      console.log(`[useFridayAgent] Speech Recognition ended in mode: ${modeRef.current}`);
-
       if (modeRef.current === 'COMMAND') {
         const userCommand = finalTranscriptRef.current.trim();
         if (userCommand) {
           updateAgentState('thinking');
           try {
             const response = await api.post('/friday/voice-text', { message: userCommand });
-            const { response: textResponse, action, audio } = response.data;
+            const { status, taskId, response: textResponse, action, audio } = response.data;
+
+            if (status === 'pending_permission') {
+              speakFallback(textResponse);
+              requestUserPermission(taskId, textResponse);
+              return;
+            }
 
             if (action) {
               executeAgentCommand(action);
@@ -284,20 +328,18 @@ export function useFridayAgent(options = {}) {
               initSpeechLoop();
             }
           } catch (err) {
-            console.error('[useFridayAgent] Command transmission error:', err);
+            console.error('[useFridayAgent] Command failed:', err);
             toast.error('Voice Assistant command failed');
             updateAgentState('idle');
             modeRef.current = 'WAKE';
             initSpeechLoop();
           }
         } else {
-          // Silence timeout, revert to wake-word listening
           updateAgentState('idle');
           modeRef.current = 'WAKE';
           initSpeechLoop();
         }
       } else {
-        // In wake-word mode, restart listening loop immediately
         setTimeout(() => {
           if (isEnabledRef.current && modeRef.current === 'WAKE' && !speakActiveRef.current) {
             initSpeechLoop();
@@ -308,7 +350,7 @@ export function useFridayAgent(options = {}) {
 
     rec.onerror = (e) => {
       if (e.error !== 'no-speech' && e.error !== 'aborted') {
-        console.warn('[useFridayAgent] Recognition Error:', e.error);
+        console.warn('[useFridayAgent] Speech error:', e.error);
       }
     };
 
@@ -316,11 +358,10 @@ export function useFridayAgent(options = {}) {
     try {
       rec.start();
     } catch (e) {
-      console.warn('[useFridayAgent] Recognition start exception:', e.message);
+      console.warn('[useFridayAgent] Speech start exception:', e.message);
     }
-  }, [updateAgentState, executeAgentCommand, playAudioResponse, speakFallback, onTranscript, onSpeakStart, onSpeakEnd]);
+  }, [updateAgentState, executeAgentCommand, requestUserPermission, playAudioResponse, speakFallback, onTranscript]);
 
-  // Manually trigger command mode on microphone button click
   const triggerManualCommand = useCallback(() => {
     stopSpeakPlayback();
     playChime('wake');
@@ -334,7 +375,6 @@ export function useFridayAgent(options = {}) {
   const [hasInteracted, setHasInteracted] = useState(false);
 
   useEffect(() => {
-    // If browser marks session active, set interacted immediately
     if (navigator.userActivation && navigator.userActivation.hasBeenActive) {
       setHasInteracted(true);
       return;
@@ -358,7 +398,6 @@ export function useFridayAgent(options = {}) {
     };
   }, []);
 
-  // Effect to manage active listener states
   useEffect(() => {
     if (isEnabled && hasInteracted) {
       modeRef.current = 'WAKE';

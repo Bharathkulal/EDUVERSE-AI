@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
+import FridayFloatingOrb from '../components/VoiceAssistant/FridayFloatingOrb';
 import './VoiceAssistant.css';
 
 export default function VoiceAssistant() {
@@ -380,23 +381,8 @@ export default function VoiceAssistant() {
             </div>
 
             {/* Reactor Core Orb */}
-            <div className="friday-orb-container my-6">
-              <div className={`friday-orb-glow-halo ${assistantState}`} />
-              <div className="friday-orb-ring-outer" />
-              <div className="friday-orb-ring-mid" />
-              <div className="friday-orb-ring-inner" />
-              <div 
-                className={`friday-orb-core ${assistantState} flex flex-col items-center justify-center`}
-                onClick={handleMicrophoneClick}
-              >
-                <Mic className="w-7 h-7 text-white" />
-                <span className="text-[9px] text-slate-300 uppercase tracking-wider font-bold mt-1">
-                  {assistantState === 'idle' && 'TAP'}
-                  {assistantState === 'listening' && 'LISTEN'}
-                  {assistantState === 'thinking' && 'THINK'}
-                  {assistantState === 'speaking' && 'SPEAK'}
-                </span>
-              </div>
+            <div className="friday-orb-container my-6 cursor-pointer" onClick={handleMicrophoneClick}>
+              <FridayFloatingOrb state={assistantState} size={135} />
             </div>
 
             {/* Info Status */}

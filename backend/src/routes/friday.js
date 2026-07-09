@@ -550,6 +550,9 @@ You have no memory between sessions unless the app explicitly gives you conversa
   }
 });
 
+// Temporary storage for pending user authorization tasks
+const pendingActions = {};
+
 // F.R.I.D.A.Y. Voice Text Pipeline Endpoint
 router.post('/voice-text', authenticate, async (req, res) => {
   try {
@@ -559,150 +562,122 @@ router.post('/voice-text', authenticate, async (req, res) => {
       return res.status(400).json({ message: 'No message provided.' });
     }
 
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    const userId = req.user.id;
     const elevenlabsKey = process.env.ELEVENLABS_API_KEY;
-    const elevenlabsVoiceId = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM'; // Default voice ID
+    const elevenlabsVoiceId = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
 
-    const systemPrompt = `You are Friday, the voice assistant inside Eduverse AI, an education platform.
-You behave similarly to Alexa, Siri, or Google Assistant, but fully integrated into Eduverse AI.
+    const FridayMemoryService = require('../services/friday/FridayMemoryService');
+    const FridayAiRouter = require('../services/friday/FridayAiRouter');
+    const FridayDesktopService = require('../services/friday/FridayDesktopService');
+    const FridayDocumentService = require('../services/friday/FridayDocumentService');
 
-YOUR PRIMARY JOBS, IN STRICT PRIORITY ORDER:
-1. COMMAND: If the user is asking you to DO something in the app (open a lesson, start a quiz, set a reminder, navigate somewhere), you MUST call the matching tool. Never say you did something without calling the tool.
-2. TUTOR: If the user is asking an educational or general question, answer directly, like a futuristic, helpful tutor.
+    // 1. Memory Context Retrieval
+    const memoryContext = await FridayMemoryService.getMemoryContext(userId);
 
-RULES:
-- If a command doesn't match any tool, say so plainly.
-- Keep responses SHORT (1-2 sentences). Voice replies should be very concise.
-- Tone: futuristic, helpful, polite (e.g. "Initializing study protocols...").
+    // 2. Classify task type
+    let taskType = 'general';
+    const lowerMessage = message.toLowerCase();
+    if (lowerMessage.includes('code') || lowerMessage.includes('programming') || lowerMessage.includes('java') || lowerMessage.includes('python')) {
+      taskType = 'coding';
+    } else if (lowerMessage.includes('image') || lowerMessage.includes('diagram') || lowerMessage.includes('diagram explanation') || lowerMessage.includes('ocr')) {
+      taskType = 'vision';
+    } else if (lowerMessage.includes('pdf') || lowerMessage.includes('document') || lowerMessage.includes('excel') || lowerMessage.includes('word')) {
+      taskType = 'document';
+    }
 
-AVAILABLE TOOLS:
-- open_lesson(lesson_name)
-- start_quiz(topic)
-- set_reminder(task, time)
-- navigate_to_screen(screen: "dashboard" | "profile" | "progress" | "settings")`;
+    // 3. AI Router Reasoning
+    const systemInstruction = `You are Friday, the futuristic Voice Assistant for EDUVERSE AI.
+Student Memory Context:
+- Course: ${memoryContext.course} (Semester ${memoryContext.semester})
+- Career Goal: ${memoryContext.careerGoal}
+- Streaks/Progress: Completed ${memoryContext.completedTopics} modules, ${memoryContext.studyHours} hours study.
+- Recent chats context: ${memoryContext.chatHistory}
 
-    const voiceTools = [
-      {
-        name: "open_lesson",
-        description: "Open a specific lesson by name or topic",
-        input_schema: {
-          type: "object",
-          properties: { lesson_name: { type: "string" } },
-          required: ["lesson_name"]
-        }
-      },
-      {
-        name: "start_quiz",
-        description: "Start a quiz for a given chapter or topic",
-        input_schema: {
-          type: "object",
-          properties: { topic: { type: "string" } },
-          required: ["topic"]
-        }
-      },
-      {
-        name: "set_reminder",
-        description: "Set a study reminder for the user",
-        input_schema: {
-          type: "object",
-          properties: {
-            task: { type: "string" },
-            time: { type: "string" }
-          },
-          required: ["task", "time"]
-        }
-      },
-      {
-        name: "navigate_to_screen",
-        description: "Navigate to dashboard, profile, progress, or settings",
-        input_schema: {
-          type: "object",
-          properties: {
-            screen: { type: "string", enum: ["dashboard", "profile", "progress", "settings"] }
-          },
-          required: ["screen"]
-        }
-      }
-    ];
+AVAILABLE ACTIONS:
+- open_app(appName): Launch application (chrome, code, terminal, explorer, calc, settings)
+- power_action(action): OS control (shutdown, restart, sleep, lock)
+- generate_document(docType, title, content): Create docs (pdf, word, excel, markdown, text, code)
+- navigate_to_screen(screen): App layout (dashboard, profile, progress, settings)
 
-    let responseText = '';
+If student requests any of these actions, specify the action name and arguments clearly in your response. Keep answers brief (1-2 sentences).`;
+
+    const aiResult = await FridayAiRouter.route(taskType, message, { systemInstruction });
+    let responseText = aiResult.text || `Processed: ${message}`;
     let toolCall = null;
 
-    if (anthropicKey) {
+    // Offline / Online regex matcher to map text outputs to tool calls reliably
+    if (lowerMessage.includes('open chrome') || lowerMessage.includes('launch chrome')) {
+      toolCall = { command: 'open_app', params: { appName: 'chrome' } };
+    } else if (lowerMessage.includes('open vs code') || lowerMessage.includes('launch vs code') || lowerMessage.includes('vscode')) {
+      toolCall = { command: 'open_app', params: { appName: 'code' } };
+    } else if (lowerMessage.includes('open terminal') || lowerMessage.includes('launch terminal') || lowerMessage.includes('cmd')) {
+      toolCall = { command: 'open_app', params: { appName: 'cmd' } };
+    } else if (lowerMessage.includes('open calculator') || lowerMessage.includes('calculator')) {
+      toolCall = { command: 'open_app', params: { appName: 'calc' } };
+    } else if (lowerMessage.includes('explorer') || lowerMessage.includes('file explorer')) {
+      toolCall = { command: 'open_app', params: { appName: 'explorer' } };
+    } else if (lowerMessage.includes('open settings') || lowerMessage.includes('settings')) {
+      toolCall = { command: 'open_app', params: { appName: 'settings' } };
+    } else if (lowerMessage.includes('shutdown')) {
+      toolCall = { command: 'power_action', params: { action: 'shutdown' } };
+    } else if (lowerMessage.includes('restart')) {
+      toolCall = { command: 'power_action', params: { action: 'restart' } };
+    } else if (lowerMessage.includes('lock screen') || lowerMessage.includes('lock computer')) {
+      toolCall = { command: 'power_action', params: { action: 'lock' } };
+    } else if (lowerMessage.includes('sleep mode') || lowerMessage.includes('sleep computer')) {
+      toolCall = { command: 'power_action', params: { action: 'sleep' } };
+    } else if (lowerMessage.includes('create pdf') || lowerMessage.includes('generate pdf')) {
+      toolCall = { command: 'generate_document', params: { docType: 'pdf', title: 'Study Notes', content: responseText } };
+    } else if (lowerMessage.includes('generate notes') || lowerMessage.includes('create markdown') || lowerMessage.includes('create md')) {
+      toolCall = { command: 'generate_document', params: { docType: 'markdown', title: 'Friday Study Summary', content: responseText } };
+    } else if (lowerMessage.includes('generate excel') || lowerMessage.includes('create sheet')) {
+      toolCall = { command: 'generate_document', params: { docType: 'excel', title: 'Learning Stats', content: responseText } };
+    } else if (lowerMessage.includes('generate word') || lowerMessage.includes('create doc')) {
+      toolCall = { command: 'generate_document', params: { docType: 'word', title: 'Course Document', content: responseText } };
+    } else if (lowerMessage.includes('dashboard') || lowerMessage.includes('go to dashboard')) {
+      toolCall = { command: 'navigate_to_screen', params: { screen: 'dashboard' } };
+    } else if (lowerMessage.includes('profile') || lowerMessage.includes('go to profile')) {
+      toolCall = { command: 'navigate_to_screen', params: { screen: 'profile' } };
+    } else if (lowerMessage.includes('subjects') || lowerMessage.includes('courses') || lowerMessage.includes('progress') || lowerMessage.includes('learn branch')) {
+      toolCall = { command: 'navigate_to_screen', params: { screen: 'progress' } };
+    } else if (lowerMessage.includes('go to settings')) {
+      toolCall = { command: 'navigate_to_screen', params: { screen: 'settings' } };
+    }
+
+    // 4. Permission Checker (Destructive power/delete commands require confirmation)
+    if (toolCall && toolCall.command === 'power_action' && (toolCall.params.action === 'shutdown' || toolCall.params.action === 'restart')) {
+      const taskId = `task_${Date.now()}`;
+      pendingActions[taskId] = toolCall;
+
+      return res.json({
+        status: 'pending_permission',
+        taskId,
+        action: toolCall,
+        response: `I need your authorization before executing a system ${toolCall.params.action}. Do you authorize this action, Sir?`,
+        audio: null
+      });
+    }
+
+    // 5. Execute Action if Immediate
+    if (toolCall) {
       try {
-        const claudeRes = await axios.post(
-          'https://api.anthropic.com/v1/messages',
-          {
-            model: 'claude-3-5-sonnet-20241022',
-            max_tokens: 1024,
-            system: systemPrompt,
-            messages: [{ role: 'user', content: message }],
-            tools: voiceTools
-          },
-          {
-            headers: {
-              'x-api-key': anthropicKey,
-              'anthropic-version': '2023-06-01',
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-
-        const contentBlocks = claudeRes.data?.content || [];
-        const textBlock = contentBlocks.find(b => b.type === 'text');
-        const toolBlock = contentBlocks.find(b => b.type === 'tool_use');
-
-        if (textBlock) responseText = textBlock.text;
-        if (toolBlock) {
-          toolCall = {
-            command: toolBlock.name,
-            params: toolBlock.input
-          };
-          if (!responseText) {
-            responseText = `Understood. Initializing command for ${toolBlock.name}.`;
-          }
+        if (toolCall.command === 'open_app') {
+          await FridayDesktopService.launchApp(toolCall.params.appName);
+        } else if (toolCall.command === 'power_action') {
+          await FridayDesktopService.powerAction(toolCall.params.action);
+        } else if (toolCall.command === 'generate_document') {
+          const { docType, title, content } = toolCall.params;
+          const doc = await FridayDocumentService.generateDocument(docType, title, content);
+          responseText = `I have generated your ${docType} document successfully. File saved as: ${doc.fileName}.`;
         }
-      } catch (claudeErr) {
-        console.error('Claude Voice-Text API Error:', claudeErr.response?.data || claudeErr.message);
+        await FridayMemoryService.logCommand(userId, message, true, toolCall);
+      } catch (err) {
+        console.error('[friday.js] Action execution error:', err.message);
+        responseText = `Failed to perform requested desktop command: ${err.message}.`;
       }
     }
 
-    // Fallback: If Anthropic key is missing or failed, parse using aiGateway or simple regex for commands!
-    if (!responseText) {
-      try {
-        const { generateResponse } = require('../services/aiGateway');
-        const aiResponse = await generateResponse(`${systemPrompt}\n\nUser Voice Input: ${message}`);
-        responseText = aiResponse?.text || '';
-      } catch (gatewayErr) {
-        console.error('aiGateway Voice-Text Error:', gatewayErr.message);
-      }
-
-      if (!responseText) {
-        responseText = `I'm processing your request: "${message}".`;
-      }
-
-      // Offline command parsing regex logic
-      const lowerMsg = message.toLowerCase();
-      if (lowerMsg.includes('open lesson') || lowerMsg.includes('open course') || lowerMsg.includes('learn branch')) {
-        const match = message.match(/(?:open lesson|open course|learn branch)\s+(.+)/i);
-        toolCall = { command: 'open_lesson', params: { lesson_name: match ? match[1] : 'General' } };
-      } else if (lowerMsg.includes('quiz') || lowerMsg.includes('start quiz')) {
-        const match = message.match(/(?:quiz|start quiz)(?:\s+on)?\s+(.+)/i);
-        toolCall = { command: 'start_quiz', params: { topic: match ? match[1] : 'General' } };
-      } else if (lowerMsg.includes('reminder') || lowerMsg.includes('remind me')) {
-        toolCall = { command: 'set_reminder', params: { task: 'Study Session', time: 'later' } };
-      } else if (lowerMsg.includes('dashboard') || lowerMsg.includes('go to dashboard')) {
-        toolCall = { command: 'navigate_to_screen', params: { screen: 'dashboard' } };
-      } else if (lowerMsg.includes('profile') || lowerMsg.includes('go to profile')) {
-        toolCall = { command: 'navigate_to_screen', params: { screen: 'profile' } };
-      } else if (lowerMsg.includes('subjects') || lowerMsg.includes('courses') || lowerMsg.includes('progress') || lowerMsg.includes('learn')) {
-        toolCall = { command: 'navigate_to_screen', params: { screen: 'progress' } };
-      } else if (lowerMsg.includes('settings') || lowerMsg.includes('go to settings')) {
-        toolCall = { command: 'navigate_to_screen', params: { screen: 'settings' } };
-      }
-    }
-
-    // --- 2. Text-to-Speech via ElevenLabs ---
+    // 6. Text-To-Speech Synthesis
     let base64Audio = null;
     if (elevenlabsKey && responseText) {
       try {
@@ -738,6 +713,40 @@ AVAILABLE TOOLS:
   } catch (err) {
     console.error('FRIDAY Voice-Text Endpoint Error:', err);
     res.status(500).json({ message: 'Internal voice-text processing error.' });
+  }
+});
+
+// Action Confirmation Endpoint
+router.post('/action-confirm', authenticate, async (req, res) => {
+  try {
+    const { taskId, confirmed } = req.body;
+    const pending = pendingActions[taskId];
+
+    if (!pending) {
+      return res.status(404).json({ message: 'Pending task not found or expired.' });
+    }
+
+    delete pendingActions[taskId]; // Clear from memory
+
+    if (!confirmed) {
+      return res.json({
+        status: 'cancelled',
+        response: 'Action cancelled. Returning to standby.'
+      });
+    }
+
+    // Execute the confirmed power action
+    const FridayDesktopService = require('../services/friday/FridayDesktopService');
+    const result = await FridayDesktopService.powerAction(pending.params.action);
+
+    res.json({
+      status: 'success',
+      response: result
+    });
+
+  } catch (err) {
+    console.error('Action confirmation execution error:', err);
+    res.status(500).json({ message: 'Failed to execute requested system power control.' });
   }
 });
 
