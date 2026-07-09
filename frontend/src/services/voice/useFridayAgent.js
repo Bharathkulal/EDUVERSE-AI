@@ -3,6 +3,46 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 
+// Synthesize a futuristic notification chime using Web Audio API
+function playChime(type = 'wake') {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    
+    if (type === 'wake') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+      osc.frequency.setValueAtTime(880.00, ctx.currentTime + 0.08); // A5
+      
+      gain.gain.setValueAtTime(0.04, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25);
+    } else if (type === 'beep') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440.00, ctx.currentTime);
+      
+      gain.gain.setValueAtTime(0.02, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    }
+  } catch (e) {
+    console.warn('[useFridayAgent] Could not play notification chime:', e);
+  }
+}
+
 export function useFridayAgent(options = {}) {
   const navigate = useNavigate();
   const { onStateChange, onTranscript, onSpeakStart, onSpeakEnd, isEnabled = true } = options;
@@ -10,21 +50,26 @@ export function useFridayAgent(options = {}) {
   const [agentState, setAgentState] = useState('idle'); // idle, listening, thinking, speaking
   const [transcriptText, setTranscriptText] = useState('');
   
-  const wakeRecognitionRef = useRef(null);
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const recordingTimeoutRef = useRef(null);
+  const recognitionRef = useRef(null);
   const activeAudioRef = useRef(null);
-  const isListeningRef = useRef(false);
-  const wakeWordCheckingRef = useRef(false);
+  
+  // Track current mode: 'WAKE' (waiting for wake word) or 'COMMAND' (capturing user request)
+  const modeRef = useRef('WAKE'); 
+  const isEnabledRef = useRef(isEnabled);
+  const finalTranscriptRef = useRef('');
+  const speakActiveRef = useRef(false);
 
-  // Sync state to parent callback
+  // Sync isEnabled to ref to prevent stale closures in recognition callbacks
+  useEffect(() => {
+    isEnabledRef.current = isEnabled;
+  }, [isEnabled]);
+
   const updateAgentState = useCallback((state) => {
     setAgentState(state);
     if (onStateChange) onStateChange(state);
   }, [onStateChange]);
 
-  // Stop any active audio playbacks
+  // Stop active audio playbacks
   const stopSpeakPlayback = useCallback(() => {
     if (activeAudioRef.current) {
       activeAudioRef.current.pause();
@@ -33,11 +78,12 @@ export function useFridayAgent(options = {}) {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
+    speakActiveRef.current = false;
     updateAgentState('idle');
     if (onSpeakEnd) onSpeakEnd();
   }, [updateAgentState, onSpeakEnd]);
 
-  // Speak a text response using browser speechSynthesis (fallback)
+  // Fallback to browser Speech Synthesis
   const speakFallback = useCallback((text) => {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
@@ -46,19 +92,21 @@ export function useFridayAgent(options = {}) {
     const utterance = new SpeechSynthesisUtterance(cleanText);
     
     utterance.onstart = () => {
+      speakActiveRef.current = true;
       updateAgentState('speaking');
       if (onSpeakStart) onSpeakStart();
     };
     utterance.onend = () => {
+      speakActiveRef.current = false;
       updateAgentState('idle');
       if (onSpeakEnd) onSpeakEnd();
     };
     utterance.onerror = () => {
+      speakActiveRef.current = false;
       updateAgentState('idle');
       if (onSpeakEnd) onSpeakEnd();
     };
 
-    // Find custom voices
     const voices = window.speechSynthesis.getVoices();
     const targetVoice = voices.find(
       (v) => v.name.includes('Google US English') || v.name.includes('Female') || v.name.includes('Zira')
@@ -68,7 +116,7 @@ export function useFridayAgent(options = {}) {
     window.speechSynthesis.speak(utterance);
   }, [updateAgentState, onSpeakStart, onSpeakEnd]);
 
-  // Play audio response (ElevenLabs base64 string)
+  // Play ElevenLabs audio
   const playAudioResponse = useCallback((base64Audio, textFallback) => {
     try {
       stopSpeakPlayback();
@@ -78,23 +126,25 @@ export function useFridayAgent(options = {}) {
       activeAudioRef.current = audio;
 
       audio.onplay = () => {
+        speakActiveRef.current = true;
         updateAgentState('speaking');
         if (onSpeakStart) onSpeakStart();
       };
 
       audio.onended = () => {
+        speakActiveRef.current = false;
         updateAgentState('idle');
         if (onSpeakEnd) onSpeakEnd();
         activeAudioRef.current = null;
       };
 
       audio.onerror = (e) => {
-        console.warn('Audio playback error, falling back to speech synthesis:', e);
+        console.warn('ElevenLabs play error, falling back to browser synthesis:', e);
         speakFallback(textFallback);
       };
 
       audio.play().catch(err => {
-        console.warn('Playback block or fail, falling back to speech synthesis:', err);
+        console.warn('Playback blocked, using fallback:', err);
         speakFallback(textFallback);
       });
     } catch (err) {
@@ -103,7 +153,7 @@ export function useFridayAgent(options = {}) {
     }
   }, [stopSpeakPlayback, speakFallback, updateAgentState, onSpeakStart, onSpeakEnd]);
 
-  // Execute commands from Claude tool calling
+  // Route navigation commands
   const executeAgentCommand = useCallback((action) => {
     if (!action) return;
     const { command, params } = action;
@@ -144,173 +194,170 @@ export function useFridayAgent(options = {}) {
         break;
       }
       default:
-        console.warn('Unknown voice command received:', command);
+        console.warn('Unknown voice command:', command);
     }
   }, [navigate]);
 
-  // Record command audio clip
-  const recordCommandClip = useCallback(async () => {
-    try {
-      updateAgentState('listening');
-      audioChunksRef.current = [];
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      mediaRecorderRef.current = mediaRecorder;
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        // Close stream tracks
-        stream.getTracks().forEach(track => track.stop());
-
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        if (audioBlob.size < 500) {
-          console.warn('Audio clip too short or empty');
-          updateAgentState('idle');
-          return;
-        }
-
-        // Send audio to backend
-        updateAgentState('thinking');
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'command.webm');
-
-        try {
-          const response = await api.post('/friday/voice', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          });
-
-          const { transcript, response: textResponse, action, audio } = response.data;
-          
-          setTranscriptText(transcript);
-          if (onTranscript) onTranscript(transcript);
-
-          // If tool call is matched, execute it
-          if (action) {
-            executeAgentCommand(action);
-          }
-
-          // TTS play
-          if (audio) {
-            playAudioResponse(audio, textResponse);
-          } else if (textResponse) {
-            speakFallback(textResponse);
-          } else {
-            updateAgentState('idle');
-          }
-        } catch (err) {
-          console.error('Error sending Friday voice clip:', err);
-          toast.error('Voice Assistant command failed');
-          updateAgentState('idle');
-        }
-      };
-
-      mediaRecorder.start();
-
-      // Record for a fixed duration of 3.5 seconds
-      recordingTimeoutRef.current = setTimeout(() => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-          mediaRecorderRef.current.stop();
-        }
-      }, 3500);
-
-    } catch (err) {
-      console.error('Failed to access microphone for command clip:', err);
-      toast.error('Could not access microphone');
-      updateAgentState('idle');
-    }
-  }, [updateAgentState, executeAgentCommand, playAudioResponse, speakFallback, onTranscript]);
-
-  // Start continuous wake-word listening
-  const startWakeWordListener = useCallback(() => {
-    if (wakeWordCheckingRef.current) return;
+  // Main SpeechRecognition initializer
+  const initSpeechLoop = useCallback(() => {
+    if (!isEnabledRef.current) return;
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      console.warn('Continuous Speech Recognition not supported in this browser.');
+      console.warn('SpeechRecognition is not supported in this browser.');
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
+    // Cancel previous instance if running
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (e) {}
+    }
 
-    recognition.onstart = () => {
-      isListeningRef.current = true;
-      wakeWordCheckingRef.current = true;
-      console.log('[useFridayAgent] Wake-word listener active. Listening for "Hey Friday"...');
+    const rec = new SpeechRecognition();
+    rec.continuous = (modeRef.current === 'WAKE');
+    rec.interimResults = (modeRef.current === 'COMMAND');
+    rec.lang = 'en-US';
+
+    rec.onstart = () => {
+      console.log(`[useFridayAgent] Speech Recognition started in mode: ${modeRef.current}`);
     };
 
-    recognition.onresult = (event) => {
+    rec.onresult = (event) => {
       const lastIndex = event.resultIndex;
-      const resultText = event.results[lastIndex][0].transcript.toLowerCase().trim();
-      console.log('[useFridayAgent] Heard phrase:', resultText);
+      const text = event.results[lastIndex][0].transcript.toLowerCase().trim();
 
-      if (resultText.includes('friday') || resultText.includes('hey friday') || resultText.includes('hay friday')) {
-        console.log('[useFridayAgent] Wake word "Hey Friday" DETECTED!');
-        // Stop wake-word recognition temporarily to record the command clip
-        recognition.stop();
-        // Trigger command clip recording
-        recordCommandClip();
-      }
-    };
+      if (modeRef.current === 'WAKE') {
+        console.log('[useFridayAgent] Wake phrase monitor:', text);
+        const hasWakeWord = [
+          'friday', 'hey friday', 'hello friday', 'hi friday', 'okay friday', 'hey eduverse', 
+          'hay friday', 'hi friday', 'ok friday', 'wake up friday', 'hey edu verse'
+        ].some(wake => text.includes(wake));
 
-    recognition.onend = () => {
-      isListeningRef.current = false;
-      wakeWordCheckingRef.current = false;
-      // Restart loop if enabled and agent is not busy
-      setTimeout(() => {
-        if (isEnabled && agentState === 'idle') {
-          startWakeWordListener();
+        if (hasWakeWord) {
+          console.log('[useFridayAgent] Hotword detected!');
+          playChime('wake');
+          modeRef.current = 'COMMAND';
+          finalTranscriptRef.current = '';
+          updateAgentState('listening');
+          
+          // Switch to command input mode
+          try {
+            rec.stop();
+          } catch (e) {}
         }
-      }, 500);
-    };
+      } else if (modeRef.current === 'COMMAND') {
+        const currentInterim = event.results[lastIndex][0].transcript;
+        console.log('[useFridayAgent] Live transcript interim:', currentInterim);
+        setTranscriptText(currentInterim);
+        if (onTranscript) onTranscript(currentInterim);
 
-    recognition.onerror = (e) => {
-      if (e.error !== 'no-speech') {
-        console.warn('Wake-word speech recognition error:', e.error);
+        if (event.results[lastIndex].isFinal) {
+          finalTranscriptRef.current = currentInterim;
+        }
       }
     };
 
-    wakeRecognitionRef.current = recognition;
-    recognition.start();
-  }, [isEnabled, agentState, recordCommandClip]);
+    rec.onend = async () => {
+      console.log(`[useFridayAgent] Speech Recognition ended in mode: ${modeRef.current}`);
 
-  const stopWakeWordListener = useCallback(() => {
-    if (wakeRecognitionRef.current) {
-      wakeRecognitionRef.current.stop();
-    }
-    if (recordingTimeoutRef.current) {
-      clearTimeout(recordingTimeoutRef.current);
-    }
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
-    }
-  }, []);
+      if (modeRef.current === 'COMMAND') {
+        const userCommand = finalTranscriptRef.current.trim();
+        if (userCommand) {
+          updateAgentState('thinking');
+          try {
+            const response = await api.post('/friday/voice-text', { message: userCommand });
+            const { response: textResponse, action, audio } = response.data;
 
-  // Monitor enabled state and busy state to start/stop wake-word listener
+            if (action) {
+              executeAgentCommand(action);
+            }
+
+            if (audio) {
+              playAudioResponse(audio, textResponse);
+            } else if (textResponse) {
+              speakFallback(textResponse);
+            } else {
+              updateAgentState('idle');
+              modeRef.current = 'WAKE';
+              initSpeechLoop();
+            }
+          } catch (err) {
+            console.error('[useFridayAgent] Command transmission error:', err);
+            toast.error('Voice Assistant command failed');
+            updateAgentState('idle');
+            modeRef.current = 'WAKE';
+            initSpeechLoop();
+          }
+        } else {
+          // Silence timeout, revert to wake-word listening
+          updateAgentState('idle');
+          modeRef.current = 'WAKE';
+          initSpeechLoop();
+        }
+      } else {
+        // In wake-word mode, restart listening loop immediately
+        setTimeout(() => {
+          if (isEnabledRef.current && modeRef.current === 'WAKE' && !speakActiveRef.current) {
+            initSpeechLoop();
+          }
+        }, 300);
+      }
+    };
+
+    rec.onerror = (e) => {
+      if (e.error !== 'no-speech' && e.error !== 'aborted') {
+        console.warn('[useFridayAgent] Recognition Error:', e.error);
+      }
+    };
+
+    recognitionRef.current = rec;
+    try {
+      rec.start();
+    } catch (e) {
+      console.warn('[useFridayAgent] Recognition start exception:', e.message);
+    }
+  }, [updateAgentState, executeAgentCommand, playAudioResponse, speakFallback, onTranscript, onSpeakStart, onSpeakEnd]);
+
+  // Manually trigger command mode on microphone button click
+  const triggerManualCommand = useCallback(() => {
+    stopSpeakPlayback();
+    playChime('wake');
+    modeRef.current = 'COMMAND';
+    finalTranscriptRef.current = '';
+    setTranscriptText('');
+    updateAgentState('listening');
+    initSpeechLoop();
+  }, [stopSpeakPlayback, initSpeechLoop, updateAgentState]);
+
+  // Effect to manage active listener states
   useEffect(() => {
-    if (isEnabled && agentState === 'idle') {
-      startWakeWordListener();
+    if (isEnabled) {
+      modeRef.current = 'WAKE';
+      initSpeechLoop();
     } else {
-      stopWakeWordListener();
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch (e) {}
+      }
+      stopSpeakPlayback();
     }
 
     return () => {
-      stopWakeWordListener();
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch (e) {}
+      }
     };
-  }, [isEnabled, agentState, startWakeWordListener, stopWakeWordListener]);
+  }, [isEnabled, initSpeechLoop, stopSpeakPlayback]);
 
   return {
     agentState,
     transcriptText,
-    recordCommand: recordCommandClip,
+    recordCommand: triggerManualCommand,
     stopSpeaking: stopSpeakPlayback
   };
 }

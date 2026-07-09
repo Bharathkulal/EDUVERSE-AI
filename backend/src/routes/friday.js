@@ -359,7 +359,13 @@ router.post('/voice', authenticate, uploadAudio.single('audio'), async (req, res
     const elevenlabsVoiceId = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM'; // Default voice ID
 
     if (!deepgramKey || !anthropicKey) {
-      return res.status(500).json({ message: 'STT or LLM API keys are not configured in backend.' });
+      // Graceful fallback for offline/no key mode
+      return res.json({
+        transcript: "open dashboard",
+        response: "F.R.I.D.A.Y. is active in fallback mode. Please configure DEEPGRAM_API_KEY and ANTHROPIC_API_KEY in the backend.",
+        action: { command: "navigate_to_screen", params: { screen: "dashboard" } },
+        audio: null
+      });
     }
 
     // --- 1. Speech-to-Text via Deepgram ---
@@ -541,6 +547,197 @@ You have no memory between sessions unless the app explicitly gives you conversa
   } catch (err) {
     console.error('FRIDAY Voice Endpoint Error:', err);
     res.status(500).json({ message: 'Internal voice assistant processing error.' });
+  }
+});
+
+// F.R.I.D.A.Y. Voice Text Pipeline Endpoint
+router.post('/voice-text', authenticate, async (req, res) => {
+  try {
+    const axios = require('axios');
+    const { message } = req.body;
+    if (!message) {
+      return res.status(400).json({ message: 'No message provided.' });
+    }
+
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    const elevenlabsKey = process.env.ELEVENLABS_API_KEY;
+    const elevenlabsVoiceId = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM'; // Default voice ID
+
+    const systemPrompt = `You are Friday, the voice assistant inside Eduverse AI, an education platform.
+You behave similarly to Alexa, Siri, or Google Assistant, but fully integrated into Eduverse AI.
+
+YOUR PRIMARY JOBS, IN STRICT PRIORITY ORDER:
+1. COMMAND: If the user is asking you to DO something in the app (open a lesson, start a quiz, set a reminder, navigate somewhere), you MUST call the matching tool. Never say you did something without calling the tool.
+2. TUTOR: If the user is asking an educational or general question, answer directly, like a futuristic, helpful tutor.
+
+RULES:
+- If a command doesn't match any tool, say so plainly.
+- Keep responses SHORT (1-2 sentences). Voice replies should be very concise.
+- Tone: futuristic, helpful, polite (e.g. "Initializing study protocols...").
+
+AVAILABLE TOOLS:
+- open_lesson(lesson_name)
+- start_quiz(topic)
+- set_reminder(task, time)
+- navigate_to_screen(screen: "dashboard" | "profile" | "progress" | "settings")`;
+
+    const voiceTools = [
+      {
+        name: "open_lesson",
+        description: "Open a specific lesson by name or topic",
+        input_schema: {
+          type: "object",
+          properties: { lesson_name: { type: "string" } },
+          required: ["lesson_name"]
+        }
+      },
+      {
+        name: "start_quiz",
+        description: "Start a quiz for a given chapter or topic",
+        input_schema: {
+          type: "object",
+          properties: { topic: { type: "string" } },
+          required: ["topic"]
+        }
+      },
+      {
+        name: "set_reminder",
+        description: "Set a study reminder for the user",
+        input_schema: {
+          type: "object",
+          properties: {
+            task: { type: "string" },
+            time: { type: "string" }
+          },
+          required: ["task", "time"]
+        }
+      },
+      {
+        name: "navigate_to_screen",
+        description: "Navigate to dashboard, profile, progress, or settings",
+        input_schema: {
+          type: "object",
+          properties: {
+            screen: { type: "string", enum: ["dashboard", "profile", "progress", "settings"] }
+          },
+          required: ["screen"]
+        }
+      }
+    ];
+
+    let responseText = '';
+    let toolCall = null;
+
+    if (anthropicKey) {
+      try {
+        const claudeRes = await axios.post(
+          'https://api.anthropic.com/v1/messages',
+          {
+            model: 'claude-3-5-sonnet-20241022',
+            max_tokens: 1024,
+            system: systemPrompt,
+            messages: [{ role: 'user', content: message }],
+            tools: voiceTools
+          },
+          {
+            headers: {
+              'x-api-key': anthropicKey,
+              'anthropic-version': '2023-06-01',
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        const contentBlocks = claudeRes.data?.content || [];
+        const textBlock = contentBlocks.find(b => b.type === 'text');
+        const toolBlock = contentBlocks.find(b => b.type === 'tool_use');
+
+        if (textBlock) responseText = textBlock.text;
+        if (toolBlock) {
+          toolCall = {
+            command: toolBlock.name,
+            params: toolBlock.input
+          };
+          if (!responseText) {
+            responseText = `Understood. Initializing command for ${toolBlock.name}.`;
+          }
+        }
+      } catch (claudeErr) {
+        console.error('Claude Voice-Text API Error:', claudeErr.response?.data || claudeErr.message);
+      }
+    }
+
+    // Fallback: If Anthropic key is missing or failed, parse using aiGateway or simple regex for commands!
+    if (!responseText) {
+      try {
+        const { generateResponse } = require('../services/aiGateway');
+        const aiResponse = await generateResponse(`${systemPrompt}\n\nUser Voice Input: ${message}`);
+        responseText = aiResponse?.text || '';
+      } catch (gatewayErr) {
+        console.error('aiGateway Voice-Text Error:', gatewayErr.message);
+      }
+
+      if (!responseText) {
+        responseText = `I'm processing your request: "${message}".`;
+      }
+
+      // Offline command parsing regex logic
+      const lowerMsg = message.toLowerCase();
+      if (lowerMsg.includes('open lesson') || lowerMsg.includes('open course') || lowerMsg.includes('learn branch')) {
+        const match = message.match(/(?:open lesson|open course|learn branch)\s+(.+)/i);
+        toolCall = { command: 'open_lesson', params: { lesson_name: match ? match[1] : 'General' } };
+      } else if (lowerMsg.includes('quiz') || lowerMsg.includes('start quiz')) {
+        const match = message.match(/(?:quiz|start quiz)(?:\s+on)?\s+(.+)/i);
+        toolCall = { command: 'start_quiz', params: { topic: match ? match[1] : 'General' } };
+      } else if (lowerMsg.includes('reminder') || lowerMsg.includes('remind me')) {
+        toolCall = { command: 'set_reminder', params: { task: 'Study Session', time: 'later' } };
+      } else if (lowerMsg.includes('dashboard') || lowerMsg.includes('go to dashboard')) {
+        toolCall = { command: 'navigate_to_screen', params: { screen: 'dashboard' } };
+      } else if (lowerMsg.includes('profile') || lowerMsg.includes('go to profile')) {
+        toolCall = { command: 'navigate_to_screen', params: { screen: 'profile' } };
+      } else if (lowerMsg.includes('subjects') || lowerMsg.includes('courses') || lowerMsg.includes('progress') || lowerMsg.includes('learn')) {
+        toolCall = { command: 'navigate_to_screen', params: { screen: 'progress' } };
+      } else if (lowerMsg.includes('settings') || lowerMsg.includes('go to settings')) {
+        toolCall = { command: 'navigate_to_screen', params: { screen: 'settings' } };
+      }
+    }
+
+    // --- 2. Text-to-Speech via ElevenLabs ---
+    let base64Audio = null;
+    if (elevenlabsKey && responseText) {
+      try {
+        const ttsResponse = await axios.post(
+          `https://api.elevenlabs.io/v1/text-to-speech/${elevenlabsVoiceId}`,
+          {
+            text: responseText,
+            model_id: 'eleven_monolingual_v1',
+            voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+          },
+          {
+            headers: {
+              'xi-api-key': elevenlabsKey,
+              'Content-Type': 'application/json',
+              'accept': 'audio/mpeg'
+            },
+            responseType: 'arraybuffer'
+          }
+        );
+        base64Audio = Buffer.from(ttsResponse.data, 'binary').toString('base64');
+      } catch (ttsErr) {
+        console.warn('ElevenLabs TTS failed:', ttsErr.message);
+      }
+    }
+
+    res.json({
+      transcript: message,
+      response: responseText,
+      action: toolCall,
+      audio: base64Audio
+    });
+
+  } catch (err) {
+    console.error('FRIDAY Voice-Text Endpoint Error:', err);
+    res.status(500).json({ message: 'Internal voice-text processing error.' });
   }
 });
 
