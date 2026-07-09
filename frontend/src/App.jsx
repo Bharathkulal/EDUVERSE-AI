@@ -42,6 +42,7 @@ const TypingQuest = lazy(() => import('./pages/TypingQuest'));
 const CodingBattleSystem = lazy(() => import('./pages/CodingBattleSystem'));
 const Community = lazy(() => import('./pages/Community'));
 const CareerHub = lazy(() => import('./pages/CareerHub'));
+const InnovationHub = lazy(() => import('./pages/InnovationHub'));
 // Python AI Learning Platform
 const PythonLessonPage = lazy(() => import('./python/PythonLessonPage'));
 // Advanced Java AI Learning Platform
@@ -173,6 +174,7 @@ export default function App() {
 
             {/* Career Hub & Community */}
             <Route path="/career-hub" element={<ProtectedRoute><Layout><CareerHub /></Layout></ProtectedRoute>} />
+            <Route path="/innovation-hub" element={<ProtectedRoute><Layout><InnovationHub /></Layout></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><Layout><Community /></Layout></ProtectedRoute>} />
 
             {/* Python AI Learning Platform */}
