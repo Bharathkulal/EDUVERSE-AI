@@ -13,6 +13,7 @@ class VoiceCommandParser {
       'profile': '/ai-profile',
       'courses': '/subjects',
       'subjects': '/subjects',
+      'learn': '/subjects',
       'settings': '/settings',
       'practice': '/practice-hub',
       'coding': '/coding',

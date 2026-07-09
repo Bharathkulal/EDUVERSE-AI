@@ -530,6 +530,7 @@ export default function Layout({ children }) {
           </div>
         </div>
       )}
+      <VoiceAssistantWidget />
     </div>
   );
 }

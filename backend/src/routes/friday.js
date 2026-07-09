@@ -638,7 +638,7 @@ If student requests any of these actions, specify the action name and arguments 
       toolCall = { command: 'navigate_to_screen', params: { screen: 'dashboard' } };
     } else if (lowerMessage.includes('profile') || lowerMessage.includes('go to profile')) {
       toolCall = { command: 'navigate_to_screen', params: { screen: 'profile' } };
-    } else if (lowerMessage.includes('subjects') || lowerMessage.includes('courses') || lowerMessage.includes('progress') || lowerMessage.includes('learn branch')) {
+    } else if (lowerMessage.includes('subjects') || lowerMessage.includes('courses') || lowerMessage.includes('progress') || lowerMessage.includes('learn branch') || lowerMessage.includes('open learn') || lowerMessage.includes('learn')) {
       toolCall = { command: 'navigate_to_screen', params: { screen: 'progress' } };
     } else if (lowerMessage.includes('go to settings')) {
       toolCall = { command: 'navigate_to_screen', params: { screen: 'settings' } };

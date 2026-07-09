@@ -58,6 +58,7 @@ export function useFridayAgent(options = {}) {
   const isEnabledRef = useRef(isEnabled);
   const finalTranscriptRef = useRef('');
   const speakActiveRef = useRef(false);
+  const isWakeTransitionRef = useRef(false);
 
   useEffect(() => {
     isEnabledRef.current = isEnabled;
@@ -273,16 +274,38 @@ export function useFridayAgent(options = {}) {
 
       if (modeRef.current === 'WAKE') {
         console.log('[useFridayAgent] Wake-phrase listener:', text);
-        const hasWakeWord = [
-          'friday', 'hey friday', 'hello friday', 'hi friday', 'okay friday', 'hey eduverse', 
-          'hay friday', 'hi friday', 'ok friday', 'wake up friday', 'hey edu verse'
-        ].some(wake => text.includes(wake));
+        const wakePhrases = [
+          'hey friday', 'hello friday', 'hi friday', 'okay friday', 'hey eduverse', 
+          'hay friday', 'hi friday', 'ok friday', 'wake up friday', 'hey edu verse', 'friday'
+        ];
+        const hasWakeWord = wakePhrases.some(wake => text.includes(wake));
 
         if (hasWakeWord) {
           console.log('[useFridayAgent] Wake word heard!');
           playChime('wake');
+
+          // Extract any words spoken after the wake phrase in the same utterance
+          let commandAfterWake = '';
+          for (const wake of wakePhrases) {
+            if (text.includes(wake)) {
+              const idx = text.indexOf(wake);
+              const remaining = text.substring(idx + wake.length).trim();
+              if (remaining) {
+                commandAfterWake = remaining;
+                break;
+              }
+            }
+          }
+
           modeRef.current = 'COMMAND';
-          finalTranscriptRef.current = '';
+          if (commandAfterWake) {
+            finalTranscriptRef.current = commandAfterWake;
+            isWakeTransitionRef.current = false;
+          } else {
+            finalTranscriptRef.current = '';
+            isWakeTransitionRef.current = true;
+          }
+
           updateAgentState('listening');
           try {
             rec.stop();
@@ -334,6 +357,11 @@ export function useFridayAgent(options = {}) {
             modeRef.current = 'WAKE';
             initSpeechLoop();
           }
+        } else if (isWakeTransitionRef.current) {
+          // We just transitioned from wake, so start listening for the actual command in COMMAND mode
+          isWakeTransitionRef.current = false;
+          updateAgentState('listening');
+          initSpeechLoop();
         } else {
           updateAgentState('idle');
           modeRef.current = 'WAKE';
