@@ -4,6 +4,7 @@ import toast, { useToasterStore } from 'react-hot-toast';
 import SpeechSynthesisService from '../services/voice/SpeechSynthesisService';
 import SpeechRecognitionService from '../services/voice/SpeechRecognitionService';
 import PageGuideService, { getPageGuide } from '../services/voice/PageGuideService';
+import { useFridayAgent } from '../services/voice/useFridayAgent';
 import VoiceCommandParser from '../services/voice/VoiceCommandParser';
 import UserProgressTracker from '../services/voice/UserProgressTracker';
 import api from '../api/axios';
@@ -105,6 +106,23 @@ export const VoiceAssistantProvider = ({ children }) => {
 
   // Sync refs to avoid dependency re-renders in callbacks
   useEffect(() => { isEnabledRef.current = isEnabled; }, [isEnabled]);
+
+  // "Hey Friday" Voice Agent Integration
+  const fridayAgent = useFridayAgent({
+    isEnabled: isEnabled && !isMuted,
+    onStateChange: (state) => {
+      setActiveState(state);
+    },
+    onTranscript: (text) => {
+      setSubtitle(`Heard: "${text}"`);
+    },
+    onSpeakStart: () => {
+      setActiveState('speaking');
+    },
+    onSpeakEnd: () => {
+      setActiveState('idle');
+    }
+  });
   useEffect(() => { settingsRef.current = settings; }, [settings]);
   useEffect(() => { isMutedRef.current = isMuted; }, [isMuted]);
 
@@ -224,11 +242,14 @@ export const VoiceAssistantProvider = ({ children }) => {
 
   const stopSpeech = useCallback(() => {
     SpeechSynthesisService.cancel();
+    if (fridayAgent && fridayAgent.stopSpeaking) {
+      fridayAgent.stopSpeaking();
+    }
     setActiveState('idle');
     setSubtitle('');
     setCurrentNarratedText('');
     setActiveParagraphIndex(-1);
-  }, []);
+  }, [fridayAgent]);
 
   // Web query LLM fallback
   const askAI = useCallback(async (question) => {
@@ -447,15 +468,6 @@ Provide a friendly, helpful, and concise response in 1 to 2 sentences. Include m
     return () => clearInterval(interval);
   }, [isEnabled, activeState]);
 
-  // Loop restart logic
-  useEffect(() => {
-    if (isEnabled && !isMuted && activeState !== 'speaking') {
-      startListening();
-    } else {
-      stopListening();
-    }
-  }, [isEnabled, isMuted, activeState, startListening, stopListening]);
-
   // Double-tap on screen gesture listener to toggle voice assistant
   useEffect(() => {
     let lastTap = 0;
@@ -496,9 +508,9 @@ Provide a friendly, helpful, and concise response in 1 to 2 sentences. Include m
       toggleEnabled,
       isMuted,
       setIsMuted,
-      activeState,
-      subtitle,
-      isListening,
+      activeState: fridayAgent ? fridayAgent.agentState : activeState,
+      subtitle: (fridayAgent && fridayAgent.transcriptText) ? fridayAgent.transcriptText : subtitle,
+      isListening: fridayAgent ? (fridayAgent.agentState === 'listening') : isListening,
       settings,
       updateSettings,
       speak,
