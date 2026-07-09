@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useSessionTracker } from '../utils/sessionTracker';
 import ThemeToggleButton from './ThemeToggleButton';
-import VoiceAssistantWidget from './VoiceAssistantWidget';
 import { Mic } from 'lucide-react';
 import '../pages/DashboardTheme.css';
 
@@ -530,7 +529,6 @@ export default function Layout({ children }) {
           </div>
         </div>
       )}
-      <VoiceAssistantWidget />
     </div>
   );
 }
