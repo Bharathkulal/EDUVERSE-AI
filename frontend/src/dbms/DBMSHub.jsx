@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Code2, Trophy, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Trophy, ArrowLeft } from 'lucide-react';
 import DBMSTheory from './DBMSTheory';
 import DBMSLab from '../components/DBMSLab';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
+import HubCards from '../components/HubCards';
 
 export default function DBMSHub() {
   const [activeView, setActiveView] = useState('hub'); // 'hub', 'theory', 'practical'
@@ -92,7 +93,7 @@ export default function DBMSHub() {
           Database Management (DBMS)
         </h1>
         <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-          Master Entity-Relationship design, schema normalizations (1NF/2NF/3NF), transactional ACID rules, and complex SQL joins inside our dynamic compiler.
+          Study relational databases, entity mapping configurations, normalizations, ACID parameters, and query executions.
         </p>
 
         {/* Progress bar */}
@@ -115,75 +116,7 @@ export default function DBMSHub() {
       </motion.div>
 
       {/* CENTER: TWO CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl w-full z-10 px-4">
-        {/* THEORY MODE */}
-        <motion.div 
-          whileHover={{ y: -6, scale: 1.01 }}
-          onClick={() => setActiveView('theory')}
-          className={`p-8 rounded-[32px] border cursor-pointer flex flex-col justify-between h-[280px] transition-all relative overflow-hidden group ${
-            isDark 
-              ? 'bg-[#120e2a]/60 border-cyan-500/10 hover:border-cyan-500/35 hover:shadow-[0_0_40px_rgba(6,182,212,0.15)] shadow-xl shadow-cyan-950/20' 
-              : 'bg-white border-slate-200 hover:shadow-2xl hover:shadow-slate-300/50 shadow-md'
-          }`}
-        >
-          <div 
-            className="absolute inset-0 bg-no-repeat bg-right-bottom pointer-events-none rounded-[32px] transition-opacity duration-300 opacity-[0.22] dark:opacity-[0.38] mix-blend-screen"
-            style={{ backgroundImage: "url('/theory_bg.png')", backgroundSize: '60% auto' }}
-          />
-          <div className="space-y-4 relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 text-2xl font-bold">
-                <BookOpen size={22} />
-              </div>
-              <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider font-bold">Theory Studio</span>
-            </div>
-            <div className="space-y-1.5 text-left">
-              <h3 className="text-xl font-bold">Interactive Voice Teacher</h3>
-              <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-655'}`}>
-                Study three-schema architectures, key relations, Normalization, ACID transactions, and lock structures with our bilingual audio coach.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center justify-end text-cyan-400 gap-1 text-xs font-bold font-mono uppercase tracking-wider group-hover:translate-x-1.5 transition-transform duration-300 relative z-10">
-            <span>Enter Studio</span>
-            <ArrowRight size={14} />
-          </div>
-        </motion.div>
- 
-        {/* PRACTICAL LAB */}
-        <motion.div 
-          whileHover={{ y: -6, scale: 1.01 }}
-          onClick={() => setActiveView('practical')}
-          className={`p-8 rounded-[32px] border cursor-pointer flex flex-col justify-between h-[280px] transition-all relative overflow-hidden group ${
-            isDark 
-              ? 'bg-[#120e2a]/60 border-teal-500/10 hover:border-teal-500/35 hover:shadow-[0_0_40px_rgba(20,184,166,0.15)] shadow-xl shadow-teal-950/20' 
-              : 'bg-white border-slate-200 hover:shadow-2xl hover:shadow-slate-300/50 shadow-md'
-          }`}
-        >
-          <div 
-            className="absolute inset-0 bg-no-repeat bg-right-bottom pointer-events-none rounded-[32px] transition-opacity duration-300 opacity-[0.22] dark:opacity-[0.38] mix-blend-screen"
-            style={{ backgroundImage: "url('/practical_bg.png')", backgroundSize: '60% auto' }}
-          />
-          <div className="space-y-4 relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-400 text-2xl font-bold">
-                <Code2 size={22} />
-              </div>
-              <span className="text-[10px] font-mono text-teal-400 bg-teal-500/10 border border-teal-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider font-bold">SQLite Playground</span>
-            </div>
-            <div className="space-y-1.5 text-left">
-              <h3 className="text-xl font-bold">Interactive SQL Lab</h3>
-              <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-655'}`}>
-                Write SQL tables, perform insert queries, join datasets, execute aggregate calculations, and preview memory grids dynamically.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center justify-end text-teal-400 gap-1 text-xs font-bold font-mono uppercase tracking-wider group-hover:translate-x-1.5 transition-transform duration-300 relative z-10">
-            <span>Open Playground</span>
-            <ArrowRight size={14} />
-          </div>
-        </motion.div>
-      </div>
+      <HubCards isDark={isDark} onSelectView={setActiveView} />
     </div>
   );
 }
