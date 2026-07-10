@@ -320,14 +320,18 @@ export default function Subjects() {
                           <span className="font-bold text-purple-200 flex items-center gap-1.5">
                             🎮 Game Mode (Rotate)
                           </span>
-                          <div className="relative inline-flex items-center">
-                            <input 
-                              type="checkbox" 
-                              checked={dsaGameMode} 
-                              readOnly
-                              className="sr-only peer" 
-                            />
-                            <div className="w-8 h-4.5 bg-slate-700/60 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[14px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-slate-600 peer-checked:bg-purple-500"></div>
+                          <div className="relative flex items-center">
+                            <div className={`w-10 h-5.5 rounded-full p-0.5 transition-all duration-300 ${
+                              dsaGameMode 
+                                ? 'bg-gradient-to-r from-purple-500 to-indigo-650 shadow-[0_0_10px_rgba(168,85,247,0.4)]' 
+                                : 'bg-slate-800/80 border border-slate-700/65'
+                            } flex items-center`}>
+                              <div className={`w-4.5 h-4.5 rounded-full transition-all duration-300 ease-out transform ${
+                                dsaGameMode 
+                                  ? 'translate-x-[18px] bg-white shadow-[0_2px_4px_rgba(0,0,0,0.25)]' 
+                                  : 'translate-x-0 bg-slate-400'
+                              }`} />
+                            </div>
                           </div>
                         </div>
                       )}
