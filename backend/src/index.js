@@ -803,44 +803,7 @@ const db = require('./config/db');
         `);
       }
 
-      // Innovation Hub Tables
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS innovation_ideas (
-          id SERIAL PRIMARY KEY,
-          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-          title VARCHAR(500) NOT NULL,
-          problem_statement TEXT,
-          solution TEXT,
-          target_audience TEXT,
-          industry VARCHAR(200),
-          country VARCHAR(100),
-          tech_stack TEXT,
-          status VARCHAR(50) DEFAULT 'draft',
-          innovation_score INTEGER DEFAULT 0,
-          market_score INTEGER DEFAULT 0,
-          execution_score INTEGER DEFAULT 0,
-          investment_score INTEGER DEFAULT 0,
-          ai_evaluation JSONB,
-          market_research JSONB,
-          competitor_analysis JSONB,
-          business_model JSONB,
-          financial_plan JSONB,
-          mvp_plan JSONB,
-          pitch_deck JSONB,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
 
-        CREATE TABLE IF NOT EXISTS innovation_documents (
-          id SERIAL PRIMARY KEY,
-          idea_id INTEGER REFERENCES innovation_ideas(id) ON DELETE CASCADE,
-          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-          doc_type VARCHAR(100) NOT NULL,
-          title VARCHAR(300),
-          content TEXT,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
 
       console.log('Database migrations completed successfully.');
     } catch (err) {
@@ -1054,7 +1017,6 @@ app.use('/api/datasets', datasetRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/it-suite', itSuiteRoutes);
 app.use('/api/chat-learn', chatLearnRoutes);
-app.use('/api/innovation', require('./routes/innovation'));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use((err, req, res, next) => {

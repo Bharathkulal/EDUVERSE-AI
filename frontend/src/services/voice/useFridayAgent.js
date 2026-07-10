@@ -217,10 +217,7 @@ export function useFridayAgent(options = {}) {
       '/quizzes': ['open arena', 'go to arena', 'quizzes', 'arena'],
       '/exam-center': ['open command center', 'go to command center', 'assessment center', 'command center'],
       '/debate-arena': ['open debate arena', 'go to debate arena', 'ai debate', 'speaking lab', 'debate arena'],
-      '/video-studio': ['open video studio', 'go to video studio', 'video learning studio', 'creation studio', 'video studio'],
       '/career-hub': ['open career hub', 'go to career hub', 'career hub'],
-      '/innovation-hub': ['open innovation hub', 'go to innovation hub', 'innovation hub'],
-      '/learning-timeline': ['open timeline', 'go to timeline', 'learning timeline', 'timeline'],
       '/community': ['open community', 'go to community', 'community'],
       '/ai-profile': ['open profile', 'go to profile', 'profile'],
       '/study-report': ['open study report', 'go to study report', 'study report']
