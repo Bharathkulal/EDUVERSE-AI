@@ -18,6 +18,7 @@ const studentNav = [
   { path: '/ai-tutor', label: 'AI Center', icon: '🧠' },
   { path: '/quizzes', label: 'Arena', icon: '🏆' },
   { path: '/exam-center', label: 'Command Center', icon: '📝' },
+  { path: '/debate-arena', label: 'AI Debate Arena', icon: '🗣️' },
   { path: '/career-hub', label: 'Career Hub', icon: '🔥' },
   { path: '/innovation-hub', label: 'Innovation Hub', icon: '💡' },
   { path: '/learning-timeline', label: 'Learning Timeline', icon: '⏳' },
@@ -49,7 +50,7 @@ const TOP_LEVEL_PATHS = [
   '/dashboard/activity', '/dashboard/continue',
   '/subjects', '/practice-hub', '/quizzes', '/coding', '/dbms-lab', '/ai-tutor',
   '/progress', '/certificates', '/study-report', '/ml-analytics', '/ai-profile', '/question-bank',
-  '/voice-assistant', '/settings', '/community', '/career-hub', '/innovation-hub', '/learning-timeline', '/exam-center', '/it-suite', '/techverse', '/chat-learn',
+  '/voice-assistant', '/settings', '/community', '/career-hub', '/innovation-hub', '/learning-timeline', '/exam-center', '/debate-arena', '/it-suite', '/techverse', '/chat-learn',
   '/admin', '/admin/students', '/admin/content', '/admin/quizzes',
   '/admin/dataset', '/admin/ml', '/admin/questions',
   '/admin/logs', '/admin/analytics', '/admin/alerts',
@@ -372,7 +373,7 @@ export default function Layout({ children }) {
           </div>
         </header>
 
-        <main className={`db-content-body overflow-y-auto custom-sidebar-scroll ${['/coding', '/chat-learn', '/innovation-hub', '/learning-timeline', '/exam-center'].includes(location.pathname) ? '!p-0 !max-w-none !m-0 !h-full' : ''}`}>
+        <main className={`db-content-body overflow-y-auto custom-sidebar-scroll ${['/coding', '/chat-learn', '/innovation-hub', '/learning-timeline', '/exam-center', '/debate-arena'].includes(location.pathname) ? '!p-0 !max-w-none !m-0 !h-full' : ''}`}>
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, x: 20 }}
