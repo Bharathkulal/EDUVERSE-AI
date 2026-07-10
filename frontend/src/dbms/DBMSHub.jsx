@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { BookOpen, Code2, Trophy, ArrowRight, ArrowLeft } from 'lucide-react';
 import DBMSTheory from './DBMSTheory';
 import DBMSLab from '../components/DBMSLab';
-import OnlineCompiler from '../components/OnlineCompiler';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -45,11 +44,6 @@ export default function DBMSHub() {
         </button>
         <div className="pt-16">
           <DBMSLab />
-          <OnlineCompiler
-            language="dbms"
-            title="SQL Online Compiler"
-            subtitle="Write and run SQL queries live — SELECT, INSERT, CREATE, JOIN and more."
-          />
         </div>
       </div>
     );
