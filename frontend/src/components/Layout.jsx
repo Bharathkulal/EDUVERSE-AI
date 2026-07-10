@@ -129,6 +129,8 @@ export default function Layout({ children }) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setShowCommandPalette(prev => !prev);
+      } else if (e.key === 'Escape') {
+        setShowCommandPalette(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
