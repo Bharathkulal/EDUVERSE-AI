@@ -171,6 +171,7 @@ export default function Coding() {
     toast.success('Cloned repository into workspace.');
   };
 
+
   // Switch tabs & sync Monaco content
   const handleTabClick = (fileName, splitSide = 'left') => {
     const file = files.find(f => f.name === fileName);
@@ -375,7 +376,7 @@ export default function Coding() {
   const buttonBgClass = isDarkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600 text-slate-300' : 'bg-slate-200 border-slate-300 hover:bg-slate-300 text-slate-700';
 
   return (
-    <div className={`w-full h-full flex flex-col relative overflow-hidden ${bgClass}`}>
+    <div className={`w-full h-full flex flex-col relative ${activeProject ? 'overflow-hidden' : 'overflow-y-auto'} ${bgClass}`}>
 
       {/* ─── CASE A: WELCOME HOME SCREEN STATE ─── */}
       {!activeProject && (
