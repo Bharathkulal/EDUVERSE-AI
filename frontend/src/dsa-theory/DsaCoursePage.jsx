@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Zap, Trophy, TrendingUp, Star, Code2, CheckCircle, Clock, ChevronRight, ArrowLeft } from 'lucide-react';
+import { BookOpen, Zap, Trophy, TrendingUp, Star, Code2, CheckCircle, Clock, ChevronRight, ArrowLeft, Play } from 'lucide-react';
 import { DSA_LESSONS } from './data/dsaLessons';
 import useDsaStore from './store/useDsaStore';
 import { useTheme } from '../context/ThemeContext';
@@ -138,6 +138,28 @@ function DsaLessonCard({ lesson, index, navigate, isDark }) {
               />
             </div>
           </div>
+
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClick();
+            }}
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl font-bold text-xs transition-all text-white mt-4"
+            style={{
+              background: `linear-gradient(135deg, ${lesson.accent}CC, ${lesson.accent}88)`,
+              boxShadow: `0 4px 20px ${lesson.accent}30`,
+            }}
+          >
+            {progress > 0 && !isCompleted ? (
+              <><Play size={12} fill="white" /> Resume</>
+            ) : isCompleted ? (
+              <><CheckCircle size={12} /> Review Module</>
+            ) : (
+              <><ChevronRight size={12} /> Start Module</>
+            )}
+          </motion.button>
         </div>
       </div>
     </motion.div>
