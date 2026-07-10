@@ -652,6 +652,9 @@ export default function GraphVisualization() {
   const getNodeStyle = (node) => {
     if (activeNodeId === node.id) return { bg: '#DBEAFE', border: '#2563EB', text: '#1D4ED8', glow: true };
     if (visitedNodes.has(node.id)) return { bg: '#D1FAE5', border: '#10B981', text: '#059669', glow: false };
+    if (isDarkMode) {
+      return { bg: '#1b124c', border: '#8b5cf6', text: '#e9d5ff', glow: false };
+    }
     return { bg: '#FFFFFF', border: '#CBD5E1', text: '#334155', glow: false };
   };
 
@@ -663,6 +666,7 @@ export default function GraphVisualization() {
     if (isMst) return { stroke: '#F59E0B', width: 3.5, glow: true };
     const srcVisited = visitedNodes.has(edge.source) && visitedNodes.has(edge.target);
     if (srcVisited) return { stroke: '#10B981', width: 2.5, glow: false };
+    if (isDarkMode) return { stroke: '#4b4869', width: 2, glow: false };
     return { stroke: '#CBD5E1', width: 2, glow: false };
   };
 
@@ -757,7 +761,11 @@ export default function GraphVisualization() {
         {/* ═══════════════════════════════════════════════
             LEFT PANEL: CONTROL CENTER (22%)
         ═══════════════════════════════════════════════ */}
-        <div className={`bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg p-5 flex flex-col justify-between overflow-y-auto shrink-0 ${
+        <div className={`backdrop-blur-xl border rounded-[24px] shadow-lg p-5 flex flex-col justify-between overflow-y-auto shrink-0 transition-colors duration-250 ${
+          isDarkMode 
+            ? 'bg-[#120e2a]/95 border-purple-500/10 text-white' 
+            : 'bg-white/70 border-[#E2E8F0] text-slate-800'
+        } ${
           isGameRotated 
             ? 'w-[22%] min-w-[240px] h-full gap-2 p-4' 
             : 'w-full lg:w-[22%] lg:min-w-[280px] h-auto lg:h-full gap-6 lg:gap-0'
@@ -766,16 +774,16 @@ export default function GraphVisualization() {
 
             {/* Header */}
             <div>
-              <h2 className="text-xl font-extrabold text-[#0F172A] flex items-center gap-2 mb-1">
+              <h2 className={`text-xl font-extrabold flex items-center gap-2 mb-1 ${isDarkMode ? 'text-white' : 'text-[#0F172A]'}`}>
                 <Zap className="w-5 h-5 text-blue-500" /> Graph Lab
               </h2>
-              <p className="text-[#64748B] text-[11px]">Create, connect, and visualize graph algorithms live.</p>
+              <p className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-[#64748B]'}`}>Create, connect, and visualize graph algorithms live.</p>
             </div>
 
             {/* Graph Type Selector */}
             <div>
               <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-2">Graph Type</label>
-              <div className="grid grid-cols-3 gap-1 bg-[#F1F5F9] p-1 rounded-xl border border-slate-200">
+              <div className={`grid grid-cols-3 gap-1 p-1 rounded-xl border ${isDarkMode ? 'bg-[#181236] border-purple-500/10' : 'bg-[#F1F5F9] border-slate-200'}`}>
                 {[
                   { id: 'undirected', label: 'Undirected' },
                   { id: 'directed', label: 'Directed' },
@@ -784,7 +792,15 @@ export default function GraphVisualization() {
                   <button
                     key={t.id}
                     onClick={() => setGraphType(t.id)}
-                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all ${graphType === t.id ? 'bg-white text-blue-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all ${
+                      graphType === t.id 
+                        ? isDarkMode 
+                          ? 'bg-purple-650 text-white shadow-sm border border-purple-500/20' 
+                          : 'bg-white text-blue-600 shadow-sm border border-slate-200' 
+                        : isDarkMode 
+                          ? 'text-slate-400 hover:text-slate-200' 
+                          : 'text-slate-500 hover:text-slate-700'
+                    }`}
                   >
                     {t.label}
                   </button>
@@ -795,21 +811,29 @@ export default function GraphVisualization() {
             {/* Node Operations */}
             <div className="space-y-3">
               <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">Node Operations</label>
-              <div className="bg-[#F8FAFC] p-3 rounded-2xl border border-slate-200 shadow-inner">
+              <div className={`p-3 rounded-2xl border shadow-inner ${isDarkMode ? 'bg-[#140f30]/60 border-purple-500/10' : 'bg-[#F8FAFC] border-slate-200'}`}>
                 <input
                   type="text"
                   value={inputValue}
                   onChange={e => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Enter node value..."
-                  className="w-full text-center text-lg font-bold bg-white border-2 border-slate-200 rounded-xl py-2.5 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all text-slate-800 placeholder-slate-300"
+                  className={`w-full text-center text-lg font-bold border-2 rounded-xl py-2.5 focus:outline-none focus:ring-4 transition-all ${
+                    isDarkMode 
+                      ? 'bg-[#0b071e] border-purple-500/20 text-white placeholder-slate-600 focus:border-purple-500 focus:ring-purple-500/20' 
+                      : 'bg-white border-slate-200 text-slate-800 placeholder-slate-300 focus:border-blue-500 focus:ring-blue-500/20'
+                  }`}
                 />
                 <div className="flex justify-center gap-1.5 mt-3">
                   {['A', 'B', 'C', 'D'].map(v => (
                     <button
                       key={v}
                       onClick={() => setInputValue(v)}
-                      className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 hover:border-blue-400 hover:text-blue-600 transition shadow-sm"
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition shadow-sm border ${
+                        isDarkMode 
+                          ? 'bg-[#181236] border-purple-500/25 text-purple-200 hover:border-purple-400 hover:text-purple-100' 
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600'
+                      }`}
                     >
                       [{v}]
                     </button>
@@ -817,41 +841,94 @@ export default function GraphVisualization() {
                 </div>
                 <button
                   onClick={handleAddNode}
-                  className="w-full mt-3 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-sm py-2.5 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  className={`w-full mt-3 font-bold text-sm py-2.5 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${
+                    isDarkMode 
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-650 text-white shadow-purple-550/20 hover:opacity-95' 
+                      : 'bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-blue-500/30'
+                  }`}
                 >
                   <Plus className="w-4 h-4" /> Add Node
                 </button>
               </div>
 
               {/* Edge Add */}
-              <div className="bg-[#F8FAFC] p-3 rounded-2xl border border-slate-200 shadow-inner space-y-2">
+              <div className={`p-3 rounded-2xl border shadow-inner space-y-2 ${isDarkMode ? 'bg-[#140f30]/60 border-purple-500/10' : 'bg-[#F8FAFC] border-slate-200'}`}>
                 <label className="block text-[9px] uppercase tracking-wider text-slate-400 font-bold">Add Edge</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <input value={edgeSource} onChange={e => setEdgeSource(e.target.value)} placeholder="From" className="text-center text-sm font-bold bg-white border-2 border-slate-200 rounded-lg py-1.5 focus:outline-none focus:border-blue-500 transition text-slate-800 placeholder-slate-300" />
-                  <input value={edgeTarget} onChange={e => setEdgeTarget(e.target.value)} placeholder="To" className="text-center text-sm font-bold bg-white border-2 border-slate-200 rounded-lg py-1.5 focus:outline-none focus:border-blue-500 transition text-slate-800 placeholder-slate-300" />
+                  <input 
+                    value={edgeSource} 
+                    onChange={e => setEdgeSource(e.target.value)} 
+                    placeholder="From" 
+                    className={`text-center text-sm font-bold border-2 rounded-lg py-1.5 focus:outline-none transition ${
+                      isDarkMode 
+                        ? 'bg-[#0b071e] border-purple-500/20 text-white focus:border-purple-550 placeholder-slate-600' 
+                        : 'bg-white border-slate-200 text-slate-800 placeholder-slate-305 focus:border-blue-500'
+                    }`} 
+                  />
+                  <input 
+                    value={edgeTarget} 
+                    onChange={e => setEdgeTarget(e.target.value)} 
+                    placeholder="To" 
+                    className={`text-center text-sm font-bold border-2 rounded-lg py-1.5 focus:outline-none transition ${
+                      isDarkMode 
+                        ? 'bg-[#0b071e] border-purple-500/20 text-white focus:border-purple-555 placeholder-slate-600' 
+                        : 'bg-white border-slate-200 text-slate-800 placeholder-slate-305 focus:border-blue-500'
+                    }`} 
+                  />
                 </div>
                 {graphType === 'weighted' && (
-                  <input value={edgeWeight} onChange={e => setEdgeWeight(e.target.value)} placeholder="Weight" type="number" className="w-full text-center text-sm font-bold bg-white border-2 border-slate-200 rounded-lg py-1.5 focus:outline-none focus:border-blue-500 transition text-slate-800 placeholder-slate-300" />
+                  <input 
+                    value={edgeWeight} 
+                    onChange={e => setEdgeWeight(e.target.value)} 
+                    placeholder="Weight" 
+                    type="number" 
+                    className={`w-full text-center text-sm font-bold border-2 rounded-lg py-1.5 focus:outline-none transition ${
+                      isDarkMode 
+                        ? 'bg-[#0b071e] border-purple-500/20 text-white focus:border-purple-555 placeholder-slate-600' 
+                        : 'bg-white border-slate-200 text-slate-800 placeholder-slate-305 focus:border-blue-500'
+                    }`} 
+                  />
                 )}
-                <button onClick={handleAddEdge} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-2 rounded-xl transition-all shadow-md shadow-emerald-500/20 active:scale-[0.98] flex items-center justify-center gap-2">
+                <button 
+                  onClick={handleAddEdge} 
+                  className={`w-full text-xs font-bold py-2 rounded-xl transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 ${
+                    isDarkMode 
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-emerald-500/10 hover:opacity-95' 
+                      : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'
+                  }`}
+                >
                   <Link2 className="w-3.5 h-3.5" /> Add Edge
                 </button>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <button onClick={handleDeleteNode} className="flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-[#EF4444] border border-red-200 font-bold py-2 rounded-xl transition-colors text-xs">
+                <button 
+                  onClick={handleDeleteNode} 
+                  className={`flex items-center justify-center gap-1 border font-bold py-2 rounded-xl transition-colors text-xs ${
+                    isDarkMode 
+                      ? 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20' 
+                      : 'bg-red-50 border-red-200 text-[#EF4444] hover:bg-red-100'
+                  }`}
+                >
                   <Minus className="w-3.5 h-3.5" /> Delete
                 </button>
-                <button onClick={handleReset} className="flex items-center justify-center gap-1 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 font-bold py-2 rounded-xl transition-colors text-xs">
+                <button 
+                  onClick={handleReset} 
+                  className={`flex items-center justify-center gap-1 border font-bold py-2 rounded-xl transition-colors text-xs ${
+                    isDarkMode 
+                      ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700' 
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
                   <Trash2 className="w-3.5 h-3.5" /> Reset
                 </button>
               </div>
             </div>
 
             {/* Algorithm Section */}
-            <div className="border-t border-slate-200 pt-4 space-y-3">
+            <div className={`border-t pt-4 space-y-3 ${isDarkMode ? 'border-purple-500/10' : 'border-slate-200'}`}>
               <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">Algorithm</label>
-              <div className="grid grid-cols-1 gap-1 bg-[#F1F5F9] p-1 rounded-xl border border-slate-200">
+              <div className={`grid grid-cols-1 gap-1 p-1 rounded-xl border ${isDarkMode ? 'bg-[#181236] border-purple-500/10' : 'bg-[#F1F5F9] border-slate-200'}`}>
                 {[
                   { id: 'bfs', label: 'BFS Traversal' },
                   { id: 'dfs', label: 'DFS Traversal' },
@@ -862,7 +939,15 @@ export default function GraphVisualization() {
                   <button
                     key={a.id}
                     onClick={() => setAlgorithm(a.id)}
-                    className={`py-1.5 text-[11px] font-bold rounded-lg transition-all text-left px-3 ${algorithm === a.id ? 'bg-white text-blue-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`py-1.5 text-[11px] font-bold rounded-lg transition-all text-left px-3 ${
+                      algorithm === a.id 
+                        ? isDarkMode 
+                          ? 'bg-purple-650 text-white shadow-sm border border-purple-500/20' 
+                          : 'bg-white text-blue-600 shadow-sm border border-slate-200' 
+                        : isDarkMode 
+                          ? 'text-slate-400 hover:text-slate-200' 
+                          : 'text-slate-500 hover:text-slate-700'
+                    }`}
                   >
                     {a.label}
                   </button>
@@ -870,43 +955,67 @@ export default function GraphVisualization() {
               </div>
               <button
                 onClick={handleRunAlgorithm}
-                className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-md shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-2"
+                className={`w-full text-xs font-bold py-2.5 rounded-xl transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 ${
+                  isDarkMode 
+                    ? 'bg-gradient-to-r from-purple-650 to-indigo-650 text-white shadow-purple-600/10 hover:opacity-95' 
+                    : 'bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-blue-500/20'
+                }`}
               >
                 <Play className="w-3.5 h-3.5 fill-current" /> Run Algorithm
               </button>
             </div>
 
             {/* Execution Debugger */}
-            <div className="border-t border-slate-200 pt-4 space-y-3">
+            <div className={`border-t pt-4 space-y-3 ${isDarkMode ? 'border-purple-500/10' : 'border-slate-200'}`}>
               <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">Execution Debugger</label>
-              <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-200 gap-1">
-                <button onClick={handleAnimReset} className="p-2 hover:bg-slate-200 rounded-lg transition text-slate-500 hover:text-slate-800" title="Restart">
+              <div className={`flex items-center justify-between p-2 rounded-xl border gap-1 ${isDarkMode ? 'bg-[#140f30]/60 border-purple-500/10' : 'bg-slate-50 border-slate-200'}`}>
+                <button 
+                  onClick={handleAnimReset} 
+                  className={`p-2 rounded-lg transition ${isDarkMode ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-205'}`} 
+                  title="Restart"
+                >
                   <RotateCcw className="w-4 h-4" />
                 </button>
-                <button onClick={handlePrev} className="p-2 hover:bg-slate-200 rounded-lg transition text-slate-500 hover:text-slate-800" title="Previous Step">
+                <button 
+                  onClick={handlePrev} 
+                  className={`p-2 rounded-lg transition ${isDarkMode ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-205'}`} 
+                  title="Previous Step"
+                >
                   <SkipBack className="w-4 h-4" />
                 </button>
                 <button onClick={handlePlayPause} className="p-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition" title={isPlaying ? 'Pause' : 'Play'}>
                   {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
                 </button>
-                <button onClick={handleNext} className="p-2 hover:bg-slate-200 rounded-lg transition text-slate-500 hover:text-slate-800" title="Next Step">
+                <button 
+                  onClick={handleNext} 
+                  className={`p-2 rounded-lg transition ${isDarkMode ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-205'}`} 
+                  title="Next Step"
+                >
                   <SkipForward className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
             {/* Speed */}
-            <div className="border-t border-slate-200 pt-4 space-y-1">
+            <div className={`border-t pt-4 space-y-1 ${isDarkMode ? 'border-purple-500/10' : 'border-slate-200'}`}>
               <div className="flex justify-between text-[10px] text-slate-400 font-bold">
                 <span>Speed</span>
                 <span>{speed}x</span>
               </div>
-              <div className="flex justify-between items-center bg-slate-100 p-1 rounded-xl">
+              <div className={`flex justify-between items-center p-1 rounded-xl ${isDarkMode ? 'bg-[#181236]' : 'bg-slate-100'}`}>
                 {[0.5, 1, 2].map(s => (
                   <button
                     key={s}
                     onClick={() => setSpeed(s)}
-                    className={`flex-1 py-1 text-xs font-bold rounded-lg transition-all ${speed === s ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`flex-1 py-1 text-xs font-bold rounded-lg transition-all ${
+                      speed === s 
+                        ? isDarkMode 
+                          ? 'bg-purple-650 text-white shadow' 
+                          : 'bg-white shadow text-blue-600' 
+                        : isDarkMode 
+                          ? 'text-slate-400 hover:text-slate-200' 
+                          : 'text-slate-500 hover:text-slate-700'
+                    }`}
                   >
                     {s}×
                   </button>
@@ -916,22 +1025,22 @@ export default function GraphVisualization() {
           </div>
 
           {/* Bottom: Stats */}
-          <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-1.5 mt-4">
-            <div className="flex justify-between text-[10px] text-slate-500 font-bold">
+          <div className={`border p-3 rounded-xl space-y-1.5 mt-4 ${isDarkMode ? 'bg-[#150d30]/60 border-purple-500/15' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`flex justify-between text-[10px] font-bold ${isDarkMode ? 'text-slate-450' : 'text-slate-505'}`}>
               <span>Graph Type:</span>
-              <span className="text-slate-800 uppercase">{graphType}</span>
+              <span className={isDarkMode ? 'text-purple-300 uppercase' : 'text-slate-800 uppercase'}>{graphType}</span>
             </div>
-            <div className="flex justify-between text-[10px] text-slate-500 font-bold">
+            <div className={`flex justify-between text-[10px] font-bold ${isDarkMode ? 'text-slate-450' : 'text-slate-505'}`}>
               <span>Nodes:</span>
-              <span className="text-slate-800">{nodes.length}</span>
+              <span className={isDarkMode ? 'text-purple-300' : 'text-slate-800'}>{nodes.length}</span>
             </div>
-            <div className="flex justify-between text-[10px] text-slate-500 font-bold">
+            <div className={`flex justify-between text-[10px] font-bold ${isDarkMode ? 'text-slate-450' : 'text-slate-505'}`}>
               <span>Edges:</span>
-              <span className="text-slate-800">{edges.length}</span>
+              <span className={isDarkMode ? 'text-purple-300' : 'text-slate-800'}>{edges.length}</span>
             </div>
-            <div className="flex justify-between text-[10px] text-slate-500 font-bold">
+            <div className={`flex justify-between text-[10px] font-bold ${isDarkMode ? 'text-slate-450' : 'text-slate-505'}`}>
               <span>Algorithm:</span>
-              <span className="text-emerald-600 uppercase">{algorithm}</span>
+              <span className="text-emerald-500 uppercase">{algorithm}</span>
             </div>
           </div>
         </div>
@@ -940,15 +1049,23 @@ export default function GraphVisualization() {
         {/* ═══════════════════════════════════════════════
             CENTER PANEL: GRAPH CANVAS (45%)
         ═══════════════════════════════════════════════ */}
-        <div className={`bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg flex flex-col relative overflow-hidden shrink-0 ${
+        <div className={`backdrop-blur-xl rounded-[24px] shadow-lg flex flex-col relative overflow-hidden shrink-0 border ${
+          isDarkMode 
+            ? 'bg-[#0f0b21]/90 border-purple-500/10 text-white' 
+            : 'bg-white/70 border-[#E2E8F0]'
+        } ${
           isGameRotated 
             ? 'w-[45%] h-full' 
             : 'w-full lg:w-[45%] h-[580px] lg:h-full'
         }`}>
 
           {/* Top bar */}
-          <div className="h-12 border-b border-slate-200 bg-slate-50/80 px-6 flex items-center justify-between text-xs font-mono text-slate-500 shrink-0">
-            <span>Status: <span className="text-blue-600 uppercase font-extrabold">{isPlaying ? 'Running' : animSteps.length > 0 ? 'Paused' : 'Idle'}</span></span>
+          <div className={`h-12 border-b px-6 flex items-center justify-between text-xs font-mono shrink-0 ${
+            isDarkMode 
+              ? 'border-purple-500/10 bg-[#120e2a]/80 text-purple-300' 
+              : 'border-slate-200 bg-slate-50/80 text-slate-500'
+          }`}>
+            <span>Status: <span className={isDarkMode ? "text-purple-400 uppercase font-extrabold" : "text-blue-600 uppercase font-extrabold"}>{isPlaying ? 'Running' : animSteps.length > 0 ? 'Paused' : 'Idle'}</span></span>
             <span>{animSteps.length > 0 ? `Step ${currentStep + 1} / ${animSteps.length}` : `Nodes: ${nodes.length} | Edges: ${edges.length}`}</span>
           </div>
 
@@ -989,8 +1106,8 @@ export default function GraphVisualization() {
                     {/* Weight badge */}
                     {(graphType === 'weighted') && (
                       <g>
-                        <rect x={wPos.x - 12} y={wPos.y - 8} width={24} height={16} rx={6} fill="white" stroke="#E2E8F0" strokeWidth="1" />
-                        <text x={wPos.x} y={wPos.y + 3} textAnchor="middle" fill="#475569" fontSize="9" fontWeight="800" fontFamily="Inter, system-ui, sans-serif">
+                        <rect x={wPos.x - 12} y={wPos.y - 8} width={24} height={16} rx={6} fill={isDarkMode ? '#0b071e' : 'white'} stroke={isDarkMode ? 'rgba(139, 92, 246, 0.3)' : '#E2E8F0'} strokeWidth="1" />
+                        <text x={wPos.x} y={wPos.y + 3} textAnchor="middle" fill={isDarkMode ? '#a78bfa' : '#475569'} fontSize="9" fontWeight="800" fontFamily="Inter, system-ui, sans-serif">
                           {edge.weight}
                         </text>
                       </g>
@@ -1073,8 +1190,14 @@ export default function GraphVisualization() {
           </div>
 
           {/* Footer: Step explanation */}
-          <div className="border-t border-slate-200 bg-slate-50/80 p-4 flex flex-col justify-center items-center gap-1 shrink-0">
-            <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest flex items-center gap-1.5">
+          <div className={`border-t p-4 flex flex-col justify-center items-center gap-1 shrink-0 ${
+            isDarkMode 
+              ? 'border-purple-500/10 bg-[#120e2a]/80' 
+              : 'border-slate-200 bg-slate-50/80'
+          }`}>
+            <h4 className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${
+              isDarkMode ? 'text-purple-400' : 'text-blue-600'
+            }`}>
               <Info className="w-3.5 h-3.5" /> AI Explanation
             </h4>
             <AnimatePresence mode="wait">
@@ -1083,7 +1206,9 @@ export default function GraphVisualization() {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
-                className="text-xs font-semibold text-slate-700 text-center max-w-md"
+                className={`text-xs font-semibold text-center max-w-md ${
+                  isDarkMode ? 'text-slate-350' : 'text-slate-700'
+                }`}
               >
                 {activeMessage}
               </motion.span>
@@ -1095,14 +1220,20 @@ export default function GraphVisualization() {
         {/* ═══════════════════════════════════════════════
             RIGHT PANEL: CODE / CALL STACK (33%)
         ═══════════════════════════════════════════════ */}
-        <div className={`bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg flex flex-col overflow-hidden shrink-0 ${
+        <div className={`backdrop-blur-xl rounded-[24px] shadow-lg flex flex-col overflow-hidden shrink-0 border ${
+          isDarkMode 
+            ? 'bg-[#120e2a]/80 border-purple-500/10 text-white' 
+            : 'bg-white/70 border-[#E2E8F0]'
+        } ${
           isGameRotated 
             ? 'w-[33%] h-full' 
             : 'w-full lg:w-[33%] lg:min-w-[300px] h-auto lg:h-full'
         }`}>
 
           {/* Tabs */}
-          <div className="grid grid-cols-3 border-b border-slate-200 shrink-0 bg-slate-50">
+          <div className={`grid grid-cols-3 border-b shrink-0 ${
+            isDarkMode ? 'border-purple-500/10 bg-[#0f0b21]' : 'border-slate-200 bg-slate-50'
+          }`}>
             {[
               { id: 'code', label: 'Pseudocode', icon: Code2 },
               { id: 'callstack', label: 'Call Stack', icon: Layers },
@@ -1111,7 +1242,15 @@ export default function GraphVisualization() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-3.5 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition ${activeTab === tab.id ? 'border-blue-600 text-blue-600 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                className={`py-3.5 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition ${
+                  activeTab === tab.id 
+                    ? isDarkMode 
+                      ? 'border-purple-500 text-purple-400 bg-[#120e2a]/50' 
+                      : 'border-blue-600 text-blue-600 bg-white' 
+                    : isDarkMode 
+                      ? 'border-transparent text-slate-400 hover:text-slate-200' 
+                      : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
               >
                 <tab.icon className="w-3.5 h-3.5" />
                 <span>{tab.label}</span>
@@ -1120,21 +1259,31 @@ export default function GraphVisualization() {
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 overflow-auto p-5 bg-white">
+          <div className={`flex-1 overflow-auto p-5 transition-colors ${isDarkMode ? 'bg-[#120e2a]/30' : 'bg-white'}`}>
             <AnimatePresence mode="wait">
 
               {/* Pseudocode Tab */}
               {activeTab === 'code' && (
                 <motion.div key="code" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex flex-col gap-4">
                   <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{algorithm.toUpperCase()} Pseudocode</h4>
-                  <pre className="text-[12px] bg-slate-50 p-4 rounded-xl border border-slate-200 overflow-y-auto font-mono flex-1">
+                  <pre className={`text-[12px] p-4 rounded-xl border overflow-y-auto font-mono flex-1 ${
+                    isDarkMode ? 'bg-[#0b071e] border-purple-500/10 text-purple-200' : 'bg-slate-50 border-slate-200'
+                  }`}>
                     <code>
                       {pseudoLines.map(line => (
                         <div
                           key={line.id}
-                          className={`py-0.5 px-2 rounded transition-all duration-200 flex items-start ${activePseudoLine === line.id ? 'bg-blue-100 text-blue-900 border-l-4 border-blue-500 font-bold' : 'border-l-4 border-transparent text-slate-600'}`}
+                          className={`py-0.5 px-2 rounded transition-all duration-200 flex items-start ${
+                            activePseudoLine === line.id 
+                              ? isDarkMode 
+                                ? 'bg-purple-650/40 text-white border-l-4 border-purple-500 font-bold' 
+                                : 'bg-blue-100 text-blue-900 border-l-4 border-blue-500 font-bold' 
+                              : isDarkMode 
+                                ? 'border-l-4 border-transparent text-slate-300' 
+                                : 'border-l-4 border-transparent text-slate-600'
+                          }`}
                         >
-                          <span className="w-5 text-slate-400 select-none shrink-0 text-right mr-2">{line.id}</span>
+                          <span className="w-5 text-slate-450 select-none shrink-0 text-right mr-2">{line.id}</span>
                           <span className="whitespace-pre">{line.text}</span>
                         </div>
                       ))}
@@ -1143,11 +1292,18 @@ export default function GraphVisualization() {
 
                   {/* Visited nodes visualization */}
                   {visitedNodes.size > 0 && (
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                    <div className={`border rounded-xl p-3 ${isDarkMode ? 'bg-[#0b071e]/85 border-purple-500/15' : 'bg-slate-50 border-slate-200'}`}>
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Visited Order</h4>
                       <div className="flex flex-wrap gap-1.5">
                         {[...visitedNodes].map((id, i) => (
-                          <span key={id} className="px-2.5 py-1 text-xs font-bold rounded-lg border bg-emerald-50 border-emerald-300 text-emerald-700">
+                          <span 
+                            key={id} 
+                            className={`px-2.5 py-1 text-xs font-bold rounded-lg border ${
+                              isDarkMode 
+                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                                : 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                            }`}
+                          >
                             {getLbl(nodes, id)}
                           </span>
                         ))}
@@ -1172,10 +1328,18 @@ export default function GraphVisualization() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.05 }}
                           className={`flex items-center gap-3 p-2.5 rounded-lg border text-xs font-mono ${
-                            i === 0 ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600'
+                            i === 0 
+                              ? isDarkMode 
+                                ? 'bg-purple-500/20 border-purple-500/30 text-purple-200 font-bold shadow-sm' 
+                                : 'bg-blue-50 border-blue-300 text-blue-700 font-bold shadow-sm' 
+                              : isDarkMode 
+                                ? 'bg-[#0b071e]/70 border-purple-550/10 text-slate-350' 
+                                : 'bg-slate-50 border-slate-200 text-slate-600'
                           }`}
                         >
-                          <span className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-500 shrink-0">
+                          <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                            isDarkMode ? 'bg-purple-950/80 text-purple-300' : 'bg-slate-200 text-slate-500'
+                          }`}>
                             {i + 1}
                           </span>
                           <span>{item}</span>
@@ -1191,13 +1355,13 @@ export default function GraphVisualization() {
 
                   {/* Distance map for Dijkstra */}
                   {algorithm === 'dijkstra' && currentStepData?.dist && (
-                    <div className="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                    <div className={`border rounded-xl p-3 ${isDarkMode ? 'bg-[#0b071e]/85 border-purple-500/15' : 'bg-slate-50 border-slate-200'}`}>
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Distance Map</h4>
                       <div className="space-y-1">
                         {Object.entries(currentStepData.dist).map(([id, d]) => (
                           <div key={id} className="flex justify-between text-xs font-mono">
-                            <span className="text-slate-600">{getLbl(nodes, id)}</span>
-                            <span className={`font-bold ${d === Infinity ? 'text-slate-300' : 'text-blue-600'}`}>{d === Infinity ? '∞' : d}</span>
+                            <span className={isDarkMode ? 'text-slate-400' : 'text-slate-600'}>{getLbl(nodes, id)}</span>
+                            <span className={`font-bold ${d === Infinity ? isDarkMode ? 'text-slate-600' : 'text-slate-300' : isDarkMode ? 'text-purple-300' : 'text-blue-600'}`}>{d === Infinity ? '∞' : d}</span>
                           </div>
                         ))}
                       </div>
@@ -1211,16 +1375,20 @@ export default function GraphVisualization() {
                 <motion.div key="details" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5">
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Time Complexity</h4>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 shadow-inner">
+                    <div className={`border rounded-xl p-4 space-y-3 shadow-inner ${
+                      isDarkMode ? 'bg-[#0b071e]/85 border-purple-500/10' : 'bg-slate-50 border-slate-200'
+                    }`}>
                       {[
                         { op: 'BFS / DFS', best: 'O(V + E)', worst: 'O(V + E)' },
                         { op: 'Dijkstra', best: 'O((V+E) log V)', worst: 'O((V+E) log V)' },
                         { op: 'Cycle Detection', best: 'O(V + E)', worst: 'O(V + E)' },
                         { op: "Kruskal's MST", best: 'O(E log E)', worst: 'O(E log E)' },
                       ].map(row => (
-                        <div key={row.op} className="flex justify-between items-center py-1 border-b border-slate-200 last:border-0">
-                          <span className="text-xs text-slate-600 font-medium">{row.op}</span>
-                          <span className="text-emerald-600 font-bold text-[10px]">{row.worst}</span>
+                        <div key={row.op} className={`flex justify-between items-center py-1 border-b last:border-0 ${
+                          isDarkMode ? 'border-purple-500/10' : 'border-slate-200'
+                        }`}>
+                          <span className={`text-xs font-medium ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>{row.op}</span>
+                          <span className="text-emerald-555 font-bold text-[10px]">{row.worst}</span>
                         </div>
                       ))}
                     </div>
@@ -1228,23 +1396,33 @@ export default function GraphVisualization() {
 
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Space Complexity</h4>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-inner">
+                    <div className={`border rounded-xl p-4 shadow-inner ${isDarkMode ? 'bg-[#0b071e]/85 border-purple-500/10' : 'bg-slate-50 border-slate-200'}`}>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-600 font-medium">Storage</span>
-                        <span className="text-emerald-600 font-bold text-xs">O(V + E)</span>
+                        <span className={`text-xs font-medium ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>Storage</span>
+                        <span className="text-emerald-555 font-bold text-xs">O(V + E)</span>
                       </div>
                     </div>
                   </div>
 
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Operation Log</h4>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1.5 max-h-48 overflow-y-auto shadow-inner">
+                    <div className={`border rounded-xl p-3 space-y-1.5 max-h-48 overflow-y-auto shadow-inner ${
+                      isDarkMode ? 'bg-[#0b071e]/85 border-purple-500/10' : 'bg-slate-50 border-slate-200'
+                    }`}>
                       {history.length > 0 ? history.map((h, i) => (
-                        <div key={i} className={`text-[11px] font-mono ${i === 0 ? 'text-slate-800 font-bold' : 'text-slate-500'}`}>
+                        <div key={i} className={`text-[11px] font-mono ${
+                          i === 0 
+                            ? isDarkMode 
+                              ? 'text-purple-300 font-bold' 
+                              : 'text-slate-800 font-bold' 
+                            : isDarkMode 
+                              ? 'text-slate-400' 
+                              : 'text-slate-505'
+                        }`}>
                           &gt; {h.msg}
                         </div>
                       )) : (
-                        <p className="text-slate-400 text-xs">No operations yet.</p>
+                        <p className="text-slate-450 text-xs">No operations yet.</p>
                       )}
                     </div>
                   </div>
