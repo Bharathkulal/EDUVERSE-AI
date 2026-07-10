@@ -587,7 +587,7 @@ const db = require('./config/db');
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         folder_id INTEGER REFERENCES it_suite_folders(id) ON DELETE CASCADE,
         name VARCHAR(255) NOT NULL,
-        type VARCHAR(50) NOT NULL CHECK (type IN ('word', 'excel', 'slides')),
+        type VARCHAR(50) NOT NULL CHECK (type IN ('word', 'excel', 'slides', 'whiteboard')),
         content TEXT,
         is_starred BOOLEAN DEFAULT false,
         is_in_recycle_bin BOOLEAN DEFAULT false,
