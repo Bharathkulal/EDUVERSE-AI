@@ -67,6 +67,13 @@ export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [calendarDate, setCalendarDate] = useState(new Date());
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: 'Friday AI Tutor', message: 'Your custom Python script compiled successfully! +15 XP', time: '10m ago', unread: true },
+    { id: 2, title: 'New Mock Viva', message: 'Prof. Sarah created a new Oral Exam in DBMS.', time: '1h ago', unread: true },
+    { id: 3, title: 'Debate Arena', message: "Debate 'AI in Healthcare' is now open for public speakers.", time: '4h ago', unread: false },
+    { id: 4, title: 'Daily Streak', message: 'You have maintained a 3-day learning streak!', time: '1d ago', unread: false }
+  ]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const navRef = useRef(null);
 
@@ -350,14 +357,75 @@ export default function Layout({ children }) {
               </button>
             )}
 
-            {/* Mock Notifications Icon with badge */}
+            {/* Notifications Dropdown Panel */}
             <div className="relative">
-              <button className="p-2 text-[var(--db-text-muted)] hover:text-[var(--db-text-accent)] hover:bg-[var(--db-btn-secondary-hover)] rounded-xl transition flex items-center justify-center" title="Notifications">
+              <button 
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  // Clear unread indicator
+                  setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+                }} 
+                className="p-2 text-[var(--db-text-muted)] hover:text-[var(--db-text-accent)] hover:bg-[var(--db-btn-secondary-hover)] rounded-xl transition flex items-center justify-center relative cursor-pointer" 
+                title="Notifications"
+              >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
-                <span className="absolute top-1 right-1 w-2 h-2 bg-[#2563EB] rounded-full"></span>
+                {notifications.some(n => n.unread) && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-[#2563EB] rounded-full animate-ping"></span>
+                )}
               </button>
+
+              {showNotifications && (
+                <div 
+                  className="absolute right-0 mt-2 w-72 rounded-2xl border shadow-2xl z-[120] p-4 text-left text-xs"
+                  style={{
+                    background: 'var(--db-card-bg)',
+                    borderColor: 'var(--db-card-border)',
+                    color: 'var(--db-text-main)'
+                  }}
+                >
+                  <div className="flex justify-between items-center border-b border-[var(--db-header-border)] pb-2 mb-2">
+                    <span className="font-extrabold text-xs">Notifications</span>
+                    <button 
+                      onClick={() => setNotifications([])} 
+                      className="text-[10px] text-red-500 hover:underline cursor-pointer font-bold"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {notifications.length > 0 ? (
+                      notifications.map(n => (
+                        <div 
+                          key={n.id} 
+                          className="p-2 rounded-lg border relative bg-[var(--db-input-bg)] border-[var(--db-input-border)]"
+                        >
+                          <div className="flex justify-between items-start">
+                            <span className="font-bold text-[10px] text-[var(--db-text-main)]">{n.title}</span>
+                            <span className="text-[8px] text-[var(--db-text-muted)]">{n.time}</span>
+                          </div>
+                          <p className="text-[9px] mt-0.5 pr-3 leading-normal text-[var(--db-text-muted)]">{n.message}</p>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setNotifications(prev => prev.filter(item => item.id !== n.id));
+                            }} 
+                            className="absolute right-1.5 top-1.5 text-slate-500 hover:text-red-500 cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-4 text-center text-slate-500">
+                        No notifications.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Theme Toggle Button */}
