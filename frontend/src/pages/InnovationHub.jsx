@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './InnovationHub.css';
+import ExamCommandCenter from './ExamCommandCenter';
 
 const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
 
@@ -82,6 +83,7 @@ export default function InnovationHub() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState('dashboard');
+  const [hubMode, setHubMode] = useState('incubator');
   const [ideas, setIdeas] = useState([]);
   const [selectedIdea, setSelectedIdea] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -836,65 +838,83 @@ export default function InnovationHub() {
             <span className="hub-brand-icon">🚀</span>
             <span className="hub-brand-name">AI Innovation Hub</span>
           </div>
-          <span style={{ fontSize: '0.7rem', color: 'var(--hub-text-muted)', background: 'rgba(139,92,246,0.1)', padding: '0.2rem 0.65rem', borderRadius: '10px', border: '1px solid rgba(139,92,246,0.2)' }}>
-            Imagine • Build • Validate • Launch
-          </span>
+          <div className="hub-mode-selector">
+            <button className={`hub-mode-btn ${hubMode === 'incubator' ? 'active' : ''}`} onClick={() => setHubMode('incubator')}>
+              🚀 Startup Hub
+            </button>
+            <button className={`hub-mode-btn ${hubMode === 'exam_center' ? 'active' : ''}`} onClick={() => setHubMode('exam_center')}>
+              📝 Assessment Center
+            </button>
+          </div>
         </div>
-        <div className="hub-topbar-right">
-          <button className="hub-mentor-btn" onClick={() => setShowMentor(true)}>🤖 AI Mentor</button>
-          <button className="hub-gen-btn" onClick={() => setShowGenerator(true)}>✨ Generate Ideas</button>
-        </div>
+        {hubMode === 'incubator' ? (
+          <div className="hub-topbar-right">
+            <button className="hub-mentor-btn" onClick={() => setShowMentor(true)}>🤖 AI Mentor</button>
+            <button className="hub-gen-btn" onClick={() => setShowGenerator(true)}>✨ Generate Ideas</button>
+          </div>
+        ) : (
+          <div className="hub-topbar-right">
+            <span style={{ fontSize: '0.8rem', color: 'var(--hub-cyan)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              🛡️ Live Proctoring Active
+            </span>
+          </div>
+        )}
       </div>
+
 
       {/* Main layout */}
-      <div className="hub-layout">
-        {/* Sidebar */}
-        <div className="hub-sidebar">
-          {STEPS.map(step => (
-            <button
-              key={step.id}
-              className={`hub-nav-item ${activeView === step.id ? 'active' : ''} ${step.id !== 'dashboard' && !selectedIdea ? 'disabled' : ''}`}
-              onClick={() => {
-                if (step.id === 'dashboard' || selectedIdea) setActiveView(step.id);
-              }}
-            >
-              <span className="hub-nav-icon">{step.icon}</span>
-              <span className="hub-nav-label">{step.label}</span>
-              {step.id !== 'dashboard' && selectedIdea && selectedIdea[step.id === 'evaluate' ? 'ai_evaluation' : step.id === 'market' ? 'market_research' : step.id === 'business' ? 'business_model' : step.id === 'financial' ? 'financial_plan' : step.id === 'mvp' ? 'mvp_plan' : step.id === 'pitch' ? 'pitch_deck' : null] && (
-                <span className="hub-nav-check">✓</span>
-              )}
-            </button>
-          ))}
+      {hubMode === 'exam_center' ? (
+        <ExamCommandCenter />
+      ) : (
+        <div className="hub-layout">
+          {/* Sidebar */}
+          <div className="hub-sidebar">
+            {STEPS.map(step => (
+              <button
+                key={step.id}
+                className={`hub-nav-item ${activeView === step.id ? 'active' : ''} ${step.id !== 'dashboard' && !selectedIdea ? 'disabled' : ''}`}
+                onClick={() => {
+                  if (step.id === 'dashboard' || selectedIdea) setActiveView(step.id);
+                }}
+              >
+                <span className="hub-nav-icon">{step.icon}</span>
+                <span className="hub-nav-label">{step.label}</span>
+                {step.id !== 'dashboard' && selectedIdea && selectedIdea[step.id === 'evaluate' ? 'ai_evaluation' : step.id === 'market' ? 'market_research' : step.id === 'business' ? 'business_model' : step.id === 'financial' ? 'financial_plan' : step.id === 'mvp' ? 'mvp_plan' : step.id === 'pitch' ? 'pitch_deck' : null] && (
+                  <span className="hub-nav-check">✓</span>
+                )}
+              </button>
+            ))}
 
-          {selectedIdea && (
-            <div className="hub-sidebar-idea">
-              <div className="sidebar-idea-label">Current Idea</div>
-              <div className="sidebar-idea-title">{selectedIdea.title}</div>
-              <ProgressPipeline idea={selectedIdea} />
-              <button className="sidebar-change-btn" onClick={() => { setSelectedIdea(null); setActiveView('dashboard'); }}>Change Idea</button>
-            </div>
-          )}
-        </div>
+            {selectedIdea && (
+              <div className="hub-sidebar-idea">
+                <div className="sidebar-idea-label">Current Idea</div>
+                <div className="sidebar-idea-title">{selectedIdea.title}</div>
+                <ProgressPipeline idea={selectedIdea} />
+                <button className="sidebar-change-btn" onClick={() => { setSelectedIdea(null); setActiveView('dashboard'); }}>Change Idea</button>
+              </div>
+            )}
+          </div>
 
-        {/* Content */}
-        <div className="hub-content">
-          {activeView === 'dashboard' && renderDashboard()}
-          {activeView === 'evaluate' && selectedIdea && renderEvaluate()}
-          {activeView === 'market' && selectedIdea && renderMarket()}
-          {activeView === 'business' && selectedIdea && renderBusiness()}
-          {activeView === 'financial' && selectedIdea && renderFinancial()}
-          {activeView === 'mvp' && selectedIdea && renderMVP()}
-          {activeView === 'pitch' && selectedIdea && renderPitch()}
-          {activeView !== 'dashboard' && !selectedIdea && (
-            <div className="no-idea-selected">
-              <div className="no-idea-icon">💡</div>
-              <h3>No idea selected</h3>
-              <p>Go to Dashboard and select or create a startup idea first.</p>
-              <button className="btn-primary-hero" onClick={() => setActiveView('dashboard')}>← Back to Dashboard</button>
-            </div>
-          )}
+          {/* Content */}
+          <div className="hub-content">
+            {activeView === 'dashboard' && renderDashboard()}
+            {activeView === 'evaluate' && selectedIdea && renderEvaluate()}
+            {activeView === 'market' && selectedIdea && renderMarket()}
+            {activeView === 'business' && selectedIdea && renderBusiness()}
+            {activeView === 'financial' && selectedIdea && renderFinancial()}
+            {activeView === 'mvp' && selectedIdea && renderMVP()}
+            {activeView === 'pitch' && selectedIdea && renderPitch()}
+            {activeView !== 'dashboard' && !selectedIdea && (
+              <div className="no-idea-selected">
+                <div className="no-idea-icon">💡</div>
+                <h3>No idea selected</h3>
+                <p>Go to Dashboard and select or create a startup idea first.</p>
+                <button className="btn-primary-hero" onClick={() => setActiveView('dashboard')}>← Back to Dashboard</button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* New Idea Modal */}
       {showNewIdea && (

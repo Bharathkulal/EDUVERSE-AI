@@ -714,3 +714,37 @@
   .fin-two-col, .mvp-two-col, .market-two-col { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
 }
+
+/* --- Mode Selector --- */
+.hub-mode-selector {
+  display: flex;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 2px;
+  margin-left: 1.5rem;
+}
+
+.hub-mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--hub-text-dim);
+  padding: 0.35rem 0.95rem;
+  border-radius: 18px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hub-mode-btn:hover {
+  color: white;
+}
+
+.hub-mode-btn.active {
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: var(--hub-primary-light);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.1);
+}
+
