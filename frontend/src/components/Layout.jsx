@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useSessionTracker } from '../utils/sessionTracker';
 import ThemeToggleButton from './ThemeToggleButton';
 import { Mic } from 'lucide-react';
+import eduverseLogo from '../assets/logo.png';
 import '../pages/DashboardTheme.css';
 
 const studentNav = [
@@ -170,12 +171,17 @@ export default function Layout({ children }) {
         <div className="flex flex-col h-full justify-between overflow-hidden">
           <div className="flex flex-col flex-1 min-h-0">
             {/* Logo */}
-            <div className="db-sidebar-logo flex flex-col items-start gap-1 pb-4 border-b border-[var(--db-sidebar-border)] mb-4 flex-shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="db-sidebar-logo-icon bg-gradient-to-tr from-[#2563EB] to-[#60A5FA] text-white font-bold text-lg rounded-xl w-9 h-9 flex items-center justify-center shadow-[0_4px_12px_rgba(37,99,235,0.2)]">E</div>
-                <span className="font-extrabold text-xl text-[var(--db-text-main)] tracking-tight">EduVerse AI</span>
-              </div>
-              <span className="text-[10px] uppercase font-bold text-[var(--db-text-muted)] tracking-widest pl-1 mt-1">Learn. Practice. Excel.</span>
+            <div className="db-sidebar-logo pb-4 border-b border-[var(--db-sidebar-border)] mb-4 flex-shrink-0">
+              <img
+                src={eduverseLogo}
+                alt="EduVerse AI"
+                style={{
+                  width: '160px',
+                  height: 'auto',
+                  mixBlendMode: 'screen',
+                  display: 'block'
+                }}
+              />
             </div>
 
             {/* Navigation Links */}

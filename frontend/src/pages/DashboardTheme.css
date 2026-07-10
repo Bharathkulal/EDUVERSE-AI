@@ -3,39 +3,39 @@
    ==================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-/* Default Theme Tokens (Dark Mode) - True Black */
+/* Default Theme Tokens (Dark Mode) - Premium dark SaaS theme */
 :root, .dark-theme {
-  --db-bg: #000000;
-  --db-bg-gradient: linear-gradient(135deg, #000000 0%, #0a0a0a 100%);
-  --db-sidebar-bg: #0a0a0a;
-  --db-sidebar-border: rgba(255, 255, 255, 0.07);
-  --db-card-bg: #111111;
-  --db-card-bg-elevated: #1a1a1a;
-  --db-card-border: rgba(255, 255, 255, 0.07);
-  --db-card-hover-border: rgba(255, 255, 255, 0.18);
-  --db-text-main: #FFFFFF;
-  --db-text-secondary: #D1D5DB;
-  --db-text-muted: #6B7280;
+  --db-bg: #0F172A;
+  --db-bg-gradient: linear-gradient(135deg, #0F172A 0%, #020617 100%);
+  --db-sidebar-bg: #111827;
+  --db-sidebar-border: rgba(255, 255, 255, 0.08);
+  --db-card-bg: #111827;
+  --db-card-bg-elevated: #1E293B;
+  --db-card-border: rgba(255, 255, 255, 0.08);
+  --db-card-hover-border: rgba(255, 255, 255, 0.15);
+  --db-text-main: #F8FAFC;
+  --db-text-secondary: #CBD5E1;
+  --db-text-muted: #94A3B8;
   --db-text-accent: #3B82F6;
   --db-text-accent-hover: #60A5FA;
-  --db-input-bg: #1a1a1a;
-  --db-input-border: rgba(255, 255, 255, 0.07);
-  --db-glass-overlay: rgba(0, 0, 0, 0.90);
-  --db-shadow: 0 4px 24px rgba(0, 0, 0, 0.60);
-  --db-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.40);
-  --db-header-border: rgba(255, 255, 255, 0.07);
-  --db-inner-card: #1a1a1a;
-  --db-badge-bg: rgba(255, 255, 255, 0.06);
-  --db-badge-border: rgba(255, 255, 255, 0.12);
+  --db-input-bg: #1E293B;
+  --db-input-border: rgba(255, 255, 255, 0.08);
+  --db-glass-overlay: rgba(17, 24, 39, 0.85);
+  --db-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --db-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.20);
+  --db-header-border: rgba(255, 255, 255, 0.08);
+  --db-inner-card: #1E293B;
+  --db-badge-bg: rgba(255, 255, 255, 0.08);
+  --db-badge-border: rgba(255, 255, 255, 0.15);
   --db-badge-text: #ffffff;
-  --db-chart-grid: rgba(255, 255, 255, 0.04);
-  --db-chart-tooltip-bg: #0a0a0a;
-  --db-btn-secondary-bg: #1a1a1a;
-  --db-btn-secondary-hover: #252525;
-  --db-demo-box-bg: #1a1a1a;
-  --db-demo-box-border: rgba(255, 255, 255, 0.07);
-  --db-prediction-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.02), transparent);
-  --db-scrollbar-thumb: #2a2a2a;
+  --db-chart-grid: rgba(255, 255, 255, 0.05);
+  --db-chart-tooltip-bg: #09090b;
+  --db-btn-secondary-bg: #1E293B;
+  --db-btn-secondary-hover: #334155;
+  --db-demo-box-bg: #1E293B;
+  --db-demo-box-border: rgba(255, 255, 255, 0.08);
+  --db-prediction-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent);
+  --db-scrollbar-thumb: #334155;
   --db-scrollbar-track: transparent;
   --db-link-color: #3B82F6;
   --db-link-hover: #60A5FA;
@@ -51,12 +51,12 @@
   --db-math-border: rgba(16, 185, 129, 0.25);
 
   /* Theme Toggle (Dark Theme) */
-  --db-toggle-bg: #1a1a1a;
-  --db-toggle-border: rgba(255, 255, 255, 0.07);
-  --db-toggle-color: #9CA3AF;
-  --db-toggle-hover-bg: #252525;
+  --db-toggle-bg: #1E293B;
+  --db-toggle-border: rgba(255, 255, 255, 0.08);
+  --db-toggle-color: #CBD5E1;
+  --db-toggle-hover-bg: #334155;
   --db-toggle-hover-border: rgba(255, 255, 255, 0.15);
-  --db-toggle-hover-color: #FFFFFF;
+  --db-toggle-hover-color: #F8FAFC;
 }
 
 /* Light Theme Tokens - True White / Bright */
