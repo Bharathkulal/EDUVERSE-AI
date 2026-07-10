@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import JavaLessonPage from './JavaLessonPage';
+import JavaCoursePage from './JavaCoursePage';
 import AdvancedJavaLab from './AdvancedJavaLab';
 import { useTheme } from '../context/ThemeContext';
 import LearningHubBackground from '../components/LearningHubBackground';
@@ -15,7 +15,7 @@ export default function JavaHub() {
 
   if (activeView === 'theory') {
     return (
-      <div className="relative">
+      <div className="relative pt-12 w-full">
         <button 
           onClick={() => setActiveView('hub')}
           className={`absolute top-4 left-4 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
@@ -26,7 +26,7 @@ export default function JavaHub() {
         >
           ← Back to Hub
         </button>
-        <JavaLessonPage />
+        <JavaCoursePage />
       </div>
     );
   }
