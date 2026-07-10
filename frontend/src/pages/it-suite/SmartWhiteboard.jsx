@@ -35,6 +35,10 @@ export default function SmartWhiteboard() {
   const [strokeWidth, setStrokeWidth] = useState(3);
   const [fontSize, setFontSize] = useState(16);
   const [selectedId, setSelectedId] = useState(null);
+  const [canvasBg, setCanvasBg] = useState('#080710');
+  const [gridSize, setGridSize] = useState(30);
+  const [gridColor, setGridColor] = useState('rgba(255, 255, 255, 0.08)');
+  const [showGrid, setShowGrid] = useState(true);
 
   // Drawing Temporary States
   const [isDrawing, setIsDrawing] = useState(false);
@@ -813,16 +817,21 @@ export default function SmartWhiteboard() {
           onMouseMove={handleMouseMove}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
-          style={{ cursor: tool === 'hand' ? 'grab' : tool === 'select' ? 'default' : 'crosshair' }}
+          style={{ 
+            cursor: tool === 'hand' ? 'grab' : tool === 'select' ? 'default' : 'crosshair',
+            backgroundColor: canvasBg
+          }}
         >
           {/* Dot Grid Background */}
-          <div className="absolute inset-0 pointer-events-none" 
-            style={{
-              backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 0)',
-              backgroundSize: `${30 * zoom}px ${30 * zoom}px`,
-              backgroundPosition: `${panX}px ${panY}px`
-            }}
-          />
+          {showGrid && (
+            <div className="absolute inset-0 pointer-events-none" 
+              style={{
+                backgroundImage: `radial-gradient(${gridColor} 1.5px, transparent 0)`,
+                backgroundSize: `${gridSize * zoom}px ${gridSize * zoom}px`,
+                backgroundPosition: `${panX}px ${panY}px`
+              }}
+            />
+          )}
 
           <svg className="w-full h-full pointer-events-none">
             {/* Main zoom/pan transformation group */}
@@ -1185,8 +1194,133 @@ export default function SmartWhiteboard() {
                     </div>
                   </div>
                 ) : (
-                  <div className="p-6 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl bg-slate-950/20 text-xs font-mono">
-                    ⚠️ No element selected. Click on any canvas shape to access styling properties.
+                  <div className="space-y-4 bg-slate-900/40 p-4 rounded-2xl border border-slate-800 text-left">
+                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block font-mono">Global Canvas Settings</span>
+                    
+                    {/* Board Name */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-semibold text-slate-400 font-mono block">Board Title</label>
+                      <input 
+                        type="text" 
+                        value={boardName} 
+                        onChange={(e) => setBoardName(e.target.value)}
+                        onBlur={saveBoardState}
+                        className="w-full bg-slate-950 border border-slate-800 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs outline-none focus:border-violet-500 transition"
+                      />
+                    </div>
+
+                    {/* Canvas Background Color */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-semibold text-slate-400 font-mono block">Canvas Background</label>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { name: 'Space', value: '#080710' },
+                          { name: 'Midnight', value: '#090d16' },
+                          { name: 'Dark Slate', value: '#0f172a' },
+                          { name: 'Deep Gray', value: '#121212' },
+                          { name: 'Charcoal', value: '#1c1917' },
+                          { name: 'Deep Purple', value: '#0f0c1b' }
+                        ].map((col) => (
+                          <button 
+                            key={col.value}
+                            onClick={() => setCanvasBg(col.value)}
+                            className={`w-6 h-6 rounded-full border border-slate-700 cursor-pointer ${canvasBg === col.value ? 'ring-2 ring-violet-500' : ''}`}
+                            style={{ backgroundColor: col.value }}
+                            title={col.name}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Grid Toggles & Configuration */}
+                    <div className="space-y-3 pt-2 border-t border-slate-800">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[10px] font-semibold text-slate-400 font-mono">Show Dot Grid</span>
+                        <input 
+                          type="checkbox" 
+                          checked={showGrid} 
+                          onChange={(e) => setShowGrid(e.target.checked)}
+                          className="accent-violet-500 rounded cursor-pointer"
+                        />
+                      </div>
+
+                      {showGrid && (
+                        <>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-[10px] font-bold text-slate-400 font-mono">
+                              <span>Grid Size</span>
+                              <span>{gridSize}px</span>
+                            </div>
+                            <input 
+                              type="range" 
+                              min="15" 
+                              max="60" 
+                              value={gridSize} 
+                              onChange={(e) => setGridSize(Number(e.target.value))}
+                              className="w-full accent-violet-500"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-semibold text-slate-400 font-mono block">Grid Dot Color</label>
+                            <div className="flex flex-wrap gap-2">
+                              {[
+                                { name: 'Muted White', value: 'rgba(255, 255, 255, 0.08)' },
+                                { name: 'Medium White', value: 'rgba(255, 255, 255, 0.16)' },
+                                { name: 'Muted Violet', value: 'rgba(139, 92, 246, 0.15)' },
+                                { name: 'Muted Cyan', value: 'rgba(6, 182, 212, 0.15)' },
+                                { name: 'Muted Rose', value: 'rgba(244, 63, 94, 0.12)' }
+                              ].map((col) => (
+                                <button 
+                                  key={col.value}
+                                  onClick={() => setGridColor(col.value)}
+                                  className={`w-6 h-6 rounded-full border border-slate-700 cursor-pointer ${gridColor === col.value ? 'ring-2 ring-violet-500' : ''}`}
+                                  style={{ backgroundColor: col.value }}
+                                  title={col.name}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Viewport Settings */}
+                    <div className="space-y-3 pt-2 border-t border-slate-800">
+                      <div className="flex justify-between text-[10px] font-bold text-slate-400 font-mono">
+                        <span>Viewport Zoom</span>
+                        <span>{Math.round(zoom * 100)}%</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => setZoom(Math.max(0.5, zoom - 0.1))} className="px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-400 hover:text-white text-[10px] font-mono hover:bg-slate-900 transition flex-1">-</button>
+                        <button onClick={() => setZoom(1.0)} className="px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-400 hover:text-white text-[10px] font-mono hover:bg-slate-900 transition flex-1">100%</button>
+                        <button onClick={() => setZoom(Math.min(2.5, zoom + 0.1))} className="px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-400 hover:text-white text-[10px] font-mono hover:bg-slate-900 transition flex-1">+</button>
+                      </div>
+                      
+                      <div className="flex justify-between text-[10px] font-bold text-slate-400 font-mono mt-1">
+                        <span>Pan Position</span>
+                        <span>X: {Math.round(panX)} | Y: {Math.round(panY)}</span>
+                      </div>
+                      <button 
+                        onClick={() => { setPanX(0); setPanY(0); setZoom(1.0); }} 
+                        className="w-full px-3 py-2 bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-violet-500 rounded-xl text-slate-300 hover:text-white text-[10px] transition font-bold"
+                      >
+                        Recenter Workspace
+                      </button>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="space-y-2 pt-2 border-t border-slate-800">
+                      <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block font-mono">Global Actions</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button onClick={clearCanvas} className="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-500/40 text-rose-400 hover:text-rose-300 rounded-xl text-[10px] font-bold transition">
+                          Clear Canvas
+                        </button>
+                        <button onClick={saveBoardState} className="px-3 py-2 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 hover:border-violet-500/40 text-violet-400 hover:text-violet-300 rounded-xl text-[10px] font-bold transition">
+                          Save Cloud
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
