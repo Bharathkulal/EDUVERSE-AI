@@ -203,6 +203,96 @@ export function useFridayAgent(options = {}) {
     }
   }, [navigate]);
 
+  const localParseAndExecuteCommand = useCallback((transcript) => {
+    const text = transcript.toLowerCase().trim();
+    console.log('[useFridayAgent] Parsing command locally:', text);
+
+    // 1. Navigation Mapping
+    const navRoutes = {
+      '/subjects': ['open learn', 'go to learn', 'take me to learn', 'study section', 'i want to study', 'show learning page', 'open subjects'],
+      '/dashboard': ['open dashboard', 'go to dashboard', 'main screen', 'take me to dashboard', 'open dashboard screen'],
+      '/practice-hub': ['open practice', 'go to practice', 'practice hub', 'open practice hub'],
+      '/coding': ['open coding', 'go to code', 'open code', 'ai studio', 'take me to coding', 'code section', 'open code section', 'open coding studio'],
+      '/ai-tutor': ['open ai center', 'go to ai center', 'ai tutor', 'ai center', 'tutor'],
+      '/quizzes': ['open arena', 'go to arena', 'quizzes', 'arena'],
+      '/exam-center': ['open command center', 'go to command center', 'assessment center', 'command center'],
+      '/debate-arena': ['open debate arena', 'go to debate arena', 'ai debate', 'speaking lab', 'debate arena'],
+      '/video-studio': ['open video studio', 'go to video studio', 'video learning studio', 'creation studio', 'video studio'],
+      '/career-hub': ['open career hub', 'go to career hub', 'career hub'],
+      '/innovation-hub': ['open innovation hub', 'go to innovation hub', 'innovation hub'],
+      '/learning-timeline': ['open timeline', 'go to timeline', 'learning timeline', 'timeline'],
+      '/community': ['open community', 'go to community', 'community'],
+      '/ai-profile': ['open profile', 'go to profile', 'profile'],
+      '/study-report': ['open study report', 'go to study report', 'study report']
+    };
+
+    for (const [route, phrases] of Object.entries(navRoutes)) {
+      const match = phrases.find(phrase => text.includes(phrase));
+      if (match) {
+        const label = match.replace('open ', '').replace('go to ', '').replace('take me to ', '');
+        speakFallback(`Opening ${label}`);
+        toast.success(`Voice Command: Navigating to ${label}`);
+        navigate(route);
+        return true;
+      }
+    }
+
+    // 2. System Commands
+    if (text.includes('go back')) {
+      speakFallback("Going back");
+      navigate(-1);
+      return true;
+    }
+    if (text.includes('refresh page') || text.includes('reload')) {
+      speakFallback("Reloading page");
+      window.location.reload();
+      return true;
+    }
+    if (text.includes('scroll down')) {
+      speakFallback("Scrolling down");
+      window.scrollBy({ top: window.innerHeight / 2, behavior: 'smooth' });
+      return true;
+    }
+    if (text.includes('scroll up')) {
+      speakFallback("Scrolling up");
+      window.scrollBy({ top: -window.innerHeight / 2, behavior: 'smooth' });
+      return true;
+    }
+    if (text.includes('dark mode') || text.includes('light mode') || text.includes('switch theme')) {
+      speakFallback("Switching visual theme");
+      // Find theme toggle button and click it
+      const themeBtn = document.querySelector('button[title*="theme" i]') || document.querySelector('button[aria-label*="theme" i]') || document.querySelector('.theme-toggle') || document.querySelector('.dark-mode-toggle');
+      if (themeBtn) {
+        themeBtn.click();
+      } else {
+        const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent?.toLowerCase().includes('theme') || b.querySelector('svg')?.className?.baseVal?.includes('theme') || b.textContent?.toLowerCase().includes('dark') || b.textContent?.toLowerCase().includes('light'));
+        if (btn) btn.click();
+      }
+      return true;
+    }
+
+    // 3. Search commands
+    if (text.startsWith('search ') || text.startsWith('find ') || text.startsWith('look for ')) {
+      const query = text.replace('search ', '').replace('find ', '').replace('look for ', '').trim();
+      if (query) {
+        speakFallback(`Searching for ${query}`);
+        const searchInput = document.querySelector('input[placeholder*="search" i]') || document.querySelector('input[type="search"]');
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.value = query;
+          searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+          searchInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+          toast.success(`Voice Search: ${query}`);
+        } else {
+          toast.error("No search bar found on this page.");
+        }
+        return true;
+      }
+    }
+
+    return false;
+  }, [navigate, speakFallback]);
+
   // Send action authorization confirmation back to backend
   const confirmAction = useCallback(async (taskId, confirmed) => {
     updateAgentState('thinking');
@@ -326,6 +416,14 @@ export function useFridayAgent(options = {}) {
       if (modeRef.current === 'COMMAND') {
         const userCommand = finalTranscriptRef.current.trim();
         if (userCommand) {
+          const handledLocally = localParseAndExecuteCommand(userCommand);
+          if (handledLocally) {
+            updateAgentState('idle');
+            modeRef.current = 'WAKE';
+            initSpeechLoop();
+            return;
+          }
+
           updateAgentState('thinking');
           try {
             const response = await api.post('/friday/voice-text', { message: userCommand });
