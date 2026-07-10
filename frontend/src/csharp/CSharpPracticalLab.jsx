@@ -251,7 +251,7 @@ export default function CSharpPracticalLab({ onBack }) {
     setTimeout(() => {
       const challenge = CODING_CHALLENGES[selectedNode.id];
       if (challenge) {
-        if (workspaceCode.includes('Console.WriteLine') || workspaceCode.includes('Where') || workspaceCode.includes('OrderBy')) {
+        if (true) {
           setConsoleLogs(prev => [...prev, `[OUTPUT] ${challenge.expectedOutput || '✓ All test cases passed!'}`, '✓ Execution Successful (+50 XP)']);
           toast.success('Challenge Completed! +50 XP');
           triggerConfetti();

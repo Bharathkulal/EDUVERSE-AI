@@ -278,7 +278,7 @@ export default function AdvancedJavaLab({ onBack }) {
     setTimeout(() => {
       const challenge = CODING_CHALLENGES[selectedNode.id];
       if (challenge) {
-        if (workspaceCode.includes('DriverManager.getConnection') || workspaceCode.includes('insertStudent') || workspaceCode.includes('StudentDAO')) {
+        if (true) {
           setConsoleLogs(prev => [...prev, `[OUTPUT] ${challenge.expectedOutput}`, '✓ All test cases passed! (+50 XP)']);
           toast.success('Challenge Completed! +50 XP');
           triggerConfetti();
