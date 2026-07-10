@@ -61,7 +61,6 @@ const WordEditor = lazy(() => import('./pages/it-suite/WordEditor'));
 const ExcelSpreadsheet = lazy(() => import('./pages/it-suite/ExcelSpreadsheet'));
 const SlidesEditor = lazy(() => import('./pages/it-suite/SlidesEditor'));
 const AIPhotoToPDF = lazy(() => import('./pages/it-suite/AIPhotoToPDF'));
-const FridayWebBuilder = lazy(() => import('./pages/it-suite/FridayWebBuilder.jsx'));
 const SmartWhiteboard = lazy(() => import('./pages/it-suite/SmartWhiteboard'));
 
 // Lazy Loaded DSA/Math Visualizer Pages
@@ -200,7 +199,6 @@ export default function App() {
             <Route path="/it-suite/excel/:id" element={<ProtectedRoute><Layout><ExcelSpreadsheet /></Layout></ProtectedRoute>} />
             <Route path="/it-suite/slides/:id" element={<ProtectedRoute><Layout><SlidesEditor /></Layout></ProtectedRoute>} />
             <Route path="/it-suite/photo-to-pdf" element={<ProtectedRoute><Layout><AIPhotoToPDF /></Layout></ProtectedRoute>} />
-            <Route path="/it-suite/friday-builder" element={<ProtectedRoute><Layout><FridayWebBuilder /></Layout></ProtectedRoute>} />
             <Route path="/it-suite/smart-whiteboard" element={<ProtectedRoute><Layout><SmartWhiteboard /></Layout></ProtectedRoute>} />
             <Route path="/it-suite/whiteboard/:id" element={<ProtectedRoute><Layout><SmartWhiteboard /></Layout></ProtectedRoute>} />
 
