@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api/axios';
 import { useHashNavigation } from '../utils/useHashNavigation';
@@ -22,6 +22,7 @@ const subjectBlobColors = {
 };
 
 export default function Subjects() {
+  const navigate = useNavigate();
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('subjects');
@@ -279,29 +280,35 @@ export default function Subjects() {
                 <Link key={s.id} to={`/subjects/${s.id}`} className="subject-card group">
                   <div className={`subject-card-blob ${subjectBlobColors[s.subject_name] || 'blob-default'}`} />
                   <div className="subject-card-bg" />
-                  <div className="subject-card-content">
+                  <div className="subject-card-content flex flex-col justify-between h-full">
                     <div>
-                      <div className="text-4xl mb-3">{subjectIcons[s.subject_name] || '📚'}</div>
-                      <h3 className="font-semibold text-lg text-[var(--db-text-main)] group-hover:text-emerald-500 transition-colors duration-300 flex items-center justify-between">
-                        <span>{s.subject_name}</span>
+                      {/* Top icon and custom game mode launch button */}
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-800/40 border border-white/5 flex items-center justify-center text-2xl shadow-inner">
+                          {subjectIcons[s.subject_name] || '📚'}
+                        </div>
                         {s.subject_name === 'DSA' && (
-                          <span 
+                          <button 
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              const nextVal = !dsaGameMode;
-                              setDsaGameMode(nextVal);
-                              localStorage.setItem('dsa_game_mode', nextVal ? 'true' : 'false');
+                              navigate('/coding-battle');
                             }}
-                            className="text-[10px] bg-orange-500 hover:bg-orange-600 active:scale-95 transition-all text-white px-2 py-0.5 rounded-full font-black flex items-center gap-0.5 animate-pulse cursor-pointer relative z-10"
+                            className="px-3 py-1.5 text-[10px] font-black text-white rounded-xl bg-gradient-to-r from-teal-400 to-indigo-600 hover:from-teal-500 hover:to-indigo-700 flex items-center gap-1 shadow-lg shadow-teal-500/25 active:scale-95 transition relative z-20 cursor-pointer border border-teal-400/20"
                           >
-                            🎮 GAME
-                          </span>
+                            <span>🎮 Play Game</span>
+                            <span className="text-[9px] font-bold">&gt;</span>
+                          </button>
                         )}
+                      </div>
+
+                      <h3 className="font-extrabold text-lg text-[var(--db-text-main)] group-hover:text-emerald-500 transition-colors duration-300">
+                        {s.subject_name}
                       </h3>
+
                       {s.subject_name === 'DSA' && (
                         <div 
-                          className="mt-2.5 p-2 rounded-xl bg-orange-500/5 border border-orange-500/20 flex items-center justify-between text-xs cursor-pointer relative z-10 select-none" 
+                          className="mt-3 px-3 py-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/15 flex items-center justify-between text-[11px] cursor-pointer relative z-10 select-none transition" 
                           onClick={(e) => { 
                             e.preventDefault(); 
                             e.stopPropagation(); 
@@ -310,7 +317,9 @@ export default function Subjects() {
                             localStorage.setItem('dsa_game_mode', nextVal ? 'true' : 'false');
                           }}
                         >
-                          <span className="font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1">🎮 Game Mode (Rotate)</span>
+                          <span className="font-bold text-purple-200 flex items-center gap-1.5">
+                            🎮 Game Mode (Rotate)
+                          </span>
                           <div className="relative inline-flex items-center">
                             <input 
                               type="checkbox" 
@@ -318,13 +327,15 @@ export default function Subjects() {
                               readOnly
                               className="sr-only peer" 
                             />
-                            <div className="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-[14px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-slate-600 peer-checked:bg-orange-500"></div>
+                            <div className="w-8 h-4.5 bg-slate-700/60 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[14px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-slate-600 peer-checked:bg-purple-500"></div>
                           </div>
                         </div>
                       )}
-                      <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 line-clamp-3 leading-relaxed">{s.description}</p>
+                      
+                      <p className="text-slate-500 dark:text-slate-400 text-sm mt-3.5 line-clamp-3 leading-relaxed">{s.description}</p>
                     </div>
-                    <div className="flex gap-4 mt-6 text-xs font-medium text-slate-400 dark:text-slate-500">
+
+                    <div className="flex gap-4 mt-6 text-xs font-semibold text-slate-400 dark:text-slate-500">
                       <span className="flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                         {s.topic_count || 0} topics
