@@ -677,6 +677,9 @@ export default function TreeVisualization() {
     if (foundNode === val) return { bg: '#D1FAE5', border: '#10B981', text: '#059669', glow: '0 0 20px rgba(16,185,129,0.5)' };
     if (activeNodeValue === val) return { bg: '#DBEAFE', border: '#2563EB', text: '#1D4ED8', glow: '0 0 20px rgba(37,99,235,0.4)' };
     if (highlightedNodes.has(val)) return { bg: '#FEF3C7', border: '#F59E0B', text: '#D97706', glow: '0 0 12px rgba(245,158,11,0.3)' };
+    if (isDarkMode) {
+      return { bg: '#1b124c', border: '#8b5cf6', text: '#e9d5ff', glow: '0 0 15px rgba(139,92,246,0.3)' };
+    }
     return { bg: '#FFFFFF', border: '#CBD5E1', text: '#334155', glow: 'none' };
   };
 
@@ -724,7 +727,11 @@ export default function TreeVisualization() {
         {/* ═══════════════════════════════════════════════
             LEFT PANEL: CONTROL CENTER (22%)
         ═══════════════════════════════════════════════ */}
-        <div className={`bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg p-5 flex flex-col justify-between overflow-y-auto shrink-0 ${
+        <div className={`backdrop-blur-xl border rounded-[24px] shadow-lg p-5 flex flex-col justify-between overflow-y-auto shrink-0 transition-colors duration-250 ${
+          isDarkMode 
+            ? 'bg-[#120e2a]/95 border-purple-500/10 text-white' 
+            : 'bg-white/70 border-[#E2E8F0] text-slate-800'
+        } ${
           isGameRotated 
             ? 'w-[22%] min-w-[240px] h-full gap-2 p-4' 
             : 'w-full lg:w-[22%] lg:min-w-[280px] h-auto lg:h-full gap-6 lg:gap-0'
@@ -733,16 +740,16 @@ export default function TreeVisualization() {
 
             {/* Header */}
             <div>
-              <h2 className="text-xl font-extrabold text-[#0F172A] flex items-center gap-2 mb-1">
+              <h2 className={`text-xl font-extrabold flex items-center gap-2 mb-1 ${isDarkMode ? 'text-white' : 'text-[#0F172A]'}`}>
                 <Zap className="w-5 h-5 text-blue-500" /> Tree Lab
               </h2>
-              <p className="text-[#64748B] text-[11px]">Insert, delete, search, and visualize tree operations live.</p>
+              <p className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-[#64748B]'}`}>Insert, delete, search, and visualize tree operations live.</p>
             </div>
 
             {/* Tree Type Selector */}
             <div>
               <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-2">Tree Type</label>
-              <div className="grid grid-cols-3 gap-1 bg-[#F1F5F9] p-1 rounded-xl border border-slate-200">
+              <div className={`grid grid-cols-3 gap-1 p-1 rounded-xl border ${isDarkMode ? 'bg-[#181236] border-purple-500/10' : 'bg-[#F1F5F9] border-slate-200'}`}>
                 {[
                   { id: 'binary', label: 'Binary' },
                   { id: 'bst', label: 'BST' },
@@ -751,7 +758,15 @@ export default function TreeVisualization() {
                   <button
                     key={t.id}
                     onClick={() => setTreeType(t.id)}
-                    className={`py-1.5 text-xs font-bold rounded-lg transition-all ${treeType === t.id ? 'bg-white text-blue-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`py-1.5 text-xs font-bold rounded-lg transition-all ${
+                      treeType === t.id 
+                        ? isDarkMode 
+                          ? 'bg-purple-650 text-white shadow-sm border border-purple-500/20' 
+                          : 'bg-white text-blue-600 shadow-sm border border-slate-200' 
+                        : isDarkMode 
+                          ? 'text-slate-400 hover:text-slate-200' 
+                          : 'text-slate-500 hover:text-slate-700'
+                    }`}
                   >
                     {t.label}
                   </button>
@@ -762,21 +777,29 @@ export default function TreeVisualization() {
             {/* Node Operations */}
             <div className="space-y-3">
               <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">Node Operations</label>
-              <div className="bg-[#F8FAFC] p-3 rounded-2xl border border-slate-200 shadow-inner">
+              <div className={`p-3 rounded-2xl border shadow-inner ${isDarkMode ? 'bg-[#140f30]/60 border-purple-500/10' : 'bg-[#F8FAFC] border-slate-200'}`}>
                 <input
                   type="number"
                   value={inputValue}
                   onChange={e => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Enter node value..."
-                  className="w-full text-center text-lg font-bold bg-white border-2 border-slate-200 rounded-xl py-2.5 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all text-slate-800 placeholder-slate-300"
+                  className={`w-full text-center text-lg font-bold border-2 rounded-xl py-2.5 focus:outline-none focus:ring-4 transition-all ${
+                    isDarkMode 
+                      ? 'bg-[#0b071e] border-purple-500/20 text-white placeholder-slate-600 focus:border-purple-500 focus:ring-purple-500/20' 
+                      : 'bg-white border-slate-200 text-slate-800 placeholder-slate-300 focus:border-blue-500 focus:ring-blue-500/20'
+                  }`}
                 />
                 <div className="flex justify-center gap-1.5 mt-3">
                   {[15, 25, 45, 90].map(v => (
                     <button
                       key={v}
                       onClick={() => setInputValue(v.toString())}
-                      className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 hover:border-blue-400 hover:text-blue-600 transition shadow-sm"
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition shadow-sm border ${
+                        isDarkMode 
+                          ? 'bg-[#181236] border-purple-500/25 text-purple-200 hover:border-purple-400 hover:text-purple-100' 
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600'
+                      }`}
                     >
                       [{v}]
                     </button>
@@ -784,34 +807,67 @@ export default function TreeVisualization() {
                 </div>
                 <button
                   onClick={handleInsert}
-                  className="w-full mt-3 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-sm py-2.5 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  className={`w-full mt-3 font-bold text-sm py-2.5 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${
+                    isDarkMode 
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-650 text-white shadow-purple-550/20 hover:opacity-95' 
+                      : 'bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-blue-500/30'
+                  }`}
                 >
                   <Plus className="w-4 h-4" /> Insert Node
                 </button>
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                <button onClick={handleDelete} className="flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-[#EF4444] border border-red-200 font-bold py-2 rounded-xl transition-colors text-xs">
+                <button 
+                  onClick={handleDelete} 
+                  className={`flex items-center justify-center gap-1 border font-bold py-2 rounded-xl transition-colors text-xs ${
+                    isDarkMode 
+                      ? 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20' 
+                      : 'bg-red-50 border-red-200 text-[#EF4444] hover:bg-red-100'
+                  }`}
+                >
                   <Minus className="w-3.5 h-3.5" /> Delete
                 </button>
-                <button onClick={handleSearch} className="flex items-center justify-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-600 border border-purple-200 font-bold py-2 rounded-xl transition-colors text-xs">
+                <button 
+                  onClick={handleSearch} 
+                  className={`flex items-center justify-center gap-1 border font-bold py-2 rounded-xl transition-colors text-xs ${
+                    isDarkMode 
+                      ? 'bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/20' 
+                      : 'bg-purple-50 border-purple-200 text-purple-600 hover:bg-purple-100'
+                  }`}
+                >
                   <Search className="w-3.5 h-3.5" /> Search
                 </button>
-                <button onClick={handleReset} className="flex items-center justify-center gap-1 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 font-bold py-2 rounded-xl transition-colors text-xs">
+                <button 
+                  onClick={handleReset} 
+                  className={`flex items-center justify-center gap-1 border font-bold py-2 rounded-xl transition-colors text-xs ${
+                    isDarkMode 
+                      ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700' 
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
                   <Trash2 className="w-3.5 h-3.5" /> Reset
                 </button>
               </div>
             </div>
 
             {/* Traversal */}
-            <div className="border-t border-slate-200 pt-4 space-y-3">
+            <div className={`border-t pt-4 space-y-3 ${isDarkMode ? 'border-purple-500/10' : 'border-slate-200'}`}>
               <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">Traversal Mode</label>
-              <div className="grid grid-cols-3 gap-1 bg-[#F1F5F9] p-1 rounded-xl border border-slate-200">
+              <div className={`grid grid-cols-3 gap-1 p-1 rounded-xl border ${isDarkMode ? 'bg-[#181236] border-purple-500/10' : 'bg-[#F1F5F9] border-slate-200'}`}>
                 {['inorder', 'preorder', 'postorder'].map(t => (
                   <button
                     key={t}
                     onClick={() => setTraversalType(t)}
-                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all capitalize ${traversalType === t ? 'bg-white text-blue-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all capitalize ${
+                      traversalType === t 
+                        ? isDarkMode 
+                          ? 'bg-purple-650 text-white shadow-sm border border-purple-500/20' 
+                          : 'bg-white text-blue-600 shadow-sm border border-slate-200' 
+                        : isDarkMode 
+                          ? 'text-slate-400 hover:text-slate-200' 
+                          : 'text-slate-500 hover:text-slate-700'
+                    }`}
                   >
                     {t}
                   </button>
@@ -819,43 +875,67 @@ export default function TreeVisualization() {
               </div>
               <button
                 onClick={handleTraversal}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-md shadow-emerald-500/20 active:scale-[0.98] flex items-center justify-center gap-2"
+                className={`w-full text-xs font-bold py-2.5 rounded-xl transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 ${
+                  isDarkMode 
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-emerald-500/10 hover:opacity-95' 
+                    : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'
+                }`}
               >
                 <Play className="w-3.5 h-3.5 fill-current" /> Run Traversal
               </button>
             </div>
 
             {/* Playback Controls */}
-            <div className="border-t border-slate-200 pt-4 space-y-3">
+            <div className={`border-t pt-4 space-y-3 ${isDarkMode ? 'border-purple-500/10' : 'border-slate-200'}`}>
               <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">Execution Debugger</label>
-              <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-200 gap-1">
-                <button onClick={handleAnimReset} className="p-2 hover:bg-slate-200 rounded-lg transition text-slate-500 hover:text-slate-800" title="Reset Step">
+              <div className={`flex items-center justify-between p-2 rounded-xl border gap-1 ${isDarkMode ? 'bg-[#140f30]/60 border-purple-500/10' : 'bg-slate-50 border-slate-200'}`}>
+                <button 
+                  onClick={handleAnimReset} 
+                  className={`p-2 rounded-lg transition ${isDarkMode ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-850 hover:bg-slate-250'}`} 
+                  title="Reset Step"
+                >
                   <RotateCcw className="w-4 h-4" />
                 </button>
-                <button onClick={handlePrev} className="p-2 hover:bg-slate-200 rounded-lg transition text-slate-500 hover:text-slate-800" title="Previous Step">
+                <button 
+                  onClick={handlePrev} 
+                  className={`p-2 rounded-lg transition ${isDarkMode ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-850 hover:bg-slate-250'}`} 
+                  title="Previous Step"
+                >
                   <SkipBack className="w-4 h-4" />
                 </button>
                 <button onClick={handlePlayPause} className="p-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition" title={isPlaying ? "Pause" : "Play"}>
                   {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
                 </button>
-                <button onClick={handleNext} className="p-2 hover:bg-slate-200 rounded-lg transition text-slate-500 hover:text-slate-800" title="Next Step">
+                <button 
+                  onClick={handleNext} 
+                  className={`p-2 rounded-lg transition ${isDarkMode ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-850 hover:bg-slate-250'}`} 
+                  title="Next Step"
+                >
                   <SkipForward className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
             {/* Speed */}
-            <div className="border-t border-slate-200 pt-4 space-y-1">
+            <div className={`border-t pt-4 space-y-1 ${isDarkMode ? 'border-purple-500/10' : 'border-slate-200'}`}>
               <div className="flex justify-between text-[10px] text-slate-400 font-bold">
                 <span>Speed</span>
                 <span>{speed}x</span>
               </div>
-              <div className="flex justify-between items-center bg-slate-100 p-1 rounded-xl">
+              <div className={`flex justify-between items-center p-1 rounded-xl ${isDarkMode ? 'bg-[#181236]' : 'bg-slate-100'}`}>
                 {[0.5, 1, 2].map(s => (
                   <button
                     key={s}
                     onClick={() => setSpeed(s)}
-                    className={`flex-1 py-1 text-xs font-bold rounded-lg transition-all ${speed === s ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`flex-1 py-1 text-xs font-bold rounded-lg transition-all ${
+                      speed === s 
+                        ? isDarkMode 
+                          ? 'bg-purple-650 text-white shadow' 
+                          : 'bg-white shadow text-blue-600' 
+                        : isDarkMode 
+                          ? 'text-slate-450 hover:text-slate-200' 
+                          : 'text-slate-500 hover:text-slate-700'
+                    }`}
                   >
                     {s}×
                   </button>
@@ -864,14 +944,14 @@ export default function TreeVisualization() {
             </div>
 
             {/* Toggle Options */}
-            <div className="border-t border-slate-200 pt-4 space-y-2">
+            <div className={`border-t pt-4 space-y-2 ${isDarkMode ? 'border-purple-500/10' : 'border-slate-200'}`}>
               <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Display Options</label>
               {[
                 { label: 'Show Traversal Path', state: showTraversalPath, set: setShowTraversalPath },
                 { label: 'Show Call Stack', state: showCallStack, set: setShowCallStack },
                 { label: 'Show Pseudocode', state: showPseudocode, set: setShowPseudocode },
               ].map(opt => (
-                <label key={opt.label} className="flex items-center gap-2.5 text-xs text-slate-600 cursor-pointer hover:text-slate-800 transition-colors">
+                <label key={opt.label} className={`flex items-center gap-2.5 text-xs cursor-pointer transition-colors ${isDarkMode ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-800'}`}>
                   <input
                     type="checkbox"
                     checked={opt.state}
@@ -885,26 +965,26 @@ export default function TreeVisualization() {
           </div>
 
           {/* Bottom: Complexity */}
-          <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-1.5 mt-4">
-            <div className="flex justify-between text-[10px] text-slate-500 font-bold">
+          <div className={`border p-3 rounded-xl space-y-1.5 mt-4 ${isDarkMode ? 'bg-[#150d30]/60 border-purple-500/15' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`flex justify-between text-[10px] font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               <span>Tree Type:</span>
-              <span className="text-slate-800 uppercase">{treeType}</span>
+              <span className={isDarkMode ? 'text-purple-300 uppercase' : 'text-slate-800 uppercase'}>{treeType}</span>
             </div>
-            <div className="flex justify-between text-[10px] text-slate-500 font-bold">
+            <div className={`flex justify-between text-[10px] font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               <span>Nodes:</span>
-              <span className="text-slate-800">{nodes.length}</span>
+              <span className={isDarkMode ? 'text-purple-300' : 'text-slate-800'}>{nodes.length}</span>
             </div>
-            <div className="flex justify-between text-[10px] text-slate-500 font-bold">
+            <div className={`flex justify-between text-[10px] font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               <span>Height:</span>
-              <span className="text-slate-800">{treeRoot ? getTreeDepth(treeRoot) : 0}</span>
+              <span className={isDarkMode ? 'text-purple-300' : 'text-slate-800'}>{treeRoot ? getTreeDepth(treeRoot) : 0}</span>
             </div>
-            <div className="flex justify-between text-[10px] text-slate-500 font-bold">
+            <div className={`flex justify-between text-[10px] font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               <span>Insert / Search:</span>
-              <span className="text-emerald-600">{treeType === 'avl' ? 'O(log n)' : 'O(h)'}</span>
+              <span className="text-emerald-500">{treeType === 'avl' ? 'O(log n)' : 'O(h)'}</span>
             </div>
-            <div className="flex justify-between text-[10px] text-slate-500 font-bold">
+            <div className={`flex justify-between text-[10px] font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               <span>Delete:</span>
-              <span className="text-emerald-600">{treeType === 'avl' ? 'O(log n)' : 'O(h)'}</span>
+              <span className="text-emerald-500">{treeType === 'avl' ? 'O(log n)' : 'O(h)'}</span>
             </div>
           </div>
         </div>
@@ -912,15 +992,23 @@ export default function TreeVisualization() {
         {/* ═══════════════════════════════════════════════
             CENTER PANEL: TREE CANVAS (45%)
         ═══════════════════════════════════════════════ */}
-        <div className={`bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg flex flex-col relative overflow-hidden shrink-0 ${
+        <div className={`backdrop-blur-xl rounded-[24px] shadow-lg flex flex-col relative overflow-hidden shrink-0 border ${
+          isDarkMode 
+            ? 'bg-[#0f0b21]/90 border-purple-500/10 text-white' 
+            : 'bg-white/70 border-[#E2E8F0]'
+        } ${
           isGameRotated 
             ? 'w-[45%] h-full' 
             : 'w-full lg:w-[45%] h-[580px] lg:h-full'
         }`}>
 
           {/* Top bar */}
-          <div className="h-12 border-b border-slate-200 bg-slate-50/80 px-6 flex items-center justify-between text-xs font-mono text-slate-500 shrink-0">
-            <span>Status: <span className="text-blue-600 uppercase font-extrabold">{isPlaying ? 'Animating' : traversalIndex >= 0 ? 'Traversing' : 'Idle'}</span></span>
+          <div className={`h-12 border-b px-6 flex items-center justify-between text-xs font-mono shrink-0 ${
+            isDarkMode 
+              ? 'border-purple-500/10 bg-[#120e2a]/80 text-purple-300' 
+              : 'border-slate-200 bg-slate-50/80 text-slate-500'
+          }`}>
+            <span>Status: <span className={isDarkMode ? "text-purple-400 uppercase font-extrabold" : "text-blue-600 uppercase font-extrabold"}>{isPlaying ? 'Animating' : traversalIndex >= 0 ? 'Traversing' : 'Idle'}</span></span>
             <span>{animSteps.length > 0 ? `Step ${currentStep + 1} / ${animSteps.length}` : `Nodes: ${nodes.length}`}</span>
           </div>
 
@@ -1060,8 +1148,14 @@ export default function TreeVisualization() {
           </div>
 
           {/* Footer: Step explanation */}
-          <div className="border-t border-slate-200 bg-slate-50/80 p-4 flex flex-col justify-center items-center gap-1 shrink-0">
-            <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest flex items-center gap-1.5">
+          <div className={`border-t p-4 flex flex-col justify-center items-center gap-1 shrink-0 ${
+            isDarkMode 
+              ? 'border-purple-500/10 bg-[#120e2a]/80' 
+              : 'border-slate-200 bg-slate-50/80'
+          }`}>
+            <h4 className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${
+              isDarkMode ? 'text-purple-400' : 'text-blue-600'
+            }`}>
               <Info className="w-3.5 h-3.5" /> AI Explanation
             </h4>
             <AnimatePresence mode="wait">
@@ -1070,7 +1164,9 @@ export default function TreeVisualization() {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
-                className="text-xs font-semibold text-slate-700 text-center max-w-md"
+                className={`text-xs font-semibold text-center max-w-md ${
+                  isDarkMode ? 'text-slate-300' : 'text-slate-700'
+                }`}
               >
                 {activeMessage}
               </motion.span>
@@ -1081,14 +1177,20 @@ export default function TreeVisualization() {
         {/* ═══════════════════════════════════════════════
             RIGHT PANEL: CODE / CALL STACK (33%)
         ═══════════════════════════════════════════════ */}
-        <div className={`bg-white/70 backdrop-blur-xl border border-[#E2E8F0] rounded-[24px] shadow-lg flex flex-col overflow-hidden shrink-0 ${
+        <div className={`backdrop-blur-xl rounded-[24px] shadow-lg flex flex-col overflow-hidden shrink-0 border ${
+          isDarkMode 
+            ? 'bg-[#120e2a]/80 border-purple-500/10 text-white' 
+            : 'bg-white/70 border-[#E2E8F0]'
+        } ${
           isGameRotated 
             ? 'w-[33%] h-full' 
             : 'w-full lg:w-[33%] lg:min-w-[300px] h-auto lg:h-full'
         }`}>
 
           {/* Tabs */}
-          <div className="grid grid-cols-3 border-b border-slate-200 shrink-0 bg-slate-50">
+          <div className={`grid grid-cols-3 border-b shrink-0 ${
+            isDarkMode ? 'border-purple-500/10 bg-[#0f0b21]' : 'border-slate-200 bg-slate-50'
+          }`}>
             {[
               { id: 'code', label: 'Pseudocode', icon: Code2 },
               { id: 'callstack', label: 'Call Stack', icon: Layers },
@@ -1097,7 +1199,15 @@ export default function TreeVisualization() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-3.5 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition ${activeTab === tab.id ? 'border-blue-600 text-blue-600 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                className={`py-3.5 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition ${
+                  activeTab === tab.id 
+                    ? isDarkMode 
+                      ? 'border-purple-500 text-purple-400 bg-[#120e2a]/50' 
+                      : 'border-blue-600 text-blue-600 bg-white' 
+                    : isDarkMode 
+                      ? 'border-transparent text-slate-400 hover:text-slate-200' 
+                      : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
               >
                 <tab.icon className="w-3.5 h-3.5" />
                 <span>{tab.label}</span>
@@ -1106,20 +1216,30 @@ export default function TreeVisualization() {
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 overflow-auto p-5 bg-white">
+          <div className={`flex-1 overflow-auto p-5 transition-colors ${isDarkMode ? 'bg-[#120e2a]/30' : 'bg-white'}`}>
             <AnimatePresence mode="wait">
 
               {/* Pseudocode Tab */}
               {activeTab === 'code' && (
                 <motion.div key="code" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex flex-col gap-4">
-                  <pre className="text-[12px] bg-slate-50 p-4 rounded-xl border border-slate-200 overflow-y-auto font-mono flex-1">
+                  <pre className={`text-[12px] p-4 rounded-xl border overflow-y-auto font-mono flex-1 ${
+                    isDarkMode ? 'bg-[#0b071e] border-purple-500/10 text-purple-200' : 'bg-slate-50 border-slate-200'
+                  }`}>
                     <code>
                       {pseudoLines.map(line => (
                         <div
                           key={line.id}
-                          className={`py-0.5 px-2 rounded transition-all duration-200 flex items-start ${activeLine === line.id ? 'bg-blue-100 text-blue-900 border-l-4 border-blue-500 font-bold' : 'border-l-4 border-transparent text-slate-600'}`}
+                          className={`py-0.5 px-2 rounded transition-all duration-200 flex items-start ${
+                            activeLine === line.id 
+                              ? isDarkMode 
+                                ? 'bg-purple-600/35 text-white border-l-4 border-purple-500 font-bold' 
+                                : 'bg-blue-100 text-blue-900 border-l-4 border-blue-500 font-bold' 
+                              : isDarkMode 
+                                ? 'border-l-4 border-transparent text-slate-300' 
+                                : 'border-l-4 border-transparent text-slate-600'
+                          }`}
                         >
-                          <span className="w-5 text-slate-400 select-none shrink-0 text-right mr-2">{line.id}</span>
+                          <span className="w-5 text-slate-450 select-none shrink-0 text-right mr-2">{line.id}</span>
                           <span className="whitespace-pre">{line.text}</span>
                         </div>
                       ))}
@@ -1128,7 +1248,7 @@ export default function TreeVisualization() {
 
                   {/* Traversal Result */}
                   {showTraversalPath && traversalOrder.length > 0 && (
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                    <div className={`border rounded-xl p-3 ${isDarkMode ? 'bg-[#0b071e]/85 border-purple-500/15' : 'bg-slate-50 border-slate-200'}`}>
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
                         {traversalType} Traversal Result
                       </h4>
@@ -1137,9 +1257,15 @@ export default function TreeVisualization() {
                           <span
                             key={i}
                             className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-all ${
-                              i < traversalIndex ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                              : i === traversalIndex ? 'bg-blue-100 border-blue-500 text-blue-700 ring-2 ring-blue-300'
-                              : 'bg-white border-slate-200 text-slate-400'
+                              i < traversalIndex 
+                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-450'
+                                : i === traversalIndex 
+                                  ? isDarkMode 
+                                    ? 'bg-purple-500/20 border-purple-500 text-purple-200 ring-2 ring-purple-500/20' 
+                                    : 'bg-blue-100 border-blue-500 text-blue-700 ring-2 ring-blue-300'
+                                  : isDarkMode 
+                                    ? 'bg-[#181236]/80 border-purple-550/15 text-slate-500' 
+                                    : 'bg-white border-slate-200 text-slate-400'
                             }`}
                           >
                             {item.value}
@@ -1164,10 +1290,18 @@ export default function TreeVisualization() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.05 }}
                           className={`flex items-center gap-3 p-2.5 rounded-lg border text-xs font-mono ${
-                            i === 0 ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600'
+                            i === 0 
+                              ? isDarkMode 
+                                ? 'bg-purple-500/20 border-purple-500/30 text-purple-200 font-bold shadow-sm' 
+                                : 'bg-blue-50 border-blue-300 text-blue-700 font-bold shadow-sm' 
+                              : isDarkMode 
+                                ? 'bg-[#0b071e]/70 border-purple-550/10 text-slate-350' 
+                                : 'bg-slate-50 border-slate-200 text-slate-600'
                           }`}
                         >
-                          <span className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-500 shrink-0">
+                          <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                            isDarkMode ? 'bg-purple-950/80 text-purple-300' : 'bg-slate-200 text-slate-500'
+                          }`}>
                             {callStack.length - i}
                           </span>
                           <span>{item.call}</span>
@@ -1188,18 +1322,22 @@ export default function TreeVisualization() {
                 <motion.div key="complexity" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5">
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Time Complexity</h4>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 shadow-inner">
+                    <div className={`border rounded-xl p-4 space-y-3 shadow-inner ${
+                      isDarkMode ? 'bg-[#0b071e]/85 border-purple-500/10' : 'bg-slate-50 border-slate-200'
+                    }`}>
                       {[
                         { op: 'Insert', best: 'O(log n)', worst: treeType === 'avl' ? 'O(log n)' : 'O(n)' },
                         { op: 'Search', best: 'O(log n)', worst: treeType === 'avl' ? 'O(log n)' : 'O(n)' },
                         { op: 'Delete', best: 'O(log n)', worst: treeType === 'avl' ? 'O(log n)' : 'O(n)' },
                         { op: 'Traversal', best: 'O(n)', worst: 'O(n)' },
                       ].map(row => (
-                        <div key={row.op} className="flex justify-between items-center py-1 border-b border-slate-200 last:border-0">
-                          <span className="text-xs text-slate-600 font-medium">{row.op}</span>
+                        <div key={row.op} className={`flex justify-between items-center py-1 border-b last:border-0 ${
+                          isDarkMode ? 'border-purple-500/10' : 'border-slate-200'
+                        }`}>
+                          <span className={`text-xs font-medium ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>{row.op}</span>
                           <div className="flex gap-3 text-[10px]">
-                            <span className="text-emerald-600 font-bold">Best: {row.best}</span>
-                            <span className="text-amber-600 font-bold">Worst: {row.worst}</span>
+                            <span className="text-emerald-500 font-bold">Best: {row.best}</span>
+                            <span className="text-amber-500 font-bold">Worst: {row.worst}</span>
                           </div>
                         </div>
                       ))}
@@ -1208,19 +1346,29 @@ export default function TreeVisualization() {
 
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Space Complexity</h4>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-inner">
+                    <div className={`border rounded-xl p-4 shadow-inner ${isDarkMode ? 'bg-[#0b071e]/85 border-purple-500/10' : 'bg-slate-50 border-slate-200'}`}>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-600 font-medium">Storage</span>
-                        <span className="text-emerald-600 font-bold text-xs">O(n)</span>
+                        <span className={`text-xs font-medium ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>Storage</span>
+                        <span className="text-emerald-500 font-bold text-xs">O(n)</span>
                       </div>
                     </div>
                   </div>
 
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Operation Log</h4>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1.5 max-h-48 overflow-y-auto shadow-inner">
+                    <div className={`border rounded-xl p-3 space-y-1.5 max-h-48 overflow-y-auto shadow-inner ${
+                      isDarkMode ? 'bg-[#0b071e]/85 border-purple-500/10' : 'bg-slate-50 border-slate-200'
+                    }`}>
                       {history.length > 0 ? history.map((h, i) => (
-                        <div key={i} className={`text-[11px] font-mono ${i === 0 ? 'text-slate-800 font-bold' : 'text-slate-500'}`}>
+                        <div key={i} className={`text-[11px] font-mono ${
+                          i === 0 
+                            ? isDarkMode 
+                              ? 'text-purple-300 font-bold' 
+                              : 'text-slate-800 font-bold' 
+                            : isDarkMode 
+                              ? 'text-slate-400' 
+                              : 'text-slate-500'
+                        }`}>
                           &gt; {h.msg}
                         </div>
                       )) : (
@@ -1232,21 +1380,31 @@ export default function TreeVisualization() {
                   {treeType === 'avl' && (
                     <div>
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">AVL Rotations</h4>
-                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 shadow-inner text-xs text-slate-600">
+                      <div className={`border rounded-xl p-4 space-y-2 shadow-inner text-xs ${
+                        isDarkMode ? 'bg-[#0b071e]/85 border-purple-500/10 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'
+                      }`}>
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[9px] font-bold">LL</span>
+                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                            isDarkMode ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-100 text-blue-600'
+                          }`}>LL</span>
                           <span>Single Right Rotation</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[9px] font-bold">RR</span>
+                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                            isDarkMode ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-100 text-blue-600'
+                          }`}>RR</span>
                           <span>Single Left Rotation</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[9px] font-bold">LR</span>
+                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                            isDarkMode ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-650'
+                          }`}>LR</span>
                           <span>Left-Right Double Rotation</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[9px] font-bold">RL</span>
+                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                            isDarkMode ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-655'
+                          }`}>RL</span>
                           <span>Right-Left Double Rotation</span>
                         </div>
                       </div>
