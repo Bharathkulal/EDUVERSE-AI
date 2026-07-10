@@ -6,7 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useSessionTracker } from '../utils/sessionTracker';
 import ThemeToggleButton from './ThemeToggleButton';
 import { Mic } from 'lucide-react';
-import eduverseLogo from '../assets/logo.png';
+import EduVerseLogo from './EduVerseLogo';
 import '../pages/DashboardTheme.css';
 
 const studentNav = [
@@ -172,16 +172,7 @@ export default function Layout({ children }) {
           <div className="flex flex-col flex-1 min-h-0">
             {/* Logo */}
             <div className="db-sidebar-logo pb-4 border-b border-[var(--db-sidebar-border)] mb-4 flex-shrink-0">
-              <img
-                src={eduverseLogo}
-                alt="EduVerse AI"
-                style={{
-                  width: '160px',
-                  height: 'auto',
-                  mixBlendMode: 'screen',
-                  display: 'block'
-                }}
-              />
+              <EduVerseLogo size={36} variant="full" />
             </div>
 
             {/* Navigation Links */}

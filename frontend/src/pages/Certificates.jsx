@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api/axios';
 import { Award, ShieldAlert, Download, Share2, Printer, ExternalLink, BookOpen, Clock, Lock, CheckCircle2 } from 'lucide-react';
+import { EduVerseIcon } from '../components/EduVerseLogo';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
@@ -203,9 +204,7 @@ export default function Certificates() {
                   {/* Top: Logo & Achievement seal */}
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-tr from-violet-600 to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold shadow-md shadow-violet-600/20">
-                        E
-                      </div>
+                      <EduVerseIcon size={40} />
                       <div className="text-left">
                         <span className="block font-black text-lg tracking-tight text-slate-900 leading-none">EduVerse AI</span>
                         <span className="text-[8px] uppercase tracking-widest font-bold text-slate-500">Learn. Practice. Master. Succeed.</span>

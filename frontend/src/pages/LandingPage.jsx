@@ -11,7 +11,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import WatchDemoModal from '../components/WatchDemoModal';
 import toast from 'react-hot-toast';
-import logoImg from '../assets/logo.png';
+import EduVerseLogo, { EduVerseIcon } from '../components/EduVerseLogo';
 import studentImg from '../assets/hero_character.png';
 import './LandingPage.css';
 
@@ -274,10 +274,8 @@ export default function LandingPage() {
       <header className="fixed left-0 right-0 top-3 z-50 px-4 md:px-8 transition-all duration-300">
         <div className="mx-auto max-w-7xl rounded-2xl glass-strong px-6 py-3 flex items-center justify-between border border-white/5 shadow-2xl">
           <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="relative h-8 w-8 rounded-lg flex items-center justify-center font-display text-[14px] font-bold text-white shadow-[0_4px_12px_rgba(79,125,255,0.3)]" style={{ background: "linear-gradient(135deg,#4F7DFF,#8B5CF6)" }}>
-              E
-            </div>
-            <span className="font-display text-sm font-extrabold tracking-tight text-white">EduVerse <span className="text-[#8B5CF6]">AI</span></span>
+            <EduVerseIcon size={32} />
+            <span className="font-display text-sm font-extrabold tracking-tight text-white">EduVerse <span className="text-[#60A5FA]">AI</span></span>
           </div>
           
           <nav className="hidden items-center gap-8 md:flex">
@@ -1271,7 +1269,10 @@ export default function LandingPage() {
           
           {/* Logo & Info */}
           <div className="text-left space-y-4">
-            <img src={logoImg} alt="EduVerse Logo" className="h-6 w-auto object-contain" />
+            <div className="flex items-center gap-2">
+              <EduVerseIcon size={28} />
+              <span className="font-extrabold text-sm text-white tracking-tight">EduVerse AI</span>
+            </div>
             <p className="leading-relaxed">
               Premium AI-powered student learning space. Mastering tech skills step-by-step through visualization.
             </p>

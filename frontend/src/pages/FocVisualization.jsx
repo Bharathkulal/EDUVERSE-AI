@@ -9,7 +9,7 @@ import {
   Binary, Terminal, RefreshCw, Send, Zap, Award, Edit3,
   Info, Lightbulb, Hash, ArrowRight, Star, AlertCircle
 } from 'lucide-react';
-import logoImg from '../assets/logo.png';
+
 
 // Core topics
 const FOC_TOPICS = [
@@ -2618,7 +2618,7 @@ export default function FocVisualization() {
                                     {opt}
                                   </div>
                                   {quizAnswered && oIdx === getQuizQuestions()[quizIndex].a && (
-                                    <img src={logoImg} alt="Correct" className="h-4 object-contain" />
+                                    <span className="text-emerald-400 font-bold text-sm">✓</span>
                                   )}
                                 </button>
                               ))}
@@ -2632,7 +2632,7 @@ export default function FocVisualization() {
                                   : 'bg-red-50 border border-red-200 text-red-800'
                               }`}>
                                 {selectedAnswer === getQuizQuestions()[quizIndex].a 
-                                  ? <div className="flex items-center gap-1.5"><img src={logoImg} alt="Correct" className="h-4 object-contain" /> Correct! Great understanding!</div>
+                                  ? <div className="flex items-center gap-1.5"><span className="text-emerald-500 font-bold">✓</span> Correct! Great understanding!</div>
                                   : `❌ Not quite. The correct answer is: ${getQuizQuestions()[quizIndex].o[getQuizQuestions()[quizIndex].a]}`
                                 }
                               </div>
