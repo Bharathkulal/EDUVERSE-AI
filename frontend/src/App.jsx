@@ -46,6 +46,7 @@ const InnovationHub = lazy(() => import('./pages/InnovationHub'));
 const LearningTimeline = lazy(() => import('./pages/LearningTimeline'));
 const ExamCommandCenter = lazy(() => import('./pages/ExamCommandCenter'));
 const DebateArena = lazy(() => import('./pages/DebateArena'));
+const VideoStudio = lazy(() => import('./pages/VideoStudio'));
 // Python AI Learning Platform
 const PythonLessonPage = lazy(() => import('./python/PythonLessonPage'));
 // Advanced Java AI Learning Platform
@@ -178,6 +179,7 @@ export default function App() {
             {/* Career Hub & Community */}
             <Route path="/career-hub" element={<ProtectedRoute><Layout><CareerHub /></Layout></ProtectedRoute>} />
             <Route path="/innovation-hub" element={<ProtectedRoute><Layout><InnovationHub /></Layout></ProtectedRoute>} />
+            <Route path="/video-studio" element={<ProtectedRoute><Layout><VideoStudio /></Layout></ProtectedRoute>} />
             <Route path="/learning-timeline" element={<ProtectedRoute><Layout><LearningTimeline /></Layout></ProtectedRoute>} />
             <Route path="/exam-center" element={<ProtectedRoute><Layout><ExamCommandCenter /></Layout></ProtectedRoute>} />
             <Route path="/debate-arena" element={<ProtectedRoute><Layout><DebateArena /></Layout></ProtectedRoute>} />
