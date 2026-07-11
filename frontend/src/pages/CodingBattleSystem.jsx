@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Flame, Zap, Shield, Target, Trophy, Play, RotateCcw, 
@@ -76,6 +77,16 @@ const PROBLEMS = [
 ];
 
 export default function CodingBattleSystem({ onExit }) {
+  const navigate = useNavigate();
+
+  const handleExit = () => {
+    if (typeof onExit === 'function') {
+      onExit();
+    } else {
+      navigate(-1);
+    }
+  };
+
   // Game state
   const [battleState, setBattleState] = useState('lobby'); // lobby, matchmaking, battle, completed, failed
   const [playerElo, setPlayerElo] = useState(1800);
@@ -271,7 +282,7 @@ export default function CodingBattleSystem({ onExit }) {
       {battleState === 'lobby' && (
         <div className="lobby-panel">
           <div className="flex items-center gap-4 mb-6">
-            <button onClick={onExit} className="exit-btn">
+            <button onClick={handleExit} className="exit-btn">
               <ArrowLeft size={16} />
               <span>Back to Hub</span>
             </button>
