@@ -220,6 +220,18 @@ export default function SubjectDetail() {
     return location.state?.activeView || 'hub';
   });
 
+  useEffect(() => {
+    const handleBack = (e) => {
+      if (e.defaultPrevented) return;
+      if (activeView !== 'hub') {
+        e.preventDefault();
+        setActiveView('hub');
+      }
+    };
+    window.addEventListener('eduverse-back', handleBack);
+    return () => window.removeEventListener('eduverse-back', handleBack);
+  }, [activeView]);
+
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 300], [0, 100]);
   const opacity = useTransform(scrollY, [0, 200], [1, 0]);

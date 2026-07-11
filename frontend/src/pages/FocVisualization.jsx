@@ -270,6 +270,18 @@ export default function FocVisualization() {
   // Notes state
   const [userNotes, setUserNotes] = useState('Type your study notes here for reference...');
 
+  useEffect(() => {
+    const handleBack = (e) => {
+      if (e.defaultPrevented) return;
+      if (selectedTopic !== null) {
+        e.preventDefault();
+        setSelectedTopic(null);
+      }
+    };
+    window.addEventListener('eduverse-back', handleBack);
+    return () => window.removeEventListener('eduverse-back', handleBack);
+  }, [selectedTopic]);
+
   // Setup operations when topic changes
   useEffect(() => {
     if (selectedTopic) {
