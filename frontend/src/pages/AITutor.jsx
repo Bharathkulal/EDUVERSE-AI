@@ -1,1060 +1,776 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  HelpCircle, BookOpen, FileText, CheckSquare, Briefcase, 
-  UserCheck, Clipboard, Calendar, Search, Sparkles, Send, 
-  RotateCcw, Save, Copy, ChevronRight, ChevronLeft, Award, 
-  TrendingUp, Star, BookMarked, ThumbsUp
+  Sparkles, Cpu, Sliders, Database, BarChart2, 
+  RotateCcw, Play, Activity, Settings, Network
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import api from '../api/axios';
-
-const TOOLS = [
-  { id: 'doubt', label: 'Ask Doubt', icon: '❓', desc: 'Get direct answers & explanations' },
-  { id: 'explain', label: 'Explain Concept', icon: '📖', desc: 'Easy, medium, or deep breakdown' },
-  { id: 'example', label: 'Generate Examples', icon: '💡', desc: 'Code and real-life samples' },
-  { id: 'practice', label: 'Practice Questions', icon: '📝', desc: 'MCQs, coding & output challenges' },
-  { id: 'career', label: 'AI Career Guide', icon: '🎯', desc: 'Learning roadmaps & career paths' },
-  { id: 'interview', label: 'AI Interviewer', icon: '🎙️', desc: 'Simulated interactive mock interviews' },
-  { id: 'resume', label: 'Resume Reviewer', icon: '📄', desc: 'ATS analysis & bullet optimization' },
-  { id: 'planner', label: 'Study Planner', icon: '📅', desc: 'Daily & weekly custom plans' },
-  { id: 'questions', label: 'Questions Bank', icon: '📚', desc: 'Search syllabus database & AI failovers' },
-];
 
 export default function AITutor() {
-  const [selectedTool, setSelectedTool] = useState('doubt');
-  const [subject, setSubject] = useState('Computer Science');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [savedAnswers, setSavedAnswers] = useState([]);
-  const [recentChats, setRecentChats] = useState([
-    { tool: 'Ask Doubt', title: 'What is polymorphic behavior?' },
-    { tool: 'Explain Concept', title: 'Deep dive into Binary Search Trees' }
-  ]);
+  // Hyperparameters
+  const [learningRate, setLearningRate] = useState(0.01);
+  const [batchSize, setBatchSize] = useState(32);
+  const [optimizer, setOptimizer] = useState('Adam');
+  const [activation, setActivation] = useState('ReLU');
+  
+  // Training Simulation State
+  const [currentEpoch, setCurrentEpoch] = useState(0);
+  const [isTraining, setIsTraining] = useState(false);
+  const [trainingHistory, setTrainingHistory] = useState([]);
+  const [confidence, setConfidence] = useState(0.5);
 
-  // General Input States
-  const [generalQuestion, setGeneralQuestion] = useState('');
-  const [doubtResult, setDoubtResult] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  // Active sub-page elements (Quick Access)
+  const [activeAccessCard, setActiveAccessCard] = useState(null);
 
-  // Explain Concept States
-  const [conceptTopic, setConceptTopic] = useState('');
-  const [conceptLevel, setConceptLevel] = useState('medium'); // easy, medium, deep
-  const [conceptResult, setConceptResult] = useState(null);
+  // Canvas Refs
+  const canvasRef = useRef(null);
+  const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
 
-  // Generate Examples States
-  const [exampleTopic, setExampleTopic] = useState('');
-  const [exampleLang, setExampleLang] = useState('Python');
-  const [exampleCount, setExampleCount] = useState(3);
-  const [exampleResult, setExampleResult] = useState(null);
+  // Generate Simulation Data based on hyperparameters
+  const generateFullHistory = (lr, bs, opt, act) => {
+    let history = [];
+    let currentLoss = 0.95;
+    let currentTrainAcc = 0.42;
+    let currentValAcc = 0.40;
 
-  // Practice Questions States
-  const [practiceTopic, setPracticeTopic] = useState('');
-  const [practiceType, setPracticeType] = useState('MCQ');
-  const [practiceDifficulty, setPracticeDifficulty] = useState('Medium');
-  const [practiceQuestions, setPracticeQuestions] = useState([]);
-  const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState('');
-  const [showHint, setShowHint] = useState(false);
-  const [practiceSubmitted, setPracticeSubmitted] = useState(false);
-  const [practiceScore, setPracticeScore] = useState(0);
+    // Hyperparameter multipliers
+    const lrFactor = lr > 0.05 ? 1.4 : lr < 0.005 ? 0.6 : 1.0;
+    const optFactor = opt === 'Adam' ? 1.2 : opt === 'RMSprop' ? 1.05 : 0.85;
+    const actFactor = act === 'ReLU' ? 1.1 : act === 'GELU' ? 1.15 : act === 'Tanh' ? 0.95 : 0.8;
 
-  // Career Guide States
-  const [careerBranch, setCareerBranch] = useState('Computer Science');
-  const [careerGoal, setCareerGoal] = useState('Full Stack Developer');
-  const [careerLevel, setCareerLevel] = useState('Beginner');
-  const [careerResult, setCareerResult] = useState(null);
+    const rate = 0.15 * lrFactor * optFactor * actFactor;
 
-  // Interviewer States
-  const [interviewRole, setInterviewRole] = useState('Frontend Engineer');
-  const [interviewTopic, setInterviewTopic] = useState('React & JavaScript');
-  const [interviewType, setInterviewType] = useState('Technical');
-  const [interviewQuestions, setInterviewQuestions] = useState([]);
-  const [interviewIdx, setInterviewIdx] = useState(0);
-  const [interviewAnswers, setInterviewAnswers] = useState({});
-  const [interviewFeedback, setInterviewFeedback] = useState(null);
+    for (let epoch = 1; epoch <= 20; epoch++) {
+      // Simulate loss curve decay
+      const decay = Math.exp(-epoch * rate);
+      const lossNoise = (Math.random() - 0.5) * 0.03 * (1 / epoch);
+      currentLoss = Math.max(0.04, 0.95 * decay + lossNoise);
 
-  // Resume States
-  const [resumeText, setResumeText] = useState('');
-  const [resumeResult, setResumeResult] = useState(null);
+      // Simulate accuracy curve growth
+      const accLimit = 0.92 + (opt === 'Adam' ? 0.05 : 0.02) + (lr > 0.05 ? -0.04 : 0.01);
+      const accGrowth = accLimit * (1 - Math.exp(-epoch * rate * 0.95));
+      const trainNoise = (Math.random() - 0.5) * 0.02;
+      const valNoise = (Math.random() - 0.5) * 0.03 - (epoch > 15 && lr > 0.04 ? 0.02 : 0); // Simulate overfitting on high LR
 
-  // Study Planner States
-  const [planSubjects, setPlanSubjects] = useState('Java, DBMS, OS');
-  const [planExamDate, setPlanExamDate] = useState('2026-07-15');
-  const [planHours, setPlanHours] = useState(4);
-  const [planWeakTopics, setPlanWeakTopics] = useState('Recursion, Normalization');
-  const [planResult, setPlanResult] = useState(null);
+      currentTrainAcc = Math.min(0.99, 0.42 + accGrowth + trainNoise);
+      currentValAcc = Math.min(0.98, 0.40 + accGrowth * 0.96 + valNoise);
 
-  // Question Bank States
-  const [qbSearchQuery, setQbSearchQuery] = useState('');
-  const [qbResult, setQbResult] = useState(null);
-  const [qbLoading, setQbLoading] = useState(false);
-
-  const handleQbSearch = async () => {
-    if (!qbSearchQuery.trim()) {
-      toast.error('Please input a question first.');
-      return;
-    }
-    setQbLoading(true);
-    setQbResult(null);
-    try {
-      const res = await api.post('/questions/search', { query: qbSearchQuery });
-      setQbResult(res.data);
-      // Save query to history
-      setRecentChats(prev => [{ tool: 'Questions Bank', title: qbSearchQuery }, ...prev]);
-      toast.success('Search complete!');
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to search question bank.');
-    } finally {
-      setQbLoading(false);
-    }
-  };
-
-  // ───── Ask Doubt Operator ─────
-  const handleAskDoubt = (qText) => {
-    const query = qText || generalQuestion;
-    if (!query.trim()) {
-      toast.error('Please input a doubt first.');
-      return;
-    }
-    setIsGenerating(true);
-    setTimeout(() => {
-      setDoubtResult({
-        question: query,
-        answer: `Polymorphism allows objects of different classes to be treated as objects of a common superclass. The most common use of polymorphism in OOP occurs when a parent class reference is used to refer to a child class object.`,
-        explanation: `For example, in Java, if a class 'Animal' has a method 'makeSound()', and subclasses 'Dog' and 'Cat' override this method, calling 'makeSound()' on an Animal reference pointing to a Dog object will trigger Dog's version of the method at runtime.`,
-        tips: `Always make sure to use '@Override' annotations in Java to prevent syntax bugs.`
+      history.push({
+        epoch,
+        loss: parseFloat(currentLoss.toFixed(4)),
+        trainAcc: parseFloat((currentTrainAcc * 100).toFixed(1)),
+        valAcc: parseFloat((currentValAcc * 100).toFixed(1))
       });
-      setIsGenerating(false);
-      toast.success('Response generated!');
-    }, 1000);
+    }
+    return history;
   };
 
-  // ───── Explain Concept Operator ─────
-  const handleExplainConcept = () => {
-    if (!conceptTopic.trim()) {
-      toast.error('Please enter a concept name.');
-      return;
-    }
-    setIsGenerating(true);
-    setTimeout(() => {
-      setConceptResult({
-        topic: conceptTopic,
-        level: conceptLevel,
-        definition: `Binary Search Tree (BST) is a node-based binary tree data structure where each node has at most two child nodes.`,
-        structure: `The left subtree of a node contains only nodes with keys lesser than the node's key. The right subtree of a node contains only nodes with keys greater than the node's key.`,
-        breakdown: `Searching: O(log N) average time. Insertion: O(log N) average time. Deletion: O(log N) average time.`,
-        summary: `Excellent for quick search, insertion, and deletion operations compared to unsorted arrays or linked lists.`,
-        links: ['Tree Traversals', 'AVL Trees', 'Red-Black Trees']
-      });
-      setIsGenerating(false);
-      toast.success('Concept explained!');
-    }, 1000);
-  };
-
-  // ───── Generate Examples Operator ─────
-  const handleGenerateExamples = () => {
-    if (!exampleTopic.trim()) {
-      toast.error('Please enter a topic.');
-      return;
-    }
-    setIsGenerating(true);
-    setTimeout(() => {
-      setExampleResult({
-        topic: exampleTopic,
-        lang: exampleLang,
-        examples: [
-          {
-            title: 'Simple Implementation',
-            code: `# Python example for ${exampleTopic}\n` +
-                  `def demonstrate():\n` +
-                  `    print("Demonstrating ${exampleTopic}")\n` +
-                  `demonstrate()`
-          },
-          {
-            title: 'Real-Life Scenario',
-            code: `# Practical ${exampleLang} implementation representing real-world usage\n` +
-                  `class ApplicationContext:\n` +
-                  `    def __init__(self):\n` +
-                  `        self.state = "${exampleTopic}"`
+  // Run Training simulation tick
+  useEffect(() => {
+    let interval = null;
+    if (isTraining) {
+      interval = setInterval(() => {
+        setCurrentEpoch(prev => {
+          if (prev >= 20) {
+            setIsTraining(false);
+            toast.success('Model Training Complete! Confidence: ' + (confidence * 100).toFixed(1) + '%');
+            return prev;
           }
-        ]
-      });
-      setIsGenerating(false);
-      toast.success('Examples generated!');
-    }, 1000);
-  };
-
-  // ───── Practice Questions Operator ─────
-  const handlePracticeQuestions = () => {
-    if (!practiceTopic.trim()) {
-      toast.error('Please enter a practice topic.');
-      return;
+          const next = prev + 1;
+          // Dynamically increase classification confidence
+          setConfidence(0.5 + (next / 20) * 0.44 + (optimizer === 'Adam' ? 0.05 : 0.01));
+          return next;
+        });
+      }, 350);
     }
-    setIsGenerating(true);
-    setTimeout(() => {
-      setPracticeQuestions([
-        {
-          id: 1,
-          question: `Which of the following is correct regarding ${practiceTopic}?`,
-          options: ['Option A: It is static', 'Option B: It runs dynamically', 'Option C: It has compile-time bindings', 'Option D: None of the above'],
-          correct: 1,
-          hint: 'Think about dynamic dispatch mechanism at runtime.',
-          solution: 'Option B is correct because polymorphism resolves bindings dynamically at runtime.'
+    return () => clearInterval(interval);
+  }, [isTraining, optimizer, confidence]);
+
+  // Regenerate history when parameters change
+  useEffect(() => {
+    const fullHistory = generateFullHistory(learningRate, batchSize, optimizer, activation);
+    setTrainingHistory(fullHistory);
+    setCurrentEpoch(0);
+    setIsTraining(false);
+    setConfidence(0.45);
+  }, [learningRate, batchSize, optimizer, activation]);
+
+  // 3D Neural Network Canvas animation
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    // Handle high DPI screens
+    const resizeCanvas = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    };
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // 3D Nodes setup
+    const nodeCount = 38;
+    const nodes = [];
+    const layers = [4, 8, 10, 8, 5, 3]; // Neural network layer sizes
+    
+    // Distribute nodes across layer columns
+    const totalLayers = layers.length;
+    const layerSpacing = 300 / (totalLayers - 1 || 1);
+
+    layers.forEach((layerSize, layerIdx) => {
+      const x = -150 + layerIdx * layerSpacing;
+      const verticalSpacing = 160 / (layerSize - 1 || 1);
+      for (let j = 0; j < layerSize; j++) {
+        const y = -80 + j * verticalSpacing;
+        nodes.push({
+          x,
+          y,
+          z: (Math.random() - 0.5) * 80,
+          originalX: x,
+          originalY: y,
+          layer: layerIdx,
+          id: `${layerIdx}-${j}`
+        });
+      }
+    });
+
+    let angleX = 0.003;
+    let angleY = 0.005;
+
+    // Render loop
+    const render = () => {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // Smooth mouse rotation offsets
+      const mouse = mouseRef.current;
+      mouse.x += (mouse.targetX - mouse.x) * 0.05;
+      mouse.y += (mouse.targetY - mouse.y) * 0.05;
+
+      const currentAngleY = angleY + mouse.x * 0.0002;
+      const currentAngleX = angleX + mouse.y * 0.0002;
+
+      // Project and rotate 3D nodes
+      const cosX = Math.cos(currentAngleX);
+      const sinX = Math.sin(currentAngleX);
+      const cosY = Math.cos(currentAngleY);
+      const sinY = Math.sin(currentAngleY);
+
+      const projectedNodes = nodes.map(node => {
+        // Rotate around Y axis
+        let x1 = node.x * cosY - node.z * sinY;
+        let z1 = node.z * cosY + node.x * sinY;
+
+        // Rotate around X axis
+        let y2 = node.y * cosX - z1 * sinX;
+        let z2 = z1 * cosX + node.y * sinX;
+
+        // Perspective projection
+        const depth = 280;
+        const scale = depth / (depth + z2);
+        const screenX = w / 2 + x1 * scale * 1.2;
+        const screenY = h / 2 + y2 * scale * 1.1;
+
+        // Rotate original values slightly for continuous movement
+        node.x = x1;
+        node.y = y2;
+        node.z = z2;
+
+        return {
+          id: node.id,
+          x: screenX,
+          y: screenY,
+          z: z2,
+          layer: node.layer,
+          scale
+        };
+      });
+
+      // Draw Connections (feedforward lines)
+      ctx.lineWidth = 0.45;
+      for (let i = 0; i < projectedNodes.length; i++) {
+        const n1 = projectedNodes[i];
+        for (let j = i + 1; j < projectedNodes.length; j++) {
+          const n2 = projectedNodes[j];
+          
+          // Connect consecutive layers
+          if (n2.layer === n1.layer + 1) {
+            const dx = n2.x - n1.x;
+            const dy = n2.y - n1.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // Restrict connections to visual clarity
+            if (dist < 100) {
+              const alpha = Math.max(0.04, (1 - dist / 100) * 0.25 * (n1.scale + n2.scale) / 2);
+              
+              // Gradient line (Cyan -> Pink/Purple)
+              const grad = ctx.createLinearGradient(n1.x, n1.y, n2.x, n2.y);
+              grad.addColorStop(0, `rgba(6, 182, 212, ${alpha})`); // Cyan
+              grad.addColorStop(1, `rgba(236, 72, 153, ${alpha})`); // Pink
+              
+              ctx.strokeStyle = grad;
+              ctx.beginPath();
+              ctx.moveTo(n1.x, n1.y);
+              ctx.lineTo(n2.x, n2.y);
+              ctx.stroke();
+            }
+          }
         }
-      ]);
-      setActiveQuestionIdx(0);
-      setSelectedAnswer('');
-      setShowHint(false);
-      setPracticeSubmitted(false);
-      setPracticeScore(0);
-      setIsGenerating(false);
-      toast.success('Questions loaded!');
-    }, 1000);
-  };
+      }
 
-  // ───── Career Guide Operator ─────
-  const handleCareerGuide = () => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      setCareerResult({
-        goal: careerGoal,
-        level: careerLevel,
-        roadmap: [
-          { step: '1. Foundation', details: 'Learn HTML, CSS, JavaScript, and programming syntax basic principles.' },
-          { step: '2. Frameworks', details: 'Master React, Vue, or Angular for front-end, Node.js or Spring for back-end.' },
-          { step: '3. DB & Deploy', details: 'Relational databases SQL, non-relational MongoDB, Git, and hosting services.' }
-        ],
-        skills: ['JavaScript/ES6', 'React Hooks', 'REST API Architecture', 'Git Control'],
-        projects: ['E-Commerce dashboard', 'Real-time Chat App', 'DSA Visualization Canvas']
+      // Draw Nodes
+      projectedNodes.forEach(node => {
+        const radius = Math.max(1.5, 3.5 * node.scale);
+        
+        // Depth-based transparency
+        const opacity = Math.max(0.15, (node.z + 100) / 200);
+        
+        // Dynamic node gradient glow
+        const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius * 3);
+        if (node.layer === 0) {
+          // Input nodes: Bright Electric Cyan
+          grad.addColorStop(0, `rgba(6, 182, 212, ${opacity})`);
+          grad.addColorStop(1, 'rgba(6, 182, 212, 0)');
+          ctx.fillStyle = `rgba(6, 182, 212, ${opacity * 0.85})`;
+        } else if (node.layer === layers.length - 1) {
+          // Output nodes: Magenta / Purple
+          grad.addColorStop(0, `rgba(236, 72, 153, ${opacity})`);
+          grad.addColorStop(1, 'rgba(236, 72, 153, 0)');
+          ctx.fillStyle = `rgba(236, 72, 153, ${opacity * 0.85})`;
+        } else {
+          // Hidden layers: Purple / Indigo gradient
+          grad.addColorStop(0, `rgba(168, 85, 247, ${opacity})`);
+          grad.addColorStop(1, 'rgba(168, 85, 247, 0)');
+          ctx.fillStyle = `rgba(168, 85, 247, ${opacity * 0.8})`;
+        }
+        
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, radius * 3, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
       });
-      setIsGenerating(false);
-      toast.success('Career path generated!');
-    }, 1000);
-  };
 
-  // ───── Interviewer Operator ─────
-  const handleStartInterview = () => {
-    setIsGenerating(true);
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    // Mouse movement handler
+    const handleMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left - rect.width / 2;
+      const mouseY = e.clientY - rect.top - rect.height / 2;
+      mouseRef.current.targetX = mouseX;
+      mouseRef.current.targetY = mouseY;
+    };
+
+    const handleMouseLeave = () => {
+      mouseRef.current.targetX = 0;
+      mouseRef.current.targetY = 0;
+    };
+
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', resizeCanvas);
+      if (canvas) {
+        canvas.removeEventListener('mousemove', handleMouseMove);
+        canvas.removeEventListener('mouseleave', handleMouseLeave);
+      }
+    };
+  }, []);
+
+  const startTrainingRun = () => {
+    setCurrentEpoch(0);
+    setIsTraining(true);
+    toast.loading('Initializing neural compilation run...', { id: 'train' });
     setTimeout(() => {
-      setInterviewQuestions([
-        { id: 1, question: `Can you explain the difference between virtual DOM and real DOM in ${interviewTopic}?` },
-        { id: 2, question: `How do you manage states in a highly nested component hierarchy?` }
-      ]);
-      setInterviewIdx(0);
-      setInterviewAnswers({});
-      setInterviewFeedback(null);
-      setIsGenerating(false);
-      toast.success('Interview started!');
-    }, 1000);
+      toast.dismiss('train');
+    }, 800);
   };
 
-  const handleSubmitInterview = () => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      setInterviewFeedback({
-        score: 85,
-        confidence: 'High',
-        strengths: 'Excellent explanation of reconciliation and virtual DOM tree comparisons.',
-        weaknesses: 'Needs deeper explanation of custom hook dependencies and callback hook scenarios.',
-        tips: 'Utilize STAR method to explain real-life implementation problems you solved previously.'
-      });
-      setIsGenerating(false);
-      toast.success('Evaluation complete!');
-    }, 1000);
+  const resetTuning = () => {
+    setLearningRate(0.01);
+    setBatchSize(32);
+    setOptimizer('Adam');
+    setActivation('ReLU');
+    setCurrentEpoch(0);
+    setIsTraining(false);
+    setConfidence(0.45);
+    toast.success('Hyperparameters reset to baseline defaults');
   };
 
-  // ───── Resume Reviewer Operator ─────
-  const handleReviewResume = () => {
-    if (!resumeText.trim()) {
-      toast.error('Please paste resume text.');
-      return;
-    }
-    setIsGenerating(true);
-    setTimeout(() => {
-      setResumeResult({
-        score: 78,
-        formatting: 'Clean formatting, but consider using active verbs rather than passive statements.',
-        gaps: ['Missing unit testing frameworks (Jest/JUnit)', 'Insufficient cloud deployment mentions'],
-        optimizedBullets: [
-          'Optimized: "Architected real-time chat application using WebSocket, reducing connection latency by 30%."',
-          'Optimized: "Leveraged Java Streams to refactor query filters, resulting in 15% faster response times."'
-        ],
-        keywords: ['CI/CD Pipeline', 'RESTful Services', 'State Management', 'System Design']
-      });
-      setIsGenerating(false);
-      toast.success('Resume analyzed!');
-    }, 1000);
-  };
-
-  // ───── Study Planner Operator ─────
-  const handleCreatePlan = () => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      setPlanResult({
-        daily: [
-          { time: '09:00 AM', task: 'Study core theoretical definitions' },
-          { time: '02:00 PM', task: 'Code practice challenges' }
-        ],
-        weekly: [
-          { day: 'Monday', focus: `Focus on ${planWeakTopics}` },
-          { day: 'Wednesday', focus: 'Solve mock questions' }
-        ],
-        stats: 'Estimated preparation coverage: 88%'
-      });
-      setIsGenerating(false);
-      toast.success('Planner created!');
-    }, 1000);
-  };
-
-  // ───── Utility Actions ─────
-  const saveToHistory = (title) => {
-    setRecentChats(prev => [{ tool: TOOLS.find(t => t.id === selectedTool).label, title }, ...prev]);
-    toast.success('Saved to recent history!');
-  };
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard!');
-  };
+  // Helper values for active simulation subset
+  const visibleHistory = trainingHistory.slice(0, currentEpoch || 1);
+  const latestMetric = visibleHistory[visibleHistory.length - 1] || { loss: 0.95, trainAcc: 42.0, valAcc: 40.0 };
 
   return (
-    <div className="quiz-arena-container h-full flex flex-col relative overflow-y-auto">
-      {/* Background gradients */}
-      <div className="absolute top-[-10%] right-[-10%] w-[45%] h-[45%] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
+    <div className="relative w-full h-full flex flex-col overflow-y-auto bg-[#070814] p-6 select-none text-white scrollbar-thin">
+      {/* Background neon flares */}
+      <div className="absolute top-[-10%] right-[-15%] w-[55%] h-[55%] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-15%] w-[50%] h-[50%] bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="grain-overlay" />
 
-      {/* ─── Top Header Bar ─── */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-200/60 pb-5 mb-5 mt-2">
+      {/* ─── Top Header Section ─── */}
+      <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-indigo-500/15 pb-5 mb-6">
         <div>
-          <h1 className="lobby-title font-extrabold text-2xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-500">AI Tutor</h1>
-          <p className="text-slate-500 text-xs mt-1">Powered by AI — ask doubts, learn concepts, generate examples, and plan studies</p>
+          <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500 neon-glow-text-purple flex items-center gap-2">
+            <Network className="text-cyan-400 animate-pulse" size={28} />
+            Neural Network Visualizer
+          </h1>
+          <p className="text-[#64748b] text-xs mt-1 font-medium">
+            Advanced real-time hologram simulation of deep learning models and parameter backpropagation.
+          </p>
         </div>
 
-        {/* Search & Subject Bar */}
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:w-60">
-            <Search className="absolute left-3 top-2.5 text-slate-400" size={14} />
-            <input 
-              type="text" 
-              placeholder="Search concepts..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
-            />
+        <div className="flex items-center gap-3">
+          <div className="px-3 py-1.5 rounded-xl border border-indigo-500/15 bg-indigo-500/5 text-xs text-[#cbd5e1] font-semibold flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
+            <span>Active Model: NeuralNet-V2.4</span>
           </div>
           
-          <select 
-            value={subject} 
-            onChange={(e) => setSubject(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 cursor-pointer"
+          <button 
+            onClick={resetTuning}
+            className="p-2.5 rounded-xl border border-indigo-500/15 bg-[#121324] hover:bg-[#1e1b4b] text-slate-400 hover:text-white transition cursor-pointer"
+            title="Reset Parameters"
           >
-            <option value="Computer Science">Computer Science</option>
-            <option value="Mathematics">Mathematics</option>
-            <option value="Data Structures">Data Structures</option>
-          </select>
+            <RotateCcw size={14} />
+          </button>
         </div>
       </div>
 
-      {/* ─── 9 Compulsory Tools Large Card Grid ─── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-3 mb-6">
-        {TOOLS.map((t) => {
-          const isActive = selectedTool === t.id;
-          return (
-            <button
-              key={t.id}
-              onClick={() => setSelectedTool(t.id)}
-              className={`p-3 rounded-2xl border transition-all text-left flex flex-col justify-between h-24 ${
-                isActive 
-                  ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/25' 
-                  : 'bg-white border-slate-200/80 hover:border-slate-300/80 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <span className="text-xl">{t.icon}</span>
-              <div>
-                <span className="text-[10px] font-black tracking-tight block uppercase">{t.label}</span>
-                <span className={`text-[8px] mt-0.5 line-clamp-1 block ${isActive ? 'text-blue-100' : 'text-slate-400'}`}>
-                  {t.desc}
-                </span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* ─── Main Content Splitted Area ─── */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch min-h-0">
+      {/* ─── Main Grid Layout ─── */}
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch mb-6">
         
-        {/* Left / Center Main Workspace (9 cols) */}
-        <div className="lg:col-span-9 flex flex-col gap-4 min-h-0">
-          
-          <div className="flex-1 bg-white border border-slate-200/80 rounded-3xl p-6 flex flex-col justify-between overflow-y-auto scrollbar-thin">
-            
-            <div className="space-y-6">
-              
-              {/* ─── Tool 1: Ask Doubt ─── */}
-              {selectedTool === 'doubt' && (
-                <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">Ask Any Doubt</h3>
-                    <p className="text-[11px] text-slate-500">Submit a query to get instant explanations from Friday tutor.</p>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="e.g. Explain polymorphic behavior with simple real world objects" 
-                      value={generalQuestion}
-                      onChange={(e) => setGeneralQuestion(e.target.value)}
-                      className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
-                    />
-                    <button 
-                      onClick={() => handleAskDoubt()}
-                      className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Sparkles size={14} /> Ask AI
-                    </button>
-                  </div>
-
-                  {isGenerating && <div className="text-center py-8 text-xs text-slate-400 animate-pulse">Tutor is analyzing your doubt...</div>}
-
-                  {doubtResult && !isGenerating && (
-                    <div className="p-5 rounded-2xl border border-blue-500/20 bg-blue-500/5 space-y-4">
-                      <div>
-                        <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider block">Question Analyzed</span>
-                        <p className="text-xs font-semibold text-slate-800 mt-1">"{doubtResult.question}"</p>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider block">Tutor Answer</span>
-                        <p className="text-xs text-slate-600 mt-1 leading-relaxed">{doubtResult.answer}</p>
-                      </div>
-                      <div className="p-3 bg-slate-100 rounded-xl">
-                        <strong className="text-[10px] text-slate-500 uppercase block">Follow-Up Breakdown:</strong>
-                        <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">{doubtResult.explanation}</p>
-                      </div>
-
-                      <div className="flex items-center justify-between border-t border-slate-200/60 pt-3 text-[10px]">
-                        <div className="flex gap-2">
-                          <button onClick={() => copyToClipboard(doubtResult.answer)} className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center gap-1">
-                            <Copy size={12} /> Copy
-                          </button>
-                          <button onClick={() => saveToHistory(doubtResult.question)} className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center gap-1">
-                            <Save size={12} /> Save to history
-                          </button>
-                        </div>
-                        <button onClick={() => handleAskDoubt()} className="text-blue-600 font-extrabold hover:underline flex items-center gap-1">
-                          <RotateCcw size={12} /> Regenerate Answer
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* ─── Tool 2: Explain Concept ─── */}
-              {selectedTool === 'explain' && (
-                <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">Explain Concept</h3>
-                    <p className="text-[11px] text-slate-500">Choose complexity level to analyze key computer science theories.</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Concept Topic</span>
-                      <input 
-                        type="text" 
-                        placeholder="e.g. Binary Search Tree" 
-                        value={conceptTopic}
-                        onChange={(e) => setConceptTopic(e.target.value)}
-                        className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800"
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Explanation Depth</span>
-                      <div className="grid grid-cols-3 gap-2 bg-slate-50 p-1 rounded-xl border border-slate-200">
-                        {['easy', 'medium', 'deep'].map(lvl => (
-                          <button
-                            key={lvl}
-                            onClick={() => setConceptLevel(lvl)}
-                            className={`py-1 text-[10px] uppercase font-bold rounded-lg transition-colors ${conceptLevel === lvl ? 'bg-blue-600 text-white' : 'text-slate-500'}`}
-                          >
-                            {lvl}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <button onClick={handleExplainConcept} className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center gap-1 justify-center w-full">
-                    <Sparkles size={14} /> Explain Concept
-                  </button>
-
-                  {isGenerating && <div className="text-center py-8 text-xs text-slate-400 animate-pulse">Tutor is breaking down the concept...</div>}
-
-                  {conceptResult && !isGenerating && (
-                    <div className="p-5 rounded-2xl border border-blue-500/20 bg-blue-500/5 space-y-4">
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-800">Tutor Definition ({conceptResult.level} mode)</h4>
-                        <p className="text-xs text-slate-600 mt-1 leading-relaxed">{conceptResult.definition}</p>
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-800">Key Structure & Rules</h4>
-                        <p className="text-xs text-slate-600 mt-1 leading-relaxed">{conceptResult.structure}</p>
-                      </div>
-                      <div className="p-3.5 bg-slate-100 rounded-xl">
-                        <strong className="text-[10px] text-slate-500 uppercase block">Simple breakdown:</strong>
-                        <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">{conceptResult.breakdown}</p>
-                      </div>
-
-                      <div className="border-t border-slate-200/60 pt-3">
-                        <span className="text-[10px] text-slate-500 uppercase block">Related links</span>
-                        <div className="flex gap-2 mt-1.5">
-                          {conceptResult.links.map(l => (
-                            <button key={l} className="text-[10px] text-blue-600 hover:underline bg-blue-500/5 px-2 py-0.5 rounded border border-blue-500/10">
-                              {l}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* ─── Tool 3: Generate Examples ─── */}
-              {selectedTool === 'example' && (
-                <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">Generate Code Examples</h3>
-                    <p className="text-[11px] text-slate-500">Produce clean syntax codes and real life comparisons.</p>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="flex flex-col col-span-2">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Topic</span>
-                      <input 
-                        type="text" 
-                        placeholder="e.g. Recursion" 
-                        value={exampleTopic}
-                        onChange={(e) => setExampleTopic(e.target.value)}
-                        className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800"
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Language</span>
-                      <select value={exampleLang} onChange={(e) => setExampleLang(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700">
-                        <option value="Python">Python</option>
-                        <option value="Java">Java</option>
-                        <option value="C">C Language</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <button onClick={handleGenerateExamples} className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full">
-                    <Sparkles size={14} /> Generate Examples
-                  </button>
-
-                  {isGenerating && <div className="text-center py-8 text-xs text-slate-400 animate-pulse">Tutor is building coding examples...</div>}
-
-                  {exampleResult && !isGenerating && (
-                    <div className="space-y-4">
-                      {exampleResult.examples.map((ex, idx) => (
-                        <div key={idx} className="p-4 rounded-xl border border-slate-200 bg-slate-950 font-mono text-[11px] text-emerald-400">
-                          <span className="text-slate-500 block mb-1"># {ex.title}</span>
-                          <pre className="overflow-x-auto"><code>{ex.code}</code></pre>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* ─── Tool 4: Practice Questions ─── */}
-              {selectedTool === 'practice' && (
-                <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">Practice Questions</h3>
-                    <p className="text-[11px] text-slate-500">Test theoretical concept questions to save progress.</p>
-                  </div>
-
-                  {practiceQuestions.length === 0 && (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-slate-500 font-bold mb-1">Topic</span>
-                          <input 
-                            type="text" 
-                            placeholder="e.g. Inheritance" 
-                            value={practiceTopic}
-                            onChange={(e) => setPracticeTopic(e.target.value)}
-                            className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800"
-                          />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-slate-500 font-bold mb-1">Question Type</span>
-                          <select value={practiceType} onChange={(e) => setPracticeType(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700">
-                            <option value="MCQ">Multiple Choice</option>
-                            <option value="Short">Short Answer</option>
-                          </select>
-                        </div>
-                      </div>
-                      <button onClick={handlePracticeQuestions} className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full">
-                        Generate practice set
-                      </button>
-                    </div>
-                  )}
-
-                  {practiceQuestions.length > 0 && (
-                    <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-4">
-                      <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold">
-                        <span>QUESTION {activeQuestionIdx + 1} OF {practiceQuestions.length}</span>
-                        <button onClick={() => setShowHint(!showHint)} className="text-blue-600 hover:underline">
-                          {showHint ? 'Hide Hint' : 'View Hint'}
-                        </button>
-                      </div>
-
-                      <h4 className="text-xs font-extrabold text-slate-800">
-                        {practiceQuestions[activeQuestionIdx].question}
-                      </h4>
-
-                      {showHint && (
-                        <div className="p-3 bg-amber-500/5 border border-amber-500/10 text-[10px] text-amber-600 rounded-xl">
-                          <strong>Hint:</strong> {practiceQuestions[activeQuestionIdx].hint}
-                        </div>
-                      )}
-
-                      <div className="space-y-2">
-                        {practiceQuestions[activeQuestionIdx].options.map((opt, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => setSelectedAnswer(idx)}
-                            className={`w-full text-left p-3 rounded-xl border text-xs transition-all ${
-                              selectedAnswer === idx 
-                                ? 'bg-blue-600 border-blue-600 text-white' 
-                                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        ))}
-                      </div>
-
-                      {practiceSubmitted && (
-                        <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-xs text-slate-700">
-                          <strong className="text-emerald-600 block">Explanation Solution:</strong>
-                          {practiceQuestions[activeQuestionIdx].solution}
-                        </div>
-                      )}
-
-                      <div className="flex justify-between mt-4">
-                        <button onClick={() => setPracticeQuestions([])} className="text-slate-400 hover:underline text-xs">
-                          Exit Set
-                        </button>
-                        <button 
-                          onClick={() => setPracticeSubmitted(true)}
-                          className="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-xl"
-                        >
-                          Submit Answer
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* ─── Tool 5: AI Career Guide ─── */}
-              {selectedTool === 'career' && (
-                <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">AI Career Guide</h3>
-                    <p className="text-[11px] text-slate-500">Provide goals to construct placement maps.</p>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Branch</span>
-                      <input type="text" value={careerBranch} onChange={(e) => setCareerBranch(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Goal</span>
-                      <input type="text" value={careerGoal} onChange={(e) => setCareerGoal(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Skill Level</span>
-                      <select value={careerLevel} onChange={(e) => setCareerLevel(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700">
-                        <option value="Beginner">Beginner</option>
-                        <option value="Intermediate">Intermediate</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <button onClick={handleCareerGuide} className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full">
-                    Generate Roadmap
-                  </button>
-
-                  {careerResult && (
-                    <div className="p-5 rounded-2xl border border-slate-200 space-y-4">
-                      <h4 className="text-xs font-bold text-slate-800">Learning Roadmap for {careerGoal}</h4>
-                      <div className="space-y-2">
-                        {careerResult.roadmap.map((step, idx) => (
-                          <div key={idx} className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                            <strong className="text-xs text-blue-600 block">{step.step}</strong>
-                            <p className="text-[11px] text-slate-600 mt-1">{step.details}</p>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-100">
-                        <div>
-                          <span className="text-[10px] text-slate-500 uppercase block font-bold">Skills to Learn</span>
-                          <ul className="text-xs text-slate-600 mt-1 list-disc pl-4 space-y-1">
-                            {careerResult.skills.map(s => <li key={s}>{s}</li>)}
-                          </ul>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-500 uppercase block font-bold">Suggested Projects</span>
-                          <ul className="text-xs text-slate-600 mt-1 list-disc pl-4 space-y-1">
-                            {careerResult.projects.map(p => <li key={p}>{p}</li>)}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* ─── Tool 6: AI Interviewer ─── */}
-              {selectedTool === 'interview' && (
-                <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">AI Interview simulator</h3>
-                    <p className="text-[11px] text-slate-500">Start structured interviews with evaluation feedback.</p>
-                  </div>
-
-                  {interviewQuestions.length === 0 && (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-slate-500 font-bold mb-1">Target Role</span>
-                          <input type="text" value={interviewRole} onChange={(e) => setInterviewRole(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-slate-500 font-bold mb-1">Topic</span>
-                          <input type="text" value={interviewTopic} onChange={(e) => setInterviewTopic(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-slate-500 font-bold mb-1">Type</span>
-                          <select value={interviewType} onChange={(e) => setInterviewType(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700">
-                            <option value="Technical">Technical</option>
-                            <option value="Behavioral">Behavioral</option>
-                          </select>
-                        </div>
-                      </div>
-                      <button onClick={handleStartInterview} className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full">
-                        Start Mock Interview
-                      </button>
-                    </div>
-                  )}
-
-                  {interviewQuestions.length > 0 && !interviewFeedback && (
-                    <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-4">
-                      <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold">
-                        <span>QUESTION {interviewIdx + 1} OF {interviewQuestions.length}</span>
-                        <span className="text-blue-600">Active simulated mic</span>
-                      </div>
-
-                      <h4 className="text-xs font-extrabold text-slate-800">
-                        {interviewQuestions[interviewIdx].question}
-                      </h4>
-
-                      <textarea 
-                        value={interviewAnswers[interviewIdx] || ''}
-                        onChange={(e) => setInterviewAnswers({...interviewAnswers, [interviewIdx]: e.target.value})}
-                        placeholder="Write or dictate your answer here..."
-                        className="w-full h-24 p-3 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500"
-                      />
-
-                      <div className="flex justify-between">
-                        <button 
-                          disabled={interviewIdx === 0}
-                          onClick={() => setInterviewIdx(prev => prev - 1)}
-                          className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-600 text-xs font-bold rounded-xl disabled:opacity-50"
-                        >
-                          Previous
-                        </button>
-
-                        {interviewIdx < interviewQuestions.length - 1 ? (
-                          <button 
-                            onClick={() => setInterviewIdx(prev => prev + 1)}
-                            className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-xl"
-                          >
-                            Next
-                          </button>
-                        ) : (
-                          <button 
-                            onClick={handleSubmitInterview}
-                            className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-black rounded-xl"
-                          >
-                            Submit Interview
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {interviewFeedback && (
-                    <div className="p-5 rounded-2xl border border-blue-500/20 bg-blue-500/5 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-extrabold text-slate-800">Evaluation Feedback</h4>
-                        <span className="text-xs font-black text-blue-600">Score: {interviewFeedback.score}%</span>
-                      </div>
-                      <div className="text-xs text-slate-600 space-y-2">
-                        <p><strong>Strengths:</strong> {interviewFeedback.strengths}</p>
-                        <p><strong>Weaknesses:</strong> {interviewFeedback.weaknesses}</p>
-                        <p className="p-2 bg-slate-100 rounded"><strong>Tutor Tip:</strong> {interviewFeedback.tips}</p>
-                      </div>
-                      <button onClick={() => setInterviewQuestions([])} className="text-xs text-blue-600 font-bold hover:underline">
-                        Retry Interview
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* ─── Tool 7: Resume Reviewer ─── */}
-              {selectedTool === 'resume' && (
-                <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">Resume reviewer</h3>
-                    <p className="text-[11px] text-slate-500">Paste your resume content to optimize for ATS criteria.</p>
-                  </div>
-
-                  <textarea 
-                    placeholder="Paste resume text or skills list here..." 
-                    value={resumeText}
-                    onChange={(e) => setResumeText(e.target.value)}
-                    className="w-full h-32 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none"
-                  />
-
-                  <button onClick={handleReviewResume} className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full">
-                    Analyze Resume
-                  </button>
-
-                  {resumeResult && (
-                    <div className="p-5 rounded-2xl border border-slate-200 space-y-4">
-                      <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                        <h4 className="text-xs font-bold text-slate-800 font-mono">ATS Match Score</h4>
-                        <span className="text-xs font-black text-emerald-600">{resumeResult.score}%</span>
-                      </div>
-
-                      <div className="text-xs text-slate-600 space-y-2">
-                        <p><strong>Formatting:</strong> {resumeResult.formatting}</p>
-                        <div>
-                          <strong className="block text-slate-700">Recommended Keywords:</strong>
-                          <div className="flex flex-wrap gap-1.5 mt-1">
-                            {resumeResult.keywords.map(kw => (
-                              <span key={kw} className="bg-slate-100 border text-[10px] px-2 py-0.5 rounded">{kw}</span>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="pt-2">
-                          <strong className="block text-slate-700">Better Bullet points:</strong>
-                          <ul className="list-disc pl-4 space-y-1 mt-1 text-[11px]">
-                            {resumeResult.optimizedBullets.map((b, i) => <li key={i}>{b}</li>)}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* ─── Tool 8: Study Planner ─── */}
-              {selectedTool === 'planner' && (
-                <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">Study Planner</h3>
-                    <p className="text-[11px] text-slate-500">Create revision daily and weekly milestones.</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Subjects to Prepare</span>
-                      <input type="text" value={planSubjects} onChange={(e) => setPlanSubjects(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Target Exam Date</span>
-                      <input type="date" value={planExamDate} onChange={(e) => setPlanExamDate(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800" />
-                    </div>
-                  </div>
-
-                  <button onClick={handleCreatePlan} className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full">
-                    Build Custom Plan
-                  </button>
-
-                  {planResult && (
-                    <div className="p-5 rounded-2xl border border-slate-200 space-y-4">
-                      <h4 className="text-xs font-bold text-slate-800">Custom Timetable Plan</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <span className="text-[10px] text-slate-500 uppercase block font-bold">Daily Routine</span>
-                          <div className="space-y-2 mt-1.5">
-                            {planResult.daily.map((d, i) => (
-                              <div key={i} className="text-xs p-2 bg-slate-50 border rounded-lg">
-                                <strong>{d.time}:</strong> {d.task}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div>
-                          <span className="text-[10px] text-slate-500 uppercase block font-bold">Weekly Milestones</span>
-                          <div className="space-y-2 mt-1.5">
-                            {planResult.weekly.map((w, i) => (
-                              <div key={i} className="text-xs p-2 bg-slate-50 border rounded-lg">
-                                <strong>{w.day}:</strong> {w.focus}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* ─── Tool 9: Questions Bank ─── */}
-              {selectedTool === 'questions' && (
-                <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">Questions Bank Search</h3>
-                    <p className="text-[11px] text-slate-500">Search verified syllabus question papers & AI cache databases.</p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Enter a syllabus question to query (e.g. Explain JRE memory models)" 
-                      value={qbSearchQuery}
-                      onChange={(e) => setQbSearchQuery(e.target.value)}
-                      className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
-                      onKeyDown={(e) => { if (e.key === 'Enter') handleQbSearch(); }}
-                    />
-                    <button 
-                      onClick={handleQbSearch} 
-                      className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition cursor-pointer"
-                      disabled={qbLoading}
-                    >
-                      {qbLoading ? 'Searching...' : 'Search'}
-                    </button>
-                  </div>
-
-                  {qbLoading && (
-                    <div className="text-center py-8 text-xs text-slate-400 animate-pulse">
-                      Searching database and querying AI failover models...
-                    </div>
-                  )}
-
-                  {qbResult && !qbLoading && (
-                    <div className="p-5 rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 space-y-4 text-xs">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <span className="font-extrabold text-slate-800 uppercase tracking-wider text-[10px] flex items-center gap-1">
-                          Source: <span className={`px-2 py-0.5 rounded text-[9px] font-black ${
-                            qbResult.source === 'Question Bank' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
-                          }`}>{qbResult.source}</span>
-                        </span>
-                        {qbResult.question_type && (
-                          <span className="text-slate-400 text-[10px] font-bold">{qbResult.question_type} ({qbResult.difficulty})</span>
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        <div>
-                          <strong className="block text-slate-800 mb-1">Question:</strong>
-                          <p className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border font-medium text-slate-700 leading-relaxed text-slate-700 dark:text-slate-200">{qbResult.question}</p>
-                        </div>
-                        <div>
-                          <strong className="block text-slate-800 mb-1">Answer / Model Solution:</strong>
-                          <div className="p-4 bg-slate-50 dark:bg-slate-800/30 rounded-xl border text-slate-700 leading-relaxed whitespace-pre-line font-normal prose prose-sm max-w-none text-slate-700 dark:text-slate-200">
-                            {qbResult.answer}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+        {/* LEFT WORKSPACE: 3D Hologram Mesh Visualizer (8 cols) */}
+        <div className="lg:col-span-8 flex flex-col gap-6">
+          <div className="relative dark-glass-card rounded-3xl p-5 flex flex-col h-[400px] justify-between overflow-hidden">
+            {/* Hologram panel details */}
+            <div className="flex justify-between items-center z-10">
+              <div>
+                <span className="text-[10px] text-cyan-400 font-extrabold uppercase tracking-wider block">Central Projection Space</span>
+                <span className="text-sm font-black text-white">Interactive Feedforward Layer Connections</span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-pink-400 font-extrabold uppercase tracking-wider block">System Confidence</span>
+                <span className="text-sm font-mono font-black text-pink-400">{(confidence * 100).toFixed(1)}%</span>
+              </div>
             </div>
 
-            {/* Bottom Actions area */}
-            <div className="border-t border-slate-100 pt-4 mt-6 flex items-center justify-between text-xs">
-              <span className="text-slate-400"> Tutors are online ready to assist.</span>
+            {/* Interactive 3D Canvas */}
+            <div className="absolute inset-0 z-0">
+              <canvas ref={canvasRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
+            </div>
+
+            {/* Dynamic Status indicators */}
+            <div className="flex items-end justify-between z-10">
+              <div className="flex gap-4 text-[10px] font-mono text-[#64748b]">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+                  <span>Input (4)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                  <span>Hidden (8, 10, 8, 5)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-pink-500" />
+                  <span>Output (3)</span>
+                </div>
+              </div>
+              
+              <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[9px] font-mono text-cyan-400">
+                Rotation speed dynamic mapping enabled
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT WORKSPACE: Hyperparameter Control Room (4 cols) */}
+        <div className="lg:col-span-4">
+          <div className="dark-glass-card rounded-3xl p-6 flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center gap-2 border-b border-indigo-500/15 pb-3 mb-5">
+                <Sliders className="text-purple-400" size={16} />
+                <div>
+                  <h3 className="text-sm font-extrabold text-white">Hyperparameter Tuning</h3>
+                  <p className="text-[10px] text-[#64748b]">Adjust active weights before compiling training layers</p>
+                </div>
+              </div>
+
+              {/* Tuning Elements */}
+              <div className="space-y-4">
+                {/* Slider: Learning Rate */}
+                <div className="flex flex-col">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-[10px] text-[#cbd5e1] font-bold">Learning Rate (α)</span>
+                    <span className="text-xs font-mono font-bold text-cyan-400">{learningRate}</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0.001" 
+                    max="0.1" 
+                    step="0.005"
+                    value={learningRate} 
+                    onChange={(e) => setLearningRate(parseFloat(e.target.value))}
+                    className="w-full accent-cyan-400 bg-[#121324] h-1.5 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[8px] text-[#64748b] mt-1 font-semibold">
+                    <span>Conservative (0.001)</span>
+                    <span>Aggressive (0.1)</span>
+                  </div>
+                </div>
+
+                {/* Dropdown: Batch Size */}
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-[#cbd5e1] font-bold mb-1.5">Batch Size</span>
+                  <select 
+                    value={batchSize} 
+                    onChange={(e) => setBatchSize(parseInt(e.target.value))}
+                    className="bg-[#121324] border border-indigo-500/15 rounded-xl px-3 py-2 text-xs font-semibold text-[#cbd5e1] focus:border-purple-400 outline-none"
+                  >
+                    <option value="16">16 Samples</option>
+                    <option value="32">32 Samples (Optimized)</option>
+                    <option value="64">64 Samples</option>
+                    <option value="128">128 Samples</option>
+                  </select>
+                </div>
+
+                {/* Dropdown: Optimizer */}
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-[#cbd5e1] font-bold mb-1.5">Optimizer Algorithm</span>
+                  <select 
+                    value={optimizer} 
+                    onChange={(e) => setOptimizer(e.target.value)}
+                    className="bg-[#121324] border border-indigo-500/15 rounded-xl px-3 py-2 text-xs font-semibold text-[#cbd5e1] focus:border-purple-400 outline-none"
+                  >
+                    <option value="Adam">Adam (Adaptive Moment Estimation)</option>
+                    <option value="RMSprop">RMSprop (Root Mean Squared Propagation)</option>
+                    <option value="SGD">SGD (Stochastic Gradient Descent)</option>
+                  </select>
+                </div>
+
+                {/* Dropdown: Activation Function */}
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-[#cbd5e1] font-bold mb-1.5">Activation Function</span>
+                  <div className="grid grid-cols-4 gap-1.5 bg-[#121324] p-1 rounded-xl border border-indigo-500/15">
+                    {['ReLU', 'GELU', 'Tanh', 'Sigmoid'].map(act => (
+                      <button
+                        key={act}
+                        onClick={() => setActivation(act)}
+                        className={`py-1 text-[9px] font-bold rounded-lg transition-colors cursor-pointer ${
+                          activation === act 
+                            ? 'bg-purple-600 text-white shadow-md' 
+                            : 'text-[#64748b] hover:text-white'
+                        }`}
+                      >
+                        {act}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Run Actions */}
+            <div className="pt-6 mt-6 border-t border-indigo-500/15">
               <button 
-                onClick={() => {
-                  setDoubtResult(null);
-                  setConceptResult(null);
-                  setExampleResult(null);
-                  setPracticeQuestions([]);
-                  setInterviewQuestions([]);
-                  setInterviewFeedback(null);
-                  setResumeResult(null);
-                  setPlanResult(null);
-                  toast.success('Cleaned active workspace');
-                }}
-                className="text-slate-500 hover:underline cursor-pointer font-bold"
+                onClick={startTrainingRun}
+                disabled={isTraining}
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-purple-500/10 transition-all active:scale-[0.98]"
               >
-                Clear Workspace
+                <Play size={14} fill="currentColor" /> 
+                {isTraining ? `Training (Epoch ${currentEpoch}/20)...` : 'Start Neural Training Run'}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Right Sidebar Menu (3 cols) */}
-        <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
-          
-          {/* Quick Tips */}
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-4 space-y-3">
-            <h4 className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5"><HelpCircle size={14} className="text-blue-600" /> Study Tips</h4>
-            <div className="space-y-2 text-[10px] text-slate-500 leading-relaxed">
-              <p className="p-2 bg-slate-50 rounded-lg">⭐ Use Deep level in Explain Concept to prepare for complex university examinations.</p>
-              <p className="p-2 bg-slate-50 rounded-lg">⭐ Practice questions can be marked and saved in your progress profile.</p>
+      </div>
+
+      {/* ─── Secondary Layout Row: Glass Graphs (Model Progress & Metrics) ─── */}
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        
+        {/* GRAPH 1: Model Training Progress */}
+        <div className="dark-glass-card rounded-3xl p-5 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-2">
+              <Activity className="text-pink-400 animate-pulse" size={16} />
+              <div>
+                <h4 className="text-sm font-extrabold text-white">Model Training Progress</h4>
+                <p className="text-[10px] text-[#64748b]">Real-time Cross-Entropy Loss optimization</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-[9px] text-[#64748b] font-bold uppercase block">Latest Loss</span>
+              <span className="text-xs font-mono font-bold text-pink-400">{latestMetric.loss}</span>
             </div>
           </div>
 
-          {/* Recent History / Saved Answers */}
-          <div className="flex-1 bg-white border border-slate-200/80 rounded-3xl p-4 flex flex-col justify-between overflow-y-auto min-h-[220px]">
-            <div>
-              <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider block mb-2">Recent Chats</span>
-              <div className="space-y-2">
-                {recentChats.map((c, i) => (
-                  <button 
-                    key={i} 
-                    onClick={() => {
-                      if (c.tool === 'Ask Doubt') {
-                        setSelectedTool('doubt');
-                        handleAskDoubt(c.title);
-                      } else {
-                        setSelectedTool('explain');
-                        setConceptTopic(c.title);
-                        handleExplainConcept();
-                      }
-                    }}
-                    className="w-full text-left p-2.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors block text-[10px]"
-                  >
-                    <span className="font-bold text-blue-600 block uppercase text-[8px]">{c.tool}</span>
-                    <span className="text-slate-700 font-semibold line-clamp-1 mt-0.5">{c.title}</span>
-                  </button>
-                ))}
+          {/* SVG Line Graph */}
+          <div className="w-full h-40 relative">
+            <svg className="w-full h-full" viewBox="0 0 400 180">
+              <defs>
+                <linearGradient id="lossGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ec4899" stopOpacity="0.25"/>
+                  <stop offset="100%" stopColor="#ec4899" stopOpacity="0"/>
+                </linearGradient>
+                <filter id="glowLoss" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              
+              {/* Grid Lines */}
+              {[30, 60, 90, 120, 150].map((y, i) => (
+                <line key={i} x1="20" y1={y} x2="380" y2={y} stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+              ))}
+
+              {/* Data Path */}
+              {visibleHistory.length > 0 && (
+                <>
+                  {/* Filled area */}
+                  <path 
+                    d={`M 20 160 ${visibleHistory.map((h, i) => {
+                      const x = 20 + (i * 18);
+                      const y = 160 - (140 * (1 - h.loss));
+                      return `L ${x} ${y}`;
+                    }).join(' ')} L ${20 + ((visibleHistory.length - 1) * 18)} 160 Z`}
+                    fill="url(#lossGrad)"
+                  />
+                  {/* Neon line */}
+                  <path 
+                    d={`M 20 ${160 - (140 * (1 - visibleHistory[0].loss))} ${visibleHistory.map((h, i) => {
+                      const x = 20 + (i * 18);
+                      const y = 160 - (140 * (1 - h.loss));
+                      return `L ${x} ${y}`;
+                    }).join(' ')}`}
+                    fill="none"
+                    stroke="#ec4899"
+                    strokeWidth="2.5"
+                    filter="url(#glowLoss)"
+                  />
+                  {/* Data Points */}
+                  {visibleHistory.map((h, i) => {
+                    const x = 20 + (i * 18);
+                    const y = 160 - (140 * (1 - h.loss));
+                    return (
+                      <circle 
+                        key={i} 
+                        cx={x} 
+                        cy={y} 
+                        r="3" 
+                        fill="#fff" 
+                        stroke="#ec4899" 
+                        strokeWidth="1.5" 
+                        title={`Epoch ${h.epoch}: Loss ${h.loss}`}
+                      />
+                    );
+                  })}
+                </>
+              )}
+              
+              {/* Axes Labels */}
+              <text x="20" y="172" fill="#64748b" fontSize="8" fontFamily="monospace">Epoch 1</text>
+              <text x="360" y="172" fill="#64748b" fontSize="8" fontFamily="monospace">Epoch 20</text>
+            </svg>
+          </div>
+        </div>
+
+        {/* GRAPH 2: Validation Accuracy */}
+        <div className="dark-glass-card rounded-3xl p-5 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-2">
+              <BarChart2 className="text-cyan-400" size={16} />
+              <div>
+                <h4 className="text-sm font-extrabold text-white">Validation Accuracy</h4>
+                <p className="text-[10px] text-[#64748b]">Compare network training vs validation score</p>
               </div>
             </div>
-
-            <div className="border-t border-slate-100 pt-3 mt-3 text-[10px] text-slate-400">
-              Saved logs persist locally.
+            <div className="text-right">
+              <span className="text-[9px] text-[#64748b] font-bold uppercase block">Val Acc</span>
+              <span className="text-xs font-mono font-bold text-cyan-400">{latestMetric.valAcc}%</span>
             </div>
+          </div>
+
+          {/* SVG Line Graph (Multi-line) */}
+          <div className="w-full h-40 relative">
+            <svg className="w-full h-full" viewBox="0 0 400 180">
+              <defs>
+                <filter id="glowCyan" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Grid Lines */}
+              {[30, 60, 90, 120, 150].map((y, i) => (
+                <line key={i} x1="20" y1={y} x2="380" y2={y} stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+              ))}
+
+              {visibleHistory.length > 0 && (
+                <>
+                  {/* Training Accuracy Path (Neon Purple) */}
+                  <path 
+                    d={`M 20 ${160 - (120 * (visibleHistory[0].trainAcc / 100))} ${visibleHistory.map((h, i) => {
+                      const x = 20 + (i * 18);
+                      const y = 160 - (120 * (h.trainAcc / 100));
+                      return `L ${x} ${y}`;
+                    }).join(' ')}`}
+                    fill="none"
+                    stroke="#a855f7"
+                    strokeWidth="2"
+                    opacity="0.85"
+                  />
+
+                  {/* Validation Accuracy Path (Neon Cyan) */}
+                  <path 
+                    d={`M 20 ${160 - (120 * (visibleHistory[0].valAcc / 100))} ${visibleHistory.map((h, i) => {
+                      const x = 20 + (i * 18);
+                      const y = 160 - (120 * (h.valAcc / 100));
+                      return `L ${x} ${y}`;
+                    }).join(' ')}`}
+                    fill="none"
+                    stroke="#06b6d4"
+                    strokeWidth="2"
+                    filter="url(#glowCyan)"
+                  />
+
+                  {/* Val Acc Markers */}
+                  {visibleHistory.map((h, i) => {
+                    const x = 20 + (i * 18);
+                    const y = 160 - (120 * (h.valAcc / 100));
+                    return (
+                      <circle 
+                        key={i} 
+                        cx={x} 
+                        cy={y} 
+                        r="3" 
+                        fill="#fff" 
+                        stroke="#06b6d4" 
+                        strokeWidth="1.5" 
+                      />
+                    );
+                  })}
+                </>
+              )}
+
+              {/* Axes Labels */}
+              <text x="20" y="172" fill="#64748b" fontSize="8" fontFamily="monospace">Epoch 1</text>
+              <text x="360" y="172" fill="#64748b" fontSize="8" fontFamily="monospace">Epoch 20</text>
+
+              {/* Legend */}
+              <g transform="translate(240, 10)">
+                <circle cx="0" cy="0" r="3.5" fill="#a855f7" />
+                <text x="8" y="3" fill="#cbd5e1" fontSize="8">Train Acc</text>
+                <circle cx="65" cy="0" r="3.5" fill="#06b6d4" />
+                <text x="73" y="3" fill="#cbd5e1" fontSize="8">Val Acc</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ─── BOTTOM QUICK ACCESS: Horizontal Jewel-Toned Cards ─── */}
+      <div>
+        <h4 className="text-xs font-extrabold text-[#64748b] uppercase tracking-widest mb-4">Quick Access Nodes</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Card 1: Cloud Datasets */}
+          <div 
+            onClick={() => {
+              setActiveAccessCard(activeAccessCard === 'datasets' ? null : 'datasets');
+              toast.success('Accessing cloud database registry...');
+            }}
+            className="relative dark-glass-card jewel-card-green rounded-2xl p-5 cursor-pointer select-none"
+          >
+            <div className="flex justify-between items-start mb-2">
+              <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
+                <Database size={16} />
+              </div>
+              <span className="text-[8px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400">Secure Vault</span>
+            </div>
+            <h5 className="text-xs font-black text-white">Cloud Datasets</h5>
+            <p className="text-[10px] text-[#64748b] mt-1 leading-normal">
+              Sync weights directly into distributed S3 and GCP bucket endpoints securely.
+            </p>
+            {activeAccessCard === 'datasets' && (
+              <div className="mt-3 pt-3 border-t border-white/5 text-[9px] font-mono text-emerald-400">
+                Status: Connected • 1.4 TB Active Records
+              </div>
+            )}
+          </div>
+
+          {/* Card 2: Compute Cluster Status */}
+          <div 
+            onClick={() => {
+              setActiveAccessCard(activeAccessCard === 'cluster' ? null : 'cluster');
+              toast.success('Querying cluster task manager...');
+            }}
+            className="relative dark-glass-card jewel-card-gold rounded-2xl p-5 cursor-pointer select-none"
+          >
+            <div className="flex justify-between items-start mb-2">
+              <div className="p-2 bg-amber-500/10 rounded-lg text-amber-400">
+                <Cpu size={16} />
+              </div>
+              <span className="text-[8px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400">Optimized</span>
+            </div>
+            <h5 className="text-xs font-black text-white">Compute Cluster Status</h5>
+            <p className="text-[10px] text-[#64748b] mt-1 leading-normal">
+              Live metrics for GPU nodes, memory allocation, and active execution pools.
+            </p>
+            {activeAccessCard === 'cluster' && (
+              <div className="mt-3 pt-3 border-t border-white/5 text-[9px] font-mono text-amber-400">
+                GPUs: 8/8 Active • Memory: 192GB / 256GB Allocation
+              </div>
+            )}
+          </div>
+
+          {/* Card 3: A/B Tests */}
+          <div 
+            onClick={() => {
+              setActiveAccessCard(activeAccessCard === 'abtests' ? null : 'abtests');
+              toast.success('Synchronizing AB experiment logs...');
+            }}
+            className="relative dark-glass-card jewel-card-crimson rounded-2xl p-5 cursor-pointer select-none"
+          >
+            <div className="flex justify-between items-start mb-2">
+              <div className="p-2 bg-red-500/10 rounded-lg text-red-400">
+                <Activity size={16} />
+              </div>
+              <span className="text-[8px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-red-500/10 text-red-400">Live Experiments</span>
+            </div>
+            <h5 className="text-xs font-black text-white">A/B Tests</h5>
+            <p className="text-[10px] text-[#64748b] mt-1 leading-normal">
+              Benchmark experimental compilation parameters against current deployment baselines.
+            </p>
+            {activeAccessCard === 'abtests' && (
+              <div className="mt-3 pt-3 border-t border-white/5 text-[9px] font-mono text-red-400">
+                Active Tests: 3 • Win Rate: +4.2% Classification Margin
+              </div>
+            )}
           </div>
 
         </div>
-
       </div>
     </div>
   );

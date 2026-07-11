@@ -188,7 +188,7 @@ export default function Layout({ children }) {
                         navigate(item.path);
                         setSidebarOpen(false);
                       }}
-                      className={`db-nav-item ${isActive ? 'active' : ''} flex items-center justify-between cursor-pointer py-2 px-3 rounded-xl`}
+                      className={`db-nav-item ${isActive ? 'active' : ''} ${item.path === '/ai-tutor' ? 'pulsating-purple-glow' : ''} flex items-center justify-between cursor-pointer py-2 px-3 rounded-xl`}
                     >
                       <div className="flex items-center gap-3">
                         <span className="db-nav-icon">{item.icon}</span>
