@@ -349,8 +349,15 @@ export default function AITutor() {
             className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 cursor-pointer"
           >
             <option value="Computer Science">Computer Science</option>
+            <option value="Advanced Java">Advanced Java</option>
+            <option value="C#">C#</option>
+            <option value="DBMS">DBMS</option>
+            <option value="DSA">DSA</option>
+            <option value="FOC">FOC</option>
+            <option value="Java">Java</option>
+            <option value="Python">Python</option>
+            <option value="Web Development">Web Development</option>
             <option value="Mathematics">Mathematics</option>
-            <option value="Data Structures">Data Structures</option>
           </select>
         </div>
       </div>
@@ -543,8 +550,16 @@ export default function AITutor() {
                     <div className="flex flex-col">
                       <span className="text-[10px] text-slate-500 font-bold mb-1">Language</span>
                       <select value={exampleLang} onChange={(e) => setExampleLang(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700">
-                        <option value="Python">Python</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Advanced Java">Advanced Java</option>
+                        <option value="C#">C#</option>
+                        <option value="DBMS">DBMS</option>
+                        <option value="DSA">DSA</option>
+                        <option value="FOC">FOC</option>
                         <option value="Java">Java</option>
+                        <option value="Python">Python</option>
+                        <option value="Web Development">Web Development</option>
+                        <option value="Mathematics">Mathematics</option>
                         <option value="C">C Language</option>
                       </select>
                     </div>
