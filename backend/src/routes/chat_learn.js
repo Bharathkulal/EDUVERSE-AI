@@ -90,7 +90,7 @@ router.put('/sessions/:id', authenticate, async (req, res) => {
   try {
     const studentId = req.user.id;
     const sessionId = req.params.id;
-    const { title, pinned, favorite, shared, collection_name } = req.body;
+    const { title, pinned, favorite, shared, collection_name, selected_provider, selected_model } = req.body;
 
     const sessionCheck = await db.query(
       'SELECT id FROM chat_sessions WHERE id = $1 AND student_id = $2',

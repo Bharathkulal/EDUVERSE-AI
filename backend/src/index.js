@@ -769,6 +769,9 @@ const db = require('./config/db');
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
+        ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS selected_provider VARCHAR(50) DEFAULT NULL;
+        ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS selected_model VARCHAR(100) DEFAULT NULL;
+
         CREATE TABLE IF NOT EXISTS chat_messages (
           id SERIAL PRIMARY KEY,
           session_id INTEGER REFERENCES chat_sessions(id) ON DELETE CASCADE,
