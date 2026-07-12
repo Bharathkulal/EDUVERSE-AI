@@ -11,6 +11,7 @@ const subjects = [
   { name: 'DBMS', desc: 'Database Management Systems - SQL, normalization, and design' },
   { name: 'Python', desc: 'Python programming for beginners to advanced' },
   { name: 'Web Development', desc: 'HTML, CSS, JavaScript, React and full-stack development' },
+  { name: 'Machine Learning', desc: 'Introduction to Machine Learning - Regression, classification, neural networks, and model evaluation' },
 ];
 
 const sampleTopics = [

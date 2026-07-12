@@ -6,7 +6,7 @@ import { useHashNavigation } from '../utils/useHashNavigation';
 
 const subjectIcons = {
   FOC: '🔢', Java: '☕', 'Advanced Java': '⚡', DSA: '🌳', 'C#': '🔷',
-  DBMS: '🗄️', Python: '🐍', 'Web Development': '🌐', Mathematics: '🧮',
+  DBMS: '🗄️', Python: '🐍', 'Web Development': '🌐', Mathematics: '🧮', 'Machine Learning': '🤖',
 };
 
 const subjectBlobColors = {
@@ -19,6 +19,7 @@ const subjectBlobColors = {
   Python: 'blob-python',
   'Web Development': 'blob-webdev',
   Mathematics: 'blob-python',
+  'Machine Learning': 'blob-advjava',
 };
 
 export default function Subjects() {

@@ -358,6 +358,7 @@ export default function AITutor() {
             <option value="Python">Python</option>
             <option value="Web Development">Web Development</option>
             <option value="Mathematics">Mathematics</option>
+            <option value="Machine Learning">Machine Learning</option>
           </select>
         </div>
       </div>

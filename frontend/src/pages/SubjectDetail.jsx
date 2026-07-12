@@ -113,6 +113,32 @@ const SUBJECT_HUB_METADATA = {
     theoryPills: ['Number Systems', 'Logic Gates', 'ASCII & Unicode', 'Flowcharts', 'CPU Architecture'],
     labDesc: 'Interact with visual computing simulators, logic gate boards, and CPU instruction datapath tracing.',
     labPills: ['Logic Simulators', 'Number Converter', 'CPU datapath trace', 'Gate Playgrounds', 'Interactive Quizzes']
+  },
+  'C#': {
+    icon: '🔷',
+    accentFrom: 'from-purple-500',
+    accentTo: 'to-indigo-600',
+    accentText: 'from-purple-400 via-indigo-400 to-pink-400',
+    level: 'Level 2 — Developer',
+    xp: '600 XP',
+    completion: 20,
+    theoryDesc: 'Learn C# fundamentals: variables, control structures, object-oriented concepts, and .NET structure.',
+    theoryPills: ['Variables & Syntax', 'OOP in C#', 'Delegates & Events', 'LINQ Queries', 'Asynchronous Code'],
+    labDesc: 'Compile and run C# programs, experiment with classes, objects, and generic collections.',
+    labPills: ['C# Sandbox', 'Object Playground', 'Generic Collections', 'LINQ Compiler', 'Interactive Output']
+  },
+  'Machine Learning': {
+    icon: '🤖',
+    accentFrom: 'from-fuchsia-500',
+    accentTo: 'to-pink-600',
+    accentText: 'from-fuchsia-400 via-pink-400 to-rose-400',
+    level: 'Level 5 — ML Engineer',
+    xp: '1,800 XP',
+    completion: 15,
+    theoryDesc: 'Understand supervised and unsupervised learning, regression, classification, support vector machines, and deep neural networks.',
+    theoryPills: ['Linear Regression', 'Classification', 'Support Vector Machines', 'Decision Trees', 'Neural Networks', 'Model Evaluation'],
+    labDesc: 'Practice training regression models, adjusting hyperparameter weights, and classifying data points.',
+    labPills: ['Regression Simulator', 'Gradient Descent Visualizer', 'Weights Sandbox', 'Model Metrics Checker', 'Interpretable AI Guide']
   }
 };
 

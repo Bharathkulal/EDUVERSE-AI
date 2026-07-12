@@ -6,7 +6,18 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const SUBJECTS = ['Java', 'Advanced Java', 'Python', 'DSA', 'DBMS'];
+const SUBJECTS = [
+  'Java', 
+  'Advanced Java', 
+  'Python', 
+  'DSA', 
+  'DBMS', 
+  'C#', 
+  'FOC', 
+  'Web Development', 
+  'Mathematics', 
+  'Machine Learning'
+];
 
 // Generates mock questions dynamically based on level and difficulty to ensure 100 levels work instantly
 const generateQuestionsForLevel = (subject, level) => {
@@ -43,6 +54,86 @@ const generateQuestionsForLevel = (subject, level) => {
       if (idx % 2 === 0) {
         questionText = `Which python slice returns the reverse order of string references?`;
         options = { a: 'str[0:-1]', b: 'str[::-1]', c: 'str[-1:0]', d: 'str.reverse()' };
+        correct = 'b';
+      }
+    } else if (subject === 'C#') {
+      if (idx % 3 === 0) {
+        questionText = `Which keyword is used to declare a constant value in C#?`;
+        options = { a: 'const', b: 'readonly', c: 'static', d: 'final' };
+        correct = 'a';
+      } else if (idx % 3 === 1) {
+        questionText = `In C#, what is the purpose of the 'using' statement block?`;
+        options = {
+          a: 'Importing namespaces at compile-time',
+          b: 'Ensuring proper resource disposal of IDisposable objects',
+          c: 'Inheriting base class interfaces',
+          d: 'Defining global thread-safe variables'
+        };
+        correct = 'b';
+      }
+    } else if (subject === 'DBMS') {
+      if (idx % 3 === 0) {
+        questionText = `Which SQL join returns all records when there is a match in either left or right table?`;
+        options = { a: 'INNER JOIN', b: 'FULL OUTER JOIN', c: 'LEFT JOIN', d: 'RIGHT JOIN' };
+        correct = 'b';
+      } else if (idx % 3 === 1) {
+        questionText = `Which normal form is designed to eliminate multi-valued dependencies?`;
+        options = { a: '1NF', b: '2NF', c: '3NF', d: '4NF' };
+        correct = 'd';
+      }
+    } else if (subject === 'DSA') {
+      if (idx % 3 === 0) {
+        questionText = `What is the worst-case time complexity of quicksort algorithm operations?`;
+        options = { a: 'O(N)', b: 'O(N log N)', c: 'O(N^2)', d: 'O(1)' };
+        correct = 'c';
+      } else if (idx % 3 === 1) {
+        questionText = `Which data structure utilizes Last-In-First-Out (LIFO) access patterns?`;
+        options = { a: 'Queue', b: 'Stack', c: 'Heap', d: 'Binary Tree' };
+        correct = 'b';
+      }
+    } else if (subject === 'FOC') {
+      if (idx % 3 === 0) {
+        questionText = `Which logic gate returns 1 only when all of its input signals are 1?`;
+        options = { a: 'OR gate', b: 'AND gate', c: 'XOR gate', d: 'NAND gate' };
+        correct = 'b';
+      } else if (idx % 3 === 1) {
+        questionText = `What is the decimal equivalent of the binary byte value 1101?`;
+        options = { a: '11', b: '13', c: '15', d: '9' };
+        correct = 'b';
+      }
+    } else if (subject === 'Web Development') {
+      if (idx % 3 === 0) {
+        questionText = `Which CSS flexbox property determines the alignment of flex items along the main axis?`;
+        options = { a: 'align-items', b: 'justify-content', c: 'align-content', d: 'flex-direction' };
+        correct = 'b';
+      } else if (idx % 3 === 1) {
+        questionText = `Which React hook is used to handle lifecycle side-effects in functional components?`;
+        options = { a: 'useState', b: 'useEffect', c: 'useContext', d: 'useRef' };
+        correct = 'b';
+      }
+    } else if (subject === 'Mathematics') {
+      if (idx % 3 === 0) {
+        questionText = `What is the derivative of sin(x) with respect to x?`;
+        options = { a: '-sin(x)', b: 'cos(x)', c: '-cos(x)', d: 'tan(x)' };
+        correct = 'b';
+      } else if (idx % 3 === 1) {
+        questionText = `Which of the following describes an identity matrix?`;
+        options = {
+          a: 'All elements are 0',
+          b: 'Diagonal elements are 1, others are 0',
+          c: 'All elements are 1',
+          d: 'Diagonal elements are 0, others are 1'
+        };
+        correct = 'b';
+      }
+    } else if (subject === 'Machine Learning') {
+      if (idx % 3 === 0) {
+        questionText = `Which technique is used to prevent overfitting by penalizing large weights?`;
+        options = { a: 'Cross validation', b: 'Regularization (L1/L2)', c: 'Min-Max scaling', d: 'Data augmentation' };
+        correct = 'b';
+      } else if (idx % 3 === 1) {
+        questionText = `Which algorithm is commonly used for unsupervised clustering tasks?`;
+        options = { a: 'Logistic Regression', b: 'K-Means', c: 'Support Vector Machine', d: 'Random Forest' };
         correct = 'b';
       }
     }
