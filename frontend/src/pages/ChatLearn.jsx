@@ -541,7 +541,50 @@ export default function ChatLearn() {
     // LOCAL OLLAMA STREAMING EXPERIENCE
     if (selectedProvider === 'ollama') {
       if (ollamaStatus !== 'connected') {
-        toast.error('Ollama Local Server is offline. Please start Ollama or switch provider.');
+        toast.success('Ollama offline. Redirecting query to Cloud AI fallback...');
+        
+        // Optimistic insert
+        setMessages(prev => [...prev, {
+          id: Date.now(),
+          role: 'user',
+          content: payload.content,
+          multimodal_type: payload.multimodal_type,
+          file_url: payload.file_url,
+          file_name: payload.file_name,
+          file_size: payload.file_size
+        }]);
+
+        setInputText('');
+        setUploadDraft(null);
+        setIsLoading(true);
+        setCurrentStreamingText('');
+
+        try {
+          const res = await api.post(`/chat-learn/sessions/${targetSessionId}/messages`, {
+            ...payload,
+            agent_type: 'chatgpt' // Cloud agent fallback
+          });
+          const textToStream = res.data.assistantMessage.content;
+          let currentIndex = 0;
+          const intervalTime = textToStream.length > 500 ? 5 : 12;
+
+          const timer = setInterval(() => {
+            if (currentIndex < textToStream.length) {
+              setCurrentStreamingText(prev => prev + textToStream.charAt(currentIndex));
+              currentIndex++;
+            } else {
+              clearInterval(timer);
+              setMessages(prev => [...prev, res.data.assistantMessage]);
+              setCurrentStreamingText('');
+              setIsLoading(false);
+            }
+          }, intervalTime);
+
+        } catch (e) {
+          console.error(e);
+          toast.error('AI model could not return response.');
+          setIsLoading(false);
+        }
         return;
       }
 
