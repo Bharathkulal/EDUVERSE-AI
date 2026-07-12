@@ -380,16 +380,22 @@ export default function Coding() {
 
       {/* ─── CASE A: WELCOME HOME SCREEN STATE ─── */}
       {!activeProject && (
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center select-none relative bg-[#070814]">
-          {/* Background image & gradient overlay */}
-          <div className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-45 z-0" style={{ backgroundImage: "url('/practical_bg.png')" }} />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#070814]/80 via-transparent to-[#070814]/85 pointer-events-none z-0" />
-          
-          {/* Neon background flares */}
-          <div className="absolute top-[-10%] right-[-15%] w-[55%] h-[55%] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none z-0" />
-          <div className="absolute bottom-[-10%] left-[-15%] w-[50%] h-[50%] bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none z-0" />
-          <div className="grain-overlay" />
+        <div className={`flex-1 flex flex-col items-center justify-center p-8 text-center select-none relative ${isDarkMode ? 'bg-[#070814]' : 'bg-white'}`}>
+          {/* Background image & gradient overlay (Dark Mode Only) */}
+          {isDarkMode && (
+            <>
+              <div className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-45 z-0" style={{ backgroundImage: "url('/practical_bg.png')" }} />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#070814]/80 via-transparent to-[#070814]/85 pointer-events-none z-0" />
+              <div className="absolute top-[-10%] right-[-15%] w-[55%] h-[55%] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none z-0" />
+              <div className="absolute bottom-[-10%] left-[-15%] w-[50%] h-[50%] bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none z-0" />
+              <div className="grain-overlay" />
+            </>
+          )}
 
+          {!isDarkMode && (
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-50/50 via-transparent to-slate-100/50 pointer-events-none z-0" />
+          )}
+          
           {/* Centered content wrapper */}
           <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl">
             <div className="relative mb-6 w-36 h-36 flex items-center justify-center">
@@ -405,20 +411,20 @@ export default function Coding() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10 max-w-lg w-full">
               <div className={`p-5 rounded-2xl border text-left cursor-pointer transition-all ${
-                isDarkMode ? 'bg-[#090A1A]/80 border-white/5 hover:border-[#8B5CF6]/50 shadow-lg backdrop-blur-md' : 'bg-white border-slate-200 hover:border-[#8B5CF6]'
+                isDarkMode ? 'bg-[#090A1A]/80 border-white/5 hover:border-[#8B5CF6]/50 shadow-lg backdrop-blur-md' : 'bg-slate-50 border-slate-200 hover:border-[#8B5CF6]/50 hover:bg-slate-100/50'
               }`} onClick={() => handleCreateNewProject('EduVerse_Demo')}>
                 <h3 className="font-extrabold text-sm text-[#2563EB]">Start Coding</h3>
                 <p className={`text-[11px] mt-1 ${textMutedClass}`}>Initialize a completely empty project directory.</p>
-                <div className="flex flex-col gap-2 mt-4 text-xs font-semibold text-slate-400">
+                <div className={`flex flex-col gap-2 mt-4 text-xs font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                   <span 
                     onClick={(e) => { e.stopPropagation(); handleCreateNewProject('EduVerse_Demo'); handleCreateFile(); }}
-                    className="flex items-center gap-2 hover:text-white cursor-pointer"
+                    className={`flex items-center gap-2 cursor-pointer transition ${isDarkMode ? 'hover:text-white' : 'hover:text-slate-900'}`}
                   >
                     <Plus size={14} /> New File
                   </span>
                   <span 
                     onClick={(e) => { e.stopPropagation(); handleCreateNewProject('EduVerse_Demo'); handleCreateFolder(); }}
-                    className="flex items-center gap-2 hover:text-white cursor-pointer"
+                    className={`flex items-center gap-2 cursor-pointer transition ${isDarkMode ? 'hover:text-white' : 'hover:text-slate-900'}`}
                   >
                     <FolderPlus size={14} /> New Folder
                   </span>
@@ -426,20 +432,20 @@ export default function Coding() {
               </div>
 
               <div className={`p-5 rounded-2xl border text-left cursor-pointer transition-all ${
-                isDarkMode ? 'bg-[#090A1A]/80 border-white/5 hover:border-[#8B5CF6]/50 shadow-lg backdrop-blur-md' : 'bg-white border-slate-200 hover:border-[#8B5CF6]'
+                isDarkMode ? 'bg-[#090A1A]/80 border-white/5 hover:border-[#8B5CF6]/50 shadow-lg backdrop-blur-md' : 'bg-slate-50 border-slate-200 hover:border-[#8B5CF6]/50 hover:bg-slate-100/50'
               }`}>
                 <h3 className="font-extrabold text-sm text-[#8B5CF6]">Import & Connect</h3>
                 <p className={`text-[11px] mt-1 ${textMutedClass}`}>Clone from GitHub or open your system local directories.</p>
-                <div className="flex flex-col gap-2 mt-4 text-xs font-semibold text-slate-400">
-                  <span className="flex items-center gap-2 hover:text-white" onClick={handleCloneRepo}><GitBranch size={14} /> Clone Repository</span>
-                  <span className="flex items-center gap-2 hover:text-white" onClick={handleImportProject}><Folder size={14} /> Open Local Folder</span>
+                <div className={`flex flex-col gap-2 mt-4 text-xs font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  <span className={`flex items-center gap-2 cursor-pointer transition ${isDarkMode ? 'hover:text-white' : 'hover:text-slate-900'}`} onClick={handleCloneRepo}><GitBranch size={14} /> Clone Repository</span>
+                  <span className={`flex items-center gap-2 cursor-pointer transition ${isDarkMode ? 'hover:text-white' : 'hover:text-slate-900'}`} onClick={handleImportProject}><Folder size={14} /> Open Local Folder</span>
                 </div>
               </div>
             </div>
 
             {/* Recent projects */}
             <div className="mt-10 w-full max-w-md text-left">
-              <span className={`text-[10px] uppercase font-bold tracking-wider ${textMutedClass}`}>Recent Workspace Projects</span>
+              <span className={`text-[10px] uppercase font-bold tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Recent Workspace Projects</span>
               <div className="space-y-2 mt-3">
                 {recentProjects.map(proj => (
                   <div 
