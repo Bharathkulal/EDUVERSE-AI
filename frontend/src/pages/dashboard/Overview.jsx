@@ -85,6 +85,29 @@ export default function Overview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Heatmap click details states
+  const [selectedHeatmapDay, setSelectedHeatmapDay] = useState(null);
+  const [selectedHeatmapActivities, setSelectedHeatmapActivities] = useState([]);
+  const [fetchingHeatmapDetails, setFetchingHeatmapDetails] = useState(false);
+  const [showHeatmapModal, setShowHeatmapModal] = useState(false);
+
+  const handleHeatmapDayClick = async (day) => {
+    if (day.count === 0) return; // ignore if zero count
+    setSelectedHeatmapDay(day.date);
+    setFetchingHeatmapDetails(true);
+    setShowHeatmapModal(true);
+    
+    try {
+      const res = await api.get(`/progress/heatmap/details?date=${day.fullDate}`);
+      setSelectedHeatmapActivities(res.data.activities || []);
+    } catch (err) {
+      console.error('Error fetching heatmap details:', err);
+      setSelectedHeatmapActivities([]);
+    } finally {
+      setFetchingHeatmapDetails(false);
+    }
+  };
+
   // Fetch real database progress and analytics
   const fetchAllData = () => {
     Promise.all([
@@ -210,6 +233,7 @@ export default function Overview() {
       });
       days.push({
         date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        fullDate: dateStr,
         count: activity ? activity.count : 0
       });
     }
@@ -780,10 +804,11 @@ export default function Overview() {
               {recentHeatmapDays.map((day, idx) => (
                 <div
                   key={idx}
-                  className={`w-[20px] h-[20px] rounded-[4px] relative group border transition-all duration-200 hover:scale-110 cursor-pointer ${day.count === 0 ? 'bg-[var(--db-input-bg)] border-[var(--db-sidebar-border)]' :
-                      day.count === 1 ? 'bg-violet-400/30 border-violet-400/20' :
+                  onClick={() => handleHeatmapDayClick(day)}
+                  className={`w-[20px] h-[20px] rounded-[4px] relative group border transition-all duration-200 hover:scale-110 ${day.count === 0 ? 'bg-[var(--db-input-bg)] border-[var(--db-sidebar-border)] opacity-60 cursor-default' :
+                      'cursor-pointer ' + (day.count === 1 ? 'bg-violet-400/30 border-violet-400/20' :
                         day.count <= 3 ? 'bg-violet-500/60 border-violet-500/30' :
-                          'bg-violet-600 border-violet-600'
+                          'bg-violet-600 border-violet-600')
                     }`}
                 >
                   {/* Tooltip */}
@@ -791,7 +816,7 @@ export default function Overview() {
                     className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1.5 hidden group-hover:block text-[9px] font-bold px-2 py-1 rounded whitespace-nowrap z-30 border border-slate-800 shadow-md"
                     style={{ color: '#ffffff', backgroundColor: '#0f172a' }}
                   >
-                    {new Date(day.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}: {day.count} action{day.count !== 1 ? 's' : ''}
+                    {day.date}: {day.count} action{day.count !== 1 ? 's' : ''}
                   </div>
                 </div>
               ))}
@@ -945,6 +970,93 @@ export default function Overview() {
         </div>
       </div>
 
+      {/* Activity Details Heatmap Modal */}
+      <AnimatePresence>
+        {showHeatmapModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="relative w-full max-w-md p-6 rounded-3xl border shadow-2xl space-y-4"
+              style={{
+                backgroundColor: 'var(--db-card-bg)',
+                borderColor: 'var(--db-sidebar-border)',
+                color: 'var(--db-text-main)'
+              }}
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center border-b border-[var(--db-header-border)] pb-3">
+                <div className="text-left">
+                  <h3 className="font-extrabold text-sm flex items-center gap-2">
+                    📅 Daily Activity
+                  </h3>
+                  <span className="text-[10px] uppercase font-bold tracking-wider" style={{ color: 'var(--db-text-muted)' }}>
+                    Actions performed on {selectedHeatmapDay}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowHeatmapModal(false)}
+                  className="p-1.5 rounded-xl hover:bg-slate-500/10 text-slate-400 hover:text-slate-200 transition"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Body Content */}
+              <div className="max-h-72 overflow-y-auto space-y-2.5 pr-1">
+                {fetchingHeatmapDetails ? (
+                  <div className="flex flex-col items-center justify-center py-10 gap-2">
+                    <div className="w-6 h-6 rounded-full border-2 border-t-violet-500 border-[var(--db-sidebar-border)] animate-spin"></div>
+                    <span className="text-[10px] uppercase font-bold tracking-wider" style={{ color: 'var(--db-text-muted)' }}>Retrieving actions...</span>
+                  </div>
+                ) : selectedHeatmapActivities.length > 0 ? (
+                  selectedHeatmapActivities.map((act, i) => {
+                    // Match visual icons for action types
+                    let icon = '⚡';
+                    if (act.action.toLowerCase().includes('quiz')) icon = '📝';
+                    else if (act.action.toLowerCase().includes('code')) icon = '💻';
+                    else if (act.action.toLowerCase().includes('topic')) icon = '📚';
+                    else if (act.action.toLowerCase().includes('session')) icon = '⏱️';
+                    else if (act.action.toLowerCase().includes('doubt')) icon = '💬';
+
+                    return (
+                      <div
+                        key={i}
+                        className="p-3 rounded-xl border flex items-start gap-3 transition hover:bg-[var(--db-input-bg)]"
+                        style={{ borderColor: 'var(--db-sidebar-border)' }}
+                      >
+                        <span className="text-sm p-1.5 rounded-lg bg-violet-500/10 text-violet-400 shrink-0">{icon}</span>
+                        <div className="min-w-0 flex-1 text-left">
+                          <div className="flex justify-between items-baseline gap-2">
+                            <span className="text-xs font-bold" style={{ color: 'var(--db-text-main)' }}>{act.action}</span>
+                            <span className="text-[9px] font-bold" style={{ color: 'var(--db-text-muted)' }}>{act.time}</span>
+                          </div>
+                          <span className="text-[10px] uppercase font-semibold tracking-wider block text-violet-400 mt-0.5">{act.module}</span>
+                          {act.value && (
+                            <p className="text-[11px] mt-1 break-words font-medium leading-relaxed" style={{ color: 'var(--db-text-muted)' }}>
+                              {act.value}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-10">
+                    <span className="text-2xl block mb-1">🔍</span>
+                    <span className="text-xs font-semibold block" style={{ color: 'var(--db-text-muted)' }}>No Action Data Found</span>
+                    <p className="text-[10px] max-w-[200px] mx-auto mt-0.5" style={{ color: 'var(--db-text-muted)' }}>Could not query specific events log for this calendar date.</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

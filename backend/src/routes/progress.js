@@ -769,6 +769,98 @@ router.get('/heatmap', authenticate, async (req, res) => {
   }
 });
 
+// Get details of user actions on a specific date
+router.get('/heatmap/details', authenticate, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { date } = req.query;
+    
+    if (!date) {
+      return res.status(400).json({ message: 'Date parameter is required' });
+    }
+    
+    // Fetch from completed topics
+    const completedTopics = await db.query(
+      `SELECT 'Topic Completed' as action, 'Learn' as module, t.title as value, ct.completed_at as created_at
+       FROM completed_topics ct
+       JOIN topics t ON ct.topic_id = t.id
+       WHERE ct.student_id = $1 AND DATE(ct.completed_at) = $2`,
+      [studentId, date]
+    );
+    
+    // Fetch from study sessions
+    const studySessions = await db.query(
+      `SELECT 'Study Session' as action, 'Dashboard' as module, 'Logged study time' as value, session_start_time as created_at
+       FROM study_sessions
+       WHERE student_id = $1 AND DATE(session_start_time) = $2`,
+      [studentId, date]
+    );
+    
+    // Fetch from quiz results
+    const quizResults = await db.query(
+      `SELECT 'Quiz Completed' as action, q.title as module, qr.score::text || '% score' as value, qr.submitted_at as created_at
+       FROM quiz_results qr
+       JOIN quizzes q ON qr.quiz_id = q.id
+       WHERE qr.student_id = $1 AND DATE(qr.submitted_at) = $2`,
+      [studentId, date]
+    );
+    
+    // Fetch from coding submissions
+    const codingSubmissions = await db.query(
+      `SELECT 'Code Submitted' as action, cp.title as module, cs.score::text || '% score (' || cs.language || ')' as value, cs.submitted_at as created_at
+       FROM coding_submissions cs
+       JOIN coding_problems cp ON cs.problem_id = cp.id
+       WHERE cs.student_id = $1 AND DATE(cs.submitted_at) = $2`,
+      [studentId, date]
+    );
+    
+    // Fetch generic activity logs (to catch other actions like Ask Doubt, AI Review etc.)
+    const genericLogs = await db.query(
+      `SELECT action, module, value, created_at
+       FROM user_activity_logs
+       WHERE user_id = $1 AND DATE(created_at) = $2
+       AND action NOT IN ('topic_completed')`, // avoid double counting
+      [studentId, date]
+    );
+    
+    // Combine all
+    const allActivities = [
+      ...completedTopics.rows,
+      ...studySessions.rows,
+      ...quizResults.rows,
+      ...codingSubmissions.rows,
+      ...genericLogs.rows
+    ];
+    
+    // Sort by created_at DESC
+    allActivities.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    
+    // Format activities for cleaner display
+    const formattedActivities = allActivities.map(act => {
+      let displayName = act.action;
+      if (act.action === 'topic_completed') displayName = 'Topic Completed';
+      else if (act.action === 'session_start' || act.action === 'session_end') displayName = 'Study Session';
+      
+      // Clean up common action strings
+      if (displayName.includes('_')) {
+        displayName = displayName.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      }
+      
+      return {
+        action: displayName,
+        module: act.module,
+        value: act.value,
+        time: new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+    });
+    
+    res.json({ date, activities: formattedActivities });
+  } catch (err) {
+    console.error('Error fetching heatmap details:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Leaderboard - ranked by total XP
 router.get('/leaderboard', authenticate, async (req, res) => {
   try {
