@@ -367,12 +367,12 @@ export default function Coding() {
   };
 
   // Theme-based class definitions
-  const bgClass = isDarkMode ? 'bg-[#0B1220] text-slate-200' : 'bg-slate-50 text-slate-800';
-  const sidebarClass = isDarkMode ? 'bg-[#0F172A] border-white/5' : 'bg-slate-100 border-slate-300';
+  const bgClass = isDarkMode ? 'bg-[#070814] text-slate-200' : 'bg-slate-50 text-slate-800';
+  const sidebarClass = isDarkMode ? 'bg-[#090A1A] border-white/5' : 'bg-slate-100 border-slate-300';
   const borderClass = isDarkMode ? 'border-white/5' : 'border-slate-250';
-  const panelHeaderClass = isDarkMode ? 'bg-[#0F172A] border-white/5' : 'bg-slate-200 border-slate-300';
+  const panelHeaderClass = isDarkMode ? 'bg-[#090A1A] border-white/5' : 'bg-slate-200 border-slate-300';
   const textMutedClass = isDarkMode ? 'text-slate-400' : 'text-slate-500';
-  const consoleBgClass = isDarkMode ? 'bg-[#111827]' : 'bg-white';
+  const consoleBgClass = isDarkMode ? 'bg-[#080916]' : 'bg-white';
   const buttonBgClass = isDarkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600 text-slate-300' : 'bg-slate-200 border-slate-300 hover:bg-slate-300 text-slate-700';
 
   return (
@@ -380,70 +380,80 @@ export default function Coding() {
 
       {/* ─── CASE A: WELCOME HOME SCREEN STATE ─── */}
       {!activeProject && (
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center select-none relative">
-          <div className="absolute inset-0 bg-[#8B5CF6]/5 rounded-full blur-[160px] max-w-lg mx-auto pointer-events-none" />
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center select-none relative bg-[#070814]">
+          {/* Background image & gradient overlay */}
+          <div className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-45 z-0" style={{ backgroundImage: "url('/practical_bg.png')" }} />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#070814]/80 via-transparent to-[#070814]/85 pointer-events-none z-0" />
           
-          <div className="relative mb-6 w-36 h-36 flex items-center justify-center">
-            <img src={heroCharacter} alt="EduVerse Hero" className="w-full h-full object-contain drop-shadow-2xl" />
-          </div>
+          {/* Neon background flares */}
+          <div className="absolute top-[-10%] right-[-15%] w-[55%] h-[55%] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none z-0" />
+          <div className="absolute bottom-[-10%] left-[-15%] w-[50%] h-[50%] bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none z-0" />
+          <div className="grain-overlay" />
 
-          <h1 className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#2563EB] via-[#8B5CF6] to-[#6366F1]">
-            Welcome to EduVerse AI Studio
-          </h1>
-          <p className={`text-sm mt-2 max-w-md ${textMutedClass}`}>
-            A professional browser-based IDE workspace integrated with Friday AI code coaching, local files integration, and visual DSA analysis.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10 max-w-lg w-full">
-            <div className={`p-5 rounded-2xl border text-left cursor-pointer transition-all ${
-              isDarkMode ? 'bg-[#0F172A] border-white/5 hover:border-[#8B5CF6]/50' : 'bg-white border-slate-200 hover:border-[#8B5CF6]'
-            }`} onClick={() => handleCreateNewProject('EduVerse_Demo')}>
-              <h3 className="font-extrabold text-sm text-[#2563EB]">Start Coding</h3>
-              <p className={`text-[11px] mt-1 ${textMutedClass}`}>Initialize a completely empty project directory.</p>
-              <div className="flex flex-col gap-2 mt-4 text-xs font-semibold text-slate-400">
-                <span 
-                  onClick={(e) => { e.stopPropagation(); handleCreateNewProject('EduVerse_Demo'); handleCreateFile(); }}
-                  className="flex items-center gap-2 hover:text-white cursor-pointer"
-                >
-                  <Plus size={14} /> New File
-                </span>
-                <span 
-                  onClick={(e) => { e.stopPropagation(); handleCreateNewProject('EduVerse_Demo'); handleCreateFolder(); }}
-                  className="flex items-center gap-2 hover:text-white cursor-pointer"
-                >
-                  <FolderPlus size={14} /> New Folder
-                </span>
-              </div>
+          {/* Centered content wrapper */}
+          <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl">
+            <div className="relative mb-6 w-36 h-36 flex items-center justify-center">
+              <img src={heroCharacter} alt="EduVerse Hero" className="w-full h-full object-contain drop-shadow-2xl" />
             </div>
 
-            <div className={`p-5 rounded-2xl border text-left cursor-pointer transition-all ${
-              isDarkMode ? 'bg-[#0F172A] border-white/5 hover:border-[#8B5CF6]/50' : 'bg-white border-slate-200 hover:border-[#8B5CF6]'
-            }`}>
-              <h3 className="font-extrabold text-sm text-[#8B5CF6]">Import & Connect</h3>
-              <p className={`text-[11px] mt-1 ${textMutedClass}`}>Clone from GitHub or open your system local directories.</p>
-              <div className="flex flex-col gap-2 mt-4 text-xs font-semibold text-slate-400">
-                <span className="flex items-center gap-2 hover:text-white" onClick={handleCloneRepo}><GitBranch size={14} /> Clone Repository</span>
-                <span className="flex items-center gap-2 hover:text-white" onClick={handleImportProject}><Folder size={14} /> Open Local Folder</span>
-              </div>
-            </div>
-          </div>
+            <h1 className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#2563EB] via-[#8B5CF6] to-[#6366F1]">
+              Welcome to EduVerse AI Studio
+            </h1>
+            <p className={`text-sm mt-2 max-w-md ${textMutedClass}`}>
+              A professional browser-based IDE workspace integrated with Friday AI code coaching, local files integration, and visual DSA analysis.
+            </p>
 
-          {/* Recent projects */}
-          <div className="mt-10 w-full max-w-md text-left">
-            <span className={`text-[10px] uppercase font-bold tracking-wider ${textMutedClass}`}>Recent Workspace Projects</span>
-            <div className="space-y-2 mt-3">
-              {recentProjects.map(proj => (
-                <div 
-                  key={proj}
-                  onClick={() => handleCreateNewProject(proj)}
-                  className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
-                    isDarkMode ? 'bg-slate-900/40 border-white/5 hover:bg-slate-900/80 text-slate-300' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
-                  }`}
-                >
-                  <span className="text-xs font-bold font-mono">{proj}</span>
-                  <span className="text-[10px] text-slate-500">2 hours ago</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10 max-w-lg w-full">
+              <div className={`p-5 rounded-2xl border text-left cursor-pointer transition-all ${
+                isDarkMode ? 'bg-[#090A1A]/80 border-white/5 hover:border-[#8B5CF6]/50 shadow-lg backdrop-blur-md' : 'bg-white border-slate-200 hover:border-[#8B5CF6]'
+              }`} onClick={() => handleCreateNewProject('EduVerse_Demo')}>
+                <h3 className="font-extrabold text-sm text-[#2563EB]">Start Coding</h3>
+                <p className={`text-[11px] mt-1 ${textMutedClass}`}>Initialize a completely empty project directory.</p>
+                <div className="flex flex-col gap-2 mt-4 text-xs font-semibold text-slate-400">
+                  <span 
+                    onClick={(e) => { e.stopPropagation(); handleCreateNewProject('EduVerse_Demo'); handleCreateFile(); }}
+                    className="flex items-center gap-2 hover:text-white cursor-pointer"
+                  >
+                    <Plus size={14} /> New File
+                  </span>
+                  <span 
+                    onClick={(e) => { e.stopPropagation(); handleCreateNewProject('EduVerse_Demo'); handleCreateFolder(); }}
+                    className="flex items-center gap-2 hover:text-white cursor-pointer"
+                  >
+                    <FolderPlus size={14} /> New Folder
+                  </span>
                 </div>
-              ))}
+              </div>
+
+              <div className={`p-5 rounded-2xl border text-left cursor-pointer transition-all ${
+                isDarkMode ? 'bg-[#090A1A]/80 border-white/5 hover:border-[#8B5CF6]/50 shadow-lg backdrop-blur-md' : 'bg-white border-slate-200 hover:border-[#8B5CF6]'
+              }`}>
+                <h3 className="font-extrabold text-sm text-[#8B5CF6]">Import & Connect</h3>
+                <p className={`text-[11px] mt-1 ${textMutedClass}`}>Clone from GitHub or open your system local directories.</p>
+                <div className="flex flex-col gap-2 mt-4 text-xs font-semibold text-slate-400">
+                  <span className="flex items-center gap-2 hover:text-white" onClick={handleCloneRepo}><GitBranch size={14} /> Clone Repository</span>
+                  <span className="flex items-center gap-2 hover:text-white" onClick={handleImportProject}><Folder size={14} /> Open Local Folder</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent projects */}
+            <div className="mt-10 w-full max-w-md text-left">
+              <span className={`text-[10px] uppercase font-bold tracking-wider ${textMutedClass}`}>Recent Workspace Projects</span>
+              <div className="space-y-2 mt-3">
+                {recentProjects.map(proj => (
+                  <div 
+                    key={proj}
+                    onClick={() => handleCreateNewProject(proj)}
+                    className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                      isDarkMode ? 'bg-slate-900/40 border-white/5 hover:bg-slate-900/80 text-slate-300' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    <span className="text-xs font-bold font-mono">{proj}</span>
+                    <span className="text-[10px] text-slate-500">2 hours ago</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
