@@ -19,8 +19,6 @@ const studentNav = [
   { path: '/coding', label: 'Code', icon: '💻' },
   { path: '/ai-tutor', label: 'AI Center', icon: '🧠' },
   { path: '/quizzes', label: 'Arena', icon: '🏆' },
-  { path: '/exam-center', label: 'Command Center', icon: '📝' },
-  { path: '/debate-arena', label: 'AI Debate Arena', icon: '🗣️' },
   { path: '/career-hub', label: 'Career Hub', icon: '🔥' },
   { path: '/community', label: 'Community', icon: '🌐' },
   { path: '/progress', label: 'Progress', icon: '📊' },
@@ -51,7 +49,7 @@ const TOP_LEVEL_PATHS = [
   '/dashboard/activity', '/dashboard/continue',
   '/subjects', '/practice-hub', '/quizzes', '/coding', '/dbms-lab', '/ai-tutor',
   '/progress', '/certificates', '/study-report', '/ml-analytics', '/ai-profile', '/question-bank',
-  '/voice-assistant', '/settings', '/community', '/career-hub', '/exam-center', '/debate-arena', '/it-suite', '/techverse', '/chat-learn',
+  '/voice-assistant', '/settings', '/community', '/career-hub', '/it-suite', '/techverse', '/chat-learn',
   '/admin', '/admin/students', '/admin/content', '/admin/quizzes',
   '/admin/dataset', '/admin/ml', '/admin/questions',
   '/admin/logs', '/admin/reviews', '/admin/analytics', '/admin/alerts',
@@ -70,7 +68,6 @@ export default function Layout({ children }) {
   const [notifications, setNotifications] = useState([
     { id: 1, title: 'Friday AI Tutor', message: 'Your custom Python script compiled successfully! +15 XP', time: '10m ago', unread: true },
     { id: 2, title: 'New Mock Viva', message: 'Prof. Sarah created a new Oral Exam in DBMS.', time: '1h ago', unread: true },
-    { id: 3, title: 'Debate Arena', message: "Debate 'AI in Healthcare' is now open for public speakers.", time: '4h ago', unread: false },
     { id: 4, title: 'Daily Streak', message: 'You have maintained a 3-day learning streak!', time: '1d ago', unread: false }
   ]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -316,16 +313,7 @@ export default function Layout({ children }) {
 
           {/* Right part: Actions + Profile */}
           <div className="flex items-center gap-4">
-            {/* Open Learning Command Center Pill Button */}
-            {!isAdmin && (
-              <button
-                onClick={() => navigate('/dashboard/goals')}
-                className="px-4 py-2 bg-[#3b82f6] text-[#1e293b] font-bold rounded-full shadow-md hover:bg-[#2563eb] hover:text-white transition-all duration-200 flex items-center gap-1.5 text-xs md:text-sm cursor-pointer whitespace-nowrap"
-              >
-                <span>🚀 Open Learning Command Center</span>
-                <span className="font-semibold">→</span>
-              </button>
-            )}
+            {/* Command Center Pill Button Removed */}
 
             {/* Logout Button */}
             <button 

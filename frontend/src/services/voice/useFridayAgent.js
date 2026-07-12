@@ -215,8 +215,6 @@ export function useFridayAgent(options = {}) {
       '/coding': ['open coding', 'go to code', 'open code', 'ai studio', 'take me to coding', 'code section', 'open code section', 'open coding studio'],
       '/ai-tutor': ['open ai center', 'go to ai center', 'ai tutor', 'ai center', 'tutor'],
       '/quizzes': ['open arena', 'go to arena', 'quizzes', 'arena'],
-      '/exam-center': ['open command center', 'go to command center', 'assessment center', 'command center'],
-      '/debate-arena': ['open debate arena', 'go to debate arena', 'ai debate', 'speaking lab', 'debate arena'],
       '/career-hub': ['open career hub', 'go to career hub', 'career hub'],
       '/community': ['open community', 'go to community', 'community'],
       '/ai-profile': ['open profile', 'go to profile', 'profile'],

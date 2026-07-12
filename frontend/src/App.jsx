@@ -175,8 +175,6 @@ export default function App() {
 
             {/* Career Hub & Community */}
             <Route path="/career-hub" element={<ProtectedRoute><Layout><CareerHub /></Layout></ProtectedRoute>} />
-            <Route path="/exam-center" element={<ProtectedRoute><Layout><ExamCommandCenter /></Layout></ProtectedRoute>} />
-            <Route path="/debate-arena" element={<ProtectedRoute><Layout><DebateArena /></Layout></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><Layout><Community /></Layout></ProtectedRoute>} />
 
             {/* Python AI Learning Platform */}
