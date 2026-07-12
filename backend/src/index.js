@@ -20,6 +20,7 @@ const db = require('./config/db');
       ALTER TABLE users ADD COLUMN IF NOT EXISTS privacy_profile_visible BOOLEAN DEFAULT true;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS privacy_analytics_sharing BOOLEAN DEFAULT true;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_completed BOOLEAN DEFAULT false;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS review_submitted BOOLEAN DEFAULT false;
       ALTER TABLE topics ADD COLUMN IF NOT EXISTS approved BOOLEAN DEFAULT true;
       ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS time_limit_minutes INTEGER DEFAULT 15;
       ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS difficulty VARCHAR(50) DEFAULT 'medium';
@@ -86,6 +87,43 @@ const db = require('./config/db');
         user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
         streak_count INTEGER DEFAULT 0,
         last_activity_date DATE
+      )
+    `);
+
+    // Create reviews table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS reviews (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        user_name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        profile_image TEXT,
+        rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+        feedback TEXT NOT NULL,
+        suggestion TEXT,
+        review_date DATE NOT NULL DEFAULT CURRENT_DATE,
+        review_time TIME NOT NULL DEFAULT CURRENT_TIME,
+        timezone VARCHAR(100),
+        browser VARCHAR(100),
+        operating_system VARCHAR(100),
+        device_type VARCHAR(100),
+        screen_resolution VARCHAR(100),
+        language VARCHAR(50),
+        country VARCHAR(100),
+        ip_address VARCHAR(45),
+        app_version VARCHAR(50) DEFAULT '1.0.0',
+        review_version VARCHAR(50) DEFAULT '1.0.0',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        submission_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        active_usage_time INTEGER,
+        review_source VARCHAR(100) DEFAULT 'web_popup',
+        status VARCHAR(50) DEFAULT 'active',
+        ai_sentiment VARCHAR(50),
+        ai_category VARCHAR(100),
+        ai_summary TEXT,
+        ai_tags JSONB,
+        ai_processed BOOLEAN DEFAULT false
       )
     `);
 
@@ -812,6 +850,7 @@ const db = require('./config/db');
   })();
 
   const authRoutes = require('./routes/auth');
+  const reviewRoutes = require('./routes/reviews');
   const subjectRoutes = require('./routes/subjects');
   const quizRoutes = require('./routes/quizzes');
   const codingRoutes = require('./routes/coding');
@@ -997,6 +1036,7 @@ app.get('/api/system-health', authenticate, async (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/coding', codingRoutes);

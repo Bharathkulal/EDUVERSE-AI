@@ -88,6 +88,7 @@ const AdminML = lazy(() => import('./pages/admin/AdminML'));
 const AdminQuestions = lazy(() => import('./pages/admin/AdminQuestions'));
 const AdminApiSettings = lazy(() => import('./pages/admin/AdminApiSettings'));
 const AdminSystemLogs = lazy(() => import('./pages/admin/AdminSystemLogs'));
+const AdminReviews = lazy(() => import('./pages/admin/AdminReviews'));
 const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 const AdminAlerts = lazy(() => import('./pages/admin/AdminAlerts'));
 const AdminPredictions = lazy(() => import('./pages/admin/AdminPredictions'));
@@ -215,6 +216,7 @@ export default function App() {
             <Route path="/admin/ml" element={<ProtectedRoute adminOnly><Layout><AdminML /></Layout></ProtectedRoute>} />
             <Route path="/admin/questions" element={<ProtectedRoute adminOnly><Layout><AdminQuestions /></Layout></ProtectedRoute>} />
             <Route path="/admin/logs" element={<ProtectedRoute adminOnly><Layout><AdminSystemLogs /></Layout></ProtectedRoute>} />
+            <Route path="/admin/reviews" element={<ProtectedRoute adminOnly><Layout><AdminReviews /></Layout></ProtectedRoute>} />
             <Route path="/admin/analytics" element={<ProtectedRoute adminOnly><Layout><AdminAnalytics /></Layout></ProtectedRoute>} />
             <Route path="/admin/alerts" element={<ProtectedRoute adminOnly><Layout><AdminAlerts /></Layout></ProtectedRoute>} />
             <Route path="/admin/predictions" element={<ProtectedRoute adminOnly><Layout><AdminPredictions /></Layout></ProtectedRoute>} />

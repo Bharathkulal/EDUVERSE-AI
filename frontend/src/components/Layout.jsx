@@ -7,6 +7,7 @@ import { useSessionTracker } from '../utils/sessionTracker';
 import ThemeToggleButton from './ThemeToggleButton';
 import { Mic } from 'lucide-react';
 import EduVerseLogo from './EduVerseLogo';
+import ReviewPopup from './ReviewPopup';
 import '../pages/DashboardTheme.css';
 
 const studentNav = [
@@ -39,6 +40,7 @@ const adminNav = [
   { path: '/admin/analytics', label: 'Analytics', icon: '📊' },
   { path: '/admin/predictions', label: 'Prediction Center', icon: '📈' },
   { path: '/admin/logs', label: 'Logs & Audit', icon: '📋' },
+  { path: '/admin/reviews', label: '⭐ Reviews', icon: '⭐' },
   { path: '/admin/alerts', label: 'Alerts', icon: '🚨' },
   { path: '/admin/settings', label: 'Settings', icon: '⚙' },
 ];
@@ -52,7 +54,7 @@ const TOP_LEVEL_PATHS = [
   '/voice-assistant', '/settings', '/community', '/career-hub', '/exam-center', '/debate-arena', '/it-suite', '/techverse', '/chat-learn',
   '/admin', '/admin/students', '/admin/content', '/admin/quizzes',
   '/admin/dataset', '/admin/ml', '/admin/questions',
-  '/admin/logs', '/admin/analytics', '/admin/alerts',
+  '/admin/logs', '/admin/reviews', '/admin/analytics', '/admin/alerts',
   '/admin/predictions', '/admin/settings',
 ];
 
@@ -154,6 +156,7 @@ export default function Layout({ children }) {
 
   return (
     <div className={`db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'}`}>
+      <ReviewPopup />
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />

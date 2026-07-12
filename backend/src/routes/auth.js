@@ -37,7 +37,7 @@ router.post(
       const userRole = role === 'admin' ? 'admin' : 'student';
 
       const result = await db.query(
-        'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role, profile_completed',
+        'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role, profile_completed, review_submitted',
         [name, email.toLowerCase(), hashedPassword, userRole]
       );
 
@@ -70,7 +70,7 @@ router.post(
     try {
       const { email, password } = req.body;
       const result = await db.query(
-        'SELECT id, name, email, password, role, profile_completed FROM users WHERE email = $1',
+        'SELECT id, name, email, password, role, profile_completed, review_submitted FROM users WHERE email = $1',
         [email.toLowerCase()]
       );
 
@@ -124,7 +124,7 @@ router.post('/google', async (req, res) => {
 
     // Find or create user
     let userResult = await db.query(
-      'SELECT id, name, email, role, profile_completed FROM users WHERE email = $1',
+      'SELECT id, name, email, role, profile_completed, review_submitted FROM users WHERE email = $1',
       [email]
     );
 
@@ -132,7 +132,7 @@ router.post('/google', async (req, res) => {
     if (userResult.rows.length === 0) {
       // Create user
       const result = await db.query(
-        'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role, profile_completed',
+        'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role, profile_completed, review_submitted',
         [name, email, '', 'student'] // Empty password for OAuth users
       );
       user = result.rows[0];
@@ -250,7 +250,7 @@ router.get('/profile', authenticate, async (req, res) => {
     const result = await db.query(
       `SELECT id, name, email, role, created_at, avatar_url, phone_number, course, semester, college_name,
               daily_study_hours_goal, weekly_quiz_target, subject_mastery_target,
-              privacy_profile_visible, privacy_analytics_sharing
+              privacy_profile_visible, privacy_analytics_sharing, review_submitted
        FROM users WHERE id = $1`,
       [req.user.id]
     );
