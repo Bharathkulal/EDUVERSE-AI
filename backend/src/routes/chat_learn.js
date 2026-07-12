@@ -10,6 +10,7 @@ const aiGateway = require('../services/aiGateway');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { decrypt } = require('../utils/crypto');
 const ollamaService = require('../services/ollamaService');
+const { generateSmartFallback } = require('../utils/smartFallback');
 
 const router = express.Router();
 
@@ -390,49 +391,7 @@ router.post('/sessions/:id/messages', authenticate, async (req, res) => {
     }
 
     if (!responseText) {
-      // 1. Math Evaluator Fallback
-      const sanitizedMath = content.replace(/solve/i, '').trim();
-      const mathPattern = /^[0-9\+\-\*\/\%\.\(\)\s]+$/;
-      if (mathPattern.test(sanitizedMath) && /[0-9]/.test(sanitizedMath)) {
-        try {
-          const evalResult = new Function(`return (${sanitizedMath});`)();
-          if (evalResult !== undefined && !isNaN(evalResult)) {
-            responseText = `The answer is **${evalResult}**.`;
-          }
-        } catch (e) {
-          // fallback
-        }
-      }
-    }
-
-    if (!responseText) {
-      // 2. Common QA Fallbacks
-      const lowerQuery = content.toLowerCase().trim();
-      if (lowerQuery === 'hi' || lowerQuery === 'hello' || lowerQuery === 'hey') {
-        responseText = "Hello! I am EduVerse AI, your smart learning assistant. How can I help you today?";
-      } else if (lowerQuery.includes('your name')) {
-        responseText = "I am EduVerse AI, your personal study coach and programming assistant.";
-      } else if (lowerQuery.includes('what can you do')) {
-        responseText = "I can solve mathematical equations, explain academic concepts, debug or run programming code, design study roadmaps, and generate custom practice quizzes.";
-      } else if (lowerQuery.includes('formula of quadratic') || lowerQuery.includes('quadratic formula')) {
-        responseText = "The quadratic formula is:\n\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\nIt is used to find the roots of a quadratic equation of the form $ax^2 + bx + c = 0$.";
-      }
-    }
-
-    if (!responseText) {
-      // 3. Demo response fallback
-      responseText = `[Demo Mode - Configure LLM Provider API Key for Live AI]
-
-Here is a standard response regarding your query "${content}":
-
-1. **Overview**: In computer science and college education, this represents a core conceptual block.
-2. **Context Details**: It operates by coordinating structured parameters and logic.
-3. **Important Points**:
-   - Break complex systems into modules.
-   - Maintain clean variables.
-   - Verify inputs.
-
-Would you like to try generating practice quiz questions or notes?`;
+      responseText = generateSmartFallback(content);
     }
 
     // Handle RAM specific explanation cards

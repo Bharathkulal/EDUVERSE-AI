@@ -4,6 +4,7 @@ const db = require('../config/db');
 const validate = require('../middleware/validate');
 const { authenticate } = require('../middleware/auth');
 const aiGateway = require('../services/aiGateway');
+const { generateSmartFallback } = require('../utils/smartFallback');
 
 const router = express.Router();
 
@@ -42,37 +43,7 @@ router.post(
       }
 
       if (!responseText) {
-        // 1. Math Evaluator Fallback
-        const sanitizedMath = message.replace(/solve/i, '').trim();
-        const mathPattern = /^[0-9\+\-\*\/\%\.\(\)\s]+$/;
-        if (mathPattern.test(sanitizedMath) && /[0-9]/.test(sanitizedMath)) {
-          try {
-            const evalResult = new Function(`return (${sanitizedMath});`)();
-            if (evalResult !== undefined && !isNaN(evalResult)) {
-              responseText = `The answer is **${evalResult}**.`;
-            }
-          } catch (e) {
-            // fallback
-          }
-        }
-      }
-
-      if (!responseText) {
-        // 2. Common QA Fallbacks
-        const lowerQuery = message.toLowerCase().trim();
-        if (lowerQuery === 'hi' || lowerQuery === 'hello' || lowerQuery === 'hey') {
-          responseText = "Hello! I am EduVerse AI, your smart learning assistant. How can I help you today?";
-        } else if (lowerQuery.includes('your name')) {
-          responseText = "I am EduVerse AI, your personal study coach and programming assistant.";
-        } else if (lowerQuery.includes('what can you do')) {
-          responseText = "I can solve mathematical equations, explain academic concepts, debug or run programming code, design study roadmaps, and generate custom practice quizzes.";
-        } else if (lowerQuery.includes('formula of quadratic') || lowerQuery.includes('quadratic formula')) {
-          responseText = "The quadratic formula is:\n\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\nIt is used to find the roots of a quadratic equation of the form $ax^2 + bx + c = 0$.";
-        }
-      }
-
-      if (!responseText) {
-        responseText = `[Demo Mode - Add GEMINI_API_KEY for live AI]\n\nRegarding "${message}":\n\nThis is a fundamental concept in ${subject || 'computer science'}. Let me explain:\n\n1. Start with the core definition\n2. Understand the key components\n3. Practice with examples\n4. Apply through exercises\n\nFor "${mode || 'doubt'}" mode: Review your course materials and try breaking the problem into smaller steps. Would you like me to generate practice questions?`;
+        responseText = generateSmartFallback(message);
       }
 
       await db.query(
