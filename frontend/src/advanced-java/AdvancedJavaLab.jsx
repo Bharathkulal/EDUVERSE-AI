@@ -483,7 +483,7 @@ Statement stmt = conn.createStatement();
 
               {/* Quick Actions */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className={`p-6 rounded-3xl space-y-4 border ${
+                <div className={`lg:col-span-2 p-6 rounded-3xl space-y-4 border ${
                   isDark ? 'bg-[#120e2a] border-purple-500/10' : 'bg-white border-slate-200 shadow-sm'
                 }`}>
                   <h3 className={`text-base font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>
