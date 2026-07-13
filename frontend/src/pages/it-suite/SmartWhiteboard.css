@@ -1,11 +1,21 @@
 /* Smart Whiteboard Styling - 2026 SaaS Aesthetic */
+:root {
+  --color-bg: #0B1020;
+  --color-panel: #111827;
+  --color-card: #1E293B;
+  --color-primary: #2563EB;
+  --color-accent: #60A5FA;
+  --radius-panel: 16px;
+  --border-light: rgba(255, 255, 255, 0.06);
+  --border-glow: rgba(96, 165, 250, 0.15);
+}
 
 .whiteboard-page-wrapper {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 65px);
   width: 100%;
-  background: radial-gradient(circle at 50% 50%, #0d1224 0%, #060913 100%);
+  background: var(--color-bg);
   overflow: hidden;
   color: #f8fafc;
   font-family: 'Inter', sans-serif;
@@ -14,60 +24,122 @@
 
 /* Glassmorphism panels */
 .glass-panel {
-  background: rgba(13, 18, 36, 0.6);
+  background: rgba(17, 24, 39, 0.75);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-panel:hover {
-  border-color: rgba(167, 139, 250, 0.15);
+  border-color: var(--border-glow);
 }
 
-/* Header styling */
-.whiteboard-top-nav {
-  height: 60px;
-  width: calc(100% - 24px);
-  margin: 12px 12px 0 12px;
-  border-radius: 20px;
+/* MS Paint style top Ribbon Toolbar */
+.whiteboard-ribbon-toolbar {
+  background: rgba(17, 24, 39, 0.85);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  width: 100%;
+}
+
+.ribbon-tabs-header {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.ribbon-tab-btn {
+  padding: 6px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  border-bottom: none;
+}
+
+.ribbon-tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ribbon-tab-btn.active {
+  color: var(--color-accent);
+  background: var(--color-card);
+  border-color: var(--border-light);
+  border-bottom: 2px solid var(--color-accent);
+}
+
+.ribbon-tab-content {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  z-index: 10;
+  gap: 16px;
+  padding: 8px 16px;
+  overflow-x: auto;
+  min-height: 52px;
+}
+
+.ribbon-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  padding-right: 14px;
+  height: 38px;
+}
+
+.ribbon-group:last-child {
+  border-right: none;
+}
+
+.ribbon-group-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
 }
 
 .whiteboard-workspace-container {
   display: flex;
   flex: 1;
   width: 100%;
-  height: calc(100% - 72px);
+  height: calc(100% - 104px); /* Accounts for ribbon and bottom status bar */
   position: relative;
   overflow: hidden;
 }
 
-/* Floating Toolbar */
+/* Floating left vertical toolbar */
 .whiteboard-left-toolbar {
   position: absolute;
-  left: 12px;
-  top: 12px;
-  bottom: 12px;
+  left: 16px;
+  top: 16px;
+  bottom: 16px;
   width: 56px;
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px 0;
-  gap: 8px;
+  padding: 16px 0;
+  gap: 10px;
   z-index: 5;
 }
 
 .tool-btn {
   width: 38px;
   height: 38px;
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,6 +148,7 @@
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .tool-btn:hover {
@@ -84,12 +157,11 @@
 }
 
 .tool-btn.active {
-  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  background: var(--color-primary);
   color: #fff;
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.3);
 }
 
-/* Nav Pill action buttons */
 .nav-btn-icon {
   width: 32px;
   height: 32px;
@@ -110,45 +182,30 @@
 }
 
 .nav-btn-icon.active {
-  background: #8b5cf6;
+  background: var(--color-primary);
   color: #fff;
 }
 
-.action-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 10px;
-  color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+/* Color palettes & gradient select indicators */
+.color-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
   cursor: pointer;
-  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.15s ease;
 }
 
-.action-pill:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.12);
+.color-circle:hover {
+  transform: scale(1.15);
 }
 
-.action-pill.danger:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
+.color-circle.active {
+  border-color: #fff;
+  box-shadow: 0 0 8px currentColor;
 }
 
-.action-pill.sparkle {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%);
-  border-color: rgba(139, 92, 246, 0.25);
-}
-
-.action-pill.sparkle:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%);
-  border-color: rgba(139, 92, 246, 0.4);
-}
-
-/* Viewport Canvas container */
+/* Viewport infinite canvas container */
 .whiteboard-canvas-viewport {
   flex: 1;
   height: 100%;
@@ -157,21 +214,67 @@
   overflow: hidden;
 }
 
-/* Right Sidebar Panel */
+/* Floating collapsible right workspace panel */
 .whiteboard-right-sidebar {
   position: absolute;
-  right: 12px;
-  top: 12px;
-  bottom: 12px;
-  width: 320px;
-  border-radius: 20px;
+  right: 16px;
+  top: 16px;
+  bottom: 16px;
+  width: 350px;
+  border-radius: var(--radius-panel);
   z-index: 5;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
 }
 
-/* Interactive editable text wraps */
+.sidebar-tab-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.sidebar-tab-btn {
+  padding: 10px 2px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.sidebar-tab-btn:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.sidebar-tab-btn.active {
+  color: var(--color-accent);
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 2px solid var(--color-accent);
+}
+
+/* Bottom Status Bar */
+.whiteboard-bottom-status {
+  height: 32px;
+  background: rgba(17, 24, 39, 0.9);
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 600;
+  z-index: 10;
+}
+
+/* Interactive elements */
 .whiteboard-node-text-wrapper {
   width: 100%;
   height: 100%;
@@ -180,12 +283,6 @@
   justify-content: center;
   text-align: center;
   font-family: inherit;
-}
-
-.whiteboard-node-text-wrapper textarea {
-  font-family: inherit;
-  font-size: inherit;
-  text-align: center;
 }
 
 /* Custom Scrollbar for sidebar panels */
@@ -203,5 +300,5 @@
 }
 
 .custom-sidebar-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.3);
+  background: var(--color-primary);
 }
