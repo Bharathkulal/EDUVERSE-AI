@@ -1114,7 +1114,7 @@ export default function ChatLearn() {
                 {generatedFiles.map(f => (
                   <a
                     key={f.id}
-                    href={api.defaults.baseURL ? `${api.defaults.baseURL}${f.file_url}` : f.file_url}
+                    href={api.defaults.baseURL ? `${api.defaults.baseURL.replace(/\/api$/, '')}${f.file_url}` : f.file_url}
                     download
                     className="flex items-center gap-2 p-1 text-[var(--db-text-secondary)] hover:text-white truncate"
                   >
