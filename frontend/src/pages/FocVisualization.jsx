@@ -1014,18 +1014,18 @@ export default function FocVisualization() {
       </header>
 
       {/* INTERACTIVE SCREENS CONTAINER */}
-      <div className="flex-1 relative z-10 overflow-hidden">
+      <div className={`flex-1 relative z-10 ${!selectedTopic ? 'overflow-y-auto' : 'overflow-hidden'}`}>
         <AnimatePresence mode="wait">
           
           {/* LEVEL 1: DASHBOARD VIEW */}
           {!selectedTopic ? (
-            <motion.div 
+            <motion.div
               key="dashboard"
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.02 }}
               transition={{ duration: 0.3 }}
-              className="h-full flex flex-col p-6 overflow-hidden max-w-[1600px] mx-auto w-full justify-between"
+              className="flex flex-col p-6 max-w-[1600px] mx-auto w-full"
             >
               <div>
                 <div className="mb-4">
