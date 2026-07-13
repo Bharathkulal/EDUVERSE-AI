@@ -28,6 +28,13 @@ const db = require('./config/db');
       ALTER TABLE question_bank ADD COLUMN IF NOT EXISTS approved BOOLEAN DEFAULT true;
     `);
 
+    // Update IT Suite documents type check constraint to support whiteboard
+    await db.query(`
+      ALTER TABLE it_suite_documents DROP CONSTRAINT IF EXISTS it_suite_documents_type_check;
+      ALTER TABLE it_suite_documents ADD CONSTRAINT it_suite_documents_type_check 
+        CHECK (type = ANY (ARRAY['word'::text, 'excel'::text, 'slides'::text, 'whiteboard'::text]));
+    `);
+
     // Create completed_topics table
     await db.query(`
       CREATE TABLE IF NOT EXISTS completed_topics (
