@@ -123,72 +123,107 @@ public class StudentDAO {
   }
 };
 
-const DEBUG_CHALLENGES = [
-  {
-    id: 'debug-1',
-    title: 'NullPointerException in JDBC Statement',
-    difficulty: 'Easy',
-    xp: 80,
-    description: 'The code below throws a NullPointerException because the connection is not initialized properly. Fix the bug.',
-    brokenCode: `public class JdbcBug {
-    private static Connection conn;
+const generateDebugChallenges = () => {
+  const list = [
+    {
+      id: 'debug-1',
+      title: 'NullPointerException in JDBC Statement',
+      difficulty: 'Easy',
+      xp: 80,
+      description: 'The code below throws a NullPointerException because the connection is not initialized properly. Fix the bug.',
+      brokenCode: `public class JdbcBug {\n    private static Connection conn;\n    \n    public static void main(String[] args) {\n        // Bug: Using connection before initializing\n        try {\n            Statement stmt = conn.createStatement();\n            ResultSet rs = stmt.executeQuery("SELECT 1");\n            if (rs.next()) {\n                System.out.println(rs.getInt(1));\n            }\n        } catch (SQLException e) {\n            e.printStackTrace();\n        }\n    }\n}`,
+      solutionKeywords: ['DriverManager.getConnection', 'getConnection']
+    },
+    {
+      id: 'debug-2',
+      title: 'SQL Injection Vulnerability',
+      difficulty: 'Medium',
+      xp: 120,
+      description: 'This method uses statement concatenation which is vulnerable to SQL injection. Refactor it to use PreparedStatement.',
+      brokenCode: `public void loginUser(Connection conn, String user, String pass) throws SQLException {\n    String sql = "SELECT * FROM users WHERE username = '" + user + "' AND password = '" + pass + "'";\n    Statement stmt = conn.createStatement();\n    ResultSet rs = stmt.executeQuery(sql);\n    if (rs.next()) {\n        System.out.println("Login Success");\n    }\n}`,
+      solutionKeywords: ['prepareStatement', 'PreparedStatement', 'setString']
+    }
+  ];
+
+  const categories = ['JDBC', 'Servlets', 'JSP', 'Security', 'Exceptions', 'Concurrency', 'Collections', 'OOP'];
+  const difficulties = ['Easy', 'Medium', 'Hard'];
+
+  for (let i = 3; i <= 100; i++) {
+    const diff = difficulties[(i - 1) % 3]; // Easy, Medium, Hard cycle
+    const cat = categories[(i - 1) % categories.length];
     
-    public static void main(String[] args) {
-        // Bug: Using connection before initializing
-        try {
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT 1");
-            if (rs.next()) {
-                System.out.println(rs.getInt(1));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-}`,
-    solution: `public class JdbcBug {
-    private static Connection conn;
+    let title = "";
+    let description = "";
+    let brokenCode = "";
+    let solutionKeywords = [];
     
-    public static void main(String[] args) {
-        try {
-            conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/eduverse", "postgres", "password123");
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT 1");
-            if (rs.next()) {
-                System.out.println(rs.getInt(1));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    if (diff === 'Easy') {
+      if (i % 3 === 1) {
+        title = `JDBC Connection NullPointer #${i}`;
+        description = `Fix the NullPointerException when trying to access a null Connection object in this JDBC routine.`;
+        brokenCode = `public class DatabaseAccess {\n    private static Connection conn;\n    public static void runQuery() throws SQLException {\n        // Bug: conn is null\n        Statement stmt = conn.createStatement();\n        stmt.executeQuery("SELECT 1");\n    }\n}`;
+        solutionKeywords = ['DriverManager.getConnection', 'getConnection'];
+      } else if (i % 3 === 2) {
+        title = `Servlet Response Encoding #${i}`;
+        description = `Correct this HTTP servlet response to use UTF-8 character encoding to prevent garbled text rendering.`;
+        brokenCode = `public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {\n    // Bug: Content type is plain without charset\n    res.setContentType("text/html");\n    PrintWriter out = res.getWriter();\n    out.println("<h1>Hello world</h1>");\n}`;
+        solutionKeywords = ['setCharacterEncoding("UTF-8")', 'charset=UTF-8'];
+      } else {
+        title = `ArithmeticException in Average Calculator #${i}`;
+        description = `Prevent potential ArithmeticException division-by-zero error if the records count is zero.`;
+        brokenCode = `public int calculateAverage(int sum, int count) {\n    // Bug: Directly dividing\n    return sum / count;\n}`;
+        solutionKeywords = ['if (count == 0)', 'count == 0 ?', 'count != 0'];
+      }
+    } else if (diff === 'Medium') {
+      if (i % 3 === 1) {
+        title = `SQL Injection Vulnerability #${i}`;
+        description = `This JDBC login query is vulnerable to SQL injection bypass. Use PreparedStatement placeholders to secure it.`;
+        brokenCode = `public void authUser(Connection conn, String user, String pass) throws SQLException {\n    String query = "SELECT * FROM admins WHERE username = '" + user + "' AND pwd = '" + pass + "'";\n    Statement st = conn.createStatement();\n    st.executeQuery(query);\n}`;
+        solutionKeywords = ['prepareStatement', 'PreparedStatement', 'setString'];
+      } else if (i % 3 === 2) {
+        title = `Unclosed Statement Memory Leak #${i}`;
+        description = `Ensure resources are closed safely to prevent memory leak using try-with-resources.`;
+        brokenCode = `public void loadData(Connection conn) throws SQLException {\n    Statement st = conn.createStatement();\n    ResultSet rs = st.executeQuery("SELECT * FROM log");\n    // Bug: Not closed\n}`;
+        solutionKeywords = ['try (', 'close()', 'finally'];
+      } else {
+        title = `Servlet SingleThreadModel Deprecation #${i}`;
+        description = `Refactor this deprecated thread-unsafe servlet variable usage to prevent session data cross-contamination.`;
+        brokenCode = `public class DataServlet extends HttpServlet {\n    private String username; // Bug: Instance variables are shared across requests\n    protected void doGet(HttpServletRequest r, HttpServletResponse s) {\n        username = r.getParameter("user");\n    }\n}`;
+        solutionKeywords = ['req.getParameter', 'getAttribute', 'local variable'];
+      }
+    } else { // Hard
+      if (i % 3 === 1) {
+        title = `Transaction Isolation Race Condition #${i}`;
+        description = `Prevent dirty reads and phantom updates on concurrent bank balance withdrawals using transaction isolation.`;
+        brokenCode = `public void withdraw(Connection conn, double amount) throws SQLException {\n    conn.setAutoCommit(true);\n    // Bug: unsafe isolation level\n    Statement st = conn.createStatement();\n    st.executeUpdate("UPDATE accounts SET bal = bal - " + amount);\n}`;
+        solutionKeywords = ['setAutoCommit(false)', 'TRANSACTION_SERIALIZABLE', 'TRANSACTION_REPEATABLE_READ'];
+      } else if (i % 3 === 2) {
+        title = `Servlet Session Hijacking Vector #${i}`;
+        description = `Secure session cookies by marking them as HttpOnly and Secure to mitigate XSS session stealing.`;
+        brokenCode = `public void secureSession(HttpServletRequest req) {\n    HttpSession s = req.getSession();\n    // Bug: session cookie not secured\n}`;
+        solutionKeywords = ['setHttpOnly(true)', 'setSecure(true)', 'CookieConfig'];
+      } else {
+        title = `Deadlock in Concurrent JDBC Updates #${i}`;
+        description = `Prevent deadlock issues when updating related accounts in separate threads by sorting resource lock access IDs.`;
+        brokenCode = `public void transfer(Account a, Account b, double val) {\n    // Bug: acquiring locks in arbitrary order\n    synchronized(a) {\n        synchronized(b) {\n            a.debit(val);\n            b.credit(val);\n        }\n    }\n}`;
+        solutionKeywords = ['System.identityHashCode', 'compareTo', 'lockOrder'];
+      }
     }
-}`
-  },
-  {
-    id: 'debug-2',
-    title: 'SQL Injection Vulnerability',
-    difficulty: 'Medium',
-    xp: 120,
-    description: 'This method uses statement concatenation which is vulnerable to SQL injection. Refactor it to use PreparedStatement.',
-    brokenCode: `public void loginUser(Connection conn, String user, String pass) throws SQLException {
-    String sql = "SELECT * FROM users WHERE username = '" + user + "' AND password = '" + pass + "'";
-    Statement stmt = conn.createStatement();
-    ResultSet rs = stmt.executeQuery(sql);
-    if (rs.next()) {
-        System.out.println("Login Success");
-    }
-}`,
-    solution: `public void loginUser(Connection conn, String user, String pass) throws SQLException {
-    String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-    PreparedStatement pstmt = conn.prepareStatement(sql);
-    pstmt.setString(1, user);
-    pstmt.setString(2, pass);
-    ResultSet rs = pstmt.executeQuery();
-    if (rs.next()) {
-        System.out.println("Login Success");
-    }
-}`
+
+    list.push({
+      id: `debug-${i}`,
+      title,
+      difficulty: diff,
+      xp: diff === 'Easy' ? 80 : diff === 'Medium' ? 120 : 200,
+      description,
+      brokenCode,
+      solutionKeywords
+    });
   }
-];
+  return list;
+};
+
+const DEBUG_CHALLENGES = generateDebugChallenges();
 
 const PROJECTS = [
   {
@@ -250,6 +285,7 @@ export default function AdvancedJavaLab({ onBack }) {
   ]);
   const [aiInput, setAiInput] = useState('');
   const [selectedDebug, setSelectedDebug] = useState(null);
+  const [debugDiff, setDebugDiff] = useState('Easy');
   const [debugCode, setDebugCode] = useState('');
   const [dbQuery, setDbQuery] = useState('SELECT * FROM students LIMIT 5;');
   const [dbResults, setDbResults] = useState([
@@ -829,25 +865,49 @@ Statement stmt = conn.createStatement();
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Sidebar list */}
                   <div className="space-y-3">
-                    {DEBUG_CHALLENGES.map(challenge => (
-                      <div 
-                        key={challenge.id}
-                        onClick={() => { setSelectedDebug(challenge); setDebugCode(challenge.brokenCode); }}
-                        className={`p-4 rounded-2xl border transition cursor-pointer ${
-                          selectedDebug?.id === challenge.id 
-                            ? 'bg-purple-500/10 border-purple-500' 
-                            : isDark 
-                              ? 'bg-[#0b0816] border-white/5 hover:border-white/10' 
-                              : 'bg-slate-50 border-slate-100 hover:border-slate-200'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <span className="text-[10px] font-bold text-purple-600 bg-purple-500/10 px-2 py-0.5 rounded-full">{challenge.difficulty}</span>
-                          <span className="text-xs text-amber-600 font-bold">✨ {challenge.xp} XP</span>
+                    <div className="flex gap-1 p-1 bg-slate-900/50 rounded-xl border border-slate-800/60 mb-2">
+                      {['Easy', 'Medium', 'Hard'].map(diff => (
+                        <button
+                          key={diff}
+                          onClick={() => {
+                            setDebugDiff(diff);
+                            const firstMatch = DEBUG_CHALLENGES.find(c => c.difficulty === diff);
+                            if (firstMatch) {
+                              setSelectedDebug(firstMatch);
+                              setDebugCode(firstMatch.brokenCode);
+                            }
+                          }}
+                          className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase transition ${
+                            debugDiff === diff 
+                              ? 'bg-purple-600 text-white' 
+                              : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          {diff}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+                      {DEBUG_CHALLENGES.filter(c => c.difficulty === debugDiff).map(challenge => (
+                        <div 
+                          key={challenge.id}
+                          onClick={() => { setSelectedDebug(challenge); setDebugCode(challenge.brokenCode); }}
+                          className={`p-4 rounded-2xl border transition cursor-pointer ${
+                            selectedDebug?.id === challenge.id 
+                              ? 'bg-purple-500/10 border-purple-500' 
+                              : isDark 
+                                ? 'bg-[#0b0816] border-white/5 hover:border-white/10' 
+                                : 'bg-slate-50 border-slate-100 hover:border-slate-200'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <span className="text-[10px] font-bold text-purple-600 bg-purple-500/10 px-2 py-0.5 rounded-full">{challenge.difficulty}</span>
+                            <span className="text-xs text-amber-600 font-bold">✨ {challenge.xp} XP</span>
+                          </div>
+                          <h4 className={`text-sm font-bold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>{challenge.title}</h4>
                         </div>
-                        <h4 className={`text-sm font-bold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>{challenge.title}</h4>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
 
                   {/* Workspace */}
@@ -881,7 +941,11 @@ Statement stmt = conn.createStatement();
                           </button>
                           <button 
                             onClick={() => {
-                              if (debugCode.includes('DriverManager.getConnection') || debugCode.includes('prepareStatement')) {
+                              const keywords = selectedDebug.solutionKeywords || [];
+                              const isCorrect = keywords.length > 0
+                                ? keywords.some(k => debugCode.toLowerCase().includes(k.toLowerCase()))
+                                : (debugCode.includes('DriverManager.getConnection') || debugCode.includes('prepareStatement'));
+                              if (isCorrect) {
                                 toast.success('Bug fixed! + ' + selectedDebug.xp + ' XP');
                                 triggerConfetti();
                               } else {
