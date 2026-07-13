@@ -471,7 +471,7 @@ export default function SmartWhiteboard() {
       });
 
       // Attempt parsing list of generated vector nodes
-      const diagramCode = res.text;
+      const diagramCode = res.data.text;
       const jsonStart = diagramCode.indexOf('[');
       const jsonEnd = diagramCode.lastIndexOf(']') + 1;
       
@@ -529,7 +529,7 @@ export default function SmartWhiteboard() {
         action: 'whiteboard_explain',
         contextText: textElements
       });
-      setAiExplanation(res.text);
+      setAiExplanation(res.data.text);
       setActiveTab('ai');
     } catch (e) {
       toast.error('Failed to compile explanation.');
