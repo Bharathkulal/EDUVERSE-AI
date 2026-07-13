@@ -947,17 +947,23 @@ export default function ChatLearn() {
             </button>
             <div className="grid grid-cols-2 gap-1 mt-1 text-[10px]">
               {[
-                { name: 'Research Chat', title: '🎓 Research Chat' },
-                { name: 'Programming Chat', title: '💻 Code Sandbox' },
-                { name: 'Math Session', title: '🧮 Math Solver' },
-                { name: 'Interview Prep', title: '👔 Interview Prep' },
-                { name: 'PDF Chat', title: '📄 PDF Chat' },
-                { name: 'Image Analysis', title: '🖼️ Image Vision' }
+                { name: 'Research Chat', title: '🎓 Research Chat', tool: 'Research Assistant' },
+                { name: 'Programming Chat', title: '💻 Code Sandbox', tool: 'Programming Assistant' },
+                { name: 'Math Session', title: '🧮 Math Solver', tool: 'Math Solver' },
+                { name: 'Interview Prep', title: '👔 Interview Prep', tool: 'Interview Coach' },
+                { name: 'PDF Chat', title: '📄 PDF Chat', tool: 'Research Assistant' },
+                { name: 'Image Analysis', title: '🖼️ Image Vision', tool: 'AI Tutor' }
               ].map(t => (
                 <button
                   key={t.name}
-                  onClick={() => createNewChat(t.name)}
-                  className="bg-[var(--db-input-bg)] py-1.5 text-left px-2 rounded hover:bg-gray-800 text-[var(--db-text-main)] border border-[var(--db-input-border)] truncate cursor-pointer"
+                  onClick={() => {
+                    createNewChat(t.title);
+                    if (t.tool) {
+                      setSelectedTool(t.tool);
+                      setAccordionOpen(prev => ({ ...prev, tools: true }));
+                    }
+                  }}
+                  className="bg-[var(--db-input-bg)] py-1.5 text-left px-2 rounded hover:bg-gray-800 text-[var(--db-text-main)] border border-[var(--db-input-border)] truncate cursor-pointer transition active:scale-95"
                 >
                   {t.title}
                 </button>
