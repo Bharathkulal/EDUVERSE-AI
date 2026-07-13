@@ -78,12 +78,13 @@ const generateResponse = async (prompt, options = {}) => {
   let providers = await getActiveProviders('llm');
   if (options.provider) {
     const matched = providers.filter(p => p.provider === options.provider);
+    const others = providers.filter(p => p.provider !== options.provider);
     if (matched.length > 0) {
-      providers = matched;
+      providers = [...matched, ...others];
     } else {
       const directConfig = await getProviderConfig(options.provider);
       if (directConfig && directConfig.key) {
-        providers = [directConfig];
+        providers = [directConfig, ...others];
       }
     }
   }

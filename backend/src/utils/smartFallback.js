@@ -30,7 +30,7 @@ function generateSmartFallback(query) {
     if (lowerQuery.includes('fibonacci')) {
       return `Here is a complete, optimized implementation of the **Fibonacci Series** using recursion in Python:
 
-```python
+\`\`\`python
 def fibonacci(n):
     if n <= 0:
         return []
@@ -44,7 +44,7 @@ def fibonacci(n):
 
 # Example output for n = 10
 print(fibonacci(10))  # Output: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
-```
+\`\`\`
 
 ### ⏱️ Complexity Details:
 - **Time Complexity**: $O(n)$
@@ -58,7 +58,7 @@ print(fibonacci(10))  # Output: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
     if (lowerQuery.includes('factorial')) {
       return `Here is a clean implementation of the **Factorial** calculation using recursion in Java:
 
-```java
+\`\`\`java
 public class Factorial {
     public static long calculate(int n) {
         if (n <= 1) return 1;
@@ -71,7 +71,7 @@ public class Factorial {
         // Output: Factorial of 5 is: 120
     }
 }
-```
+\`\`\`
 
 ### ⏱️ Complexity Details:
 - **Time Complexity**: $O(n)$
@@ -85,7 +85,7 @@ public class Factorial {
     if (lowerQuery.includes('bubble sort') || lowerQuery.includes('sort')) {
       return `Here is a complete implementation of the **Bubble Sort** algorithm in JavaScript:
 
-```javascript
+\`\`\`javascript
 function bubbleSort(arr) {
     let n = arr.length;
     let swapped;
@@ -108,7 +108,7 @@ function bubbleSort(arr) {
 
 console.log(bubbleSort([64, 34, 25, 12, 22, 11, 90]));
 // Output: [11, 12, 22, 25, 34, 64, 90]
-```
+\`\`\`
 
 ### ⏱️ Complexity Details:
 - **Time Complexity**: $O(n^2)$ worst-case, $O(n)$ best-case (when array is already sorted).
@@ -121,7 +121,7 @@ console.log(bubbleSort([64, 34, 25, 12, 22, 11, 90]));
 
     return `To solve your coding task regarding **"${cleanQuery}"**, here is the general approach and implementation template:
 
-```javascript
+\`\`\`javascript
 // Recommended code design pattern
 function executeTask(parameters) {
     try {
@@ -138,7 +138,7 @@ function executeTask(parameters) {
         throw error;
     }
 }
-```
+\`\`\`
 
 ### 💡 Key Design Best Practices:
 1. **Maintain Clean Variables**: Use descriptive naming conventions for variables and constants.
@@ -150,15 +150,8 @@ function executeTask(parameters) {
 - You can copy-paste your current code here and ask me to find any compilation errors or bugs!`;
   }
 
-  // 3. General greetings & QA
   if (lowerQuery === 'hi' || lowerQuery === 'hello' || lowerQuery === 'hey') {
-    return `Hello! I am EduVerse AI, your smart study coach and coding companion. 
-
-How can I help you today? Here are some things you can ask me to do:
-- **Solve equations** (e.g. type \`solve 15 * 8\`)
-- **Write code** (e.g. type \`write a binary search in Java\`)
-- **Explain concepts** (e.g. ask \`what is polymorphism\`)
-- **Generate quizzes** to test your knowledge!`;
+    return `Hello! How can I help you today? Whether you want to solve a math problem, write some code, or explore a concept, I'm here to help!`;
   }
 
   if (lowerQuery.includes('your name') || lowerQuery.includes('who are you')) {
