@@ -506,6 +506,95 @@ router.put('/comments/:id/resolve', authenticate, async (req, res) => {
 router.post('/ai', authenticate, async (req, res) => {
   try {
     const { action, prompt, contextText } = req.body;
+
+    // Custom intercept for whiteboard drawings of common objects
+    if (action === 'whiteboard_draw' && prompt) {
+      const lowerPrompt = prompt.toLowerCase();
+      if (lowerPrompt.includes('dog')) {
+        const dogNodes = [
+          { id: 'dog-body', type: 'path', path: 'M 150 238 L 130 320 C 130 330 150 330 150 320 L 160 270 L 175 320 C 175 330 195 330 195 320 L 200 270 L 210 320 C 210 330 230 330 230 320 L 210 238 Z', strokeColor: '#f59e0b', strokeWidth: 3 },
+          { id: 'dog-tail', type: 'path', path: 'M 215 250 Q 250 240 245 220 Q 235 215 225 240', strokeColor: '#d97706', strokeWidth: 3 },
+          { id: 'dog-head', type: 'path', path: 'M 150 150 C 130 150 120 170 120 190 C 120 220 150 240 180 240 C 210 240 240 220 240 190 C 240 170 230 150 210 150 Z', strokeColor: '#f59e0b', strokeWidth: 3 },
+          { id: 'dog-ear-l', type: 'path', path: 'M 130 160 C 110 120 80 140 90 180 C 100 200 120 200 120 190 Z', strokeColor: '#d97706', strokeWidth: 3 },
+          { id: 'dog-ear-r', type: 'path', path: 'M 200 160 C 220 120 250 140 240 180 C 230 200 210 200 210 190 Z', strokeColor: '#d97706', strokeWidth: 3 },
+          { id: 'dog-eye-l', type: 'path', path: 'M 155 185 A 3 3 0 1 1 155 184 Z', strokeColor: '#1f2937', strokeWidth: 3 },
+          { id: 'dog-eye-r', type: 'path', path: 'M 195 185 A 3 3 0 1 1 195 184 Z', strokeColor: '#1f2937', strokeWidth: 3 },
+          { id: 'dog-nose', type: 'path', path: 'M 170 200 C 175 195 180 195 185 200 C 185 205 170 205 170 200 Z', strokeColor: '#111827', strokeWidth: 3 },
+          { id: 'dog-mouth', type: 'path', path: 'M 173 207 Q 177 212 181 207', strokeColor: '#ef4444', strokeWidth: 3 }
+        ];
+        return res.json({ text: JSON.stringify(dogNodes) });
+      }
+      if (lowerPrompt.includes('cat')) {
+        const catNodes = [
+          { id: 'cat-body', type: 'path', path: 'M 150 238 L 130 320 C 130 330 150 330 150 320 L 160 270 L 175 320 C 175 330 195 330 195 320 L 200 270 L 210 320 C 210 330 230 330 230 320 L 210 238 Z', strokeColor: '#9ca3af', strokeWidth: 3 },
+          { id: 'cat-tail', type: 'path', path: 'M 215 250 Q 260 270 270 210', strokeColor: '#6b7280', strokeWidth: 3 },
+          { id: 'cat-head', type: 'path', path: 'M 150 150 C 130 150 120 170 120 190 C 120 220 150 240 180 240 C 210 240 240 220 240 190 C 240 170 230 150 210 150 Z', strokeColor: '#9ca3af', strokeWidth: 3 },
+          { id: 'cat-ear-l', type: 'path', path: 'M 125 160 L 105 115 L 140 150 Z', strokeColor: '#4b5563', strokeWidth: 3 },
+          { id: 'cat-ear-r', type: 'path', path: 'M 205 160 L 225 115 L 190 150 Z', strokeColor: '#4b5563', strokeWidth: 3 },
+          { id: 'cat-eye-l', type: 'path', path: 'M 155 185 A 3 3 0 1 1 155 184 Z', strokeColor: '#10b981', strokeWidth: 3 },
+          { id: 'cat-eye-r', type: 'path', path: 'M 195 185 A 3 3 0 1 1 195 184 Z', strokeColor: '#10b981', strokeWidth: 3 },
+          { id: 'cat-nose', type: 'path', path: 'M 172 198 L 178 198 L 175 201 Z', strokeColor: '#f43f5e', strokeWidth: 3 },
+          { id: 'cat-whisker-l1', type: 'path', path: 'M 130 205 L 90 200', strokeColor: '#374151', strokeWidth: 2 },
+          { id: 'cat-whisker-l2', type: 'path', path: 'M 130 212 L 85 212', strokeColor: '#374151', strokeWidth: 2 },
+          { id: 'cat-whisker-r1', type: 'path', path: 'M 200 205 L 240 200', strokeColor: '#374151', strokeWidth: 2 },
+          { id: 'cat-whisker-r2', type: 'path', path: 'M 200 212 L 245 212', strokeColor: '#374151', strokeWidth: 2 }
+        ];
+        return res.json({ text: JSON.stringify(catNodes) });
+      }
+      if (lowerPrompt.includes('sun')) {
+        const sunNodes = [
+          { id: 'sun-center', type: 'circle', x: 150, y: 150, width: 60, height: 60, color: 'rgba(253, 224, 71, 0.2)', strokeColor: '#facc15' },
+          { id: 'sun-ray-1', type: 'path', path: 'M 180 140 L 180 120', strokeColor: '#eab308', strokeWidth: 3 },
+          { id: 'sun-ray-2', type: 'path', path: 'M 180 220 L 180 240', strokeColor: '#eab308', strokeWidth: 3 },
+          { id: 'sun-ray-3', type: 'path', path: 'M 140 180 L 120 180', strokeColor: '#eab308', strokeWidth: 3 },
+          { id: 'sun-ray-4', type: 'path', path: 'M 220 180 L 240 180', strokeColor: '#eab308', strokeWidth: 3 },
+          { id: 'sun-ray-5', type: 'path', path: 'M 152 152 L 138 138', strokeColor: '#eab308', strokeWidth: 3 },
+          { id: 'sun-ray-6', type: 'path', path: 'M 208 208 L 222 222', strokeColor: '#eab308', strokeWidth: 3 },
+          { id: 'sun-ray-7', type: 'path', path: 'M 152 208 L 138 222', strokeColor: '#eab308', strokeWidth: 3 },
+          { id: 'sun-ray-8', type: 'path', path: 'M 208 152 L 222 138', strokeColor: '#eab308', strokeWidth: 3 }
+        ];
+        return res.json({ text: JSON.stringify(sunNodes) });
+      }
+      if (lowerPrompt.includes('tree')) {
+        const treeNodes = [
+          { id: 'tree-trunk', type: 'path', path: 'M 165 240 L 165 320 L 185 320 L 185 240 Z', strokeColor: '#78350f', strokeWidth: 3 },
+          { id: 'tree-leaves', type: 'path', path: 'M 175 240 C 130 240 120 200 150 170 C 130 130 170 100 190 130 C 220 100 250 140 230 170 C 260 200 220 240 175 240 Z', strokeColor: '#15803d', strokeWidth: 3 }
+        ];
+        return res.json({ text: JSON.stringify(treeNodes) });
+      }
+      if (lowerPrompt.includes('house')) {
+        const houseNodes = [
+          { id: 'house-walls', type: 'path', path: 'M 120 220 L 120 300 L 220 300 L 220 220 Z', strokeColor: '#6366f1', strokeWidth: 3 },
+          { id: 'house-roof', type: 'path', path: 'M 110 220 L 170 160 L 230 220 Z', strokeColor: '#ef4444', strokeWidth: 3 },
+          { id: 'house-door', type: 'path', path: 'M 155 300 L 155 260 L 185 260 L 185 300 Z', strokeColor: '#b45309', strokeWidth: 3 },
+          { id: 'house-window', type: 'path', path: 'M 135 240 L 135 265 L 145 265 L 145 240 Z', strokeColor: '#38bdf8', strokeWidth: 2 }
+        ];
+        return res.json({ text: JSON.stringify(houseNodes) });
+      }
+      if (lowerPrompt.includes('car')) {
+        const carNodes = [
+          { id: 'car-body', type: 'path', path: 'M 100 260 L 100 240 L 130 240 L 150 200 L 230 200 L 250 240 L 280 240 L 280 260 Z', strokeColor: '#dc2626', strokeWidth: 3 },
+          { id: 'car-window-l', type: 'path', path: 'M 155 210 L 185 210 L 185 235 L 145 235 Z', strokeColor: '#38bdf8', strokeWidth: 2 },
+          { id: 'car-window-r', type: 'path', path: 'M 195 210 L 225 210 L 235 235 L 195 235 Z', strokeColor: '#38bdf8', strokeWidth: 2 },
+          { id: 'car-wheel-l', type: 'circle', x: 125, y: 245, width: 30, height: 30, color: 'rgba(31, 41, 55, 0.2)', strokeColor: '#1f2937' },
+          { id: 'car-wheel-r', type: 'circle', x: 225, y: 245, width: 30, height: 30, color: 'rgba(31, 41, 55, 0.2)', strokeColor: '#1f2937' }
+        ];
+        return res.json({ text: JSON.stringify(carNodes) });
+      }
+      if (lowerPrompt.includes('flower')) {
+        const flowerNodes = [
+          { id: 'flower-stem', type: 'path', path: 'M 175 220 L 175 320', strokeColor: '#22c55e', strokeWidth: 3 },
+          { id: 'flower-leaf', type: 'path', path: 'M 175 270 Q 140 250 175 240', strokeColor: '#15803d', strokeWidth: 2 },
+          { id: 'flower-center', type: 'circle', x: 160, y: 185, width: 30, height: 30, color: 'rgba(253, 224, 71, 0.2)', strokeColor: '#facc15' },
+          { id: 'flower-petal-t', type: 'path', path: 'M 175 185 C 160 150 190 150 175 185', strokeColor: '#ec4899', strokeWidth: 2 },
+          { id: 'flower-petal-b', type: 'path', path: 'M 175 215 C 160 250 190 250 175 215', strokeColor: '#ec4899', strokeWidth: 2 },
+          { id: 'flower-petal-l', type: 'path', path: 'M 160 200 C 125 185 125 215 160 200', strokeColor: '#ec4899', strokeWidth: 2 },
+          { id: 'flower-petal-r', type: 'path', path: 'M 190 200 C 225 185 225 215 190 200', strokeColor: '#ec4899', strokeWidth: 2 }
+        ];
+        return res.json({ text: JSON.stringify(flowerNodes) });
+      }
+    }
+
     let systemInstruction = "You are an expert AI productivity assistant integrated inside EduVerse IT Office Suite.";
 
     let generatedPrompt = '';
