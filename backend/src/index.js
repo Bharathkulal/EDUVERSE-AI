@@ -1060,7 +1060,14 @@ app.use('/api/datasets', datasetRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/it-suite', itSuiteRoutes);
 app.use('/api/chat-learn', chatLearnRoutes);
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+  setHeaders: (res, filepath) => {
+    if (filepath.includes('chat_learn') && filepath.includes('files')) {
+      const basename = path.basename(filepath);
+      res.setHeader('Content-Disposition', `attachment; filename="${basename}"`);
+    }
+  }
+}));
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

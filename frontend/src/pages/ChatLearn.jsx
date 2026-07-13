@@ -768,6 +768,18 @@ export default function ChatLearn() {
       fetchGeneratedFiles();
       toast.dismiss();
       toast.success(`${label} generated and cataloged!`);
+
+      // Auto-download to local file explorer (laptop/mobile)
+      const downloadUrl = api.defaults.baseURL 
+        ? `${api.defaults.baseURL.replace(/\/api$/, '')}${res.data.file_url}` 
+        : res.data.file_url;
+        
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', res.data.file_name);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (e) {
       toast.dismiss();
       toast.error('Material generation failed.');
