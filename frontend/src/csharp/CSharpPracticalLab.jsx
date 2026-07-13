@@ -112,58 +112,107 @@ public class LinqPractice
   }
 };
 
-const DEBUG_CHALLENGES = [
-  {
-    id: 'debug-1',
-    title: 'NullReferenceException in List',
-    difficulty: 'Easy',
-    xp: 80,
-    description: 'The code throws a NullReferenceException because the list is not instantiated. Fix the bug.',
-    brokenCode: `using System;
-using System.Collections.Generic;
-
-public class ListBug
-{
-    private static List<string> names;
-    
-    public static void Main()
+const generateCSharpDebugChallenges = () => {
+  const list = [
     {
-        names.Add("Alice");
-        Console.WriteLine(names.Count);
-    }
-}`,
-    solution: `using System;
-using System.Collections.Generic;
-
-public class ListBug
-{
-    private static List<string> names = new List<string>();
-    
-    public static void Main()
+      id: 'debug-1',
+      title: 'NullReferenceException in List',
+      difficulty: 'Easy',
+      xp: 80,
+      description: 'The code throws a NullReferenceException because the list is not instantiated. Fix the bug.',
+      brokenCode: `using System;\nusing System.Collections.Generic;\n\npublic class ListBug\n{\n    private static List<string> names;\n    \n    public static void Main()\n    {\n        names.Add("Alice");\n        Console.WriteLine(names.Count);\n    }\n}`,
+      solutionKeywords: ['new List<string>()', 'new()']
+    },
     {
-        names.Add("Alice");
-        Console.WriteLine(names.Count);
+      id: 'debug-2',
+      title: 'Async Task Deadlock',
+      difficulty: 'Medium',
+      xp: 120,
+      description: 'Calling .Result on a Task in a synchronous context can cause a deadlock. Refactor it to use await properly.',
+      brokenCode: `public string FetchData()\n{\n    var task = Task.Run(() => "Data");\n    return task.Result; // Potential deadlock\n}`,
+      solutionKeywords: ['await']
     }
-}`
-  },
-  {
-    id: 'debug-2',
-    title: 'Async Task Deadlock',
-    difficulty: 'Medium',
-    xp: 120,
-    description: 'Calling .Result on a Task in a synchronous context can cause a deadlock. Refactor it to use await properly.',
-    brokenCode: `public string FetchData()
-{
-    var task = Task.Run(() => "Data");
-    return task.Result; // Potential deadlock
-}`,
-    solution: `public async Task<string> FetchDataAsync()
-{
-    var data = await Task.Run(() => "Data");
-    return data;
-}`
+  ];
+
+  const categories = ['.NET', 'OOP', 'LINQ', 'Security', 'Exceptions', 'Tasks', 'Collections', 'Basics'];
+  const difficulties = ['Easy', 'Medium', 'Hard'];
+
+  for (let i = 3; i <= 100; i++) {
+    const diff = difficulties[(i - 1) % 3]; // Easy, Medium, Hard cycle
+    const cat = categories[(i - 1) % categories.length];
+    
+    let title = "";
+    let description = "";
+    let brokenCode = "";
+    let solutionKeywords = [];
+    
+    if (diff === 'Easy') {
+      if (i % 3 === 1) {
+        title = `NullReferenceException in Dictionary #${i}`;
+        description = `Fix the NullReferenceException when trying to assign values to an uninstantiated dictionary.`;
+        brokenCode = `using System;\nusing System.Collections.Generic;\n\npublic class DictAccess {\n    private static Dictionary<int, string> mapping;\n    public static void Main() {\n        // Bug: mapping is null\n        mapping[1] = "EduVerse";\n    }\n}`;
+        solutionKeywords = ['new Dictionary<int, string>', 'new()'];
+      } else if (i % 3 === 2) {
+        title = `FormatException in Parse #${i}`;
+        description = `Fix the potential FormatException when input string is not a valid integer by using TryParse.`;
+        brokenCode = `public int GetUserAge(string input) {\n    // Bug: throws exception if input is invalid\n    return int.Parse(input);\n}`;
+        solutionKeywords = ['int.TryParse', 'TryParse'];
+      } else {
+        title = `IndexOutOfRangeException in Array #${i}`;
+        description = `Prevent IndexOutOfRangeException when iterating or accessing array elements outside boundaries.`;
+        brokenCode = `public int GetLastElement(int[] nums) {\n    // Bug: index out of bounds\n    return nums[nums.Length];\n}`;
+        solutionKeywords = ['nums.Length - 1', 'Length-1'];
+      }
+    } else if (diff === 'Medium') {
+      if (i % 3 === 1) {
+        title = `LINQ First vs FirstOrDefault #${i}`;
+        description = `This query throws an InvalidOperationException if the sequence contains no elements. Secure it.`;
+        brokenCode = `public User FindUser(List<User> list, int id) {\n    // Bug: throws exception if user not found\n    return list.First(u => u.Id == id);\n}`;
+        solutionKeywords = ['FirstOrDefault'];
+      } else if (i % 3 === 2) {
+        title = `Memory Leak in Unmanaged Resource #${i}`;
+        description = `Ensure file streams are properly closed and disposed using C# using statement syntax.`;
+        brokenCode = `public void WriteLog(string msg) {\n    var writer = new StreamWriter("log.txt");\n    writer.WriteLine(msg);\n    // Bug: unclosed resource stream\n}`;
+        solutionKeywords = ['using (', 'using var'];
+      } else {
+        title = `EventHandler Memory Leak #${i}`;
+        description = `Deregister event handler from publisher object before disposing to prevent reference retention leaks.`;
+        brokenCode = `public void Setup(Publisher pub) {\n    // Bug: event registered but never unsubscribed\n    pub.DataReceived += OnDataReceived;\n}`;
+        solutionKeywords = ['pub.DataReceived -=', '-='];
+      }
+    } else { // Hard
+      if (i % 3 === 1) {
+        title = `Race Condition in Task Parallel Library #${i}`;
+        description = `Avoid race conditions and data corruption when updating shared state across concurrent Task actions using lock.`;
+        brokenCode = `private static int counter = 0;\npublic void Increment() {\n    // Bug: thread-unsafe update\n    Task.Run(() => counter++);\n}`;
+        solutionKeywords = ['lock', 'Interlocked.Increment', 'Interlocked'];
+      } else if (i % 3 === 2) {
+        title = `Async Void Exception Handling #${i}`;
+        description = `Replace async void with async Task to ensure exception propagation can be caught in the call stack.`;
+        brokenCode = `public async void ProcessData() {\n    // Bug: async void cannot be awaited or caught easily\n    await Task.Delay(100);\n    throw new Exception("Error");\n}`;
+        solutionKeywords = ['async Task', 'Task '];
+      } else {
+        title = `Deadlock in Lock Acquisition Order #${i}`;
+        description = `Resolve deadlock scenario in concurrent locks by enforcing consistent locking hierarchy orders.`;
+        brokenCode = `private object lockA = new object();\nprivate object lockB = new object();\npublic void Process() {\n    lock(lockA) {\n        lock(lockB) {\n            // Work\n        }\n    }\n}`;
+        solutionKeywords = ['Monitor.TryEnter', 'lock'];
+      }
+    }
+
+    list.push({
+      id: `debug-${i}`,
+      title,
+      difficulty: diff,
+      xp: diff === 'Easy' ? 80 : diff === 'Medium' ? 120 : 200,
+      description,
+      brokenCode,
+      solutionKeywords
+    });
   }
-];
+  return list;
+};
+
+const DEBUG_CHALLENGES = generateCSharpDebugChallenges();
 
 const PROJECTS = [
   {
@@ -217,6 +266,7 @@ export default function CSharpPracticalLab({ onBack }) {
   ]);
   const [aiInput, setAiInput] = useState('');
   const [selectedDebug, setSelectedDebug] = useState(null);
+  const [debugDiff, setDebugDiff] = useState('Easy');
   const [debugCode, setDebugCode] = useState('');
   const [dbQuery, setDbQuery] = useState('SELECT * FROM Users LIMIT 5;');
   const [dbResults, setDbResults] = useState([
@@ -710,25 +760,54 @@ public interface IRepository {
                 <p className={`text-xs mb-6 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Analyze and fix broken C# code blocks to claim bonus XP rewards.</p>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Sidebar list */}
                   <div className="space-y-3">
-                    {DEBUG_CHALLENGES.map(challenge => (
-                      <div 
-                        key={challenge.id}
-                        onClick={() => { setSelectedDebug(challenge); setDebugCode(challenge.brokenCode); }}
-                        className={`p-4 rounded-2xl border transition cursor-pointer ${
-                          selectedDebug?.id === challenge.id 
-                            ? 'bg-purple-500/10 border-purple-500' 
-                            : isDark 
-                              ? 'bg-[#0b0816] border-white/5 hover:border-white/10' 
-                              : 'bg-slate-50 border-slate-100 hover:border-slate-200'
-                        }`}
-                      >
-                        <span className="text-[10px] font-bold text-purple-600 bg-purple-500/10 px-2 py-0.5 rounded-full">{challenge.difficulty}</span>
-                        <h4 className={`text-sm font-bold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>{challenge.title}</h4>
-                      </div>
-                    ))}
+                    <div className="flex gap-1 p-1 bg-slate-900/50 rounded-xl border border-slate-800/60 mb-2">
+                      {['Easy', 'Medium', 'Hard'].map(diff => (
+                        <button
+                          key={diff}
+                          onClick={() => {
+                            setDebugDiff(diff);
+                            const firstMatch = DEBUG_CHALLENGES.find(c => c.difficulty === diff);
+                            if (firstMatch) {
+                              setSelectedDebug(firstMatch);
+                              setDebugCode(firstMatch.brokenCode);
+                            }
+                          }}
+                          className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase transition ${
+                            debugDiff === diff 
+                              ? 'bg-purple-600 text-white' 
+                              : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          {diff}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+                      {DEBUG_CHALLENGES.filter(c => c.difficulty === debugDiff).map(challenge => (
+                        <div 
+                          key={challenge.id}
+                          onClick={() => { setSelectedDebug(challenge); setDebugCode(challenge.brokenCode); }}
+                          className={`p-4 rounded-2xl border transition cursor-pointer ${
+                            selectedDebug?.id === challenge.id 
+                              ? 'bg-purple-500/10 border-purple-500' 
+                              : isDark 
+                                ? 'bg-[#0b0816] border-white/5 hover:border-white/10' 
+                                : 'bg-slate-50 border-slate-100 hover:border-slate-200'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <span className="text-[10px] font-bold text-purple-600 bg-purple-500/10 px-2 py-0.5 rounded-full">{challenge.difficulty}</span>
+                            <span className="text-xs text-amber-600 font-bold">✨ {challenge.xp} XP</span>
+                          </div>
+                          <h4 className={`text-sm font-bold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>{challenge.title}</h4>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
+                  {/* Workspace */}
                   <div className={`rounded-3xl p-6 flex flex-col space-y-4 border lg:col-span-2 ${
                     isDark ? 'bg-[#0b0816] border-white/5' : 'bg-slate-50 border-slate-200'
                   }`}>
@@ -740,12 +819,16 @@ public interface IRepository {
                           value={debugCode}
                           onChange={(e) => setDebugCode(e.target.value)}
                           className={`w-full h-64 p-4 rounded-xl border font-mono text-xs outline-none resize-none ${
-                            isDark ? 'bg-[#07040f] border-white/5 text-emerald-450' : 'bg-white border-slate-200 text-slate-805'
+                            isDark ? 'bg-[#07040f] border-white/5 text-emerald-400' : 'bg-white border-slate-200 text-slate-805'
                           }`}
                         />
                         <button 
                           onClick={() => {
-                            if (debugCode.includes('new List<string>') || debugCode.includes('await')) {
+                            const keywords = selectedDebug.solutionKeywords || [];
+                            const isCorrect = keywords.length > 0
+                              ? keywords.some(k => debugCode.toLowerCase().includes(k.toLowerCase()))
+                              : (debugCode.includes('new List<string>') || debugCode.includes('await'));
+                            if (isCorrect) {
                               toast.success('Bug fixed! +' + selectedDebug.xp + ' XP');
                               triggerConfetti();
                             } else {
