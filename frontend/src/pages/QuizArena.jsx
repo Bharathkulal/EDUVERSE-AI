@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Trophy, Award, BookOpen, AlertCircle, Bookmark, Timer, CheckCircle2, 
   XCircle, ChevronLeft, ChevronRight, HelpCircle, Share2, Flame, ArrowLeft,
@@ -331,13 +332,24 @@ const INITIAL_STATS = {
 };
 
 export default function QuizArena({ onExit }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedSubject, setSelectedSubject] = useState('Java');
   const [selectedMode, setSelectedMode] = useState('Practice'); // Practice, Exam, Challenge
   const [quizzes, setQuizzes] = useState(SUBJECT_QUIZZES['Java']);
-  const [selectedQuiz, setSelectedQuiz] = useState(null);
+  
+  const quizId = searchParams.get('quiz');
+  const selectedQuiz = quizzes.find(q => q.id === quizId) || null;
+  const gameState = searchParams.get('state') || 'lobby';
+
+  const setSelectedQuiz = (quiz) => {
+    if (quiz) {
+      setSearchParams({ module: 'quiz', quiz: quiz.id, state: 'lobby' });
+    } else {
+      setSearchParams({ module: 'quiz', state: 'lobby' });
+    }
+  };
   
   // Game states
-  const [gameState, setGameState] = useState('lobby'); // lobby, in-quiz, results
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [answers, setAnswers] = useState({}); // { questionId: selectedOptionKey }
   const [submittedAnswers, setSubmittedAnswers] = useState({}); // { questionId: true } (Practice mode immediate views)
@@ -354,7 +366,7 @@ export default function QuizArena({ onExit }) {
   // Sync quizzes when subject changes
   useEffect(() => {
     setQuizzes(SUBJECT_QUIZZES[selectedSubject] || []);
-    setSelectedQuiz(null);
+    setSearchParams({ module: 'quiz', state: 'lobby' });
   }, [selectedSubject]);
 
   // Handle timer inside Exam/Challenge modes
@@ -387,7 +399,7 @@ export default function QuizArena({ onExit }) {
     setSubmittedAnswers({});
     setBookmarked({});
     setCurrentQuestionIdx(0);
-    setGameState('in-quiz');
+    setSearchParams({ module: 'quiz', quiz: selectedQuiz.id, state: 'in-quiz' });
   };
 
   const handleOptionSelect = (optKey) => {
@@ -464,7 +476,7 @@ export default function QuizArena({ onExit }) {
       };
     });
 
-    setGameState('results');
+    setSearchParams({ module: 'quiz', quiz: selectedQuiz.id, state: 'results' });
   };
 
   const toggleBookmark = (qId) => {
@@ -501,9 +513,6 @@ export default function QuizArena({ onExit }) {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/5 pb-5 mb-5 mt-2">
             <div>
               <div className="flex items-center gap-3">
-                <button onClick={onExit} className="exit-btn p-1.5 rounded-lg border border-cyan-500/20 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-all cursor-pointer">
-                  <ArrowLeft size={16} />
-                </button>
                 <h1 className="lobby-title font-extrabold text-2xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-500">Quiz Arena</h1>
               </div>
               <p className="text-slate-400 text-xs mt-1">Test your skills. Practice topics. Track progress.</p>
@@ -703,18 +712,6 @@ export default function QuizArena({ onExit }) {
           {/* Top Breadcrumbs & Timers */}
           <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
             <div className="flex items-center gap-3">
-              <button 
-                onClick={() => {
-                  if (window.confirm("Are you sure you want to quit this quiz? Your progress will not be saved.")) {
-                    setGameState('lobby');
-                  }
-                }}
-                className="exit-btn p-1.5 rounded-lg border border-cyan-500/20 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-all cursor-pointer flex items-center justify-center"
-                title="Quit Quiz"
-              >
-                <ArrowLeft size={12} />
-              </button>
-
               <div className="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1.5">
                 <span>Quiz Arena</span>
                 <ChevronRight size={10} />
@@ -937,7 +934,7 @@ export default function QuizArena({ onExit }) {
                 Retake Quiz
               </button>
               <button
-                onClick={() => { setGameState('lobby'); setSelectedQuiz(null); }}
+                onClick={() => setSelectedQuiz(null)}
                 className="flex-1 py-2.5 rounded-xl bg-slate-950 border border-white/10 hover:border-white/20 text-slate-300 font-extrabold text-xs transition-colors cursor-pointer"
               >
                 Back to Lobby

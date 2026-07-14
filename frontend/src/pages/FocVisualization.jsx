@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { 
@@ -237,7 +237,16 @@ export default function FocVisualization() {
   const { isDarkMode: isDark } = useTheme();
   
   // App states
-  const [selectedTopic, setSelectedTopic] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const topicId = searchParams.get('topic');
+  const selectedTopic = FOC_TOPICS.find(t => t.id === topicId) || null;
+  const setSelectedTopic = (topic) => {
+    if (topic) {
+      setSearchParams({ topic: topic.id });
+    } else {
+      setSearchParams({});
+    }
+  };
   const [activeTab, setActiveTab] = useState('explanation'); // explanation, steps, quiz, notes
   const [mode, setMode] = useState('normal'); // normal, slow-motion, debug, exam, ai-tutor
   
@@ -958,29 +967,18 @@ export default function FocVisualization() {
 
       {/* TOP HEADER */}
       <header className="h-16 shrink-0 border-b border-neutral-200 flex items-center justify-between px-6 bg-white/95 backdrop-blur-xl relative z-20 shadow-sm">
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => {
-              if (selectedTopic) setSelectedTopic(null);
-              else navigate('/subjects');
-            }} 
-            className="p-2 hover:bg-neutral-100 border border-neutral-200 hover:border-black rounded-lg transition-all duration-200"
-          >
-            <ArrowLeft className="w-4 h-4 text-black" />
-          </button>
-          <div className="flex flex-col">
-            <span className="text-[10px] tracking-widest text-neutral-500 font-bold uppercase">EduVerse AI Lab</span>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-black">Fundamentals of Computing</span>
-              {selectedTopic && (
-                <>
-                  <span className="text-neutral-300">/</span>
-                  <span className="text-black font-semibold flex items-center gap-1.5 bg-neutral-100 px-2.5 py-0.5 rounded-full text-xs border border-neutral-200">
-                    {selectedTopic.icon} {selectedTopic.title}
-                  </span>
-                </>
-              )}
-            </div>
+        <div className="flex flex-col">
+          <span className="text-[10px] tracking-widest text-neutral-500 font-bold uppercase">EduVerse AI Lab</span>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-black">Fundamentals of Computing</span>
+            {selectedTopic && (
+              <>
+                <span className="text-neutral-300">/</span>
+                <span className="text-black font-semibold flex items-center gap-1.5 bg-neutral-100 px-2.5 py-0.5 rounded-full text-xs border border-neutral-200">
+                  {selectedTopic.icon} {selectedTopic.title}
+                </span>
+              </>
+            )}
           </div>
         </div>
 

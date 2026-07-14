@@ -53,9 +53,7 @@ export default function ExecutionSimulator() {
     <div className="min-h-screen p-6 md:p-10 flex flex-col">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/dsa/stack')} className="p-2 bg-white rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition">
-            <ArrowLeft className="w-5 h-5 text-slate-600" />
-          </button>
+
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Interactive Simulator</h1>
             <p className="text-sm text-slate-500">C# Stack Implementation</p>

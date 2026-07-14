@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import GlobalBackButton from '../components/GlobalBackButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Clock, Zap, BookOpen, CheckCircle, Award, BarChart2,
@@ -97,7 +98,7 @@ export default function CoreJavaLessonPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <ShieldAlert size={48} className="text-red-500" />
         <h2 className="text-xl font-bold">Lesson Not Found</h2>
-        <button onClick={() => navigate('/subjects')} className="px-4 py-2 bg-blue-600 text-white rounded-lg">Go Back</button>
+        <GlobalBackButton label="Go Back" />
       </div>
     );
   }
@@ -109,12 +110,7 @@ export default function CoreJavaLessonPage() {
         {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate(-1)}
-              className={`p-2.5 rounded-xl border transition-all ${isDarkMode ? 'bg-slate-900/60 border-slate-800 hover:bg-slate-800 text-slate-350' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-650 shadow-sm'}`}
-            >
-              <ArrowLeft size={16} />
-            </button>
+            <GlobalBackButton />
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md ${isDarkMode ? 'bg-orange-500/10 text-orange-400' : 'bg-orange-50 text-orange-600'}`}>

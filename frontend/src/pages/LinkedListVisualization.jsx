@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import GlobalBackButton from '../components/GlobalBackButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Play, Pause, SkipForward, SkipBack, RotateCcw, 
@@ -811,11 +812,7 @@ export default function LinkedListVisualization() {
         isDarkMode ? 'bg-[#001621]/90 border-b border-[#FF4103]/20 shadow-2xl' : 'bg-white border-b border-slate-200 shadow-sm'
       } flex items-center justify-between px-6 relative z-20`}>
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className={`p-2 rounded-full transition-all border ${
-            isDarkMode ? 'hover:bg-[#FF4103]/10 text-[#FF4103] border-[#FF4103]/20' : 'hover:bg-slate-100 text-slate-700 border-slate-200'
-          }`}>
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <GlobalBackButton />
           <div className="flex flex-col">
             <span className={`text-sm font-black tracking-widest ${isDarkMode ? 'text-[#FF4103]' : 'text-slate-800'}`}>EDUVERSE AI</span>
             <span className="text-xs text-slate-500 font-semibold">Linked List Visual Lab</span>

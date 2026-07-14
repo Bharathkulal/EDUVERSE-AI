@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, ArrowLeft } from 'lucide-react';
+import { Trophy } from 'lucide-react';
+import GlobalBackButton from '../components/GlobalBackButton';
 import WebDevCoursePage from './WebDevCoursePage';
 import WebDevLab from '../components/WebDevLab';
 import { useTheme } from '../context/ThemeContext';
@@ -15,16 +16,9 @@ export default function WebDevHub() {
   if (activeView === 'theory') {
     return (
       <div className="relative">
-        <button 
-          onClick={() => setActiveView('hub')}
-          className={`absolute top-4 left-4 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
-            isDark 
-              ? 'bg-[#120e2a] hover:bg-[#1a143b] text-white border-purple-500/20' 
-              : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-sm'
-          }`}
-        >
-          ← Back to Web Dev Hub
-        </button>
+        <div className="absolute top-4 left-4 z-50">
+          <GlobalBackButton label="Back to Web Dev Hub" onClick={() => setActiveView('hub')} />
+        </div>
         <WebDevCoursePage />
       </div>
     );
@@ -33,16 +27,9 @@ export default function WebDevHub() {
   if (activeView === 'practical') {
     return (
       <div className="relative">
-        <button 
-          onClick={() => setActiveView('hub')}
-          className={`absolute top-4 left-4 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
-            isDark 
-              ? 'bg-[#120e2a] hover:bg-[#1a143b] text-white border-purple-500/20' 
-              : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-sm'
-          }`}
-        >
-          ← Back to Web Dev Hub
-        </button>
+        <div className="absolute top-4 left-4 z-50">
+          <GlobalBackButton label="Back to Web Dev Hub" onClick={() => setActiveView('hub')} />
+        </div>
         <div className="pt-16">
           <WebDevLab />
         </div>
@@ -62,17 +49,6 @@ export default function WebDevHub() {
         </>
       )}
 
-      {/* Back Button to Subjects */}
-      <button 
-        onClick={() => navigate('/subjects')}
-        className={`absolute top-6 left-6 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
-          isDark 
-            ? 'bg-[#120e2a] hover:bg-[#1a143b] text-white border-blue-500/20' 
-            : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-sm'
-        }`}
-      >
-        <ArrowLeft size={16} /> Back to Subjects
-      </button>
 
       {/* TOP SECTION */}
       <motion.div 

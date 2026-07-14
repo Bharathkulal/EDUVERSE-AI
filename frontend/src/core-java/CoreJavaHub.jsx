@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, ArrowLeft } from 'lucide-react';
+import { Trophy } from 'lucide-react';
+import GlobalBackButton from '../components/GlobalBackButton';
 import { useNavigate } from 'react-router-dom';
 import CoreJavaCoursePage from './CoreJavaCoursePage';
 import CoreJavaLab from './CoreJavaLab';
@@ -16,16 +17,9 @@ export default function CoreJavaHub() {
   if (activeView === 'theory') {
     return (
       <div className="relative pt-12 w-full">
-        <button 
-          onClick={() => setActiveView('hub')}
-          className={`absolute top-4 left-4 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
-            isDark 
-              ? 'bg-[#120e2a] hover:bg-[#1a143b] text-white border-orange-500/20' 
-              : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-sm'
-          }`}
-        >
-          ← Back to Hub
-        </button>
+        <div className="absolute top-4 left-4 z-50">
+          <GlobalBackButton label="Back to Hub" onClick={() => setActiveView('hub')} />
+        </div>
         <CoreJavaCoursePage />
       </div>
     );
@@ -34,16 +28,9 @@ export default function CoreJavaHub() {
   if (activeView === 'practical') {
     return (
       <div className="relative">
-        <button 
-          onClick={() => setActiveView('hub')}
-          className={`absolute top-4 left-4 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
-            isDark 
-              ? 'bg-[#120e2a] hover:bg-[#1a143b] text-white border-orange-500/20' 
-              : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-sm'
-          }`}
-        >
-          ← Back to Hub
-        </button>
+        <div className="absolute top-4 left-4 z-50">
+          <GlobalBackButton label="Back to Hub" onClick={() => setActiveView('hub')} />
+        </div>
         <div className="pt-16">
           <CoreJavaLab />
         </div>
@@ -56,16 +43,9 @@ export default function CoreJavaHub() {
       isDark ? 'bg-[#070313] text-slate-100' : 'bg-slate-50/50 text-slate-900'
     }`}>
       {/* Back Button to Subjects */}
-      <button 
-        onClick={() => navigate('/subjects')}
-        className={`absolute top-6 left-6 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
-          isDark 
-            ? 'bg-[#120e2a] hover:bg-[#1a143b] text-white border-orange-500/20' 
-            : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-sm'
-        }`}
-      >
-        <ArrowLeft size={16} /> Back to Subjects
-      </button>
+      <div className="absolute top-6 left-6 z-50">
+        <GlobalBackButton />
+      </div>
 
       {/* Background patterns */}
       <LearningHubBackground isDark={isDark} />

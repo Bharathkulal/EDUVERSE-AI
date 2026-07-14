@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Play, RotateCcw, Save, Trash2, BookOpen, AlertCircle, CheckCircle2, 
   XCircle, ChevronLeft, ChevronRight, HelpCircle, ArrowLeft, Terminal,
@@ -866,18 +867,27 @@ const CODING_TASKS = {
 };
 
 export default function CodingChallenges({ onExit }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedLanguage, setSelectedLanguage] = useState('Java');
   const [tasks, setTasks] = useState(CODING_TASKS['Java']);
-  const [selectedTask, setSelectedTopic] = useState(null);
   
+  const taskId = searchParams.get('task');
+  const selectedTask = tasks.find(t => t.id === taskId) || null;
+  const viewState = selectedTask ? 'workspace' : 'lobby';
+  
+  const setSelectedTopic = (task) => {
+    if (task) {
+      setSearchParams({ module: 'coding', task: task.id });
+    } else {
+      setSearchParams({ module: 'coding' });
+    }
+  };
+
   // Editor States
   const [code, setCode] = useState('');
   const [consoleOutput, setConsoleOutput] = useState('');
   const [consoleStatus, setConsoleStatus] = useState('Ready'); // Ready, Running, Success, Error
   const [testResults, setTestResults] = useState([]); // Array of { input, expected, actual, passed }
-  
-  // Lobby/Editor state
-  const [viewState, setViewState] = useState('lobby'); // lobby, workspace
   const [completedTasks, setCompletedTasks] = useState({}); // { taskId: true }
   
   useEffect(() => {
@@ -976,9 +986,6 @@ export default function CodingChallenges({ onExit }) {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/5 pb-5 mb-5 mt-2">
             <div>
               <div className="flex items-center gap-3">
-                <button onClick={onExit} className="exit-btn p-1.5 rounded-lg border border-cyan-500/20 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-all cursor-pointer">
-                  <ArrowLeft size={16} />
-                </button>
                 <h1 className="lobby-title font-extrabold text-2xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-purple-500">Coding Practice</h1>
               </div>
               <p className="text-slate-400 text-xs mt-1">Write, run, and test your code algorithms in real-time.</p>
@@ -1048,12 +1055,6 @@ export default function CodingChallenges({ onExit }) {
           {/* Top Header Controls */}
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-3 mb-3">
             <div className="flex items-center gap-3">
-              <button 
-                onClick={() => setViewState('lobby')} 
-                className="exit-btn p-1.5 rounded-lg border border-cyan-500/20 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-all cursor-pointer flex items-center justify-center"
-              >
-                <ArrowLeft size={12} />
-              </button>
               <div>
                 <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">Coding Workspace</span>
                 <h2 className="text-sm font-black text-slate-100">{selectedTask.title}</h2>

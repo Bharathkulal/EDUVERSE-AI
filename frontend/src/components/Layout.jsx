@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useSessionTracker } from '../utils/sessionTracker';
+import { useNavHistory } from '../context/NavigationContext';
 import ThemeToggleButton from './ThemeToggleButton';
 import { Mic } from 'lucide-react';
 import EduVerseLogo from './EduVerseLogo';
@@ -59,6 +60,7 @@ const TOP_LEVEL_PATHS = [
 export default function Layout({ children }) {
   const { user, logout, isAdmin } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
+  const { goBack, canGoBack, clearHistory } = useNavHistory();
   useSessionTracker(user);
   const location = useLocation();
   const navigate = useNavigate();
@@ -121,6 +123,7 @@ export default function Layout({ children }) {
 
 
   const handleLogout = () => {
+    clearHistory();
     logout();
     navigate('/?login=true');
   };
@@ -246,17 +249,16 @@ export default function Layout({ children }) {
               </svg>
             </button>
 
-            {/* Smart Back Button — shown only on sub-pages */}
-            {isSubPage && (
-              <button
-                onClick={() => {
-                  const backEvent = new CustomEvent('eduverse-back', { cancelable: true });
-                  const handled = !window.dispatchEvent(backEvent);
-                  if (!handled) {
-                    navigate(-1);
-                  }
-                }}
-                aria-label="Go back"
+            {/* Global Back Button — driven by NavigationHistoryContext */}
+            {canGoBack && (
+              <motion.button
+                onClick={goBack}
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                whileHover={{ x: -3 }}
+                whileTap={{ scale: 0.96 }}
+                title="Go Back (Alt + ←)"
+                aria-label="Go back to previous page"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -269,7 +271,7 @@ export default function Layout({ children }) {
                   fontSize: '0.82rem',
                   fontWeight: 600,
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
+                  transition: 'background 0.2s, border-color 0.2s, color 0.2s',
                   whiteSpace: 'nowrap',
                   flexShrink: 0,
                 }}
@@ -277,21 +279,18 @@ export default function Layout({ children }) {
                   e.currentTarget.style.background = 'var(--db-btn-secondary-hover)';
                   e.currentTarget.style.borderColor = 'var(--db-text-accent)';
                   e.currentTarget.style.color = 'var(--db-text-accent)';
-                  e.currentTarget.style.transform = 'translateX(-2px)';
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.background = 'var(--db-input-bg)';
                   e.currentTarget.style.borderColor = 'var(--db-input-border)';
                   e.currentTarget.style.color = 'var(--db-text-main)';
-                  e.currentTarget.style.transform = 'translateX(0)';
                 }}
               >
-                {/* Left arrow icon */}
-                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5m7-7l-7 7 7 7" />
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 12H5m7-7-7 7 7 7" />
                 </svg>
                 Back
-              </button>
+              </motion.button>
             )}
 
             {/* Redesigned Search Bar */}

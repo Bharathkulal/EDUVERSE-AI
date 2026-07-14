@@ -110,12 +110,7 @@ export default function PythonLessonPage() {
         <div className="text-5xl">🔍</div>
         <h2 className="text-xl font-bold text-white">Lesson Not Found</h2>
         <p className="text-slate-400 text-sm">The lesson "{lessonSlug}" doesn't exist yet.</p>
-        <button
-          onClick={() => navigate(-1)}
-          className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 transition-colors"
-        >
-          ← Back to Python
-        </button>
+
       </div>
     );
   }
@@ -135,14 +130,6 @@ export default function PythonLessonPage() {
         }}
       >
         <div className="p-6">
-          {/* Back button + breadcrumb */}
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors mb-5 group"
-          >
-            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-            Python Course
-          </button>
 
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
             {/* Icon + Title */}

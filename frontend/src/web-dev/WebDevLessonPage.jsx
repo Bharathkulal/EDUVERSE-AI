@@ -97,7 +97,7 @@ export default function WebDevLessonPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <ShieldAlert size={48} className="text-red-500" />
         <h2 className="text-xl font-bold">Lesson Not Found</h2>
-        <button onClick={() => navigate('/subjects')} className="px-4 py-2 bg-blue-600 text-white rounded-lg">Go Back</button>
+        <button onClick={() => navigate(-1)} className="px-4 py-2 bg-blue-600 text-white rounded-lg">Go Back</button>
       </div>
     );
   }
@@ -119,12 +119,6 @@ export default function WebDevLessonPage() {
         {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate(-1)}
-              className={`p-2.5 rounded-xl border transition-all ${isDarkMode ? 'bg-slate-900/60 border-slate-800 hover:bg-slate-800 text-slate-350' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-650 shadow-sm'}`}
-            >
-              <ArrowLeft size={16} />
-            </button>
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md ${isDarkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-650'}`}>

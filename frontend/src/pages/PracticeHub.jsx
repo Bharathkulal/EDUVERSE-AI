@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import TypingQuest from './TypingQuest';
 import CodingChallenges from './CodingChallenges';
@@ -16,7 +16,15 @@ const HASH_TO_MODULE = {
 };
 
 export default function PracticeHub() {
-  const [activeModule, setActiveModule] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeModule = searchParams.get('module');
+  const setActiveModule = (mod) => {
+    if (mod) {
+      setSearchParams({ module: mod });
+    } else {
+      setSearchParams({});
+    }
+  };
   const [dailyChallenge, setDailyChallenge] = useState(null);
   const [challengeLoading, setChallengeLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -209,12 +217,6 @@ export default function PracticeHub() {
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-[var(--db-border)] bg-[var(--db-card-bg)]">
               <div className="flex items-center gap-3">
-                <button 
-                  onClick={() => setActiveModule(null)}
-                  className="p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-xl transition text-[var(--db-text-muted)] hover:text-white cursor-pointer"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
-                </button>
                 <h2 className="text-xl font-bold">🎯 Daily Challenges</h2>
               </div>
               <div className="flex items-center gap-3">

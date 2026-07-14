@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, ArrowLeft } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import GlobalBackButton from '../components/GlobalBackButton';
 import MathTheory from './MathTheory';
 import { useTheme } from '../context/ThemeContext';
 import LearningHubBackground from '../components/LearningHubBackground';
@@ -21,16 +22,9 @@ export default function MathHub({ onSelectView, originalPracticalView }) {
       isDark ? 'bg-[#070313] text-slate-100' : 'bg-slate-50/50 text-slate-900'
     }`}>
       {/* Back Button to Subjects */}
-      <button 
-        onClick={() => navigate('/subjects')}
-        className={`absolute top-6 left-6 z-50 px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 border ${
-          isDark 
-            ? 'bg-[#120e2a] hover:bg-[#1a143b] text-white border-purple-500/20' 
-            : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-sm'
-        }`}
-      >
-        <ArrowLeft size={16} /> Back to Subjects
-      </button>
+      <div className="absolute top-6 left-6 z-50">
+        <GlobalBackButton />
+      </div>
 
       {/* Background Glows */}
       {isDark && (

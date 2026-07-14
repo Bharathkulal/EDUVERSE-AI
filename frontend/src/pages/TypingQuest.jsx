@@ -50,6 +50,7 @@ const SNIPPETS_BY_SUBJECT = {
   ]
 };
 
+import GlobalBackButton from '../components/GlobalBackButton';
 export default function TypingQuest({ onExit }) {
   // Saved stats or fallback defaults
   const savedStats = JSON.parse(localStorage.getItem('typing_quest_stats')) || {
@@ -319,12 +320,7 @@ export default function TypingQuest({ onExit }) {
     >
       {/* DESKTOP LEFT PANEL (Progress) */}
       <div className="hidden md:flex w-[280px] bg-[#111c33]/80 backdrop-blur-xl border-r border-[#4f8cff]/20 flex-col p-6 shadow-[5px_0_30px_rgba(0,0,0,0.5)] z-10">
-        <div className="flex items-center gap-4 mb-8" onClick={onExit} role="button">
-          <div className="w-10 h-10 rounded-xl bg-[#4f8cff]/20 flex items-center justify-center border border-[#4f8cff]/50 hover:bg-[#4f8cff]/40 transition text-[#4f8cff]">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
-          </div>
-          <span className="font-bold text-lg text-white/80 hover:text-white transition">Exit Arena</span>
-        </div>
+        <GlobalBackButton className="mb-8 w-full justify-center" variant="floating" label="Exit Arena" />
 
         <div className="text-center mb-6">
           <div 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import GlobalBackButton from '../components/GlobalBackButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Clock, Zap, BookOpen, CheckCircle, Award, 
@@ -198,11 +199,7 @@ export default function DsaLessonPage() {
           
           {/* Header breadcrumbs */}
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/subjects/DSA', { state: { activeView: 'theory' } })} className={`p-2 rounded-full transition-all border ${
-              isDark ? 'hover:bg-white/5 text-slate-400 border-white/5' : 'hover:bg-slate-100 text-slate-700 border-slate-200'
-            }`}>
-              <ArrowLeft className="w-5 h-5" />
-            </button>
+          <GlobalBackButton />
             <div className="flex flex-col">
               <span className={`text-[10px] uppercase font-bold tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                 DSA PATHWAY

@@ -187,13 +187,24 @@ const INTERVIEW_TOPICS = {
   ]
 };
 
+import { useSearchParams } from 'react-router-dom';
 export default function InterviewPractice({ onExit }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState('HR Interview');
   const [topics, setTopics] = useState(INTERVIEW_TOPICS['HR Interview']);
-  const [selectedTopic, setSelectedTopic] = useState(null);
   
-  // States
-  const [gameState, setGameState] = useState('lobby'); // lobby, in-practice, results
+  const topicId = searchParams.get('topic');
+  const selectedTopic = topics.find(t => t.id === topicId) || null;
+  const gameState = searchParams.get('state') || 'lobby';
+  
+  const setSelectedTopic = (topic) => {
+    if (topic) {
+      setSearchParams({ module: 'interview', topic: topic.id, state: 'lobby' });
+    } else {
+      setSearchParams({ module: 'interview', state: 'lobby' });
+    }
+  };
+
   const [currentIdx, setCurrentIdx] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
   const [submittedAnswers, setSubmittedAnswers] = useState({}); // { questionId: userAnswer }
@@ -219,7 +230,7 @@ export default function InterviewPractice({ onExit }) {
 
   useEffect(() => {
     setTopics(INTERVIEW_TOPICS[selectedCategory] || []);
-    setSelectedTopic(null);
+    setSearchParams({ module: 'interview', state: 'lobby' });
   }, [selectedCategory]);
 
   useEffect(() => {
@@ -244,7 +255,7 @@ export default function InterviewPractice({ onExit }) {
     setUserAnswer('');
     setSubmittedAnswers({});
     setCurrentIdx(0);
-    setGameState('in-practice');
+    setSearchParams({ module: 'interview', topic: selectedTopic.id, state: 'in-practice' });
   };
 
   const handleRecordVoice = () => {
@@ -297,7 +308,7 @@ export default function InterviewPractice({ onExit }) {
       quality: Math.min(prev.quality + 1, 95)
     }));
 
-    setGameState('results');
+    setSearchParams({ module: 'interview', topic: selectedTopic.id, state: 'results' });
   };
 
   const handleResumeLastSession = () => {
@@ -346,9 +357,6 @@ export default function InterviewPractice({ onExit }) {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/5 pb-5 mb-5 mt-2">
             <div>
               <div className="flex items-center gap-3">
-                <button onClick={onExit} className="exit-btn p-1.5 rounded-lg border border-cyan-500/20 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-all cursor-pointer">
-                  <ArrowLeft size={16} />
-                </button>
                 <h1 className="lobby-title font-extrabold text-2xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500">Interview Practice</h1>
               </div>
               <p className="text-slate-400 text-xs mt-1">Practice HR, technical, and mock placement interviews.</p>
@@ -508,16 +516,6 @@ export default function InterviewPractice({ onExit }) {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
             <div className="flex items-center gap-3">
-              <button 
-                onClick={() => {
-                  if (window.confirm("Quit interview session? Your progress will not be saved.")) {
-                    setGameState('lobby');
-                  }
-                }}
-                className="exit-btn p-1.5 rounded-lg border border-blue-500/20 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all cursor-pointer flex items-center justify-center"
-              >
-                <ArrowLeft size={12} />
-              </button>
               <div className="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1.5">
                 <span>Interview Practice</span>
                 <ChevronRight size={10} />
@@ -703,7 +701,7 @@ export default function InterviewPractice({ onExit }) {
                 Retake
               </button>
               <button
-                onClick={() => { setGameState('lobby'); setSelectedTopic(null); }}
+                onClick={() => setSelectedTopic(null)}
                 className="flex-1 py-2.5 rounded-xl bg-slate-950 border border-white/10 hover:border-white/20 text-slate-300 font-extrabold text-xs transition-colors cursor-pointer"
               >
                 To Lobby

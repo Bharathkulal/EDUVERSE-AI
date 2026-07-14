@@ -508,12 +508,7 @@ export default function AIPhotoToPDF() {
       {/* TOP GLASSMORPHISM NAV BAR */}
       <header className="px-6 py-4 bg-[var(--db-card-bg)] border-b border-[var(--db-sidebar-border)] flex items-center justify-between sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div className="flex items-center gap-3">
-          <button 
-            onClick={() => navigate('/it-suite')}
-            className="p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-xl transition text-[var(--db-text-muted)] hover:text-[var(--db-text-main)]"
-          >
-            <ArrowLeft size={18} />
-          </button>
+
           <div className="bg-gradient-to-tr from-violet-600 to-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center font-black shadow-lg shadow-violet-500/20 text-white">📄</div>
           <div>
             <span className="text-[9px] uppercase tracking-widest text-violet-500 font-extrabold flex items-center gap-1.5">

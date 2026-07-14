@@ -1,5 +1,6 @@
 import { useState, useEffect, cloneElement } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import GlobalBackButton from '../components/GlobalBackButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, ChevronRight, ChevronLeft, Play, Pause, RotateCcw, 
@@ -1076,9 +1077,7 @@ export default function MathVisualization() {
         {/* Header breadcrumb */}
         <header className="h-16 flex items-center justify-between px-8 relative z-20 bg-[var(--db-card-bg)]/30 border-b border-[var(--db-card-border)] backdrop-blur-sm">
           <div className="flex items-center">
-            <button onClick={() => navigate('/subjects/math-proto', { state: { activeView: 'practical' } })} className="mr-4 p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-full transition">
-              <ArrowLeft className="w-5 h-5 text-[var(--db-text-main)]" />
-            </button>
+            <GlobalBackButton className="mr-4" />
             <div className="flex items-center text-sm font-medium text-[var(--db-text-muted)] gap-2">
               <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span> <ChevronRight className="w-4 h-4" />
               <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects')}>Subjects</span> <ChevronRight className="w-4 h-4" />
@@ -1368,17 +1367,7 @@ export default function MathVisualization() {
       {/* HEADER BREADCRUMB */}
       <header className="h-16 shrink-0 bg-[var(--db-card-bg)] border-b border-[var(--db-header-border)] flex items-center justify-between px-8 shadow-sm relative z-10">
         <div className="flex items-center">
-          <button 
-            onClick={() => {
-              setSelectedMethod(null);
-              setShowFormula(false);
-              setPlaybackState('IDLE');
-            }} 
-            className="mr-4 px-3.5 py-1.5 rounded-xl transition font-bold flex items-center gap-1.5 text-xs bg-[var(--db-input-bg)] border border-[var(--db-input-border)] text-[var(--db-text-main)] hover:bg-[var(--db-btn-secondary-hover)]"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Methods</span>
-          </button>
+          <GlobalBackButton className="mr-4" />
           <div className="flex items-center text-sm font-medium text-[var(--db-text-muted)] gap-2">
             <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span> <ChevronRight className="w-4 h-4" />
             <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects')}>Subjects</span> <ChevronRight className="w-4 h-4" />

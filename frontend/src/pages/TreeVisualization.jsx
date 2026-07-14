@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import GlobalBackButton from '../components/GlobalBackButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, ChevronRight, Zap, Play, Pause, SkipForward, SkipBack, RotateCcw,
@@ -689,9 +690,7 @@ export default function TreeVisualization() {
       {/* HEADER BREADCRUMB */}
       <header className="h-16 shrink-0 flex items-center justify-between px-4 lg:px-8 shadow-sm relative z-10" style={{ background: 'var(--db-card-bg)', borderBottom: '1px solid var(--db-header-border)' }}>
         <div className="flex items-center overflow-hidden">
-        <button onClick={() => navigate(-1)} className="mr-2 lg:mr-4 p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-full transition shrink-0">
-          <ArrowLeft className="w-5 h-5" style={{ color: 'var(--db-text-main)' }} />
-        </button>
+        <GlobalBackButton className="mr-2 lg:mr-4" />
         <div className="flex items-center text-xs lg:text-sm font-medium gap-1.5 lg:gap-2 truncate" style={{ color: 'var(--db-text-muted)' }}>
           <span>Home</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
           <span>Subjects</span> <ChevronRight className="w-3 h-3 lg:w-4 h-4 shrink-0" />
