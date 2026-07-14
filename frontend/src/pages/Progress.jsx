@@ -106,6 +106,8 @@ export default function Progress() {
   const [activeTab, setActiveTab] = useState('overview');
   const [heatmapData, setHeatmapData] = useState(null);
   const [xpTimeline, setXpTimeline] = useState(null);
+  const [showTasksPanel, setShowTasksPanel] = useState(false);
+  const [recentQuizzes, setRecentQuizzes] = useState([]);
   const location = useLocation();
 
   // Hash-based navigation from sidebar
@@ -116,10 +118,12 @@ export default function Progress() {
       if (HASH_TO_TAB[hash] === 'activity' && !heatmapData) {
         Promise.all([
           api.get('/progress/heatmap'),
-          api.get('/progress/xp-timeline')
-        ]).then(([heatRes, xpRes]) => {
+          api.get('/progress/xp-timeline'),
+          api.get('/progress/dashboard')
+        ]).then(([heatRes, xpRes, dashRes]) => {
           setHeatmapData(heatRes.data);
           setXpTimeline(xpRes.data);
+          setRecentQuizzes(dashRes.data.recentQuizzes || []);
         }).catch(err => console.error(err));
       }
     }
@@ -291,10 +295,12 @@ export default function Progress() {
             if (!heatmapData) {
               Promise.all([
                 api.get('/progress/heatmap'),
-                api.get('/progress/xp-timeline')
-              ]).then(([heatRes, xpRes]) => {
+                api.get('/progress/xp-timeline'),
+                api.get('/progress/dashboard')
+              ]).then(([heatRes, xpRes, dashRes]) => {
                 setHeatmapData(heatRes.data);
                 setXpTimeline(xpRes.data);
+                setRecentQuizzes(dashRes.data.recentQuizzes || []);
               }).catch(err => console.error(err));
             }
           }}
@@ -643,6 +649,18 @@ export default function Progress() {
                     {heatmapData ? `${heatmapData.totalActiveDays} active days in the past year` : 'Loading...'}
                   </p>
                 </div>
+                {/* Activity Log button */}
+                <button
+                  onClick={() => setShowTasksPanel(prev => !prev)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                    showTasksPanel
+                      ? 'bg-violet-600 border-violet-500 text-white shadow-lg shadow-violet-500/20'
+                      : 'bg-white/5 border-white/10 text-slate-300 hover:bg-violet-600/20 hover:border-violet-500/40 hover:text-white'
+                  }`}
+                >
+                  <span>📋</span>
+                  <span>{showTasksPanel ? 'Hide' : 'Activity Log'}</span>
+                </button>
               </div>
 
               {heatmapData ? (
@@ -714,6 +732,167 @@ export default function Progress() {
                 </div>
               )}
             </div>
+
+            {/* Recent Completed Tasks Panel */}
+            <AnimatePresence>
+              {showTasksPanel && (() => {
+                // Build activity list from available analytics data
+                const activities = [];
+
+                // Quiz completions from dashboard recent quizzes
+                recentQuizzes.forEach(q => {
+                  activities.push({
+                    icon: '📝',
+                    label: `Scored ${q.score}% on ${q.title || 'Quiz'}`,
+                    subject: q.subject_name || 'General',
+                    xp: `+${Math.round((q.score || 0) / 5)} XP`,
+                    time: q.submitted_at ? new Date(q.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently',
+                    color: 'from-violet-500 to-purple-600',
+                    badge: q.score >= 80 ? '🏆' : q.score >= 50 ? '✅' : '📌'
+                  });
+                });
+
+                // Topic completions from roadmap
+                if (analytics?.roadmap) {
+                  analytics.roadmap
+                    .filter(r => r.status === 'Completed')
+                    .slice(0, 10)
+                    .forEach(r => {
+                      activities.push({
+                        icon: '📚',
+                        label: `Completed: ${r.title || r.topic}`,
+                        subject: r.subject || '',
+                        xp: '+10 XP',
+                        time: 'Topic completed',
+                        color: 'from-emerald-500 to-teal-600',
+                        badge: '✅'
+                      });
+                    });
+                }
+
+                // Coding problems from codingStats
+                if (analytics?.codingStats?.solvedCount > 0) {
+                  activities.push({
+                    icon: '💻',
+                    label: `Solved ${analytics.codingStats.solvedCount} Coding Problems`,
+                    subject: 'Coding Lab',
+                    xp: `+${analytics.codingStats.solvedCount * 15} XP`,
+                    time: 'Session total',
+                    color: 'from-cyan-500 to-blue-600',
+                    badge: '🔥'
+                  });
+                }
+
+                // Strengths from AI analysis
+                if (analytics?.strengths?.length > 0) {
+                  analytics.strengths.slice(0, 3).forEach(s => {
+                    activities.push({
+                      icon: '⭐',
+                      label: `Strength identified: ${s}`,
+                      subject: 'AI Analysis',
+                      xp: 'Skill Mastered',
+                      time: 'Performance insight',
+                      color: 'from-amber-500 to-yellow-600',
+                      badge: '🌟'
+                    });
+                  });
+                }
+
+                return (
+                  <motion.div
+                    key="tasks-panel"
+                    initial={{ opacity: 0, y: -10, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: 'auto' }}
+                    exit={{ opacity: 0, y: -10, height: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div className="rounded-2xl border border-[rgba(139,92,246,0.2)] bg-[rgba(20,15,50,0.6)] backdrop-blur-md p-6 space-y-4">
+                      {/* Panel Header */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-sm shadow-md shadow-violet-500/30">
+                            📋
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-white">Completed Task Log</h4>
+                            <p className="text-[10px] text-indigo-200/50">{activities.length} activities found</p>
+                          </div>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider">
+                          {completedTopicsCount} Topics Done
+                        </span>
+                      </div>
+
+                      {/* Activity Feed */}
+                      {activities.length > 0 ? (
+                        <div className="space-y-2 max-h-[400px] overflow-y-auto custom-sidebar-scroll pr-1">
+                          {activities.map((act, i) => (
+                            <motion.div
+                              key={i}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: i * 0.04 }}
+                              className="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-violet-500/20 transition-all group"
+                            >
+                              {/* Left icon strip */}
+                              <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${act.color} flex items-center justify-center text-sm shadow-sm flex-shrink-0`}>
+                                {act.icon}
+                              </div>
+
+                              {/* Middle content */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[11px] font-bold text-white leading-tight truncate">{act.label}</span>
+                                  <span className="text-xs flex-shrink-0">{act.badge}</span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  {act.subject && (
+                                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/5 text-indigo-300">
+                                      {act.subject}
+                                    </span>
+                                  )}
+                                  <span className="text-[9px] text-slate-500">{act.time}</span>
+                                </div>
+                              </div>
+
+                              {/* Right: XP badge */}
+                              <span className="text-[11px] font-bold text-emerald-400 shrink-0 group-hover:text-emerald-300 transition-colors">
+                                {act.xp}
+                              </span>
+                            </motion.div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-10">
+                          <span className="text-4xl block mb-3">🏃</span>
+                          <span className="text-sm text-slate-400 font-semibold block">No completed tasks yet</span>
+                          <p className="text-[11px] text-slate-600 mt-1 max-w-[240px] mx-auto">
+                            Complete quizzes, topics and coding challenges to populate your activity log.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Summary footer strip */}
+                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/5">
+                        <div className="text-center p-2 rounded-xl bg-white/[0.02]">
+                          <span className="text-lg font-black text-violet-400 block">{quizStats?.totalAttempted || 0}</span>
+                          <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Quizzes</span>
+                        </div>
+                        <div className="text-center p-2 rounded-xl bg-white/[0.02]">
+                          <span className="text-lg font-black text-emerald-400 block">{completedTopicsCount}</span>
+                          <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Topics</span>
+                        </div>
+                        <div className="text-center p-2 rounded-xl bg-white/[0.02]">
+                          <span className="text-lg font-black text-cyan-400 block">{solvedProblemsCount}</span>
+                          <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Code</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })()}
+            </AnimatePresence>
 
             {/* XP Growth Timeline */}
             <div className="rounded-2xl p-6 border border-[rgba(139,92,246,0.12)] bg-[rgba(30,27,75,0.2)] backdrop-blur-md">
