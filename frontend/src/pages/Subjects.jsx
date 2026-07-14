@@ -645,13 +645,13 @@ export default function Subjects() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
                 { title: 'Java Documentation', type: 'PDF', subject: 'Java', icon: '☕', color: 'from-orange-500 to-red-500', url: 'https://docs.oracle.com/en/java/' },
-                { title: 'DSA Cheat Sheet', type: 'PDF', subject: 'DSA', icon: '🌳', color: 'from-green-500 to-emerald-500', url: '#' },
+                { title: 'DSA Cheat Sheet', type: 'PDF', subject: 'DSA', icon: '🌳', color: 'from-green-500 to-emerald-500', url: 'https://quickref.me/dsa' },
                 { title: 'Python Official Docs', type: 'Link', subject: 'Python', icon: '🐍', color: 'from-blue-500 to-cyan-500', url: 'https://docs.python.org/3/' },
                 { title: 'C# Programming Guide', type: 'Link', subject: 'C#', icon: '🔷', color: 'from-purple-500 to-violet-500', url: 'https://learn.microsoft.com/en-us/dotnet/csharp/' },
-                { title: 'SQL Basics Tutorial', type: 'Video', subject: 'DBMS', icon: '🗄️', color: 'from-yellow-500 to-amber-500', url: '#' },
-                { title: 'Web Dev Roadmap 2026', type: 'Article', subject: 'Web Dev', icon: '🌐', color: 'from-pink-500 to-rose-500', url: '#' },
-                { title: 'FOC Study Notes', type: 'PDF', subject: 'FOC', icon: '🔢', color: 'from-indigo-500 to-blue-500', url: '#' },
-                { title: 'Numerical Methods Guide', type: 'PDF', subject: 'Mathematics', icon: '🧮', color: 'from-teal-500 to-cyan-500', url: '#' },
+                { title: 'SQL Basics Tutorial', type: 'Video', subject: 'DBMS', icon: '🗄️', color: 'from-yellow-500 to-amber-500', url: 'https://www.w3schools.com/sql/' },
+                { title: 'Web Dev Roadmap 2026', type: 'Article', subject: 'Web Dev', icon: '🌐', color: 'from-pink-500 to-rose-500', url: 'https://roadmap.sh/frontend' },
+                { title: 'FOC Study Notes', type: 'PDF', subject: 'FOC', icon: '🔢', color: 'from-indigo-500 to-blue-500', url: 'https://www.geeksforgeeks.org/fundamentals-of-computer/' },
+                { title: 'Numerical Methods Guide', type: 'PDF', subject: 'Mathematics', icon: '🧮', color: 'from-teal-500 to-cyan-500', url: 'https://en.wikipedia.org/wiki/Numerical_analysis' },
               ].map((res, i) => (
                 <a
                   key={i}
