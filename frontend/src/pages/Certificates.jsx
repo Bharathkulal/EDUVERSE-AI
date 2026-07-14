@@ -14,6 +14,20 @@ export default function Certificates() {
   const [verifying, setVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState(null);
 
+  // All 10 learning modules — guaranteed to always appear on the certificates page
+  const FALLBACK_MODULES = [
+    { subjectName: 'FOC',              description: 'Fundamentals of Computing — Introduction to computer science concepts' },
+    { subjectName: 'Java',             description: 'Core Java programming — OOP, collections, and fundamentals' },
+    { subjectName: 'Advanced Java',    description: 'JSP, Servlets, JDBC, and enterprise Java development' },
+    { subjectName: 'DSA',              description: 'Data Structures and Algorithms for problem solving' },
+    { subjectName: 'C#',               description: 'C# programming with .NET framework fundamentals' },
+    { subjectName: 'DBMS',             description: 'Database Management Systems — SQL, normalization, and design' },
+    { subjectName: 'Python',           description: 'Python programming for beginners to advanced' },
+    { subjectName: 'Web Development',  description: 'HTML, CSS, JavaScript, React and full-stack development' },
+    { subjectName: 'Mathematics',      description: 'Advanced numerical methods, linear algebra, and calculus' },
+    { subjectName: 'Machine Learning', description: 'Machine Learning algorithms, neural networks, and data science' },
+  ];
+
   useEffect(() => {
     fetchCertificates();
   }, []);
@@ -22,10 +36,53 @@ export default function Certificates() {
     try {
       setLoading(true);
       const res = await api.get('/progress/certificates');
-      setCerts(res.data.certificates || []);
+      const backendCerts = res.data.certificates || [];
+
+      // Build a lookup from the backend by subject name for fast merging
+      const backendMap = {};
+      backendCerts.forEach(c => { backendMap[c.subjectName] = c; });
+
+      // Merge: every fallback module gets real progress if backend has it, else defaults to locked
+      const merged = FALLBACK_MODULES.map((mod, idx) => {
+        if (backendMap[mod.subjectName]) {
+          return backendMap[mod.subjectName];
+        }
+        // Fallback: generate a synthetic locked entry
+        const studentId = user?.id || 0;
+        const certId = `EVAI-${mod.subjectName.replace(/\s+/g, '').toUpperCase()}-2026-${10000 + studentId}`;
+        return {
+          subjectId: `fallback-${idx}`,
+          subjectName: mod.subjectName,
+          description: mod.description,
+          progress: 0,
+          status: 'Locked',
+          certId,
+          studentName: user?.name || 'Student',
+          completedAt: null,
+          instructorCoach: 'AI Learning Coach',
+          instructorCEO: 'Co-Founder & CEO',
+        };
+      });
+
+      setCerts(merged);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to load certificates');
+      // On error, still show all modules as locked using fallback
+      const studentId = user?.id || 0;
+      const fallbackCerts = FALLBACK_MODULES.map((mod, idx) => ({
+        subjectId: `fallback-${idx}`,
+        subjectName: mod.subjectName,
+        description: mod.description,
+        progress: 0,
+        status: 'Locked',
+        certId: `EVAI-${mod.subjectName.replace(/\s+/g, '').toUpperCase()}-2026-${10000 + studentId}`,
+        studentName: user?.name || 'Student',
+        completedAt: null,
+        instructorCoach: 'AI Learning Coach',
+        instructorCEO: 'Co-Founder & CEO',
+      }));
+      setCerts(fallbackCerts);
+      toast.error('Could not sync live progress — showing cached modules');
     } finally {
       setLoading(false);
     }
@@ -87,6 +144,20 @@ export default function Certificates() {
           const isCompleted = cert.status === 'Completed';
           const isInProgress = cert.status === 'In Progress';
 
+          // Per-subject icon & gradient color
+          const subjectMeta = {
+            'FOC':              { icon: '🔢', gradient: 'from-indigo-500 to-blue-500' },
+            'Java':             { icon: '☕', gradient: 'from-orange-500 to-red-500' },
+            'Advanced Java':    { icon: '⚡', gradient: 'from-amber-500 to-orange-600' },
+            'DSA':              { icon: '🌳', gradient: 'from-green-500 to-emerald-600' },
+            'C#':               { icon: '🔷', gradient: 'from-purple-500 to-violet-600' },
+            'DBMS':             { icon: '🗄️', gradient: 'from-yellow-500 to-amber-600' },
+            'Python':           { icon: '🐍', gradient: 'from-blue-500 to-cyan-600' },
+            'Web Development':  { icon: '🌐', gradient: 'from-pink-500 to-rose-600' },
+            'Mathematics':      { icon: '🧮', gradient: 'from-teal-500 to-cyan-600' },
+            'Machine Learning': { icon: '🤖', gradient: 'from-violet-500 to-purple-600' },
+          }[cert.subjectName] || { icon: '🎓', gradient: 'from-slate-500 to-slate-700' };
+
           return (
             <motion.div
               key={cert.subjectId}
@@ -96,8 +167,8 @@ export default function Certificates() {
               {/* Card top */}
               <div>
                 <div className="flex justify-between items-start mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-violet-600/10 dark:bg-violet-600/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-violet-600 dark:text-violet-400 font-black">
-                    🎓
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${subjectMeta.gradient} flex items-center justify-center text-lg shadow-md`}>
+                    {subjectMeta.icon}
                   </div>
                   <span className={`text-[10px] px-2.5 py-1 rounded-full uppercase font-bold tracking-widest ${
                     isCompleted ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400' :
