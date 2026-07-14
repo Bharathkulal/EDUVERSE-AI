@@ -101,12 +101,39 @@ export default function CareerHub() {
   // Mock Placement Prep Questions
   const prepQuestions = {
     'Technical Round Prep': [
-      { q: 'What is a binary search tree?', a: 'A tree data structure where each node has at most two children, and the left key is smaller than parent while the right key is larger.' },
-      { q: 'Explain polymorphic behavior.', a: 'Allowing subclasses to provide custom overriding implementations for parent functions dynamically resolved at runtime.' }
+      { q: 'What is a binary search tree?', a: 'A tree data structure where each node has at most two children, the left child has a key less than the parent, and the right child has a key greater than the parent. Searching, insertion, and deletion take O(log n) average time.' },
+      { q: 'Explain polymorphic behavior.', a: 'Allowing subclasses to provide custom overriding implementations for parent functions. Method call resolution is dynamically resolved at runtime (dynamic dispatch / runtime polymorphism).' },
+      { q: 'What is the difference between a process and a thread?', a: 'A process is an independent execution unit with its own memory space allocated by the OS. A thread is a lightweight subset of a process that shares memory and resources with other threads in the same process.' },
+      { q: 'Explain the concept of time complexity and Big O notation.', a: 'Big O notation describes the upper bound of the execution time or space requirements of an algorithm in the worst-case scenario relative to the input size (n).' },
+      { q: 'What is the difference between a Stack and a Queue?', a: 'A Stack follows the Last-In-First-Out (LIFO) model where elements are added and removed from the same end. A Queue follows First-In-First-Out (FIFO) where elements are added at the rear and removed from the front.' }
     ],
     'HR Round Prep': [
-      { q: 'Why do you want to join us?', a: 'Highlight alignment with target company mission, culture, scaling challenges, and learning environments.' },
-      { q: 'Describe a conflict resolution scenario.', a: 'Focus on communication, objective compromises, metrics reviews, and standard team achievements.' }
+      { q: 'Why do you want to join us?', a: 'Highlight alignment with the target company\'s mission, culture, engineering scale, and active learning environments. Connect their specific business goals to your skillset.' },
+      { q: 'Describe a conflict resolution scenario.', a: 'Use the STAR method: describe a healthy debate/conflict, show how you focused on communication and objective data metrics, compromised, and drove the team to a successful outcome.' },
+      { q: 'What is your greatest strength and weakness?', a: 'For strength, highlight a transferable technical or collaborative skill. For weakness, name a real weakness you have recognized and show the specific steps you are taking to improve it.' },
+      { q: 'Tell me about a time you failed and how you handled it.', a: 'Describe a minor professional setback, take full responsibility, explain what you learned from it, and show how you applied that lesson to succeed in a subsequent project.' },
+      { q: 'Where do you see yourself in five years?', a: 'Express a desire to grow into a senior technical or leadership role, mastering the domain, and contributing to high-impact projects at the organization.' }
+    ],
+    'System Design Prep': [
+      { q: 'How does a Content Delivery Network (CDN) work?', a: 'A CDN is a geographically distributed network of proxy servers that cache content close to end users. It reduces latency, minimizes bandwidth costs, and improves page load times.' },
+      { q: 'Explain horizontal vs. vertical scaling.', a: 'Vertical scaling (scaling up) means adding more power (CPU, RAM) to an existing machine. Horizontal scaling (scaling out) means adding more machines/nodes to the pool to distribute the load.' },
+      { q: 'What is database partitioning/sharding?', a: 'A database design pattern where a single dataset is split into smaller, independent parts (shards) across multiple databases/servers to improve write performance and read throughput.' },
+      { q: 'Explain the CAP Theorem.', a: 'A distributed system can guarantee at most two out of three characteristics: Consistency (all nodes see same data), Availability (every request receives a response), and Partition Tolerance (system operates despite message losses).' },
+      { q: 'How would you design a rate limiter?', a: 'Use algorithms like Token Bucket, Leaky Bucket, or Sliding Window Log. Track request counts per user/IP in a fast memory cache like Redis to reject requests exceeding the limit.' }
+    ],
+    'DBMS & SQL Prep': [
+      { q: 'What is the difference between INNER JOIN and LEFT JOIN?', a: 'INNER JOIN returns records that have matching values in both tables. LEFT JOIN (or LEFT OUTER JOIN) returns all records from the left table, and the matched records from the right table (filling with NULL if no match).' },
+      { q: 'Explain Database Normalization and its forms.', a: 'Normalization is organizing database fields/tables to minimize redundancy and dependency. 1NF removes duplicate columns; 2NF ensures all non-key columns depend on the primary key; 3NF removes transitive functional dependencies.' },
+      { q: 'What are ACID properties in a database?', a: 'ACID guarantees database transactions are processed reliably: Atomicity (all or nothing), Consistency (preserves database rules), Isolation (independent concurrent execution), and Durability (saved permanently).' },
+      { q: 'What is an index and how does it speed up queries?', a: 'An index is a database structure (typically a B-Tree) that enables fast lookup of rows. It speeds up SELECT queries but incurs overhead on INSERT, UPDATE, and DELETE operations.' },
+      { q: 'Explain the difference between SQL and NoSQL.', a: 'SQL databases are relational, structured (schemas), table-based, and scale vertically (great for ACID). NoSQL databases are non-relational, distributed, schema-less, document/key-value/graph-based, and scale horizontally.' }
+    ],
+    'OS & Networks Prep': [
+      { q: 'What happens when you type a URL into a browser?', a: 'Browser parses URL -> DNS lookup to find IP -> Establishes TCP connection (three-way handshake) -> Sends HTTP/S request -> Server processes and returns response -> Browser renders HTML, CSS, JS.' },
+      { q: 'Explain the difference between TCP and UDP protocols.', a: 'TCP is connection-oriented, reliable, guarantees packet ordering, and features congestion control (slower). UDP is connectionless, unreliable, sends packets without confirmation (faster, great for streaming/gaming).' },
+      { q: 'What is virtual memory and how does it work?', a: 'An OS memory management technique that uses hardware and software to map virtual addresses used by an application into physical addresses. It allows using disk space as secondary RAM (swap).' },
+      { q: 'Explain the concept of a Deadlock and its prevention.', a: 'A state where two or more processes are unable to proceed because each is waiting for the other to release a resource. Prevent by breaking Mutual Exclusion, Hold & Wait, No Preemption, or Circular Wait.' },
+      { q: 'What is paging in operating systems?', a: 'A memory management scheme that eliminates the need for contiguous allocation of physical memory. The OS divides virtual memory into pages and physical memory into frames of equal size.' }
     ]
   };
 
@@ -276,26 +303,32 @@ export default function CareerHub() {
         {activeTab === 'placement' && (
           <motion.div key="placement" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
             {prepMode === 'lobby' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
-                  { title: 'Technical Round Prep', desc: 'DSA, OOP, DBMS questions', count: '2 Questions Loaded', icon: '💻', color: 'from-violet-500 to-purple-600' },
-                  { title: 'HR Round Prep', desc: 'Behavioral & situational questions', count: '2 Questions Loaded', icon: '🎤', color: 'from-blue-500 to-cyan-600' },
-                ].map((item, i) => (
-                  <div 
-                    key={i} 
-                    onClick={() => { setSelectedPrepTopic(item.title); setPrepIndex(0); setPrepMode('study'); }}
-                    className="p-5 rounded-2xl border hover:shadow-lg transition-all cursor-pointer group flex gap-4 bg-white border-slate-200"
-                  >
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center text-2xl text-white shadow-md shrink-0 group-hover:scale-110 transition-transform`}>
-                      {item.icon}
+                  { title: 'Technical Round Prep', desc: 'DSA, OOP, and data structures', icon: '💻', color: 'from-violet-500 to-purple-600' },
+                  { title: 'HR Round Prep', desc: 'Behavioral, situational, and STAR framework', icon: '🎤', color: 'from-blue-500 to-cyan-600' },
+                  { title: 'System Design Prep', desc: 'CDNs, scalability, caching, sharding', icon: '🏗️', color: 'from-amber-500 to-orange-600' },
+                  { title: 'DBMS & SQL Prep', desc: 'ACID, JOINs, indexing, normalization', icon: '🗄️', color: 'from-emerald-500 to-green-600' },
+                  { title: 'OS & Networks Prep', desc: 'HTTP lifecycle, TCP/UDP, deadlock, paging', icon: '🌐', color: 'from-pink-500 to-rose-600' },
+                ].map((item, i) => {
+                  const qCount = prepQuestions[item.title]?.length || 0;
+                  return (
+                    <div 
+                      key={i} 
+                      onClick={() => { setSelectedPrepTopic(item.title); setPrepIndex(0); setPrepMode('study'); }}
+                      className="p-5 rounded-2xl border hover:shadow-lg transition-all cursor-pointer group flex gap-4 bg-white border-slate-200"
+                    >
+                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center text-2xl text-white shadow-md shrink-0 group-hover:scale-110 transition-transform`}>
+                        {item.icon}
+                      </div>
+                      <div className="text-left">
+                        <h3 className="text-base font-bold text-slate-800">{item.title}</h3>
+                        <p className="text-xs mb-1 text-slate-400 leading-snug">{item.desc}</p>
+                        <span className="text-[10px] font-bold text-violet-600">{qCount} Questions Loaded</span>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-base font-bold text-slate-800">{item.title}</h3>
-                      <p className="text-xs mb-1 text-slate-400">{item.desc}</p>
-                      <span className="text-[10px] font-bold text-violet-600">{item.count}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
