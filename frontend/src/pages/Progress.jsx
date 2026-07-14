@@ -108,7 +108,25 @@ export default function Progress() {
   const [xpTimeline, setXpTimeline] = useState(null);
   const [showTasksPanel, setShowTasksPanel] = useState(false);
   const [recentQuizzes, setRecentQuizzes] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [dateActivities, setDateActivities] = useState([]);
+  const [fetchingDateDetails, setFetchingDateDetails] = useState(false);
   const location = useLocation();
+
+  const handleCellClick = async (dateStr) => {
+    setSelectedDate(dateStr);
+    setShowTasksPanel(true);
+    setFetchingDateDetails(true);
+    try {
+      const res = await api.get(`/progress/heatmap/details?date=${dateStr}`);
+      setDateActivities(res.data.activities || []);
+    } catch (err) {
+      console.error('Error fetching date activities:', err);
+      setDateActivities([]);
+    } finally {
+      setFetchingDateDetails(false);
+    }
+  };
 
   // Hash-based navigation from sidebar
   useEffect(() => {
@@ -691,12 +709,15 @@ export default function Progress() {
                           <div
                             key={dateStr}
                             title={`${dateStr}: ${count} activities`}
-                            className="rounded-sm transition-all hover:ring-1 hover:ring-violet-400 cursor-pointer"
+                            onClick={() => handleCellClick(dateStr)}
+                            className={`rounded-sm transition-all hover:ring-1 hover:ring-violet-400 cursor-pointer ${
+                              selectedDate === dateStr ? 'ring-1 ring-amber-400 scale-110 z-10' : ''
+                            }`}
                             style={{
                               width: '11px',
                               height: '11px',
                               backgroundColor: colors[intensity],
-                              border: '1px solid rgba(139, 92, 246, 0.08)'
+                              border: selectedDate === dateStr ? '1px solid #fbbf24' : '1px solid rgba(139, 92, 246, 0.08)'
                             }}
                           />
                         );
@@ -736,66 +757,107 @@ export default function Progress() {
             {/* Recent Completed Tasks Panel */}
             <AnimatePresence>
               {showTasksPanel && (() => {
-                // Build activity list from available analytics data
-                const activities = [];
+                let activities = [];
 
-                // Quiz completions from dashboard recent quizzes
-                recentQuizzes.forEach(q => {
-                  activities.push({
-                    icon: '📝',
-                    label: `Scored ${q.score}% on ${q.title || 'Quiz'}`,
-                    subject: q.subject_name || 'General',
-                    xp: `+${Math.round((q.score || 0) / 5)} XP`,
-                    time: q.submitted_at ? new Date(q.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently',
-                    color: 'from-violet-500 to-purple-600',
-                    badge: q.score >= 80 ? '🏆' : q.score >= 50 ? '✅' : '📌'
+                if (selectedDate) {
+                  // Map activities loaded from dateDetails
+                  activities = dateActivities.map(act => {
+                    const isQuiz = act.action.includes('Quiz') || act.action.toLowerCase().includes('quiz');
+                    const isCode = act.action.includes('Code') || act.action.toLowerCase().includes('code');
+                    const isTopic = act.action.includes('Topic') || act.action.toLowerCase().includes('topic');
+                    const isStudy = act.action.includes('Study') || act.action.toLowerCase().includes('study');
+
+                    let icon = '🔔';
+                    let color = 'from-slate-500 to-slate-600';
+                    let xp = 'Insight';
+                    if (isQuiz) {
+                      icon = '📝';
+                      color = 'from-violet-500 to-purple-600';
+                      xp = '+20 XP';
+                    } else if (isCode) {
+                      icon = '💻';
+                      color = 'from-cyan-500 to-blue-600';
+                      xp = '+15 XP';
+                    } else if (isTopic) {
+                      icon = '📚';
+                      color = 'from-emerald-500 to-teal-600';
+                      xp = '+10 XP';
+                    } else if (isStudy) {
+                      icon = '⏱️';
+                      color = 'from-indigo-500 to-blue-500';
+                      xp = '+5 XP';
+                    }
+
+                    return {
+                      icon,
+                      label: `${act.action}: ${act.value}`,
+                      subject: act.module || 'System',
+                      xp,
+                      time: act.time || 'Completed',
+                      color,
+                      badge: '🎯'
+                    };
                   });
-                });
+                } else {
+                  // Build full activity list from available analytics data
+                  // Quiz completions from dashboard recent quizzes
+                  recentQuizzes.forEach(q => {
+                    activities.push({
+                      icon: '📝',
+                      label: `Scored ${q.score}% on ${q.title || 'Quiz'}`,
+                      subject: q.subject_name || 'General',
+                      xp: `+${Math.round((q.score || 0) / 5)} XP`,
+                      time: q.submitted_at ? new Date(q.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently',
+                      color: 'from-violet-500 to-purple-600',
+                      badge: q.score >= 80 ? '🏆' : q.score >= 50 ? '✅' : '📌'
+                    });
+                  });
 
-                // Topic completions from roadmap
-                if (analytics?.roadmap) {
-                  analytics.roadmap
-                    .filter(r => r.status === 'Completed')
-                    .slice(0, 10)
-                    .forEach(r => {
+                  // Topic completions from roadmap
+                  if (analytics?.roadmap) {
+                    analytics.roadmap
+                      .filter(r => r.status === 'Completed')
+                      .slice(0, 10)
+                      .forEach(r => {
+                        activities.push({
+                          icon: '📚',
+                          label: `Completed: ${r.title || r.topic}`,
+                          subject: r.subject || '',
+                          xp: '+10 XP',
+                          time: 'Topic completed',
+                          color: 'from-emerald-500 to-teal-600',
+                          badge: '✅'
+                        });
+                      });
+                  }
+
+                  // Coding problems from codingStats
+                  if (analytics?.codingStats?.solvedCount > 0) {
+                    activities.push({
+                      icon: '💻',
+                      label: `Solved ${analytics.codingStats.solvedCount} Coding Problems`,
+                      subject: 'Coding Lab',
+                      xp: `+${analytics.codingStats.solvedCount * 15} XP`,
+                      time: 'Session total',
+                      color: 'from-cyan-500 to-blue-600',
+                      badge: '🔥'
+                    });
+                  }
+
+                  // Strengths from AI analysis
+                  if (analytics?.strengths?.length > 0) {
+                    analytics.strengths.slice(0, 3).forEach(s => {
                       activities.push({
-                        icon: '📚',
-                        label: `Completed: ${r.title || r.topic}`,
-                        subject: r.subject || '',
-                        xp: '+10 XP',
-                        time: 'Topic completed',
-                        color: 'from-emerald-500 to-teal-600',
-                        badge: '✅'
+                        icon: '⭐',
+                        label: `Strength identified: ${s}`,
+                        subject: 'AI Analysis',
+                        xp: 'Skill Mastered',
+                        time: 'Performance insight',
+                        color: 'from-amber-500 to-yellow-600',
+                        badge: '🌟'
                       });
                     });
-                }
-
-                // Coding problems from codingStats
-                if (analytics?.codingStats?.solvedCount > 0) {
-                  activities.push({
-                    icon: '💻',
-                    label: `Solved ${analytics.codingStats.solvedCount} Coding Problems`,
-                    subject: 'Coding Lab',
-                    xp: `+${analytics.codingStats.solvedCount * 15} XP`,
-                    time: 'Session total',
-                    color: 'from-cyan-500 to-blue-600',
-                    badge: '🔥'
-                  });
-                }
-
-                // Strengths from AI analysis
-                if (analytics?.strengths?.length > 0) {
-                  analytics.strengths.slice(0, 3).forEach(s => {
-                    activities.push({
-                      icon: '⭐',
-                      label: `Strength identified: ${s}`,
-                      subject: 'AI Analysis',
-                      xp: 'Skill Mastered',
-                      time: 'Performance insight',
-                      color: 'from-amber-500 to-yellow-600',
-                      badge: '🌟'
-                    });
-                  });
+                  }
                 }
 
                 return (
@@ -810,22 +872,40 @@ export default function Progress() {
                     <div className="rounded-2xl border border-[rgba(139,92,246,0.2)] bg-[rgba(20,15,50,0.6)] backdrop-blur-md p-6 space-y-4">
                       {/* Panel Header */}
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 text-left">
                           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-sm shadow-md shadow-violet-500/30">
                             📋
                           </div>
                           <div>
-                            <h4 className="text-sm font-bold text-white">Completed Task Log</h4>
-                            <p className="text-[10px] text-indigo-200/50">{activities.length} activities found</p>
+                            <h4 className="text-sm font-bold text-white">
+                              {selectedDate ? `Activities on ${new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'Completed Task Log'}
+                            </h4>
+                            <p className="text-[10px] text-indigo-200/50">
+                              {selectedDate ? `${activities.length} activities on this day` : `${activities.length} total activities found`}
+                            </p>
                           </div>
                         </div>
-                        <span className="px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider">
-                          {completedTopicsCount} Topics Done
-                        </span>
+                        {selectedDate ? (
+                          <button
+                            onClick={() => setSelectedDate(null)}
+                            className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wider hover:bg-amber-500/20 transition-all cursor-pointer"
+                          >
+                            Show All
+                          </button>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider">
+                            {completedTopicsCount} Topics Done
+                          </span>
+                        )}
                       </div>
 
                       {/* Activity Feed */}
-                      {activities.length > 0 ? (
+                      {fetchingDateDetails ? (
+                        <div className="flex flex-col items-center justify-center py-12 gap-2">
+                          <div className="w-6 h-6 rounded-full border-3 border-t-violet-500 border-slate-700 animate-spin"></div>
+                          <span className="text-[10px] text-slate-400">Loading day's activities...</span>
+                        </div>
+                      ) : activities.length > 0 ? (
                         <div className="space-y-2 max-h-[400px] overflow-y-auto custom-sidebar-scroll pr-1">
                           {activities.map((act, i) => (
                             <motion.div
@@ -841,7 +921,7 @@ export default function Progress() {
                               </div>
 
                               {/* Middle content */}
-                              <div className="flex-1 min-w-0">
+                              <div className="flex-1 min-w-0 text-left">
                                 <div className="flex items-center gap-1.5">
                                   <span className="text-[11px] font-bold text-white leading-tight truncate">{act.label}</span>
                                   <span className="text-xs flex-shrink-0">{act.badge}</span>
@@ -866,9 +946,9 @@ export default function Progress() {
                       ) : (
                         <div className="text-center py-10">
                           <span className="text-4xl block mb-3">🏃</span>
-                          <span className="text-sm text-slate-400 font-semibold block">No completed tasks yet</span>
+                          <span className="text-sm text-slate-400 font-semibold block">No completed tasks on this day</span>
                           <p className="text-[11px] text-slate-600 mt-1 max-w-[240px] mx-auto">
-                            Complete quizzes, topics and coding challenges to populate your activity log.
+                            No study sessions, quiz submissions, or code solutions logged on this date.
                           </p>
                         </div>
                       )}
