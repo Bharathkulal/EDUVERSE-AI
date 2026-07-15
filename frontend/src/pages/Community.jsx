@@ -3,7 +3,12 @@ import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { X, Trophy, Clock, Users, Zap, CheckCircle2, BookOpen, Code2, Palette, Server } from 'lucide-react';
+import { 
+  X, Trophy, Clock, Users, Zap, CheckCircle2, BookOpen, Code2, Palette, Server,
+  Plus, Search, Filter, MessageSquare, Phone, Edit, Calendar, UserPlus, Share2, 
+  Trash, Check, ChevronRight, Video, ArrowRight, UserCheck, Play, Settings, Database, 
+  Code, Target, RefreshCw, Send, PlusCircle, Paperclip, Smile
+} from 'lucide-react';
 
 const HASH_TO_TAB = {
   '#forum': 'forum',
@@ -219,26 +224,7 @@ export default function Community() {
 
         {/* STUDY GROUPS */}
         {activeTab === 'groups' && (
-          <motion.div key="groups" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {studyGroups.map(group => (
-              <div key={group.id} className="p-5 rounded-2xl border hover:shadow-lg transition-all flex flex-col gap-3" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-                <div className="flex items-center justify-between">
-                  <div className="text-3xl">{group.icon}</div>
-                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${group.active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'}`}>
-                    {group.active ? '🟢 Active' : '🔴 Offline'}
-                  </span>
-                </div>
-                <h3 className="text-base font-bold" style={{ color: 'var(--db-text-main)' }}>{group.name}</h3>
-                <div className="flex items-center justify-between text-xs" style={{ color: 'var(--db-text-muted)' }}>
-                  <span>👥 {group.members} members</span>
-                  <span>📅 {group.nextSession}</span>
-                </div>
-                <button className="w-full py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer mt-auto">
-                  Join Group
-                </button>
-              </div>
-            ))}
-          </motion.div>
+          <StudyGroupsSubsystem />
         )}
 
         {/* CODING CLUBS */}
@@ -520,3 +506,637 @@ export default function Community() {
     </div>
   );
 }
+
+// ── STUDY GROUPS SUBSYSTEM ──────────────────────────────────────────────────
+function StudyGroupsSubsystem() {
+  const [activeWorkspace, setActiveWorkspace] = useState(null); // null = Dashboard, otherwise group object
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showMatchmaker, setShowMatchmaker] = useState(false);
+  const [searchVal, setSearchVal] = useState('');
+  const [workspaceTab, setWorkspaceTab] = useState('chat'); // chat, whiteboard, tasks, analytics, overview
+
+  // Form State
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupSubject, setNewGroupSubject] = useState('Data Structures');
+  const [selectedAiMentor, setSelectedAiMentor] = useState('Coding AI');
+  const [maxMembers, setMaxMembers] = useState(6);
+
+  const [groups, setGroups] = useState([
+    {
+      id: 1,
+      name: 'DSA Mastery & LeetCode Sprint',
+      subject: 'Data Structures',
+      owner: 'Rohan D. (You)',
+      members: 5,
+      max: 6,
+      online: 3,
+      aiMentor: 'Coding AI',
+      weeklyGoal: 'Implement 5 tree & graph algorithms',
+      upcomingMeeting: 'Today 5:00 PM (IST)',
+      unreadCount: 3,
+      coverColor: 'from-violet-600 to-indigo-800',
+      tasks: [
+        { id: 101, title: 'Write Balanced Tree validation script', status: 'todo', priority: 'High', assignee: 'Kavya P.' },
+        { id: 102, title: 'Draw Graph traversals flowchart', status: 'progress', priority: 'Medium', assignee: 'Rahul K.' },
+        { id: 103, title: 'Implement DFS/BFS in Java', status: 'completed', priority: 'High', assignee: 'Rohan D.' }
+      ],
+      chatMessages: [
+        { role: 'user', name: 'Rahul K.', text: 'Hey team, did anyone finish the DFS code?', time: '12:30 PM' },
+        { role: 'ai', name: 'Coding AI', text: 'DFS uses a stack or recursion. I can generate a quick template if you want!', time: '12:31 PM' }
+      ]
+    },
+    {
+      id: 2,
+      name: 'DBMS Relational DB Builders',
+      subject: 'Database Systems',
+      owner: 'Kavya P.',
+      members: 4,
+      max: 8,
+      online: 2,
+      aiMentor: 'DBMS AI',
+      weeklyGoal: 'Normalize E-Commerce Schema to 3NF',
+      upcomingMeeting: 'Tomorrow 2:00 PM (IST)',
+      unreadCount: 0,
+      coverColor: 'from-blue-600 to-cyan-800',
+      tasks: [],
+      chatMessages: []
+    }
+  ]);
+
+  const [chatInput, setChatInput] = useState('');
+  const [whiteboardShapes, setWhiteboardShapes] = useState([]);
+
+  // Matchmaking recommendations mock
+  const matchmakingPool = [
+    { name: 'Amit V.', matchRate: 98, reason: 'Strong in Java, looking for DSA partners in 6th Sem.', dept: 'CSE' },
+    { name: 'Priya S.', matchRate: 92, reason: 'Expert in Python, shares similar evening study hours.', dept: 'ISE' }
+  ];
+
+  const handleCreateGroup = (e) => {
+    e.preventDefault();
+    if (!newGroupName.trim()) {
+      toast.error('Please enter a group name');
+      return;
+    }
+    const newGroup = {
+      id: Date.now(),
+      name: newGroupName,
+      subject: newGroupSubject,
+      owner: 'Rohan D. (You)',
+      members: 1,
+      max: maxMembers,
+      online: 1,
+      aiMentor: selectedAiMentor,
+      weeklyGoal: 'Solve textbook exercises',
+      upcomingMeeting: 'Setup required',
+      unreadCount: 0,
+      coverColor: 'from-purple-600 to-pink-800',
+      tasks: [],
+      chatMessages: [
+        { role: 'ai', name: selectedAiMentor, text: `Hello! I am your group's AI Mentor: ${selectedAiMentor}. Ask me anything!`, time: 'Just now' }
+      ]
+    };
+
+    setGroups(prev => [newGroup, ...prev]);
+    setNewGroupName('');
+    setShowCreateModal(false);
+    toast.success(`Group "${newGroupName}" created successfully!`);
+  };
+
+  const handleSendChat = (e) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userMsg = {
+      role: 'user',
+      name: 'Rohan D. (You)',
+      text: chatInput,
+      time: 'Just now'
+    };
+
+    const updatedGroups = groups.map(g => {
+      if (g.id === activeWorkspace.id) {
+        const msgs = [...g.chatMessages, userMsg];
+        return { ...g, chatMessages: msgs };
+      }
+      return g;
+    });
+
+    setGroups(updatedGroups);
+    setActiveWorkspace(prev => ({ ...prev, chatMessages: [...prev.chatMessages, userMsg] }));
+    const savedInput = chatInput;
+    setChatInput('');
+
+    // AI Response simulation
+    setTimeout(() => {
+      const aiResponse = {
+        role: 'ai',
+        name: activeWorkspace.aiMentor,
+        text: `Understood! Regarding "${savedInput}", let's collaborate. I recommend building a quick flowchart or writing test cases in the workspace editor.`,
+        time: 'Just now'
+      };
+
+      const withAiGroups = groups.map(g => {
+        if (g.id === activeWorkspace.id) {
+          return { ...g, chatMessages: [...g.chatMessages, userMsg, aiResponse] };
+        }
+        return g;
+      });
+      setGroups(withAiGroups);
+      setActiveWorkspace(prev => ({ ...prev, chatMessages: [...prev.chatMessages, aiResponse] }));
+    }, 1200);
+  };
+
+  const handleMoveTask = (taskId, nextStatus) => {
+    const updated = groups.map(g => {
+      if (g.id === activeWorkspace.id) {
+        const tasks = g.tasks.map(t => t.id === taskId ? { ...t, status: nextStatus } : t);
+        return { ...g, tasks };
+      }
+      return g;
+    });
+    setGroups(updated);
+    setActiveWorkspace(prev => {
+      const tasks = prev.tasks.map(t => t.id === taskId ? { ...t, status: nextStatus } : t);
+      return { ...prev, tasks };
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Title Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4">
+        <div>
+          <h2 className="text-xl font-black text-white flex items-center gap-2">
+            📚 Smart Study Groups
+          </h2>
+          <p className="text-xs text-slate-400 mt-1 max-w-xl">
+            Invite classmates, assign AI mentors, synchronize whiteboards, and solve assignments together.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl text-xs font-bold transition hover:shadow-lg hover:shadow-violet-600/20 cursor-pointer flex items-center gap-1.5"
+          >
+            <Plus className="w-3.5 h-3.5" /> Create Group
+          </button>
+          <button
+            onClick={() => setShowMatchmaker(true)}
+            className="px-4 py-2 bg-slate-900 border border-white/10 text-slate-300 rounded-xl text-xs font-bold transition hover:bg-slate-800 cursor-pointer flex items-center gap-1.5"
+          >
+            <Zap className="w-3.5 h-3.5 text-violet-400" /> AI Match Me
+          </button>
+        </div>
+      </div>
+
+      {/* Outer Workspace Toggle */}
+      {!activeWorkspace ? (
+        // DASHBOARD VIEW
+        <div className="space-y-6">
+          {/* Active Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {groups.map(g => (
+              <div 
+                key={g.id} 
+                className="rounded-3xl border border-white/5 overflow-hidden flex flex-col h-[320px] bg-slate-900/40 hover:border-violet-500/30 hover:shadow-xl transition group"
+              >
+                {/* Cover Banner */}
+                <div className={`h-24 bg-gradient-to-br ${g.coverColor} p-4 flex flex-col justify-between relative`}>
+                  <div className="absolute inset-0 bg-black/10" />
+                  <div className="relative z-10 flex justify-between items-center">
+                    <span className="text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-black/30 text-white border border-white/10">
+                      {g.subject}
+                    </span>
+                    {g.unreadCount > 0 && (
+                      <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center animate-bounce">
+                        {g.unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="relative z-10 font-bold text-white text-sm line-clamp-1">{g.name}</h3>
+                </div>
+
+                {/* Card Body */}
+                <div className="p-4 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between text-slate-400">
+                      <span>👤 Mentor</span>
+                      <span className="font-bold text-violet-400">{g.aiMentor}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400">
+                      <span>👥 Members</span>
+                      <span className="font-bold text-white">{g.members} / {g.max} ({g.online} online)</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400">
+                      <span>🎯 Goal</span>
+                      <span className="font-semibold text-slate-300 truncate max-w-[140px]">{g.weeklyGoal}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400">
+                      <span>📅 Meeting</span>
+                      <span className="font-bold text-cyan-400">{g.upcomingMeeting}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-4 pt-3 border-t border-white/5">
+                    <button
+                      onClick={() => { setActiveWorkspace(g); setWorkspaceTab('chat'); }}
+                      className="flex-1 py-2 bg-violet-650 hover:bg-violet-700 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1"
+                    >
+                      <Play className="w-3 h-3" /> Enter Room
+                    </button>
+                    <button
+                      onClick={() => { if (window.confirm('Delete this group?')) setGroups(prev => prev.filter(pg => pg.id !== g.id)); }}
+                      className="p-2 border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 rounded-xl transition cursor-pointer"
+                    >
+                      <Trash className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        // ACTIVE WORKSPACE VIEW
+        <div className="rounded-3xl border border-white/5 bg-[#0e0a24]/50 backdrop-blur-md p-6 space-y-6">
+          {/* Workspace Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4">
+            <div className="space-y-1">
+              <button 
+                onClick={() => setActiveWorkspace(null)}
+                className="text-[10px] uppercase font-bold text-violet-400 flex items-center gap-1 hover:underline cursor-pointer"
+              >
+                ← Back to groups dashboard
+              </button>
+              <h3 className="text-lg font-black text-white">{activeWorkspace.name}</h3>
+              <p className="text-xs text-slate-400 flex items-center gap-2">
+                <span>Subject: <strong>{activeWorkspace.subject}</strong></span> | 
+                <span>AI Mentor: <strong className="text-violet-400">{activeWorkspace.aiMentor}</strong></span>
+              </p>
+            </div>
+
+            {/* Workspace tabs */}
+            <div className="flex p-1 bg-slate-950/60 rounded-xl border border-white/5 flex-wrap gap-1">
+              {[
+                { id: 'chat', label: 'Chat', icon: <MessageSquare className="w-3 h-3" /> },
+                { id: 'whiteboard', label: 'Whiteboard', icon: <Palette className="w-3 h-3" /> },
+                { id: 'tasks', label: 'Tasks', icon: <Target className="w-3 h-3" /> },
+                { id: 'analytics', label: 'Analytics', icon: <Trophy className="w-3 h-3" /> }
+              ].map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setWorkspaceTab(t.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    workspaceTab === t.id ? 'bg-violet-650 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {t.icon} {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tab Workspaces */}
+          <div className="min-h-[350px]">
+            {/* WORKSPACE TAB: CHAT */}
+            {workspaceTab === 'chat' && (
+              <div className="flex flex-col h-[400px] justify-between">
+                <div className="flex-1 overflow-y-auto space-y-4 pr-2 va-scroll">
+                  {activeWorkspace.chatMessages.map((msg, i) => (
+                    <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`p-3 rounded-2xl max-w-[80%] text-xs leading-normal space-y-1.5 ${
+                        msg.role === 'user'
+                          ? 'bg-gradient-to-r from-violet-600 to-indigo-650 text-white rounded-tr-none'
+                          : 'bg-white/5 border border-white/5 text-slate-200 rounded-tl-none'
+                      }`}>
+                        <div className="flex justify-between items-center text-[9px] text-slate-400 gap-4 border-b border-white/5 pb-1">
+                          <span className="font-bold">{msg.name}</span>
+                          <span>{msg.time}</span>
+                        </div>
+                        <p>{msg.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <form onSubmit={handleSendChat} className="flex gap-2 border-t border-white/5 pt-4">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={e => setChatInput(e.target.value)}
+                    placeholder={`Ask team or @${activeWorkspace.aiMentor}...`}
+                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-violet-500"
+                  />
+                  <button type="submit" className="p-2.5 bg-violet-650 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition">
+                    Send
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* WORKSPACE TAB: WHITEBOARD */}
+            {workspaceTab === 'whiteboard' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center bg-slate-950/40 p-3 rounded-xl border border-white/5">
+                  <span className="text-xs text-slate-400 font-bold">Collaborative Smartboard Canvas</span>
+                  <div className="flex gap-1.5">
+                    {['Line', 'Flowchart', 'ER Diagram', 'Mind Map'].map(shape => (
+                      <button
+                        key={shape}
+                        onClick={() => setWhiteboardShapes(prev => [...prev, { shape, id: Date.now(), x: Math.random() * 80 + 10, y: Math.random() * 60 + 10 }])}
+                        className="px-2.5 py-1 bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold rounded-lg hover:bg-violet-500/20 transition cursor-pointer"
+                      >
+                        + Add {shape}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Whiteboard Grid View */}
+                <div className="h-[280px] bg-slate-950/60 rounded-2xl border border-white/5 relative overflow-hidden flex items-center justify-center">
+                  <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:16px_16px]" />
+                  {whiteboardShapes.length === 0 ? (
+                    <span className="text-xs text-slate-500 font-bold z-10">Canvas is blank. Add shapes from toolbar.</span>
+                  ) : (
+                    whiteboardShapes.map(s => (
+                      <div
+                        key={s.id}
+                        className="absolute p-3 bg-violet-650/20 border border-violet-500/50 text-white text-[10px] font-bold rounded-xl shadow-lg cursor-pointer"
+                        style={{ left: `${s.x}%`, top: `${s.y}%` }}
+                      >
+                        📦 {s.shape} Node
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* WORKSPACE TAB: TASKS */}
+            {workspaceTab === 'tasks' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {['todo', 'progress', 'completed'].map(col => (
+                  <div key={col} className="p-4 bg-slate-950/35 border border-white/5 rounded-2xl space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{col}</span>
+                      <span className="text-[10px] py-0.5 px-2 bg-white/5 rounded-full font-mono">
+                        {activeWorkspace.tasks.filter(t => t.status === col).length}
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {activeWorkspace.tasks.filter(t => t.status === col).map(t => (
+                        <div key={t.id} className="p-3 bg-slate-900 border border-white/5 rounded-xl space-y-2 hover:border-violet-500/20 transition">
+                          <h4 className="text-xs font-bold text-white">{t.title}</h4>
+                          <div className="flex justify-between items-center text-[9px] text-slate-500">
+                            <span>Assignee: {t.assignee}</span>
+                            <span className={`px-1.5 py-0.5 rounded ${t.priority === 'High' ? 'bg-red-500/10 text-red-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                              {t.priority}
+                            </span>
+                          </div>
+
+                          <div className="flex gap-1 justify-end pt-1 border-t border-white/5">
+                            {col !== 'todo' && (
+                              <button onClick={() => handleMoveTask(t.id, 'todo')} className="text-[8px] font-bold text-slate-400 hover:text-white cursor-pointer px-1">To Do</button>
+                            )}
+                            {col !== 'progress' && (
+                              <button onClick={() => handleMoveTask(t.id, 'progress')} className="text-[8px] font-bold text-violet-400 hover:text-white cursor-pointer px-1">Progress</button>
+                            )}
+                            {col !== 'completed' && (
+                              <button onClick={() => handleMoveTask(t.id, 'completed')} className="text-[8px] font-bold text-emerald-400 hover:text-white cursor-pointer px-1">Done</button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* WORKSPACE TAB: ANALYTICS */}
+            {workspaceTab === 'analytics' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-5 bg-slate-950/30 border border-white/5 rounded-2xl space-y-4">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Group study hours</h4>
+                  <div className="flex items-end justify-between h-32 pt-2 border-b border-white/5">
+                    {[45, 80, 50, 95, 60].map((h, idx) => {
+                      const labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                      return (
+                        <div key={idx} className="flex flex-col items-center flex-1 gap-2">
+                          <div className="w-4 rounded-t bg-gradient-to-t from-violet-600 to-cyan-400" style={{ height: `${h}px` }} />
+                          <span className="text-[9px] text-slate-500">{labels[idx]}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="p-5 bg-slate-950/30 border border-white/5 rounded-2xl space-y-4">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Contribution leaderboard</h4>
+                  <div className="space-y-3 text-xs">
+                    {[
+                      { name: 'Rohan D. (You)', score: 92, status: 'Best Contributor' },
+                      { name: 'Kavya P.', score: 85, status: 'Discussion Leader' },
+                      { name: 'Rahul K.', score: 74, status: 'Helper' }
+                    ].map((user, idx) => (
+                      <div key={idx} className="flex justify-between items-center p-2.5 bg-white/2 rounded-xl border border-white/3">
+                        <div>
+                          <p className="font-bold text-white">{user.name}</p>
+                          <span className="text-[8px] uppercase tracking-wider text-slate-400">{user.status}</span>
+                        </div>
+                        <span className="font-black text-violet-400">{user.score} XP</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* CREATE STUDY GROUP MODAL */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-[#0b071e] border border-white/10 rounded-3xl p-6 w-full max-w-md shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowCreateModal(false)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition cursor-pointer text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <h3 className="text-lg font-black text-white mb-4">➕ Create Study Group</h3>
+              
+              <form onSubmit={handleCreateGroup} className="space-y-4 text-xs">
+                <div className="space-y-1">
+                  <label className="text-slate-400 block font-bold">Group Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={newGroupName}
+                    onChange={e => setNewGroupName(e.target.value)}
+                    placeholder="e.g. DSA & LeetCode Sprint"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-white outline-none focus:border-violet-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-slate-400 block font-bold">Subject</label>
+                    <select
+                      value={newGroupSubject}
+                      onChange={e => setNewGroupSubject(e.target.value)}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl p-2 text-white outline-none"
+                    >
+                      <option value="Data Structures">Data Structures</option>
+                      <option value="Database Systems">Database Systems</option>
+                      <option value="Java Programming">Java Programming</option>
+                      <option value="Python Dev">Python Dev</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-slate-400 block font-bold">Max Members</label>
+                    <input
+                      type="number"
+                      min="2" max="20"
+                      value={maxMembers}
+                      onChange={e => setMaxMembers(parseInt(e.target.value))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl p-2 text-white outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-400 block font-bold">Select AI Mentor Partner</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Coding AI', 'DBMS AI', 'Java AI', 'Python AI'].map(mentor => (
+                      <button
+                        key={mentor}
+                        type="button"
+                        onClick={() => setSelectedAiMentor(mentor)}
+                        className={`p-2 rounded-xl font-bold border transition ${
+                          selectedAiMentor === mentor
+                            ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
+                            : 'bg-slate-900 border-white/5 text-slate-400'
+                        }`}
+                      >
+                        {mentor}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button 
+                  type="submit"
+                  className="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-650 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl font-bold text-xs mt-4 transition cursor-pointer"
+                >
+                  Create Group
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* AI MATCHMAKER DRAWER */}
+      <AnimatePresence>
+        {showMatchmaker && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 50, opacity: 0 }}
+              className="bg-[#0b071e] border border-white/10 rounded-3xl p-6 w-full max-w-md shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowMatchmaker(false)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition cursor-pointer text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <h3 className="text-lg font-black text-white mb-2 flex items-center gap-1.5">
+                🤖 AI Matchmaker Recommended Partners
+              </h3>
+              <p className="text-[10px] text-slate-400 mb-4 uppercase tracking-wider">
+                We've matched these students based on your subjects, study hours, and skill gaps.
+              </p>
+
+              <div className="space-y-3">
+                {matchmakingPool.map((candidate, idx) => (
+                  <div key={idx} className="p-4 bg-slate-950/40 border border-white/5 rounded-2xl flex justify-between items-center gap-4">
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white text-xs">{candidate.name}</span>
+                        <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-white/5 text-slate-450">{candidate.dept} Dept</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 leading-normal">{candidate.reason}</p>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <span className="text-xs font-black text-emerald-400 block">{candidate.matchRate}% Match</span>
+                      <button 
+                        onClick={() => { toast.success(`Invitation sent to ${candidate.name}!`); setShowMatchmaker(false); }}
+                        className="mt-1.5 px-2.5 py-1 bg-violet-600 hover:bg-violet-750 text-white font-bold text-[9px] rounded-lg transition cursor-pointer"
+                      >
+                        Invite to group
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+    </div>
+  );
+}
+
+function AnimatedProgressRing({ percentage, size = 120, strokeWidth = 8, color = '#8B5CF6' }) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="relative flex items-center justify-center animate-pulse" style={{ width: size, height: size }}>
+      <svg className="transform -rotate-90" width={size} height={size}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="transparent"
+          stroke="rgba(255, 255, 255, 0.05)"
+          strokeWidth={strokeWidth}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="transparent"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+        />
+      </svg>
+      <div className="absolute text-center">
+        <span className="text-sm font-bold text-white">{percentage}%</span>
+      </div>
+    </div>
+  );
+}
+
