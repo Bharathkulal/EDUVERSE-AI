@@ -7,7 +7,8 @@ import {
   X, Trophy, Clock, Users, Zap, CheckCircle2, BookOpen, Code2, Palette, Server,
   Plus, Search, Filter, MessageSquare, Phone, Edit, Calendar, UserPlus, Share2, 
   Trash, Check, ChevronRight, Video, ArrowRight, UserCheck, Play, Settings, Database, 
-  Code, Target, RefreshCw, Send, PlusCircle, Paperclip, Smile
+  Code, Target, RefreshCw, Send, PlusCircle, Paperclip, Smile,
+  FolderOpen, GitBranch, Terminal, Star, GitPullRequest
 } from 'lucide-react';
 
 const HASH_TO_TAB = {
@@ -227,26 +228,9 @@ export default function Community() {
           <StudyGroupsSubsystem />
         )}
 
-        {/* CODING CLUBS */}
+        {/* CODING CLUBS (Developer Hub) */}
         {activeTab === 'clubs' && (
-          <motion.div key="clubs" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {codingClubs.map(club => (
-              <div key={club.id} className="p-5 rounded-2xl border hover:shadow-lg transition-all flex flex-col gap-3" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-                <div className="flex justify-between items-start">
-                  <h3 className="text-lg font-bold" style={{ color: 'var(--db-text-main)' }}>{club.name}</h3>
-                  <span className="text-xs">{club.rating}</span>
-                </div>
-                <p className="text-sm" style={{ color: 'var(--db-text-muted)' }}>{club.focus}</p>
-                <div className="flex items-center justify-between text-xs" style={{ color: 'var(--db-text-muted)' }}>
-                  <span>👥 {club.members} members</span>
-                  <span>📅 {club.meetDay}</span>
-                </div>
-                <button className="w-full py-2 border rounded-xl text-xs font-bold transition-all cursor-pointer hover:bg-violet-600 hover:text-white hover:border-violet-600" style={{ borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-secondary)' }}>
-                  Join Club
-                </button>
-              </div>
-            ))}
-          </motion.div>
+          <DeveloperHubSubsystem />
         )}
 
         {/* PROJECT TEAMS */}
@@ -1136,6 +1120,550 @@ function AnimatedProgressRing({ percentage, size = 120, strokeWidth = 8, color =
       <div className="absolute text-center">
         <span className="text-sm font-bold text-white">{percentage}%</span>
       </div>
+    </div>
+  );
+}
+
+// ── DEVELOPER HUB SUBSYSTEM ────────────────────────────────────────────────
+function DeveloperHubSubsystem() {
+  const [activeWorkspace, setActiveWorkspace] = useState(null); // null = Dashboard, otherwise project object
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showMatchmaker, setShowMatchmaker] = useState(false);
+  const [activeTab, setActiveTab] = useState('code'); // code, chat, tasks, git, analytics
+  const [codeContent, setCodeContent] = useState('// JavaScript Project Template\nconsole.log("Hello from EduVerse Developer Hub!");\n\nfunction calculateSum(a, b) {\n  return a + b;\n}\n\nconsole.log("Sum: " + calculateSum(5, 7));');
+  const [terminalOutput, setTerminalOutput] = useState('Terminal ready. Click "Run Code" above.');
+  const [isRunning, setIsRunning] = useState(false);
+
+  // Form State
+  const [newProjName, setNewProjName] = useState('');
+  const [newProjDesc, setNewProjDesc] = useState('');
+  const [newProjTech, setNewProjTech] = useState('React + Node.js');
+  const [selectedAiRole, setSelectedAiRole] = useState('Coding AI');
+
+  const [workspaces, setWorkspaces] = useState([
+    {
+      id: 1,
+      name: 'EduVerse AI Smart Planner',
+      desc: 'An AI-powered calendar planner that optimizes study routines dynamically.',
+      owner: 'Rohan D. (You)',
+      tech: 'React + FastAPI + MongoDB',
+      members: 4,
+      max: 5,
+      stars: 12,
+      forks: 3,
+      aiRole: 'Backend AI',
+      progress: 68,
+      lastCommit: 'Merge pull request #14 from main',
+      tasks: [
+        { id: 201, title: 'Setup FastAPI routers', status: 'todo', priority: 'High' },
+        { id: 202, title: 'Design MongoDB User Schema', status: 'progress', priority: 'High' },
+        { id: 203, title: 'Create calendar UI layout', status: 'completed', priority: 'Medium' }
+      ],
+      commits: [
+        { hash: 'a8b7c6d', author: 'Rohan D.', msg: 'Setup FastAPI routers & db connection', date: '2 hours ago' },
+        { hash: 'e9f0a1b', author: 'Priya S.', msg: 'Create calendar UI layout with mock data', date: '1 day ago' }
+      ]
+    },
+    {
+      id: 2,
+      name: 'Collaborative Code Editor Node',
+      desc: 'Real-time collaborative markdown and script editor with Jitsi audio integrations.',
+      owner: 'Kavya P.',
+      tech: 'React + WebSocket + PeerJS',
+      members: 3,
+      max: 4,
+      stars: 8,
+      forks: 1,
+      aiRole: 'Coding AI',
+      progress: 45,
+      lastCommit: 'Fix websocket connection close handlers',
+      tasks: [],
+      commits: []
+    }
+  ]);
+
+  const [matchmakingPool] = useState([
+    { name: 'Rahul K.', role: 'Frontend Specialist', rate: 95, reason: 'Strong React 19 skill set matching your backend stack.', skills: ['React', 'Tailwind', 'Framer Motion'] },
+    { name: 'Amit V.', role: 'DevOps / Database Partner', rate: 89, reason: 'Knows MongoDB sharding and Docker deployment structures.', skills: ['MongoDB', 'Docker', 'AWS'] }
+  ]);
+
+  const handleCreateWorkspace = (e) => {
+    e.preventDefault();
+    if (!newProjName.trim()) {
+      toast.error('Please enter a project name');
+      return;
+    }
+    const newProj = {
+      id: Date.now(),
+      name: newProjName,
+      desc: newProjDesc || 'Collaborative software engineering workspace.',
+      owner: 'Rohan D. (You)',
+      tech: newProjTech,
+      members: 1,
+      max: 5,
+      stars: 0,
+      forks: 0,
+      aiRole: selectedAiRole,
+      progress: 5,
+      lastCommit: 'Initial commit',
+      tasks: [],
+      commits: [
+        { hash: 'c9d8e7f', author: 'Rohan D.', msg: 'Initial commit & project setup', date: 'Just now' }
+      ]
+    };
+
+    setWorkspaces(prev => [newProj, ...prev]);
+    setNewProjName('');
+    setNewProjDesc('');
+    setShowCreateModal(false);
+    toast.success(`Workspace "${newProjName}" initialized successfully!`);
+  };
+
+  const handleRunCode = () => {
+    setIsRunning(true);
+    setTerminalOutput('Compiling code matrix...\nRunning script in sandbox container...');
+    setTimeout(() => {
+      setIsRunning(false);
+      setTerminalOutput('Vite Dev Server started on Port 5173...\n\nEduVerse Console Logger:\nHello from EduVerse Developer Hub!\nSum: 12\n\nProcess finished with exit code 0.');
+      toast.success('Code executed successfully!');
+    }, 1500);
+  };
+
+  const handleMoveTask = (taskId, nextStatus) => {
+    const updated = workspaces.map(w => {
+      if (w.id === activeWorkspace.id) {
+        const tasks = w.tasks.map(t => t.id === taskId ? { ...t, status: nextStatus } : t);
+        return { ...w, tasks };
+      }
+      return w;
+    });
+    setWorkspaces(updated);
+    setActiveWorkspace(prev => {
+      const tasks = prev.tasks.map(t => t.id === taskId ? { ...t, status: nextStatus } : t);
+      return { ...prev, tasks };
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Title Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4">
+        <div>
+          <h2 className="text-xl font-black text-white flex items-center gap-2">
+            💻 Developer Hub
+          </h2>
+          <p className="text-xs text-slate-400 mt-1 max-w-xl">
+            Build projects together, collaborate with teammates, review code, and deploy projects with specialized AI assistants.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-650 text-white rounded-xl text-xs font-bold transition hover:shadow-lg hover:shadow-violet-600/20 cursor-pointer flex items-center gap-1.5"
+          >
+            <Plus className="w-3.5 h-3.5" /> Create Workspace
+          </button>
+          <button
+            onClick={() => setShowMatchmaker(true)}
+            className="px-4 py-2 bg-slate-900 border border-white/10 text-slate-300 rounded-xl text-xs font-bold transition hover:bg-slate-800 cursor-pointer flex items-center gap-1.5"
+          >
+            <Users className="w-3.5 h-3.5 text-violet-400" /> AI Match Team
+          </button>
+        </div>
+      </div>
+
+      {/* Main Workspace Toggle */}
+      {!activeWorkspace ? (
+        // DASHBOARD VIEW
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {workspaces.map(w => (
+            <div 
+              key={w.id} 
+              className="rounded-3xl border border-white/5 overflow-hidden flex flex-col h-[340px] bg-slate-900/40 hover:border-violet-500/30 hover:shadow-xl transition group"
+            >
+              {/* Cover Banner */}
+              <div className="h-24 bg-gradient-to-br from-indigo-700 to-indigo-950 p-4 flex flex-col justify-between relative">
+                <div className="absolute inset-0 bg-black/20" />
+                <div className="relative z-10 flex justify-between items-center text-[9px]">
+                  <span className="font-bold px-2 py-0.5 rounded bg-black/40 text-white border border-white/10">
+                    {w.tech}
+                  </span>
+                  <div className="flex gap-2 text-slate-300">
+                    <span>⭐ {w.stars}</span>
+                    <span>🍴 {w.forks}</span>
+                  </div>
+                </div>
+                <h3 className="relative z-10 font-bold text-white text-sm line-clamp-1">{w.name}</h3>
+              </div>
+
+              {/* Body */}
+              <div className="p-4 flex-1 flex flex-col justify-between text-xs">
+                <p className="text-slate-450 leading-relaxed line-clamp-2 mb-2">{w.desc}</p>
+                
+                <div className="space-y-2 border-t border-white/5 pt-3">
+                  <div className="flex justify-between text-slate-400">
+                    <span>👥 Team Members</span>
+                    <span className="font-bold text-white">{w.members} / {w.max} developers</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>🤖 AI Specialist</span>
+                    <span className="font-bold text-violet-400">{w.aiRole}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>📈 Progress</span>
+                    <span className="font-bold text-emerald-400">{w.progress}% completed</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 mt-4">
+                  <button
+                    onClick={() => setActiveWorkspace(w)}
+                    className="flex-1 py-2.5 bg-violet-650 hover:bg-violet-700 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1"
+                  >
+                    <FolderOpen className="w-3.5 h-3.5" /> Open Workspace
+                  </button>
+                  <button
+                    onClick={() => { if (window.confirm('Delete this project workspace?')) setWorkspaces(prev => prev.filter(pw => pw.id !== w.id)); }}
+                    className="p-2.5 border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/10 text-slate-450 hover:text-rose-400 rounded-xl transition cursor-pointer"
+                  >
+                    <Trash className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        // ACTIVE WORKSPACE SUITE
+        <div className="rounded-3xl border border-white/5 bg-[#0e0a24]/50 backdrop-blur-md p-6 space-y-6">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4">
+            <div>
+              <button 
+                onClick={() => setActiveWorkspace(null)}
+                className="text-[10px] uppercase font-bold text-violet-400 flex items-center gap-1 hover:underline cursor-pointer"
+              >
+                ← Back to developer hub
+              </button>
+              <h3 className="text-lg font-black text-white">{activeWorkspace.name}</h3>
+              <p className="text-xs text-slate-450">
+                AI partner assigned: <strong className="text-violet-400">{activeWorkspace.aiRole}</strong>
+              </p>
+            </div>
+
+            {/* Nav Workspace Tabs */}
+            <div className="flex p-1 bg-slate-950/60 rounded-xl border border-white/5 flex-wrap gap-1">
+              {[
+                { id: 'code', label: 'Code Editor', icon: <Code className="w-3.5 h-3.5" /> },
+                { id: 'tasks', label: 'Tasks Kanban', icon: <Target className="w-3.5 h-3.5" /> },
+                { id: 'git', label: 'Commits History', icon: <GitBranch className="w-3.5 h-3.5" /> }
+              ].map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    activeTab === t.id ? 'bg-violet-650 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {t.icon} {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Sub-Workspace Views */}
+          <div className="min-h-[400px]">
+            {/* WORKSPACE TAB: CODE EDITOR */}
+            {activeTab === 'code' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                {/* Code editor side */}
+                <div className="lg:col-span-8 flex flex-col gap-4">
+                  <div className="flex justify-between items-center bg-slate-950/50 p-3 rounded-xl border border-white/5">
+                    <span className="text-xs font-bold text-slate-400 flex items-center gap-1">
+                      📄 index.js (Multiplayer Live Editor)
+                    </span>
+                    <button 
+                      onClick={handleRunCode}
+                      disabled={isRunning}
+                      className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1"
+                    >
+                      <Play className="w-3 h-3 fill-current" /> {isRunning ? 'Running...' : 'Run Code'}
+                    </button>
+                  </div>
+
+                  {/* Monaco Simulated Canvas */}
+                  <textarea
+                    value={codeContent}
+                    onChange={e => setCodeContent(e.target.value)}
+                    className="h-[260px] bg-slate-950 text-emerald-400 font-mono text-xs p-4 rounded-2xl border border-white/5 outline-none focus:border-violet-500/50 resize-none leading-relaxed"
+                  />
+
+                  {/* Visual terminal */}
+                  <div className="p-4 bg-slate-950 rounded-2xl border border-white/5 space-y-2">
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono border-b border-white/5 pb-1">
+                      <span className="flex items-center gap-1"><Terminal className="w-3 h-3" /> Sandbox output</span>
+                      <span>bash</span>
+                    </div>
+                    <pre className="text-[10px] font-mono text-slate-300 leading-normal whitespace-pre-wrap">
+                      {terminalOutput}
+                    </pre>
+                  </div>
+                </div>
+
+                {/* AI Assistant Side Panel */}
+                <div className="lg:col-span-4 p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-4">
+                  <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                    <Settings className="w-4 h-4 text-violet-400" />
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">{activeWorkspace.aiRole} Panel</h4>
+                  </div>
+
+                  <p className="text-[10px] text-slate-500 leading-relaxed">
+                    Choose an action to run against your open script file:
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {[
+                      { l: 'Explain Script', act: 'explaining' },
+                      { l: 'Debug Code', act: 'debugging' },
+                      { l: 'Optimize', act: 'optimizing' },
+                      { l: 'Security Review', act: 'reviewing security' }
+                    ].map((item, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          toast.loading(`Running AI ${item.l}...`);
+                          setTimeout(() => {
+                            toast.dismiss();
+                            setTerminalOutput(`AI specialist returned optimization suggestions for index.js:\n- Refactor calculateSum function to support unlimited arguments.\n- Add input validation schema.\n- Current quality score: 92/100.`);
+                            toast.success(`${item.l} completed!`);
+                          }, 1200);
+                        }}
+                        className="p-2.5 bg-white/3 border border-white/5 rounded-xl text-[10px] font-bold text-left hover:border-violet-500/30 hover:bg-violet-500/10 text-slate-350 transition cursor-pointer"
+                      >
+                        ⚡ {item.l}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="p-3 bg-violet-650/10 border border-violet-500/20 rounded-xl space-y-1">
+                    <span className="text-[9px] font-bold text-violet-400 uppercase tracking-widest">Active Suggestion</span>
+                    <p className="text-[10px] text-slate-300 leading-relaxed">
+                      "I detected 0 syntax errors. Consider wrapping calculateSum output inside a template string."
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* WORKSPACE TAB: TASKS */}
+            {workspaceTab === 'tasks' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {['todo', 'progress', 'completed'].map(col => (
+                  <div key={col} className="p-4 bg-slate-950/35 border border-white/5 rounded-2xl space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{col}</span>
+                      <span className="text-[10px] py-0.5 px-2 bg-white/5 rounded-full font-mono">
+                        {activeWorkspace.tasks.filter(t => t.status === col).length}
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {activeWorkspace.tasks.length === 0 ? (
+                        <p className="text-[10px] text-slate-500 text-center py-6">No tasks assigned.</p>
+                      ) : (
+                        activeWorkspace.tasks.filter(t => t.status === col).map(t => (
+                          <div key={t.id} className="p-3 bg-slate-900 border border-white/5 rounded-xl space-y-2 hover:border-violet-500/20 transition">
+                            <h4 className="text-xs font-bold text-white">{t.title}</h4>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 font-bold">{t.priority} Priority</span>
+
+                            <div className="flex gap-1 justify-end pt-1 border-t border-white/5">
+                              {col !== 'todo' && (
+                                <button onClick={() => handleMoveTask(t.id, 'todo')} className="text-[8px] font-bold text-slate-400 hover:text-white cursor-pointer px-1">To Do</button>
+                              )}
+                              {col !== 'progress' && (
+                                <button onClick={() => handleMoveTask(t.id, 'progress')} className="text-[8px] font-bold text-violet-400 hover:text-white cursor-pointer px-1">Progress</button>
+                              )}
+                              {col !== 'completed' && (
+                                <button onClick={() => handleMoveTask(t.id, 'completed')} className="text-[8px] font-bold text-emerald-400 hover:text-white cursor-pointer px-1">Done</button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* WORKSPACE TAB: GIT COMMITS */}
+            {workspaceTab === 'git' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-xs text-slate-400 bg-slate-950/40 p-3 rounded-xl border border-white/5">
+                  <span className="font-bold flex items-center gap-1"><GitBranch className="w-3.5 h-3.5 text-violet-400" /> repository: main</span>
+                  <span>{activeWorkspace.commits.length} commits logged</span>
+                </div>
+
+                <div className="space-y-3">
+                  {activeWorkspace.commits.length === 0 ? (
+                    <div className="text-center text-slate-500 py-12 text-xs">No commits. Setup repository sync.</div>
+                  ) : (
+                    activeWorkspace.commits.map((c, i) => (
+                      <div key={i} className="p-4 bg-slate-900 border border-white/5 rounded-2xl flex justify-between items-center text-xs">
+                        <div className="space-y-1.5">
+                          <p className="font-bold text-white">"{c.msg}"</p>
+                          <span className="text-[10px] text-slate-500">by {c.author} • {c.date}</span>
+                        </div>
+                        <span className="font-mono text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-violet-300">
+                          {c.hash}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* CREATE WORKSPACE MODAL */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-[#0b071e] border border-white/10 rounded-3xl p-6 w-full max-w-md shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowCreateModal(false)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition cursor-pointer text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <h3 className="text-lg font-black text-white mb-4">➕ Create Developer Workspace</h3>
+              
+              <form onSubmit={handleCreateWorkspace} className="space-y-4 text-xs">
+                <div className="space-y-1">
+                  <label className="text-slate-400 block font-bold">Project Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={newProjName}
+                    onChange={e => setNewProjName(e.target.value)}
+                    placeholder="e.g. AI Study Assistant"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-white outline-none focus:border-violet-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-400 block font-bold">Project Description</label>
+                  <textarea
+                    value={newProjDesc}
+                    onChange={e => setNewProjDesc(e.target.value)}
+                    placeholder="Brief outline of target objectives..."
+                    className="w-full h-16 bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none focus:border-violet-500 resize-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-slate-400 block font-bold">Tech Stack</label>
+                    <select
+                      value={newProjTech}
+                      onChange={e => setNewProjTech(e.target.value)}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl p-2 text-white outline-none"
+                    >
+                      <option value="React + FastAPI + MongoDB">React + FastAPI + MongoDB</option>
+                      <option value="React + WebSocket + PeerJS">React + WebSocket + PeerJS</option>
+                      <option value="Python + PyTorch">Python + PyTorch</option>
+                      <option value="Next.js + SQL">Next.js + SQL</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-slate-400 block font-bold">AI Assistant Role</label>
+                    <select
+                      value={selectedAiRole}
+                      onChange={e => setSelectedAiRole(e.target.value)}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl p-2 text-white outline-none"
+                    >
+                      <option value="Coding AI">Coding AI</option>
+                      <option value="Backend AI">Backend AI</option>
+                      <option value="DevOps AI">DevOps AI</option>
+                      <option value="Security AI">Security AI</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button 
+                  type="submit"
+                  className="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-650 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl font-bold text-xs mt-4 transition cursor-pointer"
+                >
+                  Initialize Workspace
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* TEAM MATCHMAKER DRAWER */}
+      <AnimatePresence>
+        {showMatchmaker && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 50, opacity: 0 }}
+              className="bg-[#0b071e] border border-white/10 rounded-3xl p-6 w-full max-w-md shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowMatchmaker(false)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition cursor-pointer text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <h3 className="text-lg font-black text-white mb-2 flex items-center gap-1.5">
+                🤖 AI Team Recruiter Partner matches
+              </h3>
+              <p className="text-[10px] text-slate-400 mb-4 uppercase tracking-wider">
+                Developers matching your tech stack and missing skill roles:
+              </p>
+
+              <div className="space-y-3 text-xs">
+                {matchmakingPool.map((candidate, idx) => (
+                  <div key={idx} className="p-4 bg-slate-950/40 border border-white/5 rounded-2xl flex justify-between items-center gap-4">
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white">{candidate.name}</span>
+                        <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-white/5 text-violet-400">{candidate.role}</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 leading-normal">{candidate.reason}</p>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <span className="text-xs font-black text-emerald-400 block">{candidate.rate}% Match</span>
+                      <button 
+                        onClick={() => { toast.success(`Invitation sent to ${candidate.name}!`); setShowMatchmaker(false); }}
+                        className="mt-1.5 px-2.5 py-1 bg-violet-650 hover:bg-violet-700 text-white font-bold text-[9px] rounded-lg transition cursor-pointer"
+                      >
+                        Recruit
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
