@@ -16,6 +16,11 @@ import {
 } from 'chart.js';
 import api from '../api/axios';
 import { useVoiceAssistant } from '../context/VoiceContext';
+import { 
+  Mic, Play, Pause, TrendingUp, Clock, MessageSquare, BookOpenText, 
+  Code, Target, Settings, Brain, Radio, Shield, Globe, Award, 
+  Sparkles, ChevronRight, Copy, Share2, Bookmark, CheckCircle, AlertCircle, RefreshCw, Volume2
+} from 'lucide-react';
 
 ChartJS.register(
   CategoryScale,
@@ -1043,16 +1048,65 @@ export default function Progress() {
           </motion.div>
         )}
 
-        {activeTab === 'voice-teacher' && (
-          <VoiceTeacherTabPanel />
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+        {activeTab === 'voice-teacher' && (function VoiceTeacherTabPanel() {
+  const { stats, settings, updateSettings, isMuted, setIsMuted, speak } = useVoiceAssistant();
+  const [personality, setPersonality] = useState('Friendly Teacher');
+  const [language, setLanguage] = useState('English');
+  const [voiceGender, setVoiceGender] = useState('Female');
+  const [activeState, setActiveState] = useState('idle'); // idle, listening, thinking, speaking
+  const [conversation, setConversation] = useState([
+    { role: 'ai', text: 'Hello! I am your personal AI study mentor. What concepts are we mastering today?', time: '10:05 AM' },
+    { role: 'user', text: 'What is a binary search tree?', time: '10:06 AM' },
+    { role: 'ai', text: 'A binary search tree is a node-based binary tree data structure where the left subtree contains values less than the root, and the right subtree contains values greater. Let me show you an example!', time: '10:06 AM' }
+  ]);
+  const [simulatedBars, setSimulatedBars] = useState(Array.from({ length: 18 }, () => 8));
 
-function VoiceTeacherTabPanel() {
-  const { stats, settings, updateSettings, isMuted, setIsMuted, speak, stopSpeech } = useVoiceAssistant();
+  // Speech orb bars simulation
+  useEffect(() => {
+    if (activeState === 'idle') {
+      setSimulatedBars(Array.from({ length: 18 }, () => 8));
+      return;
+    }
+    const interval = setInterval(() => {
+      setSimulatedBars(Array.from({ length: 18 }, () => Math.floor(Math.random() * 28) + 6));
+    }, 100);
+    return () => clearInterval(interval);
+  }, [activeState]);
+
+  const handleMicClick = () => {
+    if (activeState === 'idle') {
+      setActiveState('listening');
+      setTimeout(() => {
+        setActiveState('thinking');
+        setTimeout(() => {
+          setConversation(prev => [
+            ...prev,
+            { role: 'user', text: 'Explain trees vs graphs.', time: 'Just now' },
+            { role: 'ai', text: 'A tree is a connected acyclic graph. Every tree is a graph, but not every graph is a tree. Graphs can contain cycles and have multiple connections!', time: 'Just now' }
+          ]);
+          setActiveState('speaking');
+          speak('A tree is a connected acyclic graph.');
+          setTimeout(() => {
+            setActiveState('idle');
+          }, 3000);
+        }, 1500);
+      }, 3500);
+    } else {
+      setActiveState('idle');
+    }
+  };
+
+  const QUICK_ACTIONS = [
+    { label: 'Explain Topic', desc: 'Detail concepts', icon: '🧠', color: 'from-violet-500/20 to-indigo-500/10' },
+    { label: 'Solve Code', desc: 'Get solutions', icon: '💻', color: 'from-blue-500/20 to-cyan-500/10' },
+    { label: 'Debug Program', desc: 'Fix error stack', icon: '🐛', color: 'from-rose-500/20 to-pink-500/10' },
+    { label: 'Generate Notes', desc: 'Summary PDF', icon: '📄', color: 'from-amber-500/20 to-orange-500/10' },
+    { label: 'Create Quiz', desc: 'Test skills', icon: '📝', color: 'from-emerald-500/20 to-teal-500/10' },
+    { label: 'Interview Me', desc: 'Mock practice', icon: '🎙️', color: 'from-indigo-500/20 to-violet-500/10' },
+    { label: 'Teach in Kannada', desc: 'ಕನ್ನಡ ವಿವರಣೆ', icon: '🇮🇳', color: 'from-orange-500/20 to-red-500/10' },
+    { label: 'Explain PDF', desc: 'Parse papers', icon: '📂', color: 'from-cyan-500/20 to-blue-500/10' }
+  ];
+
   return (
     <motion.div
       key="voice-teacher"
@@ -1062,95 +1116,297 @@ function VoiceTeacherTabPanel() {
       transition={{ duration: 0.3 }}
       className="space-y-6 text-left"
     >
-      <div className="relative overflow-hidden rounded-3xl p-8 border border-purple-500/20 bg-gradient-to-br from-[#130d2b] to-[#0a0718]">
+      {/* Title Header */}
+      <div className="relative overflow-hidden rounded-3xl p-8 border border-purple-500/20 bg-gradient-to-br from-[#130d2b] to-[#0a0718] shadow-2xl">
         <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-            <span className="px-3 py-1 bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-semibold rounded-full uppercase tracking-wider font-mono">
-              Voice Teacher Stats
+            <span className="px-3 py-1 bg-purple-500/20 border border-purple-500/30 text-purple-300 text-[10px] font-bold rounded-full uppercase tracking-wider font-mono">
+              Voice Assistant Core v3.8
             </span>
-            <h1 className="text-3xl font-extrabold text-white mt-3 flex items-center gap-2">
-              🎙️ AI Teacher Dashboard
+            <h1 className="text-3xl font-black text-white mt-3 flex items-center gap-2">
+              🎙️ EduVerse AI Mentor
             </h1>
-            <p className="text-purple-200/70 text-sm mt-1">Track metrics from spoken lessons, voice commands, and speech rates.</p>
+            <p className="text-purple-200/70 text-sm mt-1 max-w-xl">
+              Talk naturally with your AI Teacher. Ask questions, learn concepts, solve coding problems, and prepare for interviews.
+            </p>
           </div>
-
-          <button 
-            onClick={() => speak("Voice system diagnostics check complete. All audio channels operating correctly.")}
-            className="px-6 py-2.5 rounded-2xl bg-purple-650 hover:bg-purple-700 text-white font-bold text-xs transition-all shadow-lg hover:shadow-purple-500/20 border border-purple-500/20"
-          >
-            🔊 Speaker Test
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-            <span className="text-[10px] text-slate-400 block font-mono font-bold uppercase">Topics Explained</span>
-            <span className="text-2xl font-black text-white mt-1 block">{stats.topicsExplainedCount}</span>
-          </div>
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-            <span className="text-[10px] text-slate-400 block font-mono font-bold uppercase">Listening Duration</span>
-            <span className="text-2xl font-black text-white mt-1 block">{stats.listeningMinutes.toFixed(1)} mins</span>
-          </div>
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-            <span className="text-[10px] text-slate-400 block font-mono font-bold uppercase">Language Mode</span>
-            <span className="text-2xl font-black text-white mt-1 block capitalize">{settings.languageMode}</span>
-          </div>
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-            <span className="text-[10px] text-slate-400 block font-mono font-bold uppercase">Speaking Speed</span>
-            <span className="text-2xl font-black text-white mt-1 block">{settings.rate}x</span>
+          
+          <div className="flex gap-2">
+            <span className="text-xs font-bold px-3 py-1.5 rounded-xl border border-white/5 bg-white/5 text-slate-400">
+              Model: Gemini Pro Live
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="p-6 rounded-3xl border border-white/5 bg-slate-900/50 backdrop-blur-md space-y-4">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">🛠️ System Control Panel</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-slate-300 block">Primary Mute</span>
-                <span className="text-[10px] text-slate-500">Mutes voice teacher output universally</span>
+      {/* Main Grid: Interactive Center */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        
+        {/* Left Col: ChatGPT Voice Orb Hero */}
+        <div className="lg:col-span-4 flex flex-col gap-6">
+          <div className="p-6 rounded-3xl border border-white/5 bg-slate-900/50 backdrop-blur-md flex flex-col items-center justify-between text-center min-h-[380px] relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-32 h-32 bg-violet-600/10 rounded-full blur-2xl pointer-events-none" />
+            
+            <div className="w-full flex justify-between items-center z-10">
+              <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold">Voice Matrix</span>
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${
+                  activeState === 'listening' ? 'bg-pink-500 animate-pulse' :
+                  activeState === 'thinking' ? 'bg-purple-500 animate-pulse' :
+                  activeState === 'speaking' ? 'bg-cyan-500' : 'bg-emerald-500'
+                }`} />
+                <span className="text-[10px] font-bold uppercase text-slate-300">
+                  {activeState === 'listening' ? 'Listening' :
+                   activeState === 'thinking' ? 'Thinking' :
+                   activeState === 'speaking' ? 'Speaking' : 'Online'}
+                </span>
               </div>
-              <button 
-                onClick={() => setIsMuted(!isMuted)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${isMuted ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-purple-500/10 border-purple-500/20 text-purple-400'}`}
-              >
-                {isMuted ? 'Unmute' : 'Mute'}
-              </button>
             </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-slate-300 block">Speech Rate</span>
-                <span className="text-[10px] text-slate-500">Adjust target narration pace</span>
+
+            {/* Glowing Orb */}
+            <div className="my-6 relative cursor-pointer group" onClick={handleMicClick}>
+              {/* Outer halos */}
+              <div className={`absolute inset-[-12px] rounded-full blur-xl opacity-40 transition-all duration-500 ${
+                activeState === 'listening' ? 'bg-pink-500' :
+                activeState === 'thinking' ? 'bg-purple-500' :
+                activeState === 'speaking' ? 'bg-cyan-500' : 'bg-violet-600'
+              }`} />
+              
+              <div className="w-32 h-32 rounded-full border border-white/10 flex items-center justify-center relative bg-slate-950/60 shadow-inner">
+                <div className={`absolute inset-2 rounded-full border border-dashed border-violet-500/30 ${activeState !== 'idle' ? 'animate-spin' : ''}`} style={{ animationDuration: '8s' }} />
+                <div className={`absolute inset-4 rounded-full border border-dotted border-cyan-400/20 ${activeState !== 'idle' ? 'animate-spin' : ''}`} style={{ animationDuration: '4s', animationDirection: 'reverse' }} />
+                
+                {/* Core */}
+                <motion.div 
+                  animate={activeState !== 'idle' ? { scale: [1, 1.08, 1] } : {}}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className={`w-20 h-20 rounded-full flex items-center justify-center shadow-lg transition-colors ${
+                    activeState === 'listening' ? 'bg-pink-600' :
+                    activeState === 'thinking' ? 'bg-purple-600' :
+                    activeState === 'speaking' ? 'bg-cyan-600' : 'bg-violet-650 hover:bg-violet-600'
+                  }`}
+                >
+                  <Mic className="w-8 h-8 text-white" />
+                </motion.div>
               </div>
-              <div className="flex gap-1.5">
-                {[0.75, 1.0, 1.25, 1.5].map(r => (
-                  <button 
-                    key={r}
-                    onClick={() => updateSettings({ rate: r })}
-                    className={`p-1.5 px-3 rounded-lg text-xs font-bold border transition ${settings.rate === r ? 'bg-purple-650 border-purple-650 text-white' : 'bg-white/5 border-white/5 hover:bg-white/10 text-slate-350'}`}
-                  >
-                    {r}x
-                  </button>
+            </div>
+
+            {/* Audio Waveform */}
+            <div className="w-full space-y-3 z-10">
+              <div className="flex gap-0.5 justify-center items-end h-8">
+                {simulatedBars.map((h, i) => (
+                  <div 
+                    key={i} 
+                    className="w-1 rounded-t bg-gradient-to-t from-violet-600 to-cyan-400 transition-all" 
+                    style={{ height: `${h}px` }} 
+                  />
                 ))}
+              </div>
+              <p className="text-[10px] text-slate-500">Tap Orb or say <span className="font-bold text-violet-400">"Hey EduVerse"</span> to command</p>
+            </div>
+          </div>
+
+          {/* AI Study Twin Score */}
+          <div className="p-6 rounded-3xl border border-white/5 bg-slate-900/50 backdrop-blur-md space-y-4">
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2"><Brain className="w-4 h-4 text-violet-400" /> AI Study Twin</h3>
+            <div className="flex items-center gap-4">
+              <AnimatedProgressRing percentage={88} size={80} strokeWidth={6} color="#7c3aed" />
+              <div className="space-y-1">
+                <div className="text-sm font-bold text-white">Twin Score: Good</div>
+                <div className="text-[10px] text-slate-400 leading-normal">Learn consistency is at 94% this week. Grade prediction is A+. Ideal hours: 4 PM - 6 PM.</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="p-6 rounded-3xl border border-white/5 bg-slate-900/50 backdrop-blur-md space-y-4">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">🎧 Interactive Voice Commands</h3>
-          <div className="p-3 bg-white/5 rounded-2xl text-[11px] leading-relaxed text-slate-400 space-y-2">
-            <p>You can say the following phrases out loud to control your Voice Teacher dynamically:</p>
-            <div className="grid grid-cols-2 gap-2 text-[10px] font-mono text-purple-300">
-              <div>• "Explain in Kannada"</div>
-              <div>• "Speak faster"</div>
-              <div>• "Slow down"</div>
-              <div>• "Give example"</div>
-              <div>• "Start quiz"</div>
-              <div>• "Pause" / "Resume"</div>
+        {/* Center Col: Chat panel */}
+        <div className="lg:col-span-5 flex flex-col gap-6">
+          <div className="p-6 rounded-3xl border border-white/5 bg-slate-900/50 backdrop-blur-md flex flex-col h-[520px] justify-between">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2"><MessageSquare className="w-4 h-4 text-cyan-400" /> Conversation history</h3>
+              <span className="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400">Hands-Free</span>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-4 space-y-4 va-scroll">
+              {conversation.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`p-3.5 rounded-2xl max-w-[85%] text-xs leading-relaxed space-y-2 ${
+                    msg.role === 'user' 
+                      ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-tr-none' 
+                      : 'bg-white/3 border border-white/5 text-slate-200 rounded-tl-none'
+                  }`}>
+                    <p>{msg.text}</p>
+                    <div className="flex justify-between items-center text-[9px] text-slate-400 border-t border-white/5 pt-1.5">
+                      <span>{msg.time}</span>
+                      {msg.role === 'ai' && (
+                        <div className="flex gap-2">
+                          <button className="hover:text-white" onClick={() => speak(msg.text)}><Volume2 className="w-3.5 h-3.5" /></button>
+                          <button className="hover:text-white" onClick={() => { navigator.clipboard.writeText(msg.text); toast.success('Response copied!'); }}><Copy className="w-3.5 h-3.5" /></button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {activeState === 'thinking' && (
+                <div className="flex justify-start">
+                  <div className="p-3 bg-white/3 border border-white/5 rounded-2xl rounded-tl-none flex items-center gap-2">
+                    <span className="text-[10px] text-violet-400 font-bold uppercase tracking-wider">Formulating explanation</span>
+                    <div className="friday-typing-dots"><div className="friday-typing-dot" /><div className="friday-typing-dot" /><div className="friday-typing-dot" /></div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2 pt-3 border-t border-white/5">
+              <input
+                type="text"
+                placeholder="Ask your AI Mentor something..."
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-violet-500"
+              />
+              <button className="p-2.5 bg-violet-650 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition">
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Col: Personality & Quick Settings */}
+        <div className="lg:col-span-3 flex flex-col gap-6">
+          {/* AI Personality Selector */}
+          <div className="p-5 rounded-3xl border border-white/5 bg-slate-900/50 backdrop-blur-md space-y-3">
+            <p className="va-section-label">AI Personality</p>
+            <div className="grid grid-cols-2 gap-2">
+              {['Friendly Teacher', 'Interviewer', 'Coding Mentor', 'Motivational Coach'].map(p => (
+                <button
+                  key={p}
+                  onClick={() => setPersonality(p)}
+                  className={`p-2 rounded-xl text-[10px] font-bold text-center border transition ${
+                    personality === p 
+                      ? 'bg-violet-500/20 border-violet-500/40 text-violet-300' 
+                      : 'bg-white/3 border-white/5 hover:bg-white/5 text-slate-400'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Voice Settings */}
+          <div className="p-5 rounded-3xl border border-white/5 bg-slate-900/50 backdrop-blur-md space-y-4">
+            <p className="va-section-label">Voice settings</p>
+            
+            <div className="space-y-3 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Gender preset</span>
+                <div className="flex gap-1.5">
+                  {['Female', 'Male'].map(g => (
+                    <button
+                      key={g}
+                      onClick={() => setVoiceGender(g)}
+                      className={`px-2.5 py-1 rounded-lg font-bold border transition ${
+                        voiceGender === g ? 'bg-violet-650 border-violet-650 text-white' : 'bg-white/3 border-white/5 text-slate-400'
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Response Lang.</span>
+                <select 
+                  value={language}
+                  onChange={e => setLanguage(e.target.value)}
+                  className="bg-slate-950 border border-white/10 rounded-lg p-1 text-[10px] text-white"
+                >
+                  <option value="English">English</option>
+                  <option value="Kannada">Kannada</option>
+                  <option value="Hindi">Hindi</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex justify-between text-[10px]">
+                  <span className="text-slate-500">Narration Speed</span>
+                  <span className="font-bold text-violet-400">{settings.rate}x</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5" max="2" step="0.1"
+                  value={settings.rate}
+                  onChange={e => updateSettings({ rate: parseFloat(e.target.value) })}
+                  className="va-slider"
+                  style={{ accentColor: '#7c3aed' }}
+                />
+              </div>
+
+              <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                <div>
+                  <span className="font-bold block text-white">Audio Output Mute</span>
+                  <span className="text-[9px] text-slate-500">Silence synthesis</span>
+                </div>
+                <button
+                  onClick={() => setIsMuted(!isMuted)}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-[10px] border transition ${
+                    isMuted ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-purple-500/10 border-purple-500/20 text-purple-400'
+                  }`}
+                >
+                  {isMuted ? 'Muted' : 'Unmuted'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Live Status */}
+          <div className="p-5 rounded-3xl border border-white/5 bg-slate-900/50 backdrop-blur-md space-y-3">
+            <p className="va-section-label">AI Status Console</p>
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
+              {[
+                { label: 'Latency', val: '45ms', color: 'text-cyan-400' },
+                { label: 'Response', val: '0.8s', color: 'text-violet-400' },
+                { label: 'Tokens', val: '241 / sec', color: 'text-emerald-400' },
+                { label: 'Confidence', val: '98%', color: 'text-pink-400' }
+              ].map((s, idx) => (
+                <div key={idx} className="p-2 bg-white/2 rounded-xl border border-white/3">
+                  <span className="text-slate-500 block">{s.label}</span>
+                  <span className={`font-bold ${s.color}`}>{s.val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Quick Launch Cards Section */}
+      <div className="p-6 rounded-3xl border border-white/5 bg-slate-900/50 backdrop-blur-md">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <Award className="w-4 h-4 text-purple-400" /> Interactive Quick Actions
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {QUICK_ACTIONS.map((act, i) => (
+            <div
+              key={i}
+              className="p-4 bg-slate-950/40 border border-white/5 rounded-2xl cursor-pointer hover:border-violet-500/40 hover:shadow-lg transition flex items-center gap-3"
+            >
+              <div className="w-10 h-10 rounded-xl bg-violet-600/10 flex items-center justify-center text-lg">{act.icon}</div>
+              <div>
+                <div className="font-bold text-xs text-white">{act.label}</div>
+                <div className="text-[9px] text-slate-400 uppercase tracking-wider mt-0.5">{act.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </motion.div>
+  );
+}v>• "Pause" / "Resume"</div>
             </div>
           </div>
         </div>

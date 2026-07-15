@@ -689,11 +689,11 @@ export default function VoiceAssistant() {
           {/* ── RIGHT: Lesson Card + Stats + Settings ── */}
           <div className="lg:col-span-3 space-y-5">
 
-            {/* Current Lesson Progress */}
+            {/* Live Learning Analytics */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="va-card p-5 space-y-4">
-              <p className="va-section-label flex items-center gap-2"><BookOpen className="w-3 h-3 text-blue-400" /> Lesson Progress</p>
+              <p className="va-section-label flex items-center gap-2"><TrendingUp className="w-3 h-3 text-blue-400" /> Live Learning Analytics</p>
 
-              {/* Progress Ring */}
+              {/* Progress Ring & Average Understanding */}
               <div className="flex items-center gap-4">
                 <div className="relative shrink-0">
                   <svg width="90" height="90">
@@ -706,41 +706,65 @@ export default function VoiceAssistant() {
                     <circle cx="45" cy="45" r={readinessR} className="va-progress-ring-track" strokeWidth="6" fill="transparent" />
                     <circle cx="45" cy="45" r={readinessR} className="va-progress-ring-fill" strokeWidth="7" fill="transparent"
                       strokeDasharray={readinessCircumference}
-                      strokeDashoffset={readinessDashOffset}
+                      strokeDashoffset={readinessCircumference - (readinessCircumference * 84) / 100}
                       transform="rotate(-90 45 45)"
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-lg font-black text-white">{statsData.readinessPercentage || 72}%</span>
-                    <span className="text-[8px] text-slate-500 uppercase tracking-wider">Ready</span>
+                    <span className="text-lg font-black text-white">84%</span>
+                    <span className="text-[8px] text-slate-500 uppercase tracking-wider">Understanding</span>
                   </div>
                 </div>
                 <div className="space-y-2 flex-1 min-w-0">
                   <div>
-                    <p className="text-[9px] text-slate-500 uppercase">Chapter</p>
-                    <p className="text-xs font-bold text-white truncate">Data Structures Ch.3</p>
+                    <p className="text-[9px] text-slate-500 uppercase">Today's Study</p>
+                    <p className="text-xs font-bold text-white truncate">1h 45m / 2h Goal</p>
                   </div>
                   <div>
-                    <p className="text-[9px] text-slate-500 uppercase">XP Reward</p>
-                    <p className="text-xs font-bold text-amber-400">+250 XP</p>
+                    <p className="text-[9px] text-slate-500 uppercase">Monthly Progress</p>
+                    <p className="text-xs font-bold text-emerald-400">Up 14% vs Last Week</p>
                   </div>
                   <div>
-                    <p className="text-[9px] text-slate-500 uppercase">Est. Finish</p>
-                    <p className="text-xs font-bold text-cyan-400">12 min</p>
+                    <p className="text-[9px] text-slate-500 uppercase">Est. Completion</p>
+                    <p className="text-xs font-bold text-cyan-400">12 min remaining</p>
                   </div>
                 </div>
               </div>
 
+              {/* Analytics Details Grid */}
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { label: 'Study Hours', value: `${statsData.studyHours || 4}h`, icon: <Clock className="w-3 h-3 text-cyan-400" /> },
-                  { label: 'Topics Done', value: statsData.completedTopics || 12, icon: <BookOpenText className="w-3 h-3 text-violet-400" /> },
+                  { label: 'Today\'s Time', value: '45 mins', icon: <Clock className="w-3 h-3 text-cyan-400" /> },
+                  { label: 'Questions Asked', value: '18', icon: <MessageSquare className="w-3 h-3 text-violet-400" /> },
+                  { label: 'Concepts Done', value: '6 Learned', icon: <BookOpenText className="w-3 h-3 text-emerald-400" /> },
+                  { label: 'Coding Solved', value: '4 Problems', icon: <Code className="w-3 h-3 text-pink-400" /> },
+                  { label: 'Voice Commands', value: '28 Used', icon: <Mic className="w-3 h-3 text-amber-400" /> },
+                  { label: 'Weekly Target', value: '85%', icon: <Target className="w-3 h-3 text-indigo-400" /> }
                 ].map((s, i) => (
-                  <div key={i} className="p-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div className="flex items-center gap-1 mb-0.5">{s.icon}<span className="text-[9px] text-slate-500 uppercase">{s.label}</span></div>
-                    <span className="text-sm font-black text-white">{s.value}</span>
+                  <div key={i} className="p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      {s.icon}
+                      <span className="text-[9px] text-slate-500 uppercase font-semibold leading-none">{s.label}</span>
+                    </div>
+                    <span className="text-xs font-black text-white">{s.value}</span>
                   </div>
                 ))}
+              </div>
+
+              {/* Weekly Progress Micro Bars */}
+              <div className="space-y-1.5 p-3 rounded-xl bg-white/2" style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                <p className="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Weekly Progress Activity</p>
+                <div className="flex justify-between items-end h-8 pt-1">
+                  {[45, 60, 20, 85, 50, 90, 30].map((h, i) => {
+                    const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+                    return (
+                      <div key={i} className="flex flex-col items-center gap-1 flex-1">
+                        <div className="w-2.5 rounded-t bg-gradient-to-t from-violet-600 to-cyan-400" style={{ height: `${h * 0.24}px` }} />
+                        <span className="text-[8px] font-bold text-slate-600">{days[i]}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               <motion.button
@@ -750,7 +774,7 @@ export default function VoiceAssistant() {
                 className="w-full py-2.5 rounded-2xl text-xs font-black text-white flex items-center justify-center gap-2"
                 style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 20px rgba(124,58,237,0.3)' }}
               >
-                <Play className="w-3.5 h-3.5" /> Resume Lesson
+                <Play className="w-3.5 h-3.5" /> Resume Previous Lesson
               </motion.button>
             </motion.div>
 
