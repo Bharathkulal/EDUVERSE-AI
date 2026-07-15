@@ -9,6 +9,7 @@ import ThemeToggleButton from './ThemeToggleButton';
 import { Mic } from 'lucide-react';
 import EduVerseLogo from './EduVerseLogo';
 import ReviewPopup from './ReviewPopup';
+import CommandOrb from './CommandAI/CommandOrb';
 import '../pages/DashboardTheme.css';
 
 const studentNav = [
@@ -227,7 +228,7 @@ export default function Layout({ children }) {
             {/* Footer Profile Detail */}
             <div className="db-sidebar-footer" style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
               <div className="flex items-center gap-2 text-[var(--db-text-muted)] text-[11px] font-bold leading-normal pr-2">
-                <Mic className="w-4 h-4 text-purple-500 animate-pulse flex-shrink-0" />
+                <CommandOrb size={28} floating={false} />
                 <span>Double tap on screen for Voice Agent</span>
               </div>
             </div>

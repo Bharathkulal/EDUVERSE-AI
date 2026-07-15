@@ -47,6 +47,7 @@
 }
 
 .cai-orb-ring-1 {
+.cai-orb-ring-1 {
   inset: 0;
   border-color: rgba(37, 99, 235, 0.15);
   border-top-color: #2563eb;
@@ -54,14 +55,14 @@
   animation: rotationCW 6s linear infinite;
 }
 .cai-orb-ring-2 {
-  inset: 6px;
+  inset: 8%;
   border-color: rgba(124, 58, 237, 0.1);
   border-left-color: #7c3aed;
   border-style: dashed;
   animation: rotationCCW 10s linear infinite;
 }
 .cai-orb-ring-3 {
-  inset: 12px;
+  inset: 15%;
   border-color: rgba(236, 72, 153, 0.08);
   border-right-color: #ec4899;
   border-style: dotted;
@@ -79,7 +80,7 @@
 /* ── Interactive Core ── */
 .cai-orb-core {
   position: absolute;
-  inset: 18px;
+  inset: 22%;
   border-radius: 50%;
   display: flex;
   align-items: center;

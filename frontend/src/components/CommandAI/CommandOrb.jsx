@@ -46,7 +46,7 @@ export default function CommandOrb({ size = 80, floating = true }) {
       </motion.div>
 
       {/* Continuous indicator label if wake enabled */}
-      {isWakeEnabled && activeState === 'idle' && (
+      {isWakeEnabled && activeState === 'idle' && floating && (
         <span className="cai-orb-label">Listening for "EduVerse"</span>
       )}
     </div>
