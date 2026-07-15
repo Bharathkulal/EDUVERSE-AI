@@ -128,7 +128,6 @@ export default function App() {
       
       {/* Command AI Global Overlays */}
       <Suspense fallback={null}>
-        <CommandOrb />
         <CommandPanel />
       </Suspense>
 
