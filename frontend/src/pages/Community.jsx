@@ -1310,16 +1310,18 @@ function DeveloperHubSubsystem() {
               </button>
               <h3 className="text-lg font-black text-white">{activeWorkspace.name}</h3>
               <p className="text-xs text-slate-450">
-                AI partner assigned: <strong className="text-violet-400">{activeWorkspace.aiRole}</strong>
+                AI Partner: <strong className="text-violet-400">{activeWorkspace.aiRole}</strong>
               </p>
             </div>
 
             {/* Nav Workspace Tabs */}
             <div className="flex p-1 bg-slate-950/60 rounded-xl border border-white/5 flex-wrap gap-1">
               {[
-                { id: 'code', label: 'Code Editor', icon: <Code className="w-3.5 h-3.5" /> },
-                { id: 'tasks', label: 'Tasks Kanban', icon: <Target className="w-3.5 h-3.5" /> },
-                { id: 'git', label: 'Commits History', icon: <GitBranch className="w-3.5 h-3.5" /> }
+                { id: 'code', label: 'AI Code & Pair Programmer', icon: <Code className="w-3.5 h-3.5" /> },
+                { id: 'tasks', label: 'Tasks & Standup', icon: <Target className="w-3.5 h-3.5" /> },
+                { id: 'testing', label: 'Testing & Security', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+                { id: 'architecture', label: 'Architecture Advisor', icon: <Database className="w-3.5 h-3.5" /> },
+                { id: 'deploy', label: 'Deploy & Analytics', icon: <FolderOpen className="w-3.5 h-3.5" /> }
               ].map(t => (
                 <button
                   key={t.id}
@@ -1336,7 +1338,7 @@ function DeveloperHubSubsystem() {
 
           {/* Sub-Workspace Views */}
           <div className="min-h-[400px]">
-            {/* WORKSPACE TAB: CODE EDITOR */}
+            {/* WORKSPACE TAB: CODE EDITOR & PAIR PROGRAMMER */}
             {activeTab === 'code' && (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                 {/* Code editor side */}
@@ -1358,7 +1360,7 @@ function DeveloperHubSubsystem() {
                   <textarea
                     value={codeContent}
                     onChange={e => setCodeContent(e.target.value)}
-                    className="h-[260px] bg-slate-950 text-emerald-400 font-mono text-xs p-4 rounded-2xl border border-white/5 outline-none focus:border-violet-500/50 resize-none leading-relaxed"
+                    className="h-[280px] bg-slate-950 text-emerald-400 font-mono text-xs p-4 rounded-2xl border border-white/5 outline-none focus:border-violet-500/50 resize-none leading-relaxed"
                   />
 
                   {/* Visual terminal */}
@@ -1373,119 +1375,316 @@ function DeveloperHubSubsystem() {
                   </div>
                 </div>
 
-                {/* AI Assistant Side Panel */}
+                {/* AI Pair Programmer Timeline Panel */}
                 <div className="lg:col-span-4 p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-4">
                   <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                    <Settings className="w-4 h-4 text-violet-400" />
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">{activeWorkspace.aiRole} Panel</h4>
+                    <Settings className="w-4 h-4 text-violet-400 animate-spin" style={{ animationDuration: '3s' }} />
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">AI Pair Programmer</h4>
                   </div>
 
-                  <p className="text-[10px] text-slate-500 leading-relaxed">
-                    Choose an action to run against your open script file:
-                  </p>
+                  {/* AI Activity Timeline */}
+                  <div className="space-y-3">
+                    <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold block">Activity Logs</span>
+                    <div className="space-y-2 max-h-[140px] overflow-y-auto va-scroll pr-1">
+                      {[
+                        { state: 'Watching...', desc: 'Monitored 1 file modification in index.js.', time: 'Just now' },
+                        { state: 'Reviewing...', desc: 'Verified calculateSum execution paths.', time: '1 min ago' },
+                        { state: 'Optimizing...', desc: 'Proposed React Hooks convert options.', time: '5 mins ago' }
+                      ].map((log, idx) => (
+                        <div key={idx} className="p-2 bg-white/3 border border-white/5 rounded-xl text-[10px] space-y-1">
+                          <div className="flex justify-between font-bold text-violet-300">
+                            <span>{log.state}</span>
+                            <span className="text-[9px] text-slate-500">{log.time}</span>
+                          </div>
+                          <p className="text-slate-400 leading-normal">{log.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {[
-                      { l: 'Explain Script', act: 'explaining' },
-                      { l: 'Debug Code', act: 'debugging' },
-                      { l: 'Optimize', act: 'optimizing' },
-                      { l: 'Security Review', act: 'reviewing security' }
-                    ].map((item, idx) => (
-                      <button
-                        key={idx}
+                  {/* Student Ask Prompts */}
+                  <div className="space-y-2 border-t border-white/5 pt-3">
+                    <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold block">Ask Pair Programmer</span>
+                    <div className="grid grid-cols-1 gap-2 text-xs">
+                      {[
+                        { l: 'Explain this function', p: 'Provide time and space complexity analysis for calculateSum.' },
+                        { l: 'Improve performance', p: 'Optimize script execution speed and memory footprints.' },
+                        { l: 'Rewrite using Hooks', p: 'Convert to functional state component.' }
+                      ].map((item, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            toast.loading(`Consulting AI...`);
+                            setTimeout(() => {
+                              toast.dismiss();
+                              setTerminalOutput(`AI Pair Programmer reply:\n"Here is the optimized approach. We cache recursive calls using React useMemo or python lru_cache. Let's apply this code change."`);
+                              toast.success('Advice generated!');
+                            }, 1200);
+                          }}
+                          className="w-full text-left p-2.5 bg-slate-900 border border-white/10 rounded-xl hover:border-violet-500/40 text-[10px] text-slate-300 font-bold transition cursor-pointer"
+                        >
+                          💬 {item.l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* WORKSPACE TAB: TASKS & STANDUP */}
+            {workspaceTab === 'tasks' && (
+              <div className="space-y-6">
+                {/* Daily Stand-up summary banner */}
+                <div className="p-4 bg-gradient-to-r from-violet-900/35 to-indigo-900/30 border border-purple-500/20 rounded-2xl space-y-2">
+                  <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                    🤖 AI Daily Stand-up Meeting & Sprint Report
+                  </h4>
+                  <p className="text-[10px] text-slate-350 leading-relaxed">
+                    AI Sprints report generated today: <strong>Sprint Health - Good (85%)</strong>. Developer contributions: Rohan D. (10 commits), Priya S. (4 commits). <strong>Blocked tasks:</strong> Setup FastAPI routers (FastAPI db connection issue).
+                  </p>
+                  <button 
+                    onClick={() => toast.success('Sprint PDF report generated!')}
+                    className="px-3 py-1 bg-violet-650 hover:bg-violet-750 text-white font-bold text-[9px] rounded-lg transition"
+                  >
+                    Export Stand-up Report
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {['todo', 'progress', 'completed'].map(col => (
+                    <div key={col} className="p-4 bg-slate-950/35 border border-white/5 rounded-2xl space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{col}</span>
+                        <span className="text-[10px] py-0.5 px-2 bg-white/5 rounded-full font-mono">
+                          {activeWorkspace.tasks.filter(t => t.status === col).length}
+                        </span>
+                      </div>
+
+                      <div className="space-y-3">
+                        {activeWorkspace.tasks.length === 0 ? (
+                          <p className="text-[10px] text-slate-500 text-center py-6">No tasks assigned.</p>
+                        ) : (
+                          activeWorkspace.tasks.filter(t => t.status === col).map(t => (
+                            <div key={t.id} className="p-3 bg-slate-900 border border-white/5 rounded-xl space-y-2 hover:border-violet-500/20 transition">
+                              <h4 className="text-xs font-bold text-white">{t.title}</h4>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 font-bold">{t.priority} Priority</span>
+
+                              <div className="flex gap-1 justify-end pt-1 border-t border-white/5">
+                                {col !== 'todo' && (
+                                  <button onClick={() => handleMoveTask(t.id, 'todo')} className="text-[8px] font-bold text-slate-400 hover:text-white cursor-pointer px-1">To Do</button>
+                                )}
+                                {col !== 'progress' && (
+                                  <button onClick={() => handleMoveTask(t.id, 'progress')} className="text-[8px] font-bold text-violet-400 hover:text-white cursor-pointer px-1">Progress</button>
+                                )}
+                                {col !== 'completed' && (
+                                  <button onClick={() => handleMoveTask(t.id, 'completed')} className="text-[8px] font-bold text-emerald-400 hover:text-white cursor-pointer px-1">Done</button>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* WORKSPACE TAB: TESTING & SECURITY */}
+            {workspaceTab === 'testing' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* One Click Test Generator */}
+                <div className="p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-4 text-xs">
+                  <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                    🧪 One Click Test Generator
+                  </h4>
+                  
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-[10px] text-slate-400">
+                      <span>Target Framework</span>
+                      <span className="font-bold text-violet-400">Jest / Vitest</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-[10px]">
+                      {[
+                        { label: 'Coverage', val: '92%', color: 'text-emerald-400' },
+                        { label: 'Passed', val: '12 / 12', color: 'text-cyan-400' },
+                        { label: 'Missing Tests', val: '3 detected', color: 'text-rose-400' }
+                      ].map((stat, i) => (
+                        <div key={i} className="p-2 bg-white/3 border border-white/5 rounded-xl">
+                          <span className="text-slate-500 block">{stat.label}</span>
+                          <span className={`font-bold ${stat.color}`}>{stat.val}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <button 
                         onClick={() => {
-                          toast.loading(`Running AI ${item.l}...`);
+                          toast.loading('Running unit tests...');
                           setTimeout(() => {
                             toast.dismiss();
-                            setTerminalOutput(`AI specialist returned optimization suggestions for index.js:\n- Refactor calculateSum function to support unlimited arguments.\n- Add input validation schema.\n- Current quality score: 92/100.`);
-                            toast.success(`${item.l} completed!`);
-                          }, 1200);
+                            toast.success('All 12 test specs passed!');
+                          }, 1000);
                         }}
-                        className="p-2.5 bg-white/3 border border-white/5 rounded-xl text-[10px] font-bold text-left hover:border-violet-500/30 hover:bg-violet-500/10 text-slate-350 transition cursor-pointer"
+                        className="flex-1 py-2 bg-violet-650 hover:bg-violet-750 text-white font-bold rounded-xl text-[10px] transition"
                       >
-                        ⚡ {item.l}
+                        Run Test Suite
+                      </button>
+                      <button 
+                        onClick={() => toast.success('Generated 5 Jest specifications!')}
+                        className="px-3 py-2 border border-white/10 hover:border-violet-500 text-slate-350 rounded-xl transition text-[10px]"
+                      >
+                        Generate Tests
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Security & Vulnerability Scanner */}
+                <div className="p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-4 text-xs">
+                  <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                    🛡️ AI Security & OWASP Analyzer
+                  </h4>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-slate-500">Security Score</span>
+                      <span className="font-black text-rose-400">88% (Low Risk)</span>
+                    </div>
+
+                    <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[10px] space-y-1">
+                      <span className="font-bold text-rose-400 uppercase tracking-widest block">Vulnerability warning</span>
+                      <p className="text-slate-300 leading-normal">
+                        "index.js line 18 uses hardcoded credentials. We recommend moving database passwords to process.env config."
+                      </p>
+                    </div>
+
+                    <button 
+                      onClick={() => {
+                        toast.loading('Scanning workspace...');
+                        setTimeout(() => {
+                          toast.dismiss();
+                          toast.success('Vulnerability scan completed. 1 warning found.');
+                        }, 1200);
+                      }}
+                      className="w-full py-2 bg-slate-900 border border-white/10 hover:border-rose-500/50 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 font-bold rounded-xl transition"
+                    >
+                      Scan API Endpoints
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* WORKSPACE TAB: ARCHITECTURE & SCHEMAS */}
+            {workspaceTab === 'architecture' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                {/* Visual directory structure advisor */}
+                <div className="p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-3">
+                  <h4 className="text-xs font-bold text-white">📁 Folder Structure & Tech Recommendations</h4>
+                  <div className="bg-slate-950 p-4 rounded-xl border border-white/5 font-mono text-[10px] text-slate-300 space-y-1">
+                    <div>├── src/</div>
+                    <div>│   ├── controllers/ <span className="text-slate-500">// API endpoints</span></div>
+                    <div>│   ├── models/ <span className="text-slate-500">// MongoDB schemas</span></div>
+                    <div>│   └── index.js <span className="text-slate-500">// Application entrypoint</span></div>
+                    <div>├── tests/ <span className="text-slate-500">// Vitest suites</span></div>
+                    <div>└── package.json</div>
+                  </div>
+                </div>
+
+                {/* AI Diagram builder */}
+                <div className="p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-4">
+                  <h4 className="text-xs font-bold text-white">📊 AI Diagram Generator</h4>
+                  <p className="text-[10px] text-slate-500 leading-normal">
+                    Generate microservice flowcharts, ER diagrams, or authentication pathways with one click:
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    {['ER Diagram', 'API Flow', 'Microservices', 'Auth Flow'].map((diag, i) => (
+                      <button
+                        key={i}
+                        onClick={() => toast.success(`Generated ${diag} blueprint!`)}
+                        className="p-2.5 bg-slate-900 border border-white/10 text-[10px] hover:border-violet-500/30 hover:text-white font-bold rounded-xl text-slate-400 transition"
+                      >
+                        📐 {diag}
                       </button>
                     ))}
                   </div>
+                </div>
+              </div>
+            )}
 
-                  <div className="p-3 bg-violet-650/10 border border-violet-500/20 rounded-xl space-y-1">
-                    <span className="text-[9px] font-bold text-violet-400 uppercase tracking-widest">Active Suggestion</span>
-                    <p className="text-[10px] text-slate-300 leading-relaxed">
-                      "I detected 0 syntax errors. Consider wrapping calculateSum output inside a template string."
-                    </p>
+            {/* WORKSPACE TAB: DEPLOYMENT & PORTFOLIO */}
+            {workspaceTab === 'deploy' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                {/* One Click Deployment Center */}
+                <div className="p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-4">
+                  <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                    🚀 One Click Deployment Wizard
+                  </h4>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-slate-450">Deploy Platform</span>
+                      <span className="font-bold text-cyan-400">Vercel / Render</span>
+                    </div>
+
+                    <div className="p-3 bg-slate-950 rounded-xl border border-white/5 space-y-1 font-mono text-[9px] text-slate-400 max-h-[80px] overflow-y-auto va-scroll">
+                      <div>[12:00:15] Build command executed successfully.</div>
+                      <div>[12:00:18] Uploading bundles to Render CDN...</div>
+                      <div>[12:00:20] Deployment online: https://eduverse-planner.render.com</div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          toast.loading('Initializing deploy pipeline...');
+                          setTimeout(() => {
+                            toast.dismiss();
+                            toast.success('Production build online!');
+                          }, 1500);
+                        }}
+                        className="flex-1 py-2 bg-gradient-to-r from-violet-600 to-indigo-650 text-white font-bold rounded-xl text-[10px] transition"
+                      >
+                        Deploy to Prod
+                      </button>
+                      <button
+                        onClick={() => toast.success('Deployment rolled back to previous hash commit!')}
+                        className="px-3 py-2 border border-white/10 hover:border-rose-500 text-slate-450 hover:text-rose-400 rounded-xl transition text-[10px]"
+                      >
+                        Rollback
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Project Portfolio Generator */}
+                <div className="p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-4">
+                  <h4 className="text-xs font-bold text-white">📄 Portfolio & README Generator</h4>
+                  <p className="text-[10px] text-slate-500 leading-normal">
+                    Automatically assemble professional portfolio pages, Swagger specs, and developer README layouts.
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
+                    <button 
+                      onClick={() => toast.success('README.md generated successfully!')}
+                      className="p-2.5 bg-slate-900 border border-white/5 hover:border-violet-500/20 text-slate-350 rounded-xl transition text-left"
+                    >
+                      📝 Generate README
+                    </button>
+                    <button 
+                      onClick={() => toast.success('Swagger specs generated!')}
+                      className="p-2.5 bg-slate-900 border border-white/5 hover:border-violet-500/20 text-slate-350 rounded-xl transition text-left"
+                    >
+                      Swagger Exporter
+                    </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* WORKSPACE TAB: TASKS */}
-            {workspaceTab === 'tasks' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {['todo', 'progress', 'completed'].map(col => (
-                  <div key={col} className="p-4 bg-slate-950/35 border border-white/5 rounded-2xl space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{col}</span>
-                      <span className="text-[10px] py-0.5 px-2 bg-white/5 rounded-full font-mono">
-                        {activeWorkspace.tasks.filter(t => t.status === col).length}
-                      </span>
-                    </div>
-
-                    <div className="space-y-3">
-                      {activeWorkspace.tasks.length === 0 ? (
-                        <p className="text-[10px] text-slate-500 text-center py-6">No tasks assigned.</p>
-                      ) : (
-                        activeWorkspace.tasks.filter(t => t.status === col).map(t => (
-                          <div key={t.id} className="p-3 bg-slate-900 border border-white/5 rounded-xl space-y-2 hover:border-violet-500/20 transition">
-                            <h4 className="text-xs font-bold text-white">{t.title}</h4>
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 font-bold">{t.priority} Priority</span>
-
-                            <div className="flex gap-1 justify-end pt-1 border-t border-white/5">
-                              {col !== 'todo' && (
-                                <button onClick={() => handleMoveTask(t.id, 'todo')} className="text-[8px] font-bold text-slate-400 hover:text-white cursor-pointer px-1">To Do</button>
-                              )}
-                              {col !== 'progress' && (
-                                <button onClick={() => handleMoveTask(t.id, 'progress')} className="text-[8px] font-bold text-violet-400 hover:text-white cursor-pointer px-1">Progress</button>
-                              )}
-                              {col !== 'completed' && (
-                                <button onClick={() => handleMoveTask(t.id, 'completed')} className="text-[8px] font-bold text-emerald-400 hover:text-white cursor-pointer px-1">Done</button>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* WORKSPACE TAB: GIT COMMITS */}
-            {workspaceTab === 'git' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center text-xs text-slate-400 bg-slate-950/40 p-3 rounded-xl border border-white/5">
-                  <span className="font-bold flex items-center gap-1"><GitBranch className="w-3.5 h-3.5 text-violet-400" /> repository: main</span>
-                  <span>{activeWorkspace.commits.length} commits logged</span>
-                </div>
-
-                <div className="space-y-3">
-                  {activeWorkspace.commits.length === 0 ? (
-                    <div className="text-center text-slate-500 py-12 text-xs">No commits. Setup repository sync.</div>
-                  ) : (
-                    activeWorkspace.commits.map((c, i) => (
-                      <div key={i} className="p-4 bg-slate-900 border border-white/5 rounded-2xl flex justify-between items-center text-xs">
-                        <div className="space-y-1.5">
-                          <p className="font-bold text-white">"{c.msg}"</p>
-                          <span className="text-[10px] text-slate-500">by {c.author} • {c.date}</span>
-                        </div>
-                        <span className="font-mono text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-violet-300">
-                          {c.hash}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -1613,7 +1812,7 @@ function DeveloperHubSubsystem() {
                       <span className="text-xs font-black text-emerald-400 block">{candidate.rate}% Match</span>
                       <button 
                         onClick={() => { toast.success(`Invitation sent to ${candidate.name}!`); setShowMatchmaker(false); }}
-                        className="mt-1.5 px-2.5 py-1 bg-violet-650 hover:bg-violet-700 text-white font-bold text-[9px] rounded-lg transition cursor-pointer"
+                        className="mt-1.5 px-2.5 py-1 bg-violet-650 hover:bg-violet-750 text-white font-bold text-[9px] rounded-lg transition cursor-pointer"
                       >
                         Recruit
                       </button>
