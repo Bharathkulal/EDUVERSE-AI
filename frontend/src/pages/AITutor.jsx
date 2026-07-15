@@ -319,7 +319,7 @@ export default function AITutor() {
   };
 
   return (
-    <div className="quiz-arena-container h-full flex flex-col relative overflow-y-auto">
+    <div className="quiz-arena-container min-h-screen flex flex-col relative overflow-y-auto">
       {/* Background gradients */}
       <div className="absolute top-[-10%] right-[-10%] w-[45%] h-[45%] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
 
@@ -390,12 +390,12 @@ export default function AITutor() {
       </div>
 
       {/* ─── Main Content Splitted Area ─── */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch min-h-0">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch" style={{ minHeight: '72vh' }}>
         
         {/* Left / Center Main Workspace (9 cols) */}
         <div className="lg:col-span-9 flex flex-col gap-4 min-h-0">
           
-          <div className="flex-1 bg-white border border-slate-200/80 rounded-3xl p-6 flex flex-col justify-between overflow-y-auto scrollbar-thin">
+          <div className="flex-1 bg-white border border-slate-200/80 rounded-3xl p-6 flex flex-col justify-between overflow-y-auto scrollbar-thin" style={{ minHeight: '65vh' }}>
             
             <div className="space-y-6">
               

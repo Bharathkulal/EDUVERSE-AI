@@ -380,22 +380,23 @@ export default function Coding() {
 
       {/* ─── CASE A: WELCOME HOME SCREEN STATE ─── */}
       {!activeProject && (
-        <div className={`flex-1 flex flex-col items-center justify-center p-8 text-center select-none relative ${isDarkMode ? 'bg-[#070814]' : 'bg-white'}`}>
+        <div className={`flex-1 flex flex-col items-center justify-center p-8 text-center select-none relative ${isDarkMode ? 'bg-[#070814]' : 'bg-white'}`} style={{ minHeight: '100vh' }}>
           {/* Background image & gradient overlay (Dark Mode Only) */}
           {isDarkMode && (
             <>
               <div 
-                className="absolute inset-0 pointer-events-none opacity-45 z-0" 
+                className="absolute inset-0 pointer-events-none opacity-60 z-0" 
                 style={{ 
                   backgroundImage: "url('/practical_bg.png')", 
                   backgroundSize: "cover", 
-                  backgroundPosition: "center",
-                  backgroundRepeat: "no-repeat"
+                  backgroundPosition: "center top",
+                  backgroundRepeat: "no-repeat",
+                  minHeight: '100vh'
                 }} 
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-[#070814]/80 via-transparent to-[#070814]/85 pointer-events-none z-0" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#070814]/60 via-transparent to-[#070814]/90 pointer-events-none z-0" />
               {/* Radial vignette to blend all borders smoothly into the dark theme */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,#070814_95%)] pointer-events-none z-0" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,#070814_98%)] pointer-events-none z-0" />
               <div className="absolute top-[-10%] right-[-15%] w-[55%] h-[55%] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none z-0" />
               <div className="absolute bottom-[-10%] left-[-15%] w-[50%] h-[50%] bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none z-0" />
               <div className="grain-overlay" />
