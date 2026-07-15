@@ -15,7 +15,6 @@ const HASH_TO_TAB = {
   '#forum': 'forum',
   '#groups': 'groups',
   '#clubs': 'clubs',
-  '#teams': 'teams',
   '#challenges': 'challenges',
   '#doubt': 'doubt',
 };
@@ -90,7 +89,6 @@ export default function Community() {
     { id: 'forum', label: 'Discussion Forum', icon: '💬' },
     { id: 'groups', label: 'Study Groups', icon: '👥' },
     { id: 'clubs', label: 'Coding Clubs', icon: '🏫' },
-    { id: 'teams', label: 'Project Teams', icon: '🚀' },
     { id: 'challenges', label: 'Challenges', icon: '⚡' },
     { id: 'doubt', label: 'Doubt Solving', icon: '❓' },
   ];
@@ -108,13 +106,6 @@ export default function Community() {
     { id: 2, name: 'Open Source Contributors', members: 85, rating: '⭐⭐⭐⭐', focus: 'Open Source Projects', meetDay: 'Every Sunday' },
     { id: 3, name: 'Hackathon Squad', members: 67, rating: '⭐⭐⭐⭐', focus: 'Hackathons & Innovations', meetDay: 'Bi-weekly' },
     { id: 4, name: 'Full Stack Devs', members: 94, rating: '⭐⭐⭐⭐⭐', focus: 'Full Stack Development', meetDay: 'Every Friday' },
-  ];
-
-  const projectTeams = [
-    { id: 1, name: 'E-Commerce Platform', tech: 'React + Node.js', members: 4, maxMembers: 5, status: 'Active', lead: 'Vikram S.' },
-    { id: 2, name: 'AI Chatbot System', tech: 'Python + TensorFlow', members: 3, maxMembers: 4, status: 'Recruiting', lead: 'Ananya R.' },
-    { id: 3, name: 'Mobile Fitness App', tech: 'Flutter + Firebase', members: 5, maxMembers: 5, status: 'Completed', lead: 'Rohan D.' },
-    { id: 4, name: 'Student Portal', tech: 'Next.js + PostgreSQL', members: 2, maxMembers: 6, status: 'Recruiting', lead: 'Kavya P.' },
   ];
 
   const handleJoinChallenge = (ch, e) => {
@@ -233,36 +224,7 @@ export default function Community() {
           <DeveloperHubSubsystem />
         )}
 
-        {/* PROJECT TEAMS */}
-        {activeTab === 'teams' && (
-          <motion.div key="teams" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {projectTeams.map(team => (
-              <div key={team.id} className="p-5 rounded-2xl border hover:shadow-lg transition-all flex flex-col gap-3" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-                <div className="flex justify-between items-start">
-                  <h3 className="text-base font-bold" style={{ color: 'var(--db-text-main)' }}>{team.name}</h3>
-                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
-                    team.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400' :
-                    team.status === 'Recruiting' ? 'bg-blue-500/10 text-blue-400' :
-                    'bg-slate-500/10 text-slate-400'
-                  }`}>{team.status}</span>
-                </div>
-                <div className="text-xs font-mono px-2 py-1 rounded-md w-fit" style={{ backgroundColor: 'var(--db-input-bg)', color: 'var(--db-text-accent)' }}>{team.tech}</div>
-                <div className="flex items-center justify-between text-xs" style={{ color: 'var(--db-text-muted)' }}>
-                  <span>👤 Lead: {team.lead}</span>
-                  <span>👥 {team.members}/{team.maxMembers} members</span>
-                </div>
-                <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--db-sidebar-border)' }}>
-                  <div className="h-full bg-violet-500 rounded-full" style={{ width: `${(team.members / team.maxMembers) * 100}%` }} />
-                </div>
-                {team.status === 'Recruiting' && (
-                  <button className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer">
-                    Request to Join
-                  </button>
-                )}
-              </div>
-            ))}
-          </motion.div>
-        )}
+
 
         {/* CHALLENGES */}
         {activeTab === 'challenges' && (
