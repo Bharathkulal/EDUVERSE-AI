@@ -1048,7 +1048,15 @@ export default function Progress() {
           </motion.div>
         )}
 
-        {activeTab === 'voice-teacher' && (function VoiceTeacherTabPanel() {
+        {activeTab === 'voice-teacher' && (
+          <VoiceTeacherTabPanel />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function VoiceTeacherTabPanel() {
   const { stats, settings, updateSettings, isMuted, setIsMuted, speak } = useVoiceAssistant();
   const [personality, setPersonality] = useState('Friendly Teacher');
   const [language, setLanguage] = useState('English');
@@ -1404,13 +1412,6 @@ export default function Progress() {
         </div>
       </div>
 
-    </motion.div>
-  );
-}v>• "Pause" / "Resume"</div>
-            </div>
-          </div>
-        </div>
-      </div>
     </motion.div>
   );
 }
