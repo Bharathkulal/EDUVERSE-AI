@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
+import { X, Trophy, Clock, Users, Zap, CheckCircle2, BookOpen, Code2, Palette, Server } from 'lucide-react';
 
 const HASH_TO_TAB = {
   '#forum': 'forum',
@@ -10,6 +12,40 @@ const HASH_TO_TAB = {
   '#teams': 'teams',
   '#challenges': 'challenges',
   '#doubt': 'doubt',
+};
+
+const CHALLENGE_ICONS = {
+  Coding: Code2,
+  DBMS: BookOpen,
+  Design: Palette,
+  Architecture: Server,
+};
+
+const CHALLENGE_DETAILS = {
+  1: {
+    description: 'Solve 5 algorithmic problems using arrays, linked lists, and binary search within the time limit. Compete with 89+ participants across all skill levels.',
+    tasks: ['Solve Two Sum problem', 'Implement Binary Search', 'Reverse a Linked List', 'Find Max Subarray Sum', 'Validate Balanced Parentheses'],
+    prize: '200 XP + Algorithm Warrior Badge',
+    level: 'Beginner–Intermediate',
+  },
+  2: {
+    description: 'Design a normalized database schema for a real-world e-commerce system. Submit ER diagram + SQL DDL scripts that demonstrate 3NF compliance.',
+    tasks: ['Design ER Diagram', 'Write DDL scripts (3NF)', 'Implement Indexing Strategy', 'Write 3 complex JOIN queries'],
+    prize: '350 XP + DBMS Expert Badge',
+    level: 'Intermediate–Advanced',
+  },
+  3: {
+    description: 'Create a complete UI/UX design for a mobile learning app. Submit Figma prototypes with user flow, color palette, and component library.',
+    tasks: ['User Research & Personas', 'Wireframes (Lo-Fi)', 'High-Fidelity Mockups', 'Interactive Prototype', 'Design System Documentation'],
+    prize: '150 XP + Design Star Badge',
+    level: 'All Levels',
+  },
+  4: {
+    description: 'Design a scalable system architecture for a video streaming platform handling 1M concurrent users. Present your design with diagrams and trade-off analysis.',
+    tasks: ['High-Level Architecture Diagram', 'Database Sharding Strategy', 'CDN & Caching Layer Design', 'Load Balancing Approach', 'Failure Mode Analysis'],
+    prize: '400 XP + System Architect Badge',
+    level: 'Advanced',
+  },
 };
 
 export default function Community() {
@@ -24,6 +60,18 @@ export default function Community() {
   ]);
   const [newPost, setNewPost] = useState('');
   const [doubtQuestion, setDoubtQuestion] = useState('');
+
+  // Challenge state
+  const [joinedChallenges, setJoinedChallenges] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('eduverse_joined_challenges') || '{}'); } catch { return {}; }
+  });
+  const [challenges, setChallenges] = useState([
+    { id: 1, title: 'Weekly Algorithm Sprint', difficulty: 'Medium', participants: 89, deadline: '3 days left', xp: 200, type: 'Coding' },
+    { id: 2, title: 'Database Design Challenge', difficulty: 'Hard', participants: 45, deadline: '5 days left', xp: 350, type: 'DBMS' },
+    { id: 3, title: 'UI/UX Design Contest', difficulty: 'Easy', participants: 123, deadline: '7 days left', xp: 150, type: 'Design' },
+    { id: 4, title: 'System Design Sprint', difficulty: 'Hard', participants: 34, deadline: '2 days left', xp: 400, type: 'Architecture' },
+  ]);
+  const [selectedChallenge, setSelectedChallenge] = useState(null);
 
   useEffect(() => {
     const hash = location.hash;
@@ -63,12 +111,30 @@ export default function Community() {
     { id: 4, name: 'Student Portal', tech: 'Next.js + PostgreSQL', members: 2, maxMembers: 6, status: 'Recruiting', lead: 'Kavya P.' },
   ];
 
-  const communityChalleng = [
-    { id: 1, title: 'Weekly Algorithm Sprint', difficulty: 'Medium', participants: 89, deadline: '3 days left', xp: 200, type: 'Coding' },
-    { id: 2, title: 'Database Design Challenge', difficulty: 'Hard', participants: 45, deadline: '5 days left', xp: 350, type: 'DBMS' },
-    { id: 3, title: 'UI/UX Design Contest', difficulty: 'Easy', participants: 123, deadline: '7 days left', xp: 150, type: 'Design' },
-    { id: 4, title: 'System Design Sprint', difficulty: 'Hard', participants: 34, deadline: '2 days left', xp: 400, type: 'Architecture' },
-  ];
+  const handleJoinChallenge = (ch, e) => {
+    e.stopPropagation();
+    const alreadyJoined = joinedChallenges[ch.id];
+    const updated = { ...joinedChallenges };
+
+    if (alreadyJoined) {
+      delete updated[ch.id];
+      setChallenges(prev => prev.map(c => c.id === ch.id ? { ...c, participants: c.participants - 1 } : c));
+      toast('Left the challenge', { icon: '👋' });
+    } else {
+      updated[ch.id] = true;
+      setChallenges(prev => prev.map(c => c.id === ch.id ? { ...c, participants: c.participants + 1 } : c));
+      toast.success(`🎯 Joined "${ch.title}"! +${ch.xp} XP on completion`, { duration: 3500 });
+    }
+
+    setJoinedChallenges(updated);
+    localStorage.setItem('eduverse_joined_challenges', JSON.stringify(updated));
+  };
+
+  const difficultyStyle = (d) => {
+    if (d === 'Easy') return 'bg-emerald-500/10 text-emerald-400';
+    if (d === 'Medium') return 'bg-amber-500/10 text-amber-400';
+    return 'bg-red-500/10 text-red-400';
+  };
 
   return (
     <div className="space-y-6 pb-8">
@@ -104,7 +170,6 @@ export default function Community() {
         {/* DISCUSSION FORUM */}
         {activeTab === 'forum' && (
           <motion.div key="forum" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
-            {/* New Post */}
             <div className="p-4 rounded-2xl border flex gap-3" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
               <div className="w-10 h-10 rounded-full bg-violet-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
                 {user?.name?.charAt(0)?.toUpperCase() || 'U'}
@@ -127,7 +192,6 @@ export default function Community() {
               </div>
             </div>
 
-            {/* Posts */}
             {posts.map(post => (
               <div key={post.id} className="p-5 rounded-2xl border hover:shadow-lg transition-all" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
                 <div className="flex items-start gap-3">
@@ -232,28 +296,79 @@ export default function Community() {
 
         {/* CHALLENGES */}
         {activeTab === 'challenges' && (
-          <motion.div key="challenges" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {communityChalleng.map(ch => (
-              <div key={ch.id} className="p-5 rounded-2xl border hover:shadow-lg transition-all flex flex-col gap-3" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-                <div className="flex justify-between items-start">
-                  <h3 className="text-base font-bold" style={{ color: 'var(--db-text-main)' }}>{ch.title}</h3>
-                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
-                    ch.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400' :
-                    ch.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-400' :
-                    'bg-red-500/10 text-red-400'
-                  }`}>{ch.difficulty}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs" style={{ color: 'var(--db-text-muted)' }}>
-                  <span>👥 {ch.participants} participants</span>
-                  <span>⏰ {ch.deadline}</span>
-                  <span className="font-bold" style={{ color: 'var(--db-text-accent)' }}>+{ch.xp} XP</span>
-                </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md w-fit" style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)' }}>{ch.type}</span>
-                <button className="w-full py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md">
-                  Join Challenge
-                </button>
-              </div>
-            ))}
+          <motion.div key="challenges" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
+            {/* Joined Banner */}
+            {Object.keys(joinedChallenges).length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <p className="text-xs font-semibold text-emerald-400">
+                  You are participating in <strong>{Object.keys(joinedChallenges).length}</strong> challenge{Object.keys(joinedChallenges).length > 1 ? 's' : ''}. Complete them to earn XP!
+                </p>
+              </motion.div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {challenges.map(ch => {
+                const joined = !!joinedChallenges[ch.id];
+                const Icon = CHALLENGE_ICONS[ch.type] || Zap;
+                return (
+                  <motion.div
+                    key={ch.id}
+                    whileHover={{ y: -2 }}
+                    onClick={() => setSelectedChallenge(ch)}
+                    className="p-5 rounded-2xl border cursor-pointer transition-all flex flex-col gap-3 relative overflow-hidden"
+                    style={{
+                      backgroundColor: 'var(--db-card-bg)',
+                      borderColor: joined ? 'rgba(139,92,246,0.5)' : 'var(--db-sidebar-border)',
+                      boxShadow: joined ? '0 0 0 1px rgba(139,92,246,0.3)' : 'none',
+                    }}
+                  >
+                    {joined && <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl pointer-events-none" />}
+
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(139,92,246,0.12)' }}>
+                          <Icon className="w-4 h-4 text-violet-400" />
+                        </div>
+                        <h3 className="text-sm font-bold leading-tight" style={{ color: 'var(--db-text-main)' }}>{ch.title}</h3>
+                      </div>
+                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md shrink-0 ml-2 ${difficultyStyle(ch.difficulty)}`}>
+                        {ch.difficulty}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs" style={{ color: 'var(--db-text-muted)' }}>
+                      <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {ch.participants} participants</span>
+                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {ch.deadline}</span>
+                      <span className="flex items-center gap-1 font-bold" style={{ color: 'var(--db-text-accent)' }}>
+                        <Zap className="w-3 h-3" />+{ch.xp} XP
+                      </span>
+                    </div>
+
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md w-fit" style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)' }}>{ch.type}</span>
+
+                    <button
+                      onClick={(e) => handleJoinChallenge(ch, e)}
+                      className={`w-full py-2.5 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 ${
+                        joined
+                          ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-red-600 hover:to-rose-600'
+                          : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700'
+                      }`}
+                    >
+                      {joined ? (
+                        <><CheckCircle2 className="w-3.5 h-3.5" /> Joined — Click to Leave</>
+                      ) : (
+                        <><Trophy className="w-3.5 h-3.5" /> Join Challenge</>
+                      )}
+                    </button>
+                  </motion.div>
+                );
+              })}
+            </div>
           </motion.div>
         )}
 
@@ -283,7 +398,6 @@ export default function Community() {
               </div>
             </div>
 
-            {/* Previous doubts */}
             <div className="space-y-3">
               {[
                 { q: 'What is the difference between HashMap and TreeMap?', subject: 'Java', answers: 5, solved: true },
@@ -304,6 +418,102 @@ export default function Community() {
                 </div>
               ))}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Challenge Detail Modal ── */}
+      <AnimatePresence>
+        {selectedChallenge && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+            onClick={() => setSelectedChallenge(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 10, opacity: 0 }}
+              transition={{ type: 'spring', duration: 0.4 }}
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-lg rounded-3xl border overflow-hidden"
+              style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
+            >
+              {/* Modal Header */}
+              <div className="relative p-6 pb-4 bg-gradient-to-r from-violet-600/20 to-indigo-600/10 border-b" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                <div className="absolute top-0 right-0 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${difficultyStyle(selectedChallenge.difficulty)}`}>
+                      {selectedChallenge.difficulty}
+                    </span>
+                    <h2 className="text-xl font-black mt-1" style={{ color: 'var(--db-text-main)' }}>{selectedChallenge.title}</h2>
+                  </div>
+                  <button
+                    onClick={() => setSelectedChallenge(null)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition cursor-pointer shrink-0"
+                    style={{ color: 'var(--db-text-muted)' }}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex items-center gap-4 mt-4 text-xs" style={{ color: 'var(--db-text-muted)' }}>
+                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> {selectedChallenge.participants} participants</span>
+                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {selectedChallenge.deadline}</span>
+                  <span className="flex items-center gap-1.5 font-bold text-violet-400"><Zap className="w-3.5 h-3.5" /> +{selectedChallenge.xp} XP</span>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-5">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--db-text-muted)' }}>About this Challenge</p>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--db-text-main)' }}>
+                    {CHALLENGE_DETAILS[selectedChallenge.id]?.description}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--db-text-muted)' }}>Tasks to Complete</p>
+                  <ul className="space-y-2">
+                    {CHALLENGE_DETAILS[selectedChallenge.id]?.tasks.map((task, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm" style={{ color: 'var(--db-text-main)' }}>
+                        <span className="w-5 h-5 rounded-full bg-violet-500/10 text-violet-400 flex items-center justify-center text-[10px] font-black shrink-0">{i + 1}</span>
+                        {task}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl" style={{ backgroundColor: 'var(--db-input-bg)' }}>
+                    <p className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--db-text-muted)' }}>🏆 Prize</p>
+                    <p className="text-xs font-bold text-amber-400">{CHALLENGE_DETAILS[selectedChallenge.id]?.prize}</p>
+                  </div>
+                  <div className="p-3 rounded-xl" style={{ backgroundColor: 'var(--db-input-bg)' }}>
+                    <p className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--db-text-muted)' }}>🎯 Level</p>
+                    <p className="text-xs font-bold" style={{ color: 'var(--db-text-main)' }}>{CHALLENGE_DETAILS[selectedChallenge.id]?.level}</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={(e) => { handleJoinChallenge(selectedChallenge, e); setSelectedChallenge(null); }}
+                  className={`w-full py-3 text-white text-sm font-black rounded-2xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2 ${
+                    joinedChallenges[selectedChallenge.id]
+                      ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700'
+                      : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700'
+                  }`}
+                >
+                  {joinedChallenges[selectedChallenge.id] ? (
+                    <><X className="w-4 h-4" /> Leave Challenge</>
+                  ) : (
+                    <><Trophy className="w-4 h-4" /> Join Challenge — Earn +{selectedChallenge.xp} XP</>
+                  )}
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
