@@ -595,34 +595,59 @@ export default function TypingQuest({ onExit }) {
         </div>
 
         {/* BOTTOM HUD */}
-        <div className="h-24 bg-[#111c33]/80 backdrop-blur-xl border-t border-white/5 flex items-center justify-between px-6 z-20">
+        <div className={`h-24 border-t flex items-center justify-between px-6 z-20 ${
+          isDarkMode ? 'bg-[#111c33]/80 border-white/5 backdrop-blur-xl text-white' : 'bg-white border-slate-200 text-slate-800'
+        }`}>
           <div className="flex gap-8">
             <div className="flex flex-col">
-              <span className="text-xs text-white/50 font-bold uppercase tracking-wider flex items-center gap-1"><Zap className="w-3 h-3"/> Speed</span>
-              <span className="text-2xl font-mono font-black text-white">{wpm} WPM</span>
+              <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1 ${
+                isDarkMode ? 'text-white/50' : 'text-slate-400'
+              }`}><Zap className="w-3 h-3"/> Speed</span>
+              <span className={`text-2xl font-mono font-black ${
+                isDarkMode ? 'text-white' : 'text-slate-700'
+              }`}>{wpm} WPM</span>
             </div>
-            <div className="w-px h-8 bg-white/10" />
+            <div className={`w-px h-8 ${isDarkMode ? 'bg-white/10' : 'bg-slate-200'}`} />
             <div className="flex flex-col">
-              <span className="text-xs text-white/50 font-bold uppercase tracking-wider flex items-center gap-1"><Target className="w-3 h-3"/> Accuracy</span>
+              <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1 ${
+                isDarkMode ? 'text-white/50' : 'text-slate-400'
+              }`}><Target className="w-3 h-3"/> Accuracy</span>
               <span className="text-2xl font-mono font-black text-[#22c55e]">{accuracy}%</span>
             </div>
           </div>
 
           <div className="flex gap-3">
-            <button onClick={handleRestart} className="p-3 bg-[#071225] hover:bg-white/5 border border-white/10 rounded-2xl transition flex items-center gap-2 group">
-              <RefreshCw className="w-4 h-4 text-white/60 group-hover:text-white transition" />
-              <span className="hidden md:block font-bold text-white/80 group-hover:text-white text-xs">Restart</span>
+            <button 
+              onClick={handleRestart} 
+              className={`p-3 border rounded-2xl transition flex items-center gap-2 group ${
+                isDarkMode ? 'bg-[#071225] hover:bg-white/5 border-white/10 text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-750'
+              }`}
+            >
+              <RefreshCw className={`w-4 h-4 transition ${
+                isDarkMode ? 'text-white/60 group-hover:text-white' : 'text-slate-500 group-hover:text-slate-800'
+              }`} />
+              <span className={`hidden md:block font-bold text-xs transition ${
+                isDarkMode ? 'text-white/80 group-hover:text-white' : 'text-slate-650 group-hover:text-slate-800'
+              }`}>Restart</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* DESKTOP RIGHT PANEL (Rewards & Stats) */}
-      <div className="hidden lg:flex w-[300px] bg-[#111c33]/80 backdrop-blur-xl border-l border-[#4f8cff]/20 flex-col p-6 shadow-[-5px_0_30px_rgba(0,0,0,0.5)] z-10">
+      <div className={`hidden lg:flex w-[300px] border-l flex-col p-6 z-10 ${
+        isDarkMode 
+          ? 'bg-[#111c33]/80 border-[#4f8cff]/20 shadow-[-5px_0_30px_rgba(0,0,0,0.5)] backdrop-blur-xl text-white' 
+          : 'bg-white border-slate-200 shadow-[-5px_0_30px_rgba(0,0,0,0.03)] text-slate-800'
+      }`}>
         {/* Combo Tracker */}
-        <div className="bg-[#071225] rounded-3xl p-5 border border-white/5 mb-6 text-center relative overflow-hidden group">
+        <div className={`rounded-3xl p-5 border mb-6 text-center relative overflow-hidden group ${
+          isDarkMode ? 'bg-[#071225] border-white/5' : 'bg-slate-50 border-slate-200'
+        }`}>
           <div className="absolute inset-0 bg-gradient-to-b from-[#4f8cff]/10 to-transparent opacity-0 group-hover:opacity-100 transition duration-500" />
-          <div className="text-xs font-bold text-white/50 uppercase tracking-widest mb-1 flex items-center justify-center gap-2">
+          <div className={`text-xs font-bold uppercase tracking-widest mb-1 flex items-center justify-center gap-2 ${
+            isDarkMode ? 'text-white/50' : 'text-slate-400'
+          }`}>
             <Flame className="w-4 h-4 text-orange-500 animate-bounce" /> Combo Multiplier
           </div>
           <div 
@@ -634,24 +659,30 @@ export default function TypingQuest({ onExit }) {
         </div>
 
         {/* High Stats Summary */}
-        <h4 className="text-xs font-bold text-white/60 uppercase tracking-wider mb-4">Quest Records</h4>
-        <div className="space-y-3 bg-[#071225]/50 border border-white/5 rounded-2xl p-4 mb-6">
+        <h4 className={`text-xs font-bold uppercase tracking-wider mb-4 ${
+          isDarkMode ? 'text-white/60' : 'text-slate-400'
+        }`}>Quest Records</h4>
+        <div className={`space-y-3 rounded-2xl p-4 mb-6 border ${
+          isDarkMode ? 'bg-[#071225]/50 border-white/5' : 'bg-slate-50 border-slate-200'
+        }`}>
           <div className="flex justify-between items-center text-sm">
-            <span className="text-white/60">High speed:</span>
-            <span className="font-bold text-white">{savedStats.highWpm} WPM</span>
+            <span className={isDarkMode ? 'text-white/60' : 'text-slate-500'}>High speed:</span>
+            <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{savedStats.highWpm} WPM</span>
           </div>
           <div className="flex justify-between items-center text-sm">
-            <span className="text-white/60">Best Streak:</span>
-            <span className="font-bold text-orange-400">{streak} Days</span>
+            <span className={isDarkMode ? 'text-white/60' : 'text-slate-500'}>Best Streak:</span>
+            <span className="font-bold text-orange-450">{streak} Days</span>
           </div>
           <div className="flex justify-between items-center text-sm">
-            <span className="text-white/60">Total XP earned:</span>
-            <span className="font-bold text-blue-400">{xp} XP</span>
+            <span className={isDarkMode ? 'text-white/60' : 'text-slate-500'}>Total XP earned:</span>
+            <span className="font-bold text-blue-500">{xp} XP</span>
           </div>
         </div>
 
         {/* Badges */}
-        <h4 className="text-xs font-bold text-white/60 uppercase tracking-wider mb-4">Arena Rewards</h4>
+        <h4 className={`text-xs font-bold uppercase tracking-wider mb-4 ${
+          isDarkMode ? 'text-white/60' : 'text-slate-400'
+        }`}>Arena Rewards</h4>
         <div className="grid grid-cols-3 gap-3">
           <div className="aspect-square bg-gradient-to-br from-yellow-400/20 to-orange-500/20 rounded-2xl border border-yellow-500/30 flex items-center justify-center hover:scale-105 transition shadow-[0_0_15px_rgba(234,179,8,0.15)]">
             <Star className="w-8 h-8 text-yellow-400" fill="currentColor" />
@@ -659,9 +690,11 @@ export default function TypingQuest({ onExit }) {
           <div className="aspect-square bg-gradient-to-br from-[#4f8cff]/20 to-cyan-500/20 rounded-2xl border border-[#4f8cff]/30 flex items-center justify-center hover:scale-105 transition">
             <Target className="w-8 h-8 text-[#4f8cff]" />
           </div>
-          <div className="aspect-square bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl border border-purple-500/30 flex items-center justify-center hover:scale-105 transition flex-col">
-            <span className="text-[10px] font-bold text-purple-300">WPM</span>
-            <span className="text-lg font-black text-purple-400">{Math.max(savedStats.highWpm, wpm)}</span>
+          <div className={`aspect-square bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl border flex items-center justify-center hover:scale-105 transition flex-col ${
+            isDarkMode ? 'border-purple-500/30' : 'border-purple-200'
+          }`}>
+            <span className={`text-[10px] font-bold ${isDarkMode ? 'text-purple-300' : 'text-purple-650'}`}>WPM</span>
+            <span className={`text-lg font-black ${isDarkMode ? 'text-purple-400' : 'text-purple-700'}`}>{Math.max(savedStats.highWpm, wpm)}</span>
           </div>
         </div>
       </div>
