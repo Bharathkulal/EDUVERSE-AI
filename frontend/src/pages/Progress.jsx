@@ -1062,12 +1062,40 @@ function VoiceTeacherTabPanel() {
   const [language, setLanguage] = useState('English');
   const [voiceGender, setVoiceGender] = useState('Female');
   const [activeState, setActiveState] = useState('idle'); // idle, listening, thinking, speaking
+  const [textInput, setTextInput] = useState('');
   const [conversation, setConversation] = useState([
     { role: 'ai', text: 'Hello! I am your personal AI study mentor. What concepts are we mastering today?', time: '10:05 AM' },
     { role: 'user', text: 'What is a binary search tree?', time: '10:06 AM' },
     { role: 'ai', text: 'A binary search tree is a node-based binary tree data structure where the left subtree contains values less than the root, and the right subtree contains values greater. Let me show you an example!', time: '10:06 AM' }
   ]);
   const [simulatedBars, setSimulatedBars] = useState(Array.from({ length: 18 }, () => 8));
+
+  const handleSendText = () => {
+    if (!textInput.trim()) return;
+    const userText = textInput;
+    setConversation(prev => [
+      ...prev,
+      { role: 'user', text: userText, time: 'Just now' }
+    ]);
+    setTextInput('');
+    setActiveState('thinking');
+    
+    setTimeout(() => {
+      let responseText = `I received your question about "${userText}". Let's master this concept together!`;
+      if (userText.toLowerCase().trim() === 'hi' || userText.toLowerCase().trim() === 'hello') {
+        responseText = "Hello! I am your personal AI study mentor. What concepts are we mastering today?";
+      }
+      setConversation(prev => [
+        ...prev,
+        { role: 'ai', text: responseText, time: 'Just now' }
+      ]);
+      setActiveState('speaking');
+      speak(responseText);
+      setTimeout(() => {
+        setActiveState('idle');
+      }, 4000);
+    }, 1500);
+  };
 
   // Speech orb bars simulation
   useEffect(() => {
@@ -1271,10 +1299,16 @@ function VoiceTeacherTabPanel() {
             <div className="flex gap-2 pt-3 border-t border-white/5">
               <input
                 type="text"
+                value={textInput}
+                onChange={e => setTextInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleSendText(); }}
                 placeholder="Ask your AI Mentor something..."
                 className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-violet-500"
               />
-              <button className="p-2.5 bg-violet-650 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition">
+              <button 
+                onClick={handleSendText}
+                className="p-2.5 bg-violet-650 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+              >
                 Send
               </button>
             </div>

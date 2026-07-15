@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useSessionTracker } from '../utils/sessionTracker';
 import { useNavHistory } from '../context/NavigationContext';
+import { useCommandAI } from '../context/CommandAIContext';
 import ThemeToggleButton from './ThemeToggleButton';
 import { Mic } from 'lucide-react';
 import EduVerseLogo from './EduVerseLogo';
@@ -62,6 +63,7 @@ export default function Layout({ children }) {
   const { user, logout, isAdmin } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const { goBack, canGoBack, clearHistory } = useNavHistory();
+  const { executeCommand } = useCommandAI();
   useSessionTracker(user);
   const location = useLocation();
   const navigate = useNavigate();
@@ -561,6 +563,13 @@ export default function Layout({ children }) {
               style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}
               value={commandQuery}
               onChange={(e) => setCommandQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && commandQuery.trim()) {
+                  executeCommand(commandQuery);
+                  setShowCommandPalette(false);
+                  setCommandQuery('');
+                }
+              }}
               autoFocus
             />
 
