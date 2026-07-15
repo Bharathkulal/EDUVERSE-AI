@@ -1,0 +1,208 @@
+/* ═══════════════════════════════════════════════
+   EduVerse Command AI — Complete Component Stylesheet
+═══════════════════════════════════════════════ */
+
+/* ── Floating Orb Wrapper ── */
+.cai-orb-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cai-orb-floating {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4));
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.cai-orb-floating:hover {
+  transform: translateY(-4px) scale(1.05);
+}
+
+/* ── Halo Background Glow ── */
+.cai-orb-halo {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  filter: blur(16px);
+  opacity: 0.3;
+  transition: background 0.4s ease, opacity 0.4s ease;
+}
+.cai-orb-halo.idle { background: radial-gradient(circle, #2563eb 0%, transparent 70%); }
+.cai-orb-halo.listening { background: radial-gradient(circle, #ec4899 0%, transparent 70%); opacity: 0.6; }
+.cai-orb-halo.thinking { background: radial-gradient(circle, #7c3aed 0%, transparent 70%); opacity: 0.5; }
+.cai-orb-halo.speaking { background: radial-gradient(circle, #00d4ff 0%, transparent 70%); opacity: 0.55; }
+
+/* ── Nested Rings ── */
+.cai-orb-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  pointer-events: none;
+}
+
+.cai-orb-ring-1 {
+  inset: 0;
+  border-color: rgba(37, 99, 235, 0.15);
+  border-top-color: #2563eb;
+  border-bottom-color: #00d4ff;
+  animation: rotationCW 6s linear infinite;
+}
+.cai-orb-ring-2 {
+  inset: 6px;
+  border-color: rgba(124, 58, 237, 0.1);
+  border-left-color: #7c3aed;
+  border-style: dashed;
+  animation: rotationCCW 10s linear infinite;
+}
+.cai-orb-ring-3 {
+  inset: 12px;
+  border-color: rgba(236, 72, 153, 0.08);
+  border-right-color: #ec4899;
+  border-style: dotted;
+  animation: rotationCW 4s linear infinite;
+}
+
+/* State animation overrides */
+.cai-ring-listening { border-color: rgba(236, 72, 153, 0.2) !important; border-top-color: #ec4899 !important; }
+.cai-ring-thinking { border-color: rgba(124, 58, 237, 0.2) !important; border-left-color: #7c3aed !important; }
+.cai-ring-speaking { border-color: rgba(0, 212, 255, 0.2) !important; border-right-color: #00d4ff !important; }
+
+@keyframes rotationCW { to { transform: rotate(360deg); } }
+@keyframes rotationCCW { to { transform: rotate(-360deg); } }
+
+/* ── Interactive Core ── */
+.cai-orb-core {
+  position: absolute;
+  inset: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1.5px solid transparent;
+}
+.cai-orb-core.idle {
+  background: radial-gradient(circle at 35% 35%, #1e40af, #050816);
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.1);
+  border-color: #2563eb;
+  animation: orbPulseIdle 3s ease-in-out infinite;
+}
+.cai-orb-core.listening {
+  background: radial-gradient(circle at 35% 35%, #ec4899, #500724);
+  box-shadow: 0 0 25px rgba(236, 72, 153, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.2);
+  border-color: #ec4899;
+  animation: orbListeningPulse 0.7s ease-in-out infinite alternate;
+}
+.cai-orb-core.thinking {
+  background: radial-gradient(circle at 35% 35%, #7c3aed, #1e1b4b);
+  box-shadow: 0 0 25px rgba(124, 58, 237, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.1);
+  border-color: #7c3aed;
+  animation: orbThinkingRotate 1.2s linear infinite;
+}
+.cai-orb-core.speaking {
+  background: radial-gradient(circle at 35% 35%, #0891b2, #0c4a6e);
+  box-shadow: 0 0 25px rgba(0, 212, 255, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.2);
+  border-color: #00d4ff;
+  animation: orbSpeakingPulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes orbPulseIdle { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+@keyframes orbListeningPulse { 0% { transform: scale(0.95); } 100% { transform: scale(1.1); } }
+@keyframes orbSpeakingPulse { 0% { transform: scale(0.98); } 100% { transform: scale(1.08); } }
+@keyframes orbThinkingRotate { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.05); } 100% { transform: rotate(360deg) scale(1); } }
+
+/* ── State Info Label ── */
+.cai-orb-label {
+  position: absolute;
+  bottom: -22px;
+  white-space: nowrap;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #64748b;
+  pointer-events: none;
+  animation: pulseLabel 2s infinite ease-in-out;
+}
+@keyframes pulseLabel { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+/* ── Panel Layout ── */
+.cai-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  z-index: 90;
+}
+
+.cai-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 480px;
+  background: rgba(4, 6, 15, 0.85);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px 28px 0 0;
+  z-index: 95;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+  padding: 24px;
+}
+
+.cai-panel::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+/* ── Waveform bars ── */
+.cai-waveform {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 32px;
+}
+.cai-waveform-bar {
+  width: 3.5px;
+  background: linear-gradient(to top, #7c3aed, #00d4ff);
+  border-radius: 3px;
+  transition: height 0.1s ease;
+}
+
+/* ── Commands Chips ── */
+.cai-chip {
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.cai-chip:hover {
+  border-color: rgba(124, 58, 237, 0.4);
+  background: rgba(124, 58, 237, 0.1);
+  color: #c4b5fd;
+  transform: translateY(-1px);
+}
+.cai-chip:active {
+  transform: scale(0.96);
+}

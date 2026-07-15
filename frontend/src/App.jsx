@@ -44,6 +44,8 @@ const Community = lazy(() => import('./pages/Community'));
 const CareerHub = lazy(() => import('./pages/CareerHub'));
 const ExamCommandCenter = lazy(() => import('./pages/ExamCommandCenter'));
 const DebateArena = lazy(() => import('./pages/DebateArena'));
+// Command AI Page
+const CommandAIDashboard = lazy(() => import('./pages/CommandAIDashboard'));
 // Python AI Learning Platform
 const PythonLessonPage = lazy(() => import('./python/PythonLessonPage'));
 // Advanced Java AI Learning Platform
@@ -93,8 +95,13 @@ const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 const AdminAlerts = lazy(() => import('./pages/admin/AdminAlerts'));
 const AdminPredictions = lazy(() => import('./pages/admin/AdminPredictions'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+const AdminVoiceLogs = lazy(() => import('./pages/admin/AdminVoiceLogs'));
 // Other Components
 const DBMSLab = lazy(() => import('./components/DBMSLab'));
+
+// Command AI Global Overlay imports
+const CommandOrb = lazy(() => import('./components/CommandAI/CommandOrb'));
+const CommandPanel = lazy(() => import('./components/CommandAI/CommandPanel'));
 
 function HomeRedirect() {
   const { user, loading, profileCompleted } = useAuth();
@@ -114,13 +121,17 @@ const PageLoader = () => (
 
 export default function App() {
   const location = useLocation();
-  const { startListening, toggleEnabled, isEnabled } = useVoiceAssistant();
-
-
 
   return (
     <>
       <AIChatLayer />
+      
+      {/* Command AI Global Overlays */}
+      <Suspense fallback={null}>
+        <CommandOrb />
+        <CommandPanel />
+      </Suspense>
+
       <AnimatePresence mode="wait">
         <Suspense fallback={<PageLoader />}>
           <Routes location={location} key={location.pathname + location.hash}>
@@ -169,6 +180,7 @@ export default function App() {
             <Route path="/ai-profile" element={<ProtectedRoute><Layout><AIProfile /></Layout></ProtectedRoute>} />
             <Route path="/question-bank" element={<ProtectedRoute><Layout><QuestionBank /></Layout></ProtectedRoute>} />
             <Route path="/voice-assistant" element={<ProtectedRoute><Layout><VoiceAssistant /></Layout></ProtectedRoute>} />
+            <Route path="/command-ai" element={<ProtectedRoute><Layout><CommandAIDashboard /></Layout></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
             <Route path="/typing-quest" element={<ProtectedRoute><Layout><TypingQuest /></Layout></ProtectedRoute>} />
             <Route path="/coding-battle" element={<ProtectedRoute><Layout><CodingBattleSystem /></Layout></ProtectedRoute>} />
@@ -219,6 +231,7 @@ export default function App() {
             <Route path="/admin/alerts" element={<ProtectedRoute adminOnly><Layout><AdminAlerts /></Layout></ProtectedRoute>} />
             <Route path="/admin/predictions" element={<ProtectedRoute adminOnly><Layout><AdminPredictions /></Layout></ProtectedRoute>} />
             <Route path="/admin/settings" element={<ProtectedRoute adminOnly><Layout><AdminSettings /></Layout></ProtectedRoute>} />
+            <Route path="/admin/voice-logs" element={<ProtectedRoute adminOnly><Layout><AdminVoiceLogs /></Layout></ProtectedRoute>} />
 
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>
