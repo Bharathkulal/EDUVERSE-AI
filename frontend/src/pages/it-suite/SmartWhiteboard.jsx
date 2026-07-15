@@ -14,11 +14,13 @@ import {
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import './SmartWhiteboard.css';
 
 export default function SmartWhiteboard() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const navigate = useNavigate();
 
   // Board Data States
@@ -43,6 +45,10 @@ export default function SmartWhiteboard() {
   const [showGrid, setShowGrid] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [canvasBg, setCanvasBg] = useState('#0B1020');
+
+  useEffect(() => {
+    setCanvasBg(isDarkMode ? '#0B1020' : '#ffffff');
+  }, [isDarkMode]);
 
   // Drawing States
   const [isDrawing, setIsDrawing] = useState(false);
@@ -740,7 +746,7 @@ export default function SmartWhiteboard() {
             <div 
               className="absolute inset-0 pointer-events-none opacity-20"
               style={{
-                backgroundImage: 'radial-gradient(rgba(255,255,255,0.15) 1.5px, transparent 1.5px)',
+                backgroundImage: `radial-gradient(${isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)'} 1.5px, transparent 1.5px)`,
                 backgroundSize: '30px 30px',
                 backgroundPosition: `${panX}px ${panY}px`
               }}

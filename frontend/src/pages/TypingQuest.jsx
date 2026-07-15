@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, Heart, Zap, Shield, Play, Pause, SkipForward, RefreshCw, Star, Target, Crosshair, Award, Code2, Clock, RotateCcw, ChevronRight } from 'lucide-react';
 import { animateXP, animateCombo, animateLevelUp, xpBurst, shakeError, countdown } from '../utils/gameAnimations';
+import { useTheme } from '../context/ThemeContext';
+import GlobalBackButton from '../components/GlobalBackButton';
 
 const SUBJECTS = [
   { id: 'java', name: 'Java', icon: '☕' },
@@ -50,8 +52,8 @@ const SNIPPETS_BY_SUBJECT = {
   ]
 };
 
-import GlobalBackButton from '../components/GlobalBackButton';
 export default function TypingQuest({ onExit }) {
+  const { isDarkMode } = useTheme();
   // Saved stats or fallback defaults
   const savedStats = JSON.parse(localStorage.getItem('typing_quest_stats')) || {
     level: 1,
@@ -315,11 +317,19 @@ export default function TypingQuest({ onExit }) {
   return (
     <div 
       ref={containerRef}
-      className="fixed inset-0 z-50 bg-[#071225] text-white overflow-hidden flex flex-col md:flex-row font-sans"
-      style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, #111c33 0%, #071225 100%)' }}
+      className={`fixed inset-0 z-50 overflow-hidden flex flex-col md:flex-row font-sans ${
+        isDarkMode ? 'bg-[#071225] text-white' : 'bg-[#f1f5f9] text-slate-800'
+      }`}
+      style={{ backgroundImage: isDarkMode ? 'radial-gradient(circle at 50% 50%, #111c33 0%, #071225 100%)' : 'none' }}
     >
       {/* DESKTOP LEFT PANEL (Progress) */}
-      <div className="hidden md:flex w-[280px] bg-[#111c33]/80 backdrop-blur-xl border-r border-[#4f8cff]/20 flex-col p-6 shadow-[5px_0_30px_rgba(0,0,0,0.5)] z-10">
+      <div 
+        className={`hidden md:flex w-[280px] flex-col p-6 z-10 border-r ${
+          isDarkMode 
+            ? 'bg-[#111c33]/80 border-[#4f8cff]/20 shadow-[5px_0_30px_rgba(0,0,0,0.5)] backdrop-blur-xl' 
+            : 'bg-white border-slate-200 shadow-[5px_0_30px_rgba(0,0,0,0.03)]'
+        }`}
+      >
         <GlobalBackButton className="mb-8 w-full justify-center" variant="floating" label="Exit Arena" />
 
         <div className="text-center mb-6">
@@ -327,17 +337,21 @@ export default function TypingQuest({ onExit }) {
             ref={levelRef}
             className="w-28 h-28 mx-auto rounded-full bg-gradient-to-br from-[#4f8cff] to-purple-600 p-1 mb-4 shadow-[0_0_20px_rgba(79,140,255,0.4)]"
           >
-            <div className="w-full h-full bg-[#111c33] rounded-full flex flex-col items-center justify-center border-2 border-transparent">
+            <div className={`w-full h-full rounded-full flex flex-col items-center justify-center border-2 border-transparent ${
+              isDarkMode ? 'bg-[#111c33] text-white' : 'bg-white text-slate-800'
+            }`}>
               <span className="text-[10px] text-[#4f8cff] font-bold tracking-widest uppercase">Level</span>
-              <span className="text-3xl font-extrabold text-white">{level}</span>
+              <span className="text-3xl font-extrabold">{level}</span>
             </div>
           </div>
-          <h3 className="text-md font-bold text-white/80">Infinity Typist</h3>
+          <h3 className={`text-md font-bold ${isDarkMode ? 'text-white/80' : 'text-slate-700'}`}>Infinity Typist</h3>
         </div>
 
         {/* Subject Selection Side Menu */}
         <div className="flex-1 flex flex-col min-h-0">
-          <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-3">Choose Subject</span>
+          <span className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${
+            isDarkMode ? 'text-white/50' : 'text-slate-400'
+          }`}>Choose Subject</span>
           <div className="flex-1 overflow-y-auto space-y-1.5 pr-2 custom-scrollbar">
             {SUBJECTS.map((sub) => (
               <button
@@ -346,7 +360,7 @@ export default function TypingQuest({ onExit }) {
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-semibold transition ${
                   activeSubject === sub.id
                     ? 'bg-[#4f8cff] text-white shadow-[0_0_12px_rgba(79,140,255,0.3)]'
-                    : 'bg-[#071225]/40 hover:bg-[#071225]/80 text-white/70'
+                    : (isDarkMode ? 'bg-[#071225]/40 hover:bg-[#071225]/80 text-white/70' : 'bg-slate-100 hover:bg-slate-200 text-slate-600')
                 }`}
               >
                 <span>{sub.icon}</span>
@@ -358,10 +372,12 @@ export default function TypingQuest({ onExit }) {
 
         <div className="mt-4 pt-4 border-t border-white/10">
           <div className="flex justify-between text-xs mb-2">
-            <span className="text-white/60 font-semibold">XP Progress</span>
+            <span className={`font-semibold ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>XP Progress</span>
             <span className="text-[#4f8cff] font-bold">{xp} / {xpRequired} XP</span>
           </div>
-          <div className="h-2.5 w-full bg-[#071225] rounded-full overflow-hidden border border-white/5 relative">
+          <div className={`h-2.5 w-full rounded-full overflow-hidden border relative ${
+            isDarkMode ? 'bg-[#071225] border-white/5' : 'bg-slate-100 border-slate-200'
+          }`}>
             <div 
               ref={xpBarRef}
               className="h-full bg-gradient-to-r from-[#4f8cff] to-cyan-400 shadow-[0_0_10px_rgba(79,140,255,0.8)]"
@@ -374,11 +390,17 @@ export default function TypingQuest({ onExit }) {
       {/* CENTER AREA (Arena + HUDs) */}
       <div className="flex-1 flex flex-col relative min-w-0">
         {/* TOP HUD */}
-        <div className="h-20 bg-[#111c33]/60 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 z-20">
+        <div className={`h-20 border-b flex items-center justify-between px-6 z-20 ${
+          isDarkMode ? 'bg-[#111c33]/60 border-white/5 backdrop-blur-md' : 'bg-white border-slate-200'
+        }`}>
           <div className="flex items-center gap-4">
             <div className="flex flex-col">
-              <span className="text-xs text-white/50 font-semibold uppercase tracking-wider">Level {level} Arena</span>
-              <span className="text-md font-bold text-white flex items-center gap-2">
+              <span className={`text-xs font-semibold uppercase tracking-wider ${
+                isDarkMode ? 'text-white/50' : 'text-slate-400'
+              }`}>Level {level} Arena</span>
+              <span className={`text-md font-bold flex items-center gap-2 ${
+                isDarkMode ? 'text-white' : 'text-slate-700'
+              }`}>
                 <Code2 size={16} className="text-[#4f8cff]" /> {currentSnippet.title}
               </span>
             </div>
@@ -389,7 +411,7 @@ export default function TypingQuest({ onExit }) {
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all ${
               timeLeft < 10 
                 ? 'border-red-500/50 bg-red-500/10 text-red-400 animate-pulse'
-                : 'border-white/10 bg-[#071225]/80 text-[#4f8cff]'
+                : (isDarkMode ? 'border-white/10 bg-[#071225]/80 text-[#4f8cff]' : 'border-slate-200 bg-slate-50 text-[#2563eb]')
             }`}>
               <Clock className="w-4 h-4" />
               <span className="font-mono font-bold text-sm">{timeLeft}s</span>
@@ -399,7 +421,7 @@ export default function TypingQuest({ onExit }) {
               {[...Array(3)].map((_, i) => (
                 <Heart 
                   key={i} 
-                  className={`w-5 h-5 ${i < lives ? 'text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]' : 'text-white/10'}`} 
+                  className={`w-5 h-5 ${i < lives ? 'text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]' : (isDarkMode ? 'text-white/10' : 'text-slate-200')}`} 
                   fill={i < lives ? "currentColor" : "none"} 
                 />
               ))}
@@ -418,7 +440,11 @@ export default function TypingQuest({ onExit }) {
 
           {/* Line-by-Line Code Workspace */}
           <div className="w-full max-w-3xl relative z-10 font-mono">
-            <div className="bg-[#0a1122]/90 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col gap-3 min-h-[250px]">
+            <div className={`p-6 md:p-8 rounded-3xl border flex flex-col gap-3 min-h-[250px] ${
+              isDarkMode 
+                ? 'bg-[#0a1122]/90 border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl' 
+                : 'bg-white border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.04)]'
+            }`}>
               
               {/* Render Completed Lines */}
               {snippetLines.slice(0, currentLineIndex).map((line, idx) => (
@@ -428,10 +454,14 @@ export default function TypingQuest({ onExit }) {
               ))}
 
               {/* Active Typing Line */}
-              <div className="relative py-2 px-3 bg-[#4f8cff]/10 border border-[#4f8cff]/30 rounded-xl shadow-[0_0_15px_rgba(79,140,255,0.1)]">
+              <div className={`relative py-2 px-3 border rounded-xl ${
+                isDarkMode 
+                  ? 'bg-[#4f8cff]/10 border-[#4f8cff]/30 shadow-[0_0_15px_rgba(79,140,255,0.1)]' 
+                  : 'bg-blue-50/50 border-blue-200 shadow-[0_0_15px_rgba(37,99,235,0.03)]'
+              }`}>
                 <div className="whitespace-pre-wrap select-none text-xl leading-relaxed break-all relative">
                   {snippetLines[currentLineIndex].split('').map((char, charIdx) => {
-                    let colorClass = 'text-white/30';
+                    let colorClass = isDarkMode ? 'text-white/30' : 'text-slate-400';
                     let isCurrent = charIdx === lineInput.length;
                     
                     if (charIdx < lineInput.length) {
@@ -441,7 +471,9 @@ export default function TypingQuest({ onExit }) {
                         colorClass = 'text-[#ef4444] bg-[#ef4444]/20 border-b border-[#ef4444]';
                       }
                     } else if (isCurrent && gameState === 'playing') {
-                      colorClass = 'text-white bg-[#4f8cff]/30 border-l border-[#4f8cff] animate-pulse';
+                      colorClass = isDarkMode 
+                        ? 'text-white bg-[#4f8cff]/30 border-l border-[#4f8cff] animate-pulse' 
+                        : 'text-slate-900 bg-blue-100 border-l border-blue-500 animate-pulse';
                     }
 
                     return (
@@ -469,16 +501,20 @@ export default function TypingQuest({ onExit }) {
 
               {/* Render Upcoming Lines */}
               {snippetLines.slice(currentLineIndex + 1).map((line, idx) => (
-                <div key={idx} className="text-white/20 select-none whitespace-pre-wrap">
+                <div key={idx} className={`select-none whitespace-pre-wrap ${
+                  isDarkMode ? 'text-white/20' : 'text-slate-300'
+                }`}>
                   {line}
                 </div>
               ))}
 
             </div>
             
-            <div className="mt-3 flex justify-between items-center text-xs text-white/40 px-2">
-              <span>Press <kbd className="bg-white/10 px-1 py-0.5 rounded text-white font-mono">Tab</kbd> to autocomplete indentation spaces.</span>
-              <span>Press <kbd className="bg-white/10 px-1 py-0.5 rounded text-white font-mono">Enter</kbd> to submit line.</span>
+            <div className={`mt-3 flex justify-between items-center text-xs px-2 ${
+              isDarkMode ? 'text-white/40' : 'text-slate-500'
+            }`}>
+              <span>Press <kbd className={`px-1 py-0.5 rounded font-mono ${isDarkMode ? 'bg-white/10 text-white' : 'bg-slate-200 text-slate-800'}`}>Tab</kbd> to autocomplete indentation spaces.</span>
+              <span>Press <kbd className={`px-1 py-0.5 rounded font-mono ${isDarkMode ? 'bg-white/10 text-white' : 'bg-slate-200 text-slate-800'}`}>Enter</kbd> to submit line.</span>
             </div>
           </div>
 
