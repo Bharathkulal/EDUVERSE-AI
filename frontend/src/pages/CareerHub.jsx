@@ -78,6 +78,8 @@ export default function CareerHub() {
     { topic: 'Logical Reasoning', questions: 200, completed: 30, icon: '🧩' },
     { topic: 'Verbal Ability', questions: 180, completed: 20, icon: '📝' },
     { topic: 'Data Interpretation', questions: 120, completed: 10, icon: '📊' },
+    { topic: 'Attention to Detail', questions: 150, completed: 25, icon: '🔍' },
+    { topic: 'Spatial Ability', questions: 100, completed: 15, icon: '📐' },
   ];
   const [activeCertCertificate, setActiveCertCertificate] = useState(null);
 
@@ -153,10 +155,36 @@ export default function CareerHub() {
   const aptitudeData = {
     'Quantitative Aptitude': [
       { q: 'A train 100m long passes a platform 200m long in 30 seconds. What is its speed?', opts: ['10 m/s', '15 m/s', '20 m/s', '25 m/s'], ans: 0 },
-      { q: 'If 3 pumps work 8 hours a day to empty a tank in 2 days, how many hours a day must 4 pumps work to empty it in 1 day?', opts: ['8 hours', '12 hours', '10 hours', '6 hours'], ans: 1 }
+      { q: 'If 3 pumps work 8 hours a day to empty a tank in 2 days, how many hours a day must 4 pumps work to empty it in 1 day?', opts: ['8 hours', '12 hours', '10 hours', '6 hours'], ans: 1 },
+      { q: 'A sum of money at simple interest amounts to Rs. 815 in 3 years and to Rs. 854 in 4 years. What is the sum?', opts: ['Rs. 650', 'Rs. 690', 'Rs. 698', 'Rs. 700'], ans: 2 },
+      { q: 'Two numbers are in the ratio 3:5. If 9 is subtracted from each, the new numbers are in the ratio 12:23. The smaller number is:', opts: ['27', '33', '49', '55'], ans: 0 }
     ],
     'Logical Reasoning': [
-      { q: 'Point to a photograph, a man says "I have no brother or sister but that man\'s father is my father\'s son." Whose photograph is it?', opts: ['His own', 'His son\'s', 'His father\'s', 'His nephew\'s'], ans: 1 }
+      { q: 'Point to a photograph, a man says "I have no brother or sister but that man\'s father is my father\'s son." Whose photograph is it?', opts: ['His own', 'His son\'s', 'His father\'s', 'His nephew\'s'], ans: 1 },
+      { q: 'Look at this series: 2, 1, (1/2), (1/4), ... What number should come next?', opts: ['1/3', '1/8', '2/8', '1/16'], ans: 1 },
+      { q: 'SCD, TEF, UGH, ____, WKL. What letters should fill in the blank?', opts: ['VIJ', 'VJH', 'IJT', 'UJI'], ans: 0 },
+      { q: 'If A + B means A is the brother of B; A - B means A is the sister of B and A x B means A is the father of B. Which of the following means that C is the son of M?', opts: ['M - N x C', 'F - C + M', 'M x N - C', 'M x C - F'], ans: 3 }
+    ],
+    'Verbal Ability': [
+      { q: 'Find the synonym of: ADVERSITY', opts: ['Crisis', 'Misfortune', 'Failure', 'Helplessness'], ans: 1 },
+      { q: 'Select the word that is opposite in meaning (antonym) to: ENORMOUS', opts: ['Soft', 'Average', 'Tiny', 'Weak'], ans: 2 },
+      { q: 'Choose the correct spelling:', opts: ['Receive', 'Recieve', 'Receve', 'Reiceve'], ans: 0 },
+      { q: 'Identify the grammatical error: "He is one of those men who is never satisfied."', opts: ['He is', 'one of those', 'men who is', 'never satisfied'], ans: 2 }
+    ],
+    'Data Interpretation': [
+      { q: 'If the total sales of a company in 2025 were $5 million and increased by 20% in 2026, what were the sales in 2026?', opts: ['$5.5 million', '$6.0 million', '$6.2 million', '$6.5 million'], ans: 1 },
+      { q: 'In a pie chart representing student grades, 25% of students got an A. What is the central angle for the sector representing Grade A?', opts: ['45 degrees', '90 degrees', '120 degrees', '180 degrees'], ans: 1 },
+      { q: 'A bar graph shows sales of Cars: Year 1 = 150, Year 2 = 180, Year 3 = 210. What is the average sales across the three years?', opts: ['160', '180', '190', '200'], ans: 1 }
+    ],
+    'Attention to Detail': [
+      { q: 'Which of the following pairs is NOT an exact match?', opts: ['849302-A / 849302-A', 'Microsoft Corp. / Microsoft Corp.', 'O\'Connor, John / O\'Conner, John', '9812-321-X / 9812-321-X'], ans: 2 },
+      { q: 'How many times does the letter \'e\' appear in the word \'representation\'?', opts: ['1', '2', '3', '4'], ans: 1 },
+      { q: 'Compare 479201948 and 479201948. Are they identical?', opts: ['Yes', 'No', 'Cannot be determined', 'They are partially identical'], ans: 0 }
+    ],
+    'Spatial Ability': [
+      { q: 'If you fold a piece of paper in half and punch a hole in the center, how many holes will there be when you unfold it?', opts: ['1', '2', '3', '4'], ans: 1 },
+      { q: 'A cube has its faces numbered 1 through 6. If the numbers 1 and 6 are on opposite faces, and 2 and 5 are on opposite faces, which number is opposite to 3?', opts: ['4', '5', '6', '1'], ans: 0 },
+      { q: 'If a clock shows 3:00, what is the angle between the hour and minute hand?', opts: ['45 degrees', '60 degrees', '90 degrees', '120 degrees'], ans: 2 }
     ]
   };
 
@@ -565,7 +593,7 @@ export default function CareerHub() {
                           setAptScore(0);
                           setAptitudeMode('test');
                         } else {
-                          toast.error('Logical Reasoning and other topics are unlocking soon.');
+                          toast.error(`${topic.topic} is unlocking soon.`);
                         }
                       }}
                       className="w-full py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
