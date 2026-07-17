@@ -81,6 +81,16 @@ export default function CareerHub() {
     { topic: 'Attention to Detail', questions: 150, completed: 25, icon: '🔍' },
     { topic: 'Spatial Ability', questions: 100, completed: 15, icon: '📐' },
   ];
+
+  const interviewTracks = [
+    { type: 'Technical Interview', desc: 'Data structures, algorithms, OOP, code efficiency', icon: '💻' },
+    { type: 'Behavioral Interview', desc: 'Teamwork, leadership, situational questions', icon: '🎙️' },
+    { type: 'System Design', desc: 'Architecture, scalability, load balancing, databases', icon: '🏗️' },
+    { type: 'Frontend Interview', desc: 'HTML, CSS, React, browser rendering, performance', icon: '🎨' },
+    { type: 'Database & SQL Interview', desc: 'Indexing, ACID properties, queries, replication', icon: '🗄️' },
+    { type: 'Managerial / HR Interview', desc: 'Conflict resolution, growth mindset, career alignment', icon: '🤝' },
+  ];
+
   const [activeCertCertificate, setActiveCertCertificate] = useState(null);
 
   useEffect(() => {
@@ -185,6 +195,40 @@ export default function CareerHub() {
       { q: 'If you fold a piece of paper in half and punch a hole in the center, how many holes will there be when you unfold it?', opts: ['1', '2', '3', '4'], ans: 1 },
       { q: 'A cube has its faces numbered 1 through 6. If the numbers 1 and 6 are on opposite faces, and 2 and 5 are on opposite faces, which number is opposite to 3?', opts: ['4', '5', '6', '1'], ans: 0 },
       { q: 'If a clock shows 3:00, what is the angle between the hour and minute hand?', opts: ['45 degrees', '60 degrees', '90 degrees', '120 degrees'], ans: 2 }
+    ]
+  };
+
+  // Mock Interview Questions
+  const interviewData = {
+    'Technical Interview': [
+      { q: 'Question 1: Explain the difference between thread-safe operations and default asynchronous execution.', ansTip: 'Focus on locks, mutexes, shared memory vs independent execution paths.' },
+      { q: 'Question 2: How do you verify and optimize index queries inside database tables?', ansTip: 'Discuss EXPLAIN plans, index types (B-tree, Hash), and coverage.' },
+      { q: 'Question 3: Describe the time and space complexity of sorting algorithms like QuickSort and MergeSort.', ansTip: 'QuickSort is O(n log n) average, O(n^2) worst case, O(log n) space. MergeSort is O(n log n) always, O(n) space.' }
+    ],
+    'Behavioral Interview': [
+      { q: 'Question 1: Describe a conflict resolution scenario you experienced in a team setting.', ansTip: 'Use STAR method. Highlight communication, objectivity, and mutual compromises.' },
+      { q: 'Question 2: Tell me about a time you had to meet a tight deadline and how you handled the pressure.', ansTip: 'Talk about prioritization, delegation, scope adjustment, and focus.' },
+      { q: 'Question 3: How do you handle constructive criticism from a peer or manager?', ansTip: 'Emphasize listening without defense, reflecting, and setting action steps for growth.' }
+    ],
+    'System Design': [
+      { q: 'Question 1: How would you design a distributed cache system like Redis?', ansTip: 'Discuss consistency hashing, eviction policies (LRU, LFU), replication, and API layer.' },
+      { q: 'Question 2: Detail the key differences between SQL and NoSQL databases from an architecture standpoint.', ansTip: 'Relational table structure with ACID guarantees vs distributed key-value/document stores scaling horizontally.' },
+      { q: 'Question 3: Explain the concepts of load balancing and CDN in high traffic websites.', ansTip: 'Load balancers route incoming requests; CDNs cache static files at edge locations closer to users.' }
+    ],
+    'Frontend Interview': [
+      { q: 'Question 1: Explain the concept of Virtual DOM in React and how it optimizes UI updates.', ansTip: 'Discuss the reconciliation algorithm, diffing state changes, and patching only changed nodes in the real DOM.' },
+      { q: 'Question 2: What is the difference between client-side rendering (CSR) and server-side rendering (SSR)?', ansTip: 'CSR renders HTML in the browser via JS; SSR pre-renders pages on the server, improving SEO and initial load time.' },
+      { q: 'Question 3: How would you optimize the loading speed of a media-heavy web application?', ansTip: 'Mention image optimization (WebP, lazy loading), code splitting, CDN caching, and bundling.' }
+    ],
+    'Database & SQL Interview': [
+      { q: 'Question 1: What is database normalization, and when is it appropriate to denormalize?', ansTip: 'Normalization removes redundancy (1NF, 2NF, 3NF); denormalization is used to speed up read operations in read-heavy applications.' },
+      { q: 'Question 2: Explain the ACID properties in database transactions with real-world examples.', ansTip: 'Atomicity (bank transfer completes or fails), Consistency (no constraints broken), Isolation (concurrent transfers don\'t mix), Durability (written to disk).' },
+      { q: 'Question 3: How does database replication work, and what is replication lag?', ansTip: 'Primary-replica setups where database modifications are sent to replicas. Lag is the delay for updates to propagate.' }
+    ],
+    'Managerial / HR Interview': [
+      { q: 'Question 1: Why do you want to work for our company specifically?', ansTip: 'Align company mission, engineering culture, and business domain with your growth goals and projects.' },
+      { q: 'Question 2: What has been your biggest technical failure so far, and what did you learn from it?', ansTip: 'Admit a real setback, show accountability, explain the root cause, and highlight what preventive measures you learned.' },
+      { q: 'Question 3: Where do you see yourself in five years professionally?', ansTip: 'Talk about technical maturity, taking on leadership/mentorship, and diving deep into system design or product development.' }
     ]
   };
 
@@ -484,15 +528,15 @@ export default function CareerHub() {
                 <h2 className="text-sm font-extrabold text-slate-800 mb-2">🎤 AI Mock Interview</h2>
                 <p className="text-xs text-slate-500 mb-6">Select a track to launch customized placement interviewing checks.</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {['Technical Interview', 'Behavioral Interview', 'System Design'].map((type, i) => (
+                  {interviewTracks.map((track, i) => (
                     <div key={i} className="p-4 rounded-2xl border text-center hover:shadow-lg transition-all bg-slate-50 border-slate-200 flex flex-col justify-between">
                       <div>
-                        <div className="text-3xl mb-3">{['💻', '🎙️', '🏗️'][i]}</div>
-                        <h4 className="text-sm font-bold text-slate-800 mb-2">{type}</h4>
-                        <p className="text-[10px] text-slate-400 mb-4">{['Data structures, algorithms, OOP', 'Teamwork, leadership, situational', 'Architecture & scalability'][i]}</p>
+                        <div className="text-3xl mb-3">{track.icon}</div>
+                        <h4 className="text-sm font-bold text-slate-800 mb-2">{track.type}</h4>
+                        <p className="text-[10px] text-slate-400 mb-4">{track.desc}</p>
                       </div>
                       <button 
-                        onClick={() => { setInterviewType(type); setInterviewIdx(0); setInterviewAnswers({}); setInterviewMode('active'); }}
+                        onClick={() => { setInterviewType(track.type); setInterviewIdx(0); setInterviewAnswers({}); setInterviewMode('active'); }}
                         className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer w-full"
                       >
                         Start Interview
@@ -511,9 +555,7 @@ export default function CareerHub() {
                 </div>
 
                 <p className="text-xs font-extrabold text-slate-800">
-                  {interviewIdx === 0 
-                    ? 'Question 1: Explain the difference between thread safe operations and default asynchronous execution.'
-                    : 'Question 2: How do you verify and optimize index queries inside database tables?'}
+                  {interviewData[interviewType]?.[interviewIdx]?.q || 'Question not found'}
                 </p>
 
                 <textarea 
@@ -526,22 +568,22 @@ export default function CareerHub() {
                 <div className="flex justify-between">
                   <button 
                     disabled={interviewIdx === 0}
-                    onClick={() => setInterviewIdx(0)}
-                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-xl disabled:opacity-50"
+                    onClick={() => setInterviewIdx(prev => prev - 1)}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-xl disabled:opacity-50 cursor-pointer"
                   >
                     Previous
                   </button>
-                  {interviewIdx === 0 ? (
+                  {interviewIdx < (interviewData[interviewType]?.length - 1) ? (
                     <button 
-                      onClick={() => setInterviewIdx(1)}
-                      className="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl"
+                      onClick={() => setInterviewIdx(prev => prev + 1)}
+                      className="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl cursor-pointer"
                     >
                       Next
                     </button>
                   ) : (
                     <button 
                       onClick={() => setInterviewMode('evaluation')}
-                      className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-black rounded-xl"
+                      className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-black rounded-xl cursor-pointer"
                     >
                       Submit Mock Test
                     </button>
@@ -554,11 +596,26 @@ export default function CareerHub() {
               <div className="p-6 rounded-3xl border bg-white border-slate-200 max-w-xl mx-auto text-center space-y-4">
                 <Trophy size={40} className="text-amber-500 mx-auto" />
                 <h3 className="text-sm font-extrabold text-slate-800">Mock Interview Evaluated!</h3>
-                <p className="text-xs text-slate-500">Your mock performance score: <strong>82/100</strong></p>
-                <div className="text-[11px] text-slate-600 bg-slate-50 p-3 rounded-xl leading-relaxed text-left">
-                  <strong>Tutor Review:</strong> Strong conceptual explanation. Could optimize by giving concrete concurrency class names in Java.
+                <p className="text-xs text-slate-500">Your mock performance score: <strong>85/100</strong></p>
+                
+                <div className="space-y-3 text-left">
+                  <h4 className="text-xs font-bold text-slate-700">Tutor Feedback & Suggestions:</h4>
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {interviewData[interviewType]?.map((qObj, idx) => (
+                      <div key={idx} className="text-[11px] bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-1">
+                        <div className="font-semibold text-slate-700">{qObj.q}</div>
+                        <div className="text-slate-500">
+                          <strong className="text-violet-600">Your Response:</strong> {interviewAnswers[idx] || <em>No answer provided.</em>}
+                        </div>
+                        <div className="text-emerald-700 bg-emerald-50/50 p-1.5 rounded text-[10px] mt-1">
+                          <strong>Key Tip:</strong> {qObj.ansTip}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <button onClick={() => setInterviewMode('lobby')} className="px-4 py-2 bg-violet-600 text-white text-xs font-bold rounded-xl">
+
+                <button onClick={() => setInterviewMode('lobby')} className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer">
                   Try Another Category
                 </button>
               </div>
