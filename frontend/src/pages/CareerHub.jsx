@@ -146,6 +146,20 @@ export default function CareerHub() {
       { q: 'What is virtual memory and how does it work?', a: 'An OS memory management technique that uses hardware and software to map virtual addresses used by an application into physical addresses. It allows using disk space as secondary RAM (swap).' },
       { q: 'Explain the concept of a Deadlock and its prevention.', a: 'A state where two or more processes are unable to proceed because each is waiting for the other to release a resource. Prevent by breaking Mutual Exclusion, Hold & Wait, No Preemption, or Circular Wait.' },
       { q: 'What is paging in operating systems?', a: 'A memory management scheme that eliminates the need for contiguous allocation of physical memory. The OS divides virtual memory into pages and physical memory into frames of equal size.' }
+    ],
+    'Aptitude & Logical Prep': [
+      { q: 'What is the formula to calculate compound interest and how does it differ from simple interest?', a: 'A = P(1 + r/n)^(nt). Compound interest calculates interest on the initial principal and the accumulated interest of previous periods, whereas simple interest only calculates interest on the principal.' },
+      { q: 'Explain the concepts of Permutations and Combinations with examples.', a: 'Permutations (nPr) are used when order matters (e.g., arrangements). Combinations (nCr) are used when order does not matter (e.g., selecting a committee).' },
+      { q: 'How do you calculate relative speed for objects in motion?', a: 'Relative speed = Speed A + Speed B (if moving in opposite directions), or Speed A - Speed B (if moving in the same direction). Relative Distance = Length of Train A + Length of Train B.' },
+      { q: 'Explain the trick to find if a large number is divisible by 3, 4, 9, or 11.', a: 'Divisible by 3/9: sum of digits is divisible by 3/9. Divisible by 4: last two digits form a multiple of 4. Divisible by 11: difference between sum of odd-position digits and sum of even-position digits is 0 or a multiple of 11.' },
+      { q: 'What is the handshake puzzle in combinatorics?', a: 'If there are n people, each handshaking once with everyone else, total handshakes = n(n-1)/2. For n=10, 10*9/2 = 45 handshakes.' }
+    ],
+    'Cloud & DevOps Prep': [
+      { q: 'What is the difference between a Container and a Virtual Machine (VM)?', a: 'Containers share the host operating system\'s kernel, making them lightweight and fast. VMs package an entire guest operating system and virtualized hardware, making them heavier but more isolated.' },
+      { q: 'Explain the concept of Continuous Integration and Continuous Deployment (CI/CD).', a: 'CI is the practice of automating the integration of code changes from multiple contributors into a single software project. CD automates the delivery/deployment of the validated build to staging or production environments.' },
+      { q: 'What is Kubernetes (K8s) and what is its role in modern deployment?', a: 'Kubernetes is an open-source container orchestration platform that automates container deployment, scaling, load balancing, health monitoring, and self-healing of application microservices.' },
+      { q: 'Detail the difference between Blue-Green Deployment and Canary Deployment.', a: 'Blue-Green deploys the new version alongside the old version and switches traffic entirely. Canary rolls out the change to a small subset of users first before migrating the rest of the traffic.' },
+      { q: 'What is Infrastructure as Code (IaC) and what are its benefits?', a: 'Managing and provisioning infrastructure through machine-readable definition files (e.g., Terraform) rather than manual processes. Benefits include consistency, speed, version control, and auditability.' }
     ]
   };
 
@@ -406,6 +420,8 @@ export default function CareerHub() {
                   { title: 'System Design Prep', desc: 'CDNs, scalability, caching, sharding', icon: '🏗️', color: 'from-amber-500 to-orange-600' },
                   { title: 'DBMS & SQL Prep', desc: 'ACID, JOINs, indexing, normalization', icon: '🗄️', color: 'from-emerald-500 to-green-600' },
                   { title: 'OS & Networks Prep', desc: 'HTTP lifecycle, TCP/UDP, deadlock, paging', icon: '🌐', color: 'from-pink-500 to-rose-600' },
+                  { title: 'Aptitude & Logical Prep', desc: 'Quant, reasoning, patterns, and speed math', icon: '🧮', color: 'from-indigo-500 to-blue-600' },
+                  { title: 'Cloud & DevOps Prep', desc: 'Docker, Kubernetes, CI/CD, AWS, and deployment', icon: '☁️', color: 'from-sky-500 to-blue-600' },
                 ].map((item, i) => {
                   const qCount = prepQuestions[item.title]?.length || 0;
                   return (
