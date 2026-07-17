@@ -319,15 +319,15 @@ export default function AITutor() {
   };
 
   return (
-    <div className="quiz-arena-container min-h-screen flex flex-col relative overflow-y-auto">
+    <div className="quiz-arena-container min-h-screen flex flex-col relative overflow-y-auto pb-8">
       {/* Background gradients */}
       <div className="absolute top-[-10%] right-[-10%] w-[45%] h-[45%] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* ─── Top Header Bar ─── */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-200/60 pb-5 mb-5 mt-2">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-5 mb-5 mt-2 border-b" style={{ borderColor: 'var(--db-header-border)' }}>
         <div>
           <h1 className="lobby-title font-extrabold text-2xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-500">AI Tutor</h1>
-          <p className="text-slate-500 text-xs mt-1">Powered by AI — ask doubts, learn concepts, generate examples, and plan studies</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--db-text-muted)' }}>Powered by AI — ask doubts, learn concepts, generate examples, and plan studies</p>
         </div>
 
         {/* Search & Subject Bar */}
@@ -339,14 +339,16 @@ export default function AITutor() {
               placeholder="Search concepts..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+              style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}
+              className="w-full rounded-xl pl-9 pr-4 py-2 text-xs border focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
             />
           </div>
           
           <select 
             value={subject} 
             onChange={(e) => setSubject(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 cursor-pointer"
+            style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}
+            className="rounded-xl px-3 py-2 text-xs font-semibold cursor-pointer border focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
           >
             <option value="Computer Science">Computer Science</option>
             <option value="Advanced Java">Advanced Java</option>
@@ -371,16 +373,18 @@ export default function AITutor() {
             <button
               key={t.id}
               onClick={() => setSelectedTool(t.id)}
-              className={`p-3 rounded-2xl border transition-all text-left flex flex-col justify-between h-24 ${
-                isActive 
-                  ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/25' 
-                  : 'bg-white border-slate-200/80 hover:border-slate-300/80 text-slate-700 hover:bg-slate-50'
-              }`}
+              style={{
+                backgroundColor: isActive ? 'var(--db-text-accent)' : 'var(--db-card-bg)',
+                borderColor: isActive ? 'var(--db-text-accent)' : 'var(--db-card-border)',
+                color: isActive ? '#ffffff' : 'var(--db-text-main)',
+                boxShadow: isActive ? '0 4px 16px rgba(59,130,246,0.25)' : 'none'
+              }}
+              className="p-3 rounded-2xl border transition-all text-left flex flex-col justify-between h-24 hover:opacity-90 cursor-pointer"
             >
               <span className="text-xl">{t.icon}</span>
               <div>
                 <span className="text-[10px] font-black tracking-tight block uppercase">{t.label}</span>
-                <span className={`text-[8px] mt-0.5 line-clamp-1 block ${isActive ? 'text-blue-100' : 'text-slate-400'}`}>
+                <span className="text-[8px] mt-0.5 line-clamp-1 block" style={{ color: isActive ? 'rgba(255,255,255,0.75)' : 'var(--db-text-muted)' }}>
                   {t.desc}
                 </span>
               </div>
@@ -395,16 +399,16 @@ export default function AITutor() {
         {/* Left / Center Main Workspace (9 cols) */}
         <div className="lg:col-span-9 flex flex-col gap-4 min-h-0">
           
-          <div className="flex-1 bg-white border border-slate-200/80 rounded-3xl p-6 flex flex-col justify-between overflow-y-auto scrollbar-thin" style={{ minHeight: '65vh' }}>
+          <div className="flex-1 rounded-3xl p-6 flex flex-col justify-between overflow-y-auto scrollbar-thin shadow-sm border" style={{ minHeight: '65vh', backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-card-border)' }}>
             
             <div className="space-y-6">
               
               {/* ─── Tool 1: Ask Doubt ─── */}
               {selectedTool === 'doubt' && (
                 <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">Ask Any Doubt</h3>
-                    <p className="text-[11px] text-slate-500">Submit a query to get instant explanations from Friday tutor.</p>
+                  <div className="border-b pb-3" style={{ borderColor: 'var(--db-header-border)' }}>
+                    <h3 className="text-sm font-extrabold" style={{ color: 'var(--db-text-main)' }}>Ask Any Doubt</h3>
+                    <p className="text-[11px]" style={{ color: 'var(--db-text-muted)' }}>Submit a query to get instant explanations from Friday tutor.</p>
                   </div>
                   
                   <div className="flex gap-2">
@@ -413,43 +417,44 @@ export default function AITutor() {
                       placeholder="e.g. Explain polymorphic behavior with simple real world objects" 
                       value={generalQuestion}
                       onChange={(e) => setGeneralQuestion(e.target.value)}
-                      className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                      style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }}
+                      className="flex-1 rounded-xl px-4 py-2.5 text-xs border focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                     />
                     <button 
                       onClick={() => handleAskDoubt()}
-                      className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <Sparkles size={14} /> Ask AI
                     </button>
                   </div>
 
-                  {isGenerating && <div className="text-center py-8 text-xs text-slate-400 animate-pulse">Tutor is analyzing your doubt...</div>}
+                  {isGenerating && <div className="text-center py-8 text-xs animate-pulse" style={{ color: 'var(--db-text-muted)' }}>Tutor is analyzing your doubt...</div>}
 
                   {doubtResult && !isGenerating && (
-                    <div className="p-5 rounded-2xl border border-blue-500/20 bg-blue-500/5 space-y-4">
+                    <div className="p-5 rounded-2xl border space-y-4 shadow-sm" style={{ backgroundColor: 'var(--db-card-bg-elevated, var(--db-input-bg))', borderColor: 'var(--db-card-border)' }}>
                       <div>
-                        <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider block">Question Analyzed</span>
-                        <p className="text-xs font-semibold text-slate-800 mt-1">"{doubtResult.question}"</p>
+                        <span className="text-[10px] font-bold uppercase tracking-wider block" style={{ color: 'var(--db-text-accent)' }}>Question Analyzed</span>
+                        <p className="text-xs font-semibold mt-1" style={{ color: 'var(--db-text-main)' }}>"{doubtResult.question}"</p>
                       </div>
                       <div>
-                        <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider block">Tutor Answer</span>
-                        <p className="text-xs text-slate-600 mt-1 leading-relaxed">{doubtResult.answer}</p>
+                        <span className="text-[10px] font-bold uppercase tracking-wider block" style={{ color: 'var(--db-text-accent)' }}>Tutor Answer</span>
+                        <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--db-text-secondary)' }}>{doubtResult.answer}</p>
                       </div>
-                      <div className="p-3 bg-slate-100 rounded-xl">
-                        <strong className="text-[10px] text-slate-500 uppercase block">Follow-Up Breakdown:</strong>
-                        <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">{doubtResult.explanation}</p>
+                      <div className="p-3.5 rounded-xl border" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)' }}>
+                        <strong className="text-[10px] uppercase block" style={{ color: 'var(--db-text-muted)' }}>Follow-Up Breakdown:</strong>
+                        <p className="text-[11px] mt-1 leading-relaxed" style={{ color: 'var(--db-text-secondary)' }}>{doubtResult.explanation}</p>
                       </div>
 
-                      <div className="flex items-center justify-between border-t border-slate-200/60 pt-3 text-[10px]">
+                      <div className="flex items-center justify-between border-t pt-3 text-[10px]" style={{ borderColor: 'var(--db-header-border)' }}>
                         <div className="flex gap-2">
-                          <button onClick={() => copyToClipboard(doubtResult.answer)} className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center gap-1">
+                          <button onClick={() => copyToClipboard(doubtResult.answer)} style={{ backgroundColor: 'var(--db-input-bg)', color: 'var(--db-text-secondary)' }} className="px-2.5 py-1 rounded-lg hover:opacity-85 font-bold flex items-center gap-1 cursor-pointer">
                             <Copy size={12} /> Copy
                           </button>
-                          <button onClick={() => saveToHistory(doubtResult.question)} className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center gap-1">
+                          <button onClick={() => saveToHistory(doubtResult.question)} style={{ backgroundColor: 'var(--db-input-bg)', color: 'var(--db-text-secondary)' }} className="px-2.5 py-1 rounded-lg hover:opacity-85 font-bold flex items-center gap-1 cursor-pointer">
                             <Save size={12} /> Save to history
                           </button>
                         </div>
-                        <button onClick={() => handleAskDoubt()} className="text-blue-600 font-extrabold hover:underline flex items-center gap-1">
+                        <button onClick={() => handleAskDoubt()} className="font-extrabold hover:underline flex items-center gap-1 cursor-pointer" style={{ color: 'var(--db-text-accent)' }}>
                           <RotateCcw size={12} /> Regenerate Answer
                         </button>
                       </div>
@@ -461,30 +466,35 @@ export default function AITutor() {
               {/* ─── Tool 2: Explain Concept ─── */}
               {selectedTool === 'explain' && (
                 <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">Explain Concept</h3>
-                    <p className="text-[11px] text-slate-500">Choose complexity level to analyze key computer science theories.</p>
+                  <div className="border-b pb-3" style={{ borderColor: 'var(--db-header-border)' }}>
+                    <h3 className="text-sm font-extrabold" style={{ color: 'var(--db-text-main)' }}>Explain Concept</h3>
+                    <p className="text-[11px]" style={{ color: 'var(--db-text-muted)' }}>Choose complexity level to analyze key computer science theories.</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Concept Topic</span>
+                      <span className="text-[10px] font-bold mb-1" style={{ color: 'var(--db-text-muted)' }}>Concept Topic</span>
                       <input 
                         type="text" 
                         placeholder="e.g. Binary Search Tree" 
                         value={conceptTopic}
                         onChange={(e) => setConceptTopic(e.target.value)}
-                        className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800"
+                        style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }}
+                        className="rounded-xl px-4 py-2 text-xs border focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                       />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Explanation Depth</span>
-                      <div className="grid grid-cols-3 gap-2 bg-slate-50 p-1 rounded-xl border border-slate-200">
+                      <span className="text-[10px] font-bold mb-1" style={{ color: 'var(--db-text-muted)' }}>Explanation Depth</span>
+                      <div className="grid grid-cols-3 gap-2 p-1 rounded-xl border" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)' }}>
                         {['easy', 'medium', 'deep'].map(lvl => (
                           <button
                             key={lvl}
                             onClick={() => setConceptLevel(lvl)}
-                            className={`py-1 text-[10px] uppercase font-bold rounded-lg transition-colors ${conceptLevel === lvl ? 'bg-blue-600 text-white' : 'text-slate-500'}`}
+                            style={{
+                              backgroundColor: conceptLevel === lvl ? 'var(--db-text-accent)' : 'transparent',
+                              color: conceptLevel === lvl ? '#ffffff' : 'var(--db-text-muted)'
+                            }}
+                            className="py-1 text-[10px] uppercase font-bold rounded-lg transition-colors cursor-pointer"
                           >
                             {lvl}
                           </button>
@@ -493,32 +503,32 @@ export default function AITutor() {
                     </div>
                   </div>
 
-                  <button onClick={handleExplainConcept} className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center gap-1 justify-center w-full">
+                  <button onClick={handleExplainConcept} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center gap-1 justify-center w-full shadow-sm cursor-pointer">
                     <Sparkles size={14} /> Explain Concept
                   </button>
 
-                  {isGenerating && <div className="text-center py-8 text-xs text-slate-400 animate-pulse">Tutor is breaking down the concept...</div>}
+                  {isGenerating && <div className="text-center py-8 text-xs animate-pulse" style={{ color: 'var(--db-text-muted)' }}>Tutor is breaking down the concept...</div>}
 
                   {conceptResult && !isGenerating && (
-                    <div className="p-5 rounded-2xl border border-blue-500/20 bg-blue-500/5 space-y-4">
+                    <div className="p-5 rounded-2xl border space-y-4 shadow-sm" style={{ backgroundColor: 'var(--db-card-bg-elevated, var(--db-input-bg))', borderColor: 'var(--db-card-border)' }}>
                       <div>
-                        <h4 className="text-xs font-bold text-slate-800">Tutor Definition ({conceptResult.level} mode)</h4>
-                        <p className="text-xs text-slate-600 mt-1 leading-relaxed">{conceptResult.definition}</p>
+                        <h4 className="text-xs font-bold" style={{ color: 'var(--db-text-main)' }}>Tutor Definition ({conceptResult.level} mode)</h4>
+                        <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--db-text-secondary)' }}>{conceptResult.definition}</p>
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-slate-800">Key Structure & Rules</h4>
-                        <p className="text-xs text-slate-600 mt-1 leading-relaxed">{conceptResult.structure}</p>
+                        <h4 className="text-xs font-bold" style={{ color: 'var(--db-text-main)' }}>Key Structure & Rules</h4>
+                        <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--db-text-secondary)' }}>{conceptResult.structure}</p>
                       </div>
-                      <div className="p-3.5 bg-slate-100 rounded-xl">
-                        <strong className="text-[10px] text-slate-500 uppercase block">Simple breakdown:</strong>
-                        <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">{conceptResult.breakdown}</p>
+                      <div className="p-3.5 rounded-xl border" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)' }}>
+                        <strong className="text-[10px] uppercase block" style={{ color: 'var(--db-text-muted)' }}>Simple breakdown:</strong>
+                        <p className="text-[11px] mt-1 leading-relaxed" style={{ color: 'var(--db-text-secondary)' }}>{conceptResult.breakdown}</p>
                       </div>
 
-                      <div className="border-t border-slate-200/60 pt-3">
-                        <span className="text-[10px] text-slate-500 uppercase block">Related links</span>
+                      <div className="border-t pt-3" style={{ borderColor: 'var(--db-header-border)' }}>
+                        <span className="text-[10px] uppercase block" style={{ color: 'var(--db-text-muted)' }}>Related links</span>
                         <div className="flex gap-2 mt-1.5">
                           {conceptResult.links.map(l => (
-                            <button key={l} className="text-[10px] text-blue-600 hover:underline bg-blue-500/5 px-2 py-0.5 rounded border border-blue-500/10">
+                            <button key={l} style={{ backgroundColor: 'rgba(59,130,246,0.08)', color: 'var(--db-text-accent)', borderColor: 'rgba(59,130,246,0.15)' }} className="text-[10px] hover:opacity-85 px-2 py-0.5 rounded border cursor-pointer">
                               {l}
                             </button>
                           ))}
@@ -532,25 +542,26 @@ export default function AITutor() {
               {/* ─── Tool 3: Generate Examples ─── */}
               {selectedTool === 'example' && (
                 <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">Generate Code Examples</h3>
-                    <p className="text-[11px] text-slate-500">Produce clean syntax codes and real life comparisons.</p>
+                  <div className="border-b pb-3" style={{ borderColor: 'var(--db-header-border)' }}>
+                    <h3 className="text-sm font-extrabold" style={{ color: 'var(--db-text-main)' }}>Generate Code Examples</h3>
+                    <p className="text-[11px]" style={{ color: 'var(--db-text-muted)' }}>Produce clean syntax codes and real life comparisons.</p>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
                     <div className="flex flex-col col-span-2">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Topic</span>
+                      <span className="text-[10px] font-bold mb-1" style={{ color: 'var(--db-text-muted)' }}>Topic</span>
                       <input 
                         type="text" 
                         placeholder="e.g. Recursion" 
                         value={exampleTopic}
                         onChange={(e) => setExampleTopic(e.target.value)}
-                        className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800"
+                        style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }}
+                        className="rounded-xl px-4 py-2 text-xs border focus:outline-none"
                       />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Language</span>
-                      <select value={exampleLang} onChange={(e) => setExampleLang(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700">
+                      <span className="text-[10px] font-bold mb-1" style={{ color: 'var(--db-text-muted)' }}>Language</span>
+                      <select value={exampleLang} onChange={(e) => setExampleLang(e.target.value)} style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }} className="rounded-xl px-3 py-2 text-xs border cursor-pointer focus:outline-none">
                         <option value="Computer Science">Computer Science</option>
                         <option value="Advanced Java">Advanced Java</option>
                         <option value="C#">C#</option>
@@ -566,16 +577,16 @@ export default function AITutor() {
                     </div>
                   </div>
 
-                  <button onClick={handleGenerateExamples} className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full">
+                  <button onClick={handleGenerateExamples} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full shadow-sm cursor-pointer">
                     <Sparkles size={14} /> Generate Examples
                   </button>
 
-                  {isGenerating && <div className="text-center py-8 text-xs text-slate-400 animate-pulse">Tutor is building coding examples...</div>}
+                  {isGenerating && <div className="text-center py-8 text-xs animate-pulse" style={{ color: 'var(--db-text-muted)' }}>Tutor is building coding examples...</div>}
 
                   {exampleResult && !isGenerating && (
                     <div className="space-y-4">
                       {exampleResult.examples.map((ex, idx) => (
-                        <div key={idx} className="p-4 rounded-xl border border-slate-200 bg-slate-950 font-mono text-[11px] text-emerald-400">
+                        <div key={idx} className="p-4 rounded-xl border font-mono text-[11px]" style={{ backgroundColor: '#090d16', borderColor: 'var(--db-card-border)', color: '#34d399' }}>
                           <span className="text-slate-500 block mb-1"># {ex.title}</span>
                           <pre className="overflow-x-auto"><code>{ex.code}</code></pre>
                         </div>
@@ -588,27 +599,28 @@ export default function AITutor() {
               {/* ─── Tool 4: Practice Questions ─── */}
               {selectedTool === 'practice' && (
                 <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">Practice Questions</h3>
-                    <p className="text-[11px] text-slate-500">Test theoretical concept questions to save progress.</p>
+                  <div className="border-b pb-3" style={{ borderColor: 'var(--db-header-border)' }}>
+                    <h3 className="text-sm font-extrabold" style={{ color: 'var(--db-text-main)' }}>Practice Questions</h3>
+                    <p className="text-[11px]" style={{ color: 'var(--db-text-muted)' }}>Test theoretical concept questions to save progress.</p>
                   </div>
 
                   {practiceQuestions.length === 0 && (
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-slate-500 font-bold mb-1">Topic</span>
+                          <span className="text-[10px] font-bold mb-1" style={{ color: 'var(--db-text-muted)' }}>Topic</span>
                           <input 
                             type="text" 
                             placeholder="e.g. Inheritance" 
                             value={practiceTopic}
                             onChange={(e) => setPracticeTopic(e.target.value)}
-                            className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800"
+                            style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }}
+                            className="rounded-xl px-4 py-2 text-xs border focus:outline-none"
                           />
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-slate-500 font-bold mb-1">Question Type</span>
-                          <select value={practiceType} onChange={(e) => setPracticeType(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700">
+                          <span className="text-[10px] font-bold mb-1" style={{ color: 'var(--db-text-muted)' }}>Question Type</span>
+                          <select value={practiceType} onChange={(e) => setPracticeType(e.target.value)} style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }} className="rounded-xl px-3 py-2 text-xs border cursor-pointer focus:outline-none">
                             <option value="MCQ">Multiple Choice</option>
                             <option value="Short">Short Answer</option>
                           </select>
@@ -681,55 +693,55 @@ export default function AITutor() {
               {/* ─── Tool 5: AI Career Guide ─── */}
               {selectedTool === 'career' && (
                 <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">AI Career Guide</h3>
-                    <p className="text-[11px] text-slate-500">Provide goals to construct placement maps.</p>
+                  <div className="border-b pb-3" style={{ borderColor: 'var(--db-header-border)' }}>
+                    <h3 className="text-sm font-extrabold" style={{ color: 'var(--db-text-main)' }}>AI Career Guide</h3>
+                    <p className="text-[11px]" style={{ color: 'var(--db-text-muted)' }}>Provide goals to construct placement maps.</p>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Branch</span>
-                      <input type="text" value={careerBranch} onChange={(e) => setCareerBranch(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800" />
+                      <span className="text-[10px] font-bold mb-1" style={{ color: 'var(--db-text-muted)' }}>Branch</span>
+                      <input type="text" value={careerBranch} onChange={(e) => setCareerBranch(e.target.value)} style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }} className="rounded-xl px-4 py-2 text-xs border focus:outline-none" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Goal</span>
-                      <input type="text" value={careerGoal} onChange={(e) => setCareerGoal(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800" />
+                      <span className="text-[10px] font-bold mb-1" style={{ color: 'var(--db-text-muted)' }}>Goal</span>
+                      <input type="text" value={careerGoal} onChange={(e) => setCareerGoal(e.target.value)} style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }} className="rounded-xl px-4 py-2 text-xs border focus:outline-none" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Skill Level</span>
-                      <select value={careerLevel} onChange={(e) => setCareerLevel(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700">
+                      <span className="text-[10px] font-bold mb-1" style={{ color: 'var(--db-text-muted)' }}>Skill Level</span>
+                      <select value={careerLevel} onChange={(e) => setCareerLevel(e.target.value)} style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }} className="rounded-xl px-3 py-2 text-xs border cursor-pointer focus:outline-none">
                         <option value="Beginner">Beginner</option>
                         <option value="Intermediate">Intermediate</option>
                       </select>
                     </div>
                   </div>
 
-                  <button onClick={handleCareerGuide} className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full">
+                  <button onClick={handleCareerGuide} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full shadow-sm cursor-pointer">
                     Generate Roadmap
                   </button>
 
                   {careerResult && (
-                    <div className="p-5 rounded-2xl border border-slate-200 space-y-4">
-                      <h4 className="text-xs font-bold text-slate-800">Learning Roadmap for {careerGoal}</h4>
+                    <div className="p-5 rounded-2xl border space-y-4" style={{ backgroundColor: 'var(--db-card-bg-elevated, var(--db-input-bg))', borderColor: 'var(--db-card-border)' }}>
+                      <h4 className="text-xs font-bold" style={{ color: 'var(--db-text-main)' }}>Learning Roadmap for {careerGoal}</h4>
                       <div className="space-y-2">
                         {careerResult.roadmap.map((step, idx) => (
-                          <div key={idx} className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                            <strong className="text-xs text-blue-600 block">{step.step}</strong>
-                            <p className="text-[11px] text-slate-600 mt-1">{step.details}</p>
+                          <div key={idx} className="p-3 border rounded-xl" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)' }}>
+                            <strong className="text-xs block" style={{ color: 'var(--db-text-accent)' }}>{step.step}</strong>
+                            <p className="text-[11px] mt-1" style={{ color: 'var(--db-text-secondary)' }}>{step.details}</p>
                           </div>
                         ))}
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-100">
+                      <div className="grid grid-cols-2 gap-4 pt-3 border-t" style={{ borderColor: 'var(--db-header-border)' }}>
                         <div>
-                          <span className="text-[10px] text-slate-500 uppercase block font-bold">Skills to Learn</span>
-                          <ul className="text-xs text-slate-600 mt-1 list-disc pl-4 space-y-1">
+                          <span className="text-[10px] uppercase block font-bold" style={{ color: 'var(--db-text-muted)' }}>Skills to Learn</span>
+                          <ul className="text-xs mt-1 list-disc pl-4 space-y-1" style={{ color: 'var(--db-text-secondary)' }}>
                             {careerResult.skills.map(s => <li key={s}>{s}</li>)}
                           </ul>
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-500 uppercase block font-bold">Suggested Projects</span>
-                          <ul className="text-xs text-slate-600 mt-1 list-disc pl-4 space-y-1">
+                          <span className="text-[10px] uppercase block font-bold" style={{ color: 'var(--db-text-muted)' }}>Suggested Projects</span>
+                          <ul className="text-xs mt-1 list-disc pl-4 space-y-1" style={{ color: 'var(--db-text-secondary)' }}>
                             {careerResult.projects.map(p => <li key={p}>{p}</li>)}
                           </ul>
                         </div>
@@ -742,44 +754,44 @@ export default function AITutor() {
               {/* ─── Tool 6: AI Interviewer ─── */}
               {selectedTool === 'interview' && (
                 <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">AI Interview simulator</h3>
-                    <p className="text-[11px] text-slate-500">Start structured interviews with evaluation feedback.</p>
+                  <div className="border-b pb-3" style={{ borderColor: 'var(--db-header-border)' }}>
+                    <h3 className="text-sm font-extrabold" style={{ color: 'var(--db-text-main)' }}>AI Interview simulator</h3>
+                    <p className="text-[11px]" style={{ color: 'var(--db-text-muted)' }}>Start structured interviews with evaluation feedback.</p>
                   </div>
 
                   {interviewQuestions.length === 0 && (
                     <div className="space-y-4">
                       <div className="grid grid-cols-3 gap-3">
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-slate-500 font-bold mb-1">Target Role</span>
-                          <input type="text" value={interviewRole} onChange={(e) => setInterviewRole(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800" />
+                          <span className="text-[10px] font-bold mb-1" style={{ color: 'var(--db-text-muted)' }}>Target Role</span>
+                          <input type="text" value={interviewRole} onChange={(e) => setInterviewRole(e.target.value)} style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }} className="rounded-xl px-4 py-2 text-xs border focus:outline-none" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-slate-500 font-bold mb-1">Topic</span>
-                          <input type="text" value={interviewTopic} onChange={(e) => setInterviewTopic(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800" />
+                          <span className="text-[10px] font-bold mb-1" style={{ color: 'var(--db-text-muted)' }}>Topic</span>
+                          <input type="text" value={interviewTopic} onChange={(e) => setInterviewTopic(e.target.value)} style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }} className="rounded-xl px-4 py-2 text-xs border focus:outline-none" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-slate-500 font-bold mb-1">Type</span>
-                          <select value={interviewType} onChange={(e) => setInterviewType(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700">
+                          <span className="text-[10px] font-bold mb-1" style={{ color: 'var(--db-text-muted)' }}>Type</span>
+                          <select value={interviewType} onChange={(e) => setInterviewType(e.target.value)} style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }} className="rounded-xl px-3 py-2 text-xs border cursor-pointer focus:outline-none">
                             <option value="Technical">Technical</option>
                             <option value="Behavioral">Behavioral</option>
                           </select>
                         </div>
                       </div>
-                      <button onClick={handleStartInterview} className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full">
+                      <button onClick={handleStartInterview} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full shadow-sm cursor-pointer">
                         Start Mock Interview
                       </button>
                     </div>
                   )}
 
                   {interviewQuestions.length > 0 && !interviewFeedback && (
-                    <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-4">
-                      <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold">
+                    <div className="p-5 rounded-2xl border space-y-4" style={{ backgroundColor: 'var(--db-card-bg-elevated, var(--db-input-bg))', borderColor: 'var(--db-card-border)' }}>
+                      <div className="flex justify-between items-center text-[10px] font-bold" style={{ color: 'var(--db-text-muted)' }}>
                         <span>QUESTION {interviewIdx + 1} OF {interviewQuestions.length}</span>
-                        <span className="text-blue-600">Active simulated mic</span>
+                        <span style={{ color: 'var(--db-text-accent)' }}>Active simulated mic</span>
                       </div>
 
-                      <h4 className="text-xs font-extrabold text-slate-800">
+                      <h4 className="text-xs font-extrabold" style={{ color: 'var(--db-text-main)' }}>
                         {interviewQuestions[interviewIdx].question}
                       </h4>
 
@@ -787,14 +799,16 @@ export default function AITutor() {
                         value={interviewAnswers[interviewIdx] || ''}
                         onChange={(e) => setInterviewAnswers({...interviewAnswers, [interviewIdx]: e.target.value})}
                         placeholder="Write or dictate your answer here..."
-                        className="w-full h-24 p-3 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500"
+                        style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }}
+                        className="w-full h-24 p-3 rounded-xl text-xs border focus:outline-none"
                       />
 
                       <div className="flex justify-between">
                         <button 
                           disabled={interviewIdx === 0}
                           onClick={() => setInterviewIdx(prev => prev - 1)}
-                          className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-600 text-xs font-bold rounded-xl disabled:opacity-50"
+                          style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-secondary)' }}
+                          className="px-3 py-1.5 text-xs font-bold rounded-xl disabled:opacity-50 border cursor-pointer"
                         >
                           Previous
                         </button>
@@ -802,14 +816,14 @@ export default function AITutor() {
                         {interviewIdx < interviewQuestions.length - 1 ? (
                           <button 
                             onClick={() => setInterviewIdx(prev => prev + 1)}
-                            className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-xl"
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-sm cursor-pointer"
                           >
                             Next
                           </button>
                         ) : (
                           <button 
                             onClick={handleSubmitInterview}
-                            className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-black rounded-xl"
+                            className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-black rounded-xl shadow-sm cursor-pointer"
                           >
                             Submit Interview
                           </button>
@@ -819,17 +833,17 @@ export default function AITutor() {
                   )}
 
                   {interviewFeedback && (
-                    <div className="p-5 rounded-2xl border border-blue-500/20 bg-blue-500/5 space-y-4">
+                    <div className="p-5 rounded-2xl border space-y-4" style={{ backgroundColor: 'var(--db-card-bg-elevated, var(--db-input-bg))', borderColor: 'var(--db-card-border)' }}>
                       <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-extrabold text-slate-800">Evaluation Feedback</h4>
-                        <span className="text-xs font-black text-blue-600">Score: {interviewFeedback.score}%</span>
+                        <h4 className="text-xs font-extrabold" style={{ color: 'var(--db-text-main)' }}>Evaluation Feedback</h4>
+                        <span className="text-xs font-black" style={{ color: 'var(--db-text-accent)' }}>Score: {interviewFeedback.score}%</span>
                       </div>
-                      <div className="text-xs text-slate-600 space-y-2">
+                      <div className="text-xs space-y-2" style={{ color: 'var(--db-text-secondary)' }}>
                         <p><strong>Strengths:</strong> {interviewFeedback.strengths}</p>
                         <p><strong>Weaknesses:</strong> {interviewFeedback.weaknesses}</p>
-                        <p className="p-2 bg-slate-100 rounded"><strong>Tutor Tip:</strong> {interviewFeedback.tips}</p>
+                        <p className="p-2.5 rounded border" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)' }}><strong>Tutor Tip:</strong> {interviewFeedback.tips}</p>
                       </div>
-                      <button onClick={() => setInterviewQuestions([])} className="text-xs text-blue-600 font-bold hover:underline">
+                      <button onClick={() => setInterviewQuestions([])} className="text-xs font-bold hover:underline cursor-pointer" style={{ color: 'var(--db-text-accent)' }}>
                         Retry Interview
                       </button>
                     </div>
@@ -840,42 +854,43 @@ export default function AITutor() {
               {/* ─── Tool 7: Resume Reviewer ─── */}
               {selectedTool === 'resume' && (
                 <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">Resume reviewer</h3>
-                    <p className="text-[11px] text-slate-500">Paste your resume content to optimize for ATS criteria.</p>
+                  <div className="border-b pb-3" style={{ borderColor: 'var(--db-header-border)' }}>
+                    <h3 className="text-sm font-extrabold" style={{ color: 'var(--db-text-main)' }}>Resume reviewer</h3>
+                    <p className="text-[11px]" style={{ color: 'var(--db-text-muted)' }}>Paste your resume content to optimize for ATS criteria.</p>
                   </div>
 
                   <textarea 
                     placeholder="Paste resume text or skills list here..." 
                     value={resumeText}
                     onChange={(e) => setResumeText(e.target.value)}
-                    className="w-full h-32 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none"
+                    style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }}
+                    className="w-full h-32 p-3 border rounded-xl text-xs focus:outline-none"
                   />
 
-                  <button onClick={handleReviewResume} className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full">
+                  <button onClick={handleReviewResume} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full shadow-sm cursor-pointer">
                     Analyze Resume
                   </button>
 
                   {resumeResult && (
-                    <div className="p-5 rounded-2xl border border-slate-200 space-y-4">
-                      <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                        <h4 className="text-xs font-bold text-slate-800 font-mono">ATS Match Score</h4>
-                        <span className="text-xs font-black text-emerald-600">{resumeResult.score}%</span>
+                    <div className="p-5 rounded-2xl border space-y-4" style={{ backgroundColor: 'var(--db-card-bg-elevated, var(--db-input-bg))', borderColor: 'var(--db-card-border)' }}>
+                      <div className="flex justify-between items-center border-b pb-2" style={{ borderColor: 'var(--db-header-border)' }}>
+                        <h4 className="text-xs font-bold font-mono" style={{ color: 'var(--db-text-main)' }}>ATS Match Score</h4>
+                        <span className="text-xs font-black text-emerald-500">{resumeResult.score}%</span>
                       </div>
 
-                      <div className="text-xs text-slate-600 space-y-2">
+                      <div className="text-xs space-y-2" style={{ color: 'var(--db-text-secondary)' }}>
                         <p><strong>Formatting:</strong> {resumeResult.formatting}</p>
                         <div>
-                          <strong className="block text-slate-700">Recommended Keywords:</strong>
+                          <strong className="block" style={{ color: 'var(--db-text-main)' }}>Recommended Keywords:</strong>
                           <div className="flex flex-wrap gap-1.5 mt-1">
                             {resumeResult.keywords.map(kw => (
-                              <span key={kw} className="bg-slate-100 border text-[10px] px-2 py-0.5 rounded">{kw}</span>
+                              <span key={kw} style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-secondary)' }} className="border text-[10px] px-2 py-0.5 rounded-lg">{kw}</span>
                             ))}
                           </div>
                         </div>
 
                         <div className="pt-2">
-                          <strong className="block text-slate-700">Better Bullet points:</strong>
+                          <strong className="block" style={{ color: 'var(--db-text-main)' }}>Better Bullet points:</strong>
                           <ul className="list-disc pl-4 space-y-1 mt-1 text-[11px]">
                             {resumeResult.optimizedBullets.map((b, i) => <li key={i}>{b}</li>)}
                           </ul>
@@ -889,35 +904,35 @@ export default function AITutor() {
               {/* ─── Tool 8: Study Planner ─── */}
               {selectedTool === 'planner' && (
                 <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">Study Planner</h3>
-                    <p className="text-[11px] text-slate-500">Create revision daily and weekly milestones.</p>
+                  <div className="border-b pb-3" style={{ borderColor: 'var(--db-header-border)' }}>
+                    <h3 className="text-sm font-extrabold" style={{ color: 'var(--db-text-main)' }}>Study Planner</h3>
+                    <p className="text-[11px]" style={{ color: 'var(--db-text-muted)' }}>Create revision daily and weekly milestones.</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Subjects to Prepare</span>
-                      <input type="text" value={planSubjects} onChange={(e) => setPlanSubjects(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800" />
+                      <span className="text-[10px] font-bold mb-1" style={{ color: 'var(--db-text-muted)' }}>Subjects to Prepare</span>
+                      <input type="text" value={planSubjects} onChange={(e) => setPlanSubjects(e.target.value)} style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }} className="rounded-xl px-4 py-2 text-xs border focus:outline-none" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold mb-1">Target Exam Date</span>
-                      <input type="date" value={planExamDate} onChange={(e) => setPlanExamDate(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800" />
+                      <span className="text-[10px] font-bold mb-1" style={{ color: 'var(--db-text-muted)' }}>Target Exam Date</span>
+                      <input type="date" value={planExamDate} onChange={(e) => setPlanExamDate(e.target.value)} style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }} className="rounded-xl px-4 py-2 text-xs border focus:outline-none" />
                     </div>
                   </div>
 
-                  <button onClick={handleCreatePlan} className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full">
+                  <button onClick={handleCreatePlan} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center justify-center w-full shadow-sm cursor-pointer">
                     Build Custom Plan
                   </button>
 
                   {planResult && (
-                    <div className="p-5 rounded-2xl border border-slate-200 space-y-4">
-                      <h4 className="text-xs font-bold text-slate-800">Custom Timetable Plan</h4>
+                    <div className="p-5 rounded-2xl border space-y-4" style={{ backgroundColor: 'var(--db-card-bg-elevated, var(--db-input-bg))', borderColor: 'var(--db-card-border)' }}>
+                      <h4 className="text-xs font-bold" style={{ color: 'var(--db-text-main)' }}>Custom Timetable Plan</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <span className="text-[10px] text-slate-500 uppercase block font-bold">Daily Routine</span>
+                          <span className="text-[10px] uppercase block font-bold" style={{ color: 'var(--db-text-muted)' }}>Daily Routine</span>
                           <div className="space-y-2 mt-1.5">
                             {planResult.daily.map((d, i) => (
-                              <div key={i} className="text-xs p-2 bg-slate-50 border rounded-lg">
+                              <div key={i} className="text-xs p-2.5 border rounded-xl" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-secondary)' }}>
                                 <strong>{d.time}:</strong> {d.task}
                               </div>
                             ))}
@@ -925,10 +940,10 @@ export default function AITutor() {
                         </div>
 
                         <div>
-                          <span className="text-[10px] text-slate-500 uppercase block font-bold">Weekly Milestones</span>
+                          <span className="text-[10px] uppercase block font-bold" style={{ color: 'var(--db-text-muted)' }}>Weekly Milestones</span>
                           <div className="space-y-2 mt-1.5">
                             {planResult.weekly.map((w, i) => (
-                              <div key={i} className="text-xs p-2 bg-slate-50 border rounded-lg">
+                              <div key={i} className="text-xs p-2.5 border rounded-xl" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-secondary)' }}>
                                 <strong>{w.day}:</strong> {w.focus}
                               </div>
                             ))}
@@ -942,9 +957,9 @@ export default function AITutor() {
               {/* ─── Tool 9: Questions Bank ─── */}
               {selectedTool === 'questions' && (
                 <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">Questions Bank Search</h3>
-                    <p className="text-[11px] text-slate-500">Search verified syllabus question papers & AI cache databases.</p>
+                  <div className="border-b pb-3" style={{ borderColor: 'var(--db-header-border)' }}>
+                    <h3 className="text-sm font-extrabold" style={{ color: 'var(--db-text-main)' }}>Questions Bank Search</h3>
+                    <p className="text-[11px]" style={{ color: 'var(--db-text-muted)' }}>Search verified syllabus question papers & AI cache databases.</p>
                   </div>
 
                   <div className="flex gap-2">
@@ -953,12 +968,13 @@ export default function AITutor() {
                       placeholder="Enter a syllabus question to query (e.g. Explain JRE memory models)" 
                       value={qbSearchQuery}
                       onChange={(e) => setQbSearchQuery(e.target.value)}
-                      className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                      style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-main)' }}
+                      className="flex-1 rounded-xl px-4 py-2.5 text-xs border focus:outline-none"
                       onKeyDown={(e) => { if (e.key === 'Enter') handleQbSearch(); }}
                     />
                     <button 
                       onClick={handleQbSearch} 
-                      className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition cursor-pointer"
+                      className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition cursor-pointer shadow-sm"
                       disabled={qbLoading}
                     >
                       {qbLoading ? 'Searching...' : 'Search'}
@@ -966,32 +982,32 @@ export default function AITutor() {
                   </div>
 
                   {qbLoading && (
-                    <div className="text-center py-8 text-xs text-slate-400 animate-pulse">
+                    <div className="text-center py-8 text-xs animate-pulse" style={{ color: 'var(--db-text-muted)' }}>
                       Searching database and querying AI failover models...
                     </div>
                   )}
 
                   {qbResult && !qbLoading && (
-                    <div className="p-5 rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 space-y-4 text-xs">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <span className="font-extrabold text-slate-800 uppercase tracking-wider text-[10px] flex items-center gap-1">
+                    <div className="p-5 rounded-2xl border space-y-4 text-xs" style={{ backgroundColor: 'var(--db-card-bg-elevated, var(--db-input-bg))', borderColor: 'var(--db-card-border)' }}>
+                      <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'var(--db-header-border)' }}>
+                        <span className="font-extrabold uppercase tracking-wider text-[10px] flex items-center gap-1" style={{ color: 'var(--db-text-main)' }}>
                           Source: <span className={`px-2 py-0.5 rounded text-[9px] font-black ${
                             qbResult.source === 'Question Bank' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
                           }`}>{qbResult.source}</span>
                         </span>
                         {qbResult.question_type && (
-                          <span className="text-slate-400 text-[10px] font-bold">{qbResult.question_type} ({qbResult.difficulty})</span>
+                          <span className="text-[10px] font-bold" style={{ color: 'var(--db-text-muted)' }}>{qbResult.question_type} ({qbResult.difficulty})</span>
                         )}
                       </div>
 
                       <div className="space-y-3">
                         <div>
-                          <strong className="block text-slate-800 mb-1">Question:</strong>
-                          <p className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border font-medium text-slate-700 leading-relaxed text-slate-700 dark:text-slate-200">{qbResult.question}</p>
+                          <strong className="block mb-1" style={{ color: 'var(--db-text-main)' }}>Question:</strong>
+                          <p className="p-3 rounded-xl border font-medium leading-relaxed" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-secondary)' }}>{qbResult.question}</p>
                         </div>
                         <div>
-                          <strong className="block text-slate-800 mb-1">Answer / Model Solution:</strong>
-                          <div className="p-4 bg-slate-50 dark:bg-slate-800/30 rounded-xl border text-slate-700 leading-relaxed whitespace-pre-line font-normal prose prose-sm max-w-none text-slate-700 dark:text-slate-200">
+                          <strong className="block mb-1" style={{ color: 'var(--db-text-main)' }}>Answer / Model Solution:</strong>
+                          <div className="p-4 rounded-xl border leading-relaxed whitespace-pre-line font-normal prose prose-sm max-w-none" style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)', color: 'var(--db-text-secondary)' }}>
                             {qbResult.answer}
                           </div>
                         </div>
@@ -1003,8 +1019,8 @@ export default function AITutor() {
             </div>
 
             {/* Bottom Actions area */}
-            <div className="border-t border-slate-100 pt-4 mt-6 flex items-center justify-between text-xs">
-              <span className="text-slate-400"> Tutors are online ready to assist.</span>
+            <div className="border-t pt-4 mt-6 flex items-center justify-between text-xs" style={{ borderColor: 'var(--db-header-border)' }}>
+              <span style={{ color: 'var(--db-text-muted)' }}>Tutors are online ready to assist.</span>
               <button 
                 onClick={() => {
                   setDoubtResult(null);
@@ -1017,7 +1033,8 @@ export default function AITutor() {
                   setPlanResult(null);
                   toast.success('Cleaned active workspace');
                 }}
-                className="text-slate-500 hover:underline cursor-pointer font-bold"
+                className="hover:underline cursor-pointer font-bold"
+                style={{ color: 'var(--db-text-muted)' }}
               >
                 Clear Workspace
               </button>
@@ -1029,18 +1046,18 @@ export default function AITutor() {
         <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
           
           {/* Quick Tips */}
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-4 space-y-3">
-            <h4 className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5"><HelpCircle size={14} className="text-blue-600" /> Study Tips</h4>
-            <div className="space-y-2 text-[10px] text-slate-500 leading-relaxed">
-              <p className="p-2 bg-slate-50 rounded-lg">⭐ Use Deep level in Explain Concept to prepare for complex university examinations.</p>
-              <p className="p-2 bg-slate-50 rounded-lg">⭐ Practice questions can be marked and saved in your progress profile.</p>
+          <div className="rounded-3xl p-4 space-y-3 border" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-card-border)' }}>
+            <h4 className="text-xs font-extrabold flex items-center gap-1.5" style={{ color: 'var(--db-text-main)' }}><HelpCircle size={14} className="text-blue-600" /> Study Tips</h4>
+            <div className="space-y-2 text-[10px] leading-relaxed" style={{ color: 'var(--db-text-secondary)' }}>
+              <p className="p-2 rounded-lg" style={{ backgroundColor: 'var(--db-input-bg)' }}>⭐ Use Deep level in Explain Concept to prepare for complex university examinations.</p>
+              <p className="p-2 rounded-lg" style={{ backgroundColor: 'var(--db-input-bg)' }}>⭐ Practice questions can be marked and saved in your progress profile.</p>
             </div>
           </div>
 
           {/* Recent History / Saved Answers */}
-          <div className="flex-1 bg-white border border-slate-200/80 rounded-3xl p-4 flex flex-col justify-between overflow-y-auto min-h-[220px]">
+          <div className="flex-1 rounded-3xl p-4 flex flex-col justify-between overflow-y-auto min-h-[220px] border" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-card-border)' }}>
             <div>
-              <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider block mb-2">Recent Chats</span>
+              <span className="text-[10px] uppercase font-black tracking-wider block mb-2" style={{ color: 'var(--db-text-muted)' }}>Recent Chats</span>
               <div className="space-y-2">
                 {recentChats.map((c, i) => (
                   <button 
@@ -1055,16 +1072,17 @@ export default function AITutor() {
                         handleExplainConcept();
                       }
                     }}
-                    className="w-full text-left p-2.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors block text-[10px]"
+                    style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-input-border)' }}
+                    className="w-full text-left p-2.5 rounded-xl border hover:opacity-85 transition-all block text-[10px] cursor-pointer"
                   >
-                    <span className="font-bold text-blue-600 block uppercase text-[8px]">{c.tool}</span>
-                    <span className="text-slate-700 font-semibold line-clamp-1 mt-0.5">{c.title}</span>
+                    <span className="font-bold block uppercase text-[8px]" style={{ color: 'var(--db-text-accent)' }}>{c.tool}</span>
+                    <span className="font-semibold line-clamp-1 mt-0.5" style={{ color: 'var(--db-text-main)' }}>{c.title}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="border-t border-slate-100 pt-3 mt-3 text-[10px] text-slate-400">
+            <div className="border-t pt-3 mt-3 text-[10px]" style={{ borderColor: 'var(--db-header-border)', color: 'var(--db-text-muted)' }}>
               Saved logs persist locally.
             </div>
           </div>
