@@ -153,11 +153,35 @@ export default function CareerHub() {
   const companyData = {
     'Google': [
       { id: 'g1', q: 'Find the longest substring without repeating characters.', ans: 'Sliding window approach' },
-      { id: 'g2', q: 'Design an autocomplete search engine suggestion service.', ans: 'Trie data structure structure' }
+      { id: 'g2', q: 'Design an autocomplete search engine suggestion service.', ans: 'Trie data structure structure' },
+      { id: 'g3', q: 'Implement a rate limiter with a sliding window counter.', ans: 'Redis sorted sets containing timestamps within the window duration' },
+      { id: 'g4', q: 'Find the shortest path in a grid with obstacles.', ans: 'BFS traversal tracking visited state with remaining obstacle bypasses' }
     ],
     'Microsoft': [
       { id: 'm1', q: 'Reverse a linked list in pairs of k.', ans: 'Recursion or stack pointers' },
-      { id: 'm2', q: 'Explain deadlock conditions.', ans: 'Mutual exclusion, hold and wait, no preemption, circular wait' }
+      { id: 'm2', q: 'Explain deadlock conditions.', ans: 'Mutual exclusion, hold and wait, no preemption, circular wait' },
+      { id: 'm3', q: 'Serialize and deserialize a binary tree.', ans: 'Pre-order traversal with marker tokens for null leaf children' },
+      { id: 'm4', q: 'Design a distributed document collaborative editor like MS Word Online.', ans: 'Operational Transformation (OT) or Conflict-free Replicated Data Types (CRDT)' }
+    ],
+    'Amazon': [
+      { id: 'am1', q: 'Given an array of integers and a target value, find two numbers that sum up to target.', ans: 'HashMap lookup in O(n) time' },
+      { id: 'am2', q: 'Design a system for Amazon\'s Locker service.', ans: 'Distributed state machines and localized hardware notifications' },
+      { id: 'am3', q: 'Find the lowest common ancestor in a Binary Tree.', ans: 'Recursive traversal checking left and right subtrees' }
+    ],
+    'TCS': [
+      { id: 'tcs1', q: 'Write a program to reverse a string without using built-in methods.', ans: 'Two-pointer approach swapping characters from both ends' },
+      { id: 'tcs2', q: 'What is the difference between Method Overloading and Method Overriding?', ans: 'Compile-time polymorphism vs runtime dynamic binding' },
+      { id: 'tcs3', q: 'Explain the architecture of MVC pattern.', ans: 'Model represents data, View renders UI, Controller handles logic' }
+    ],
+    'Infosys': [
+      { id: 'inf1', q: 'How do you detect a cycle in a linked list?', ans: 'Floyd\'s cycle-finding algorithm (slow and fast pointers)' },
+      { id: 'inf2', q: 'Explain abstract classes vs interfaces in Java.', ans: 'Abstract classes can have state and constructor; interfaces define behavior contract' },
+      { id: 'inf3', q: 'What is an outer join in SQL databases?', ans: 'Retrieves rows matching the join condition along with unmatched rows from one or both tables' }
+    ],
+    'Wipro': [
+      { id: 'wip1', q: 'Write a function to check if a number is prime.', ans: 'Trial division up to the square root of the number' },
+      { id: 'wip2', q: 'Explain the concept of encapsulation in object-oriented programming.', ans: 'Restricting direct access to state by using private fields and public getters/setters' },
+      { id: 'wip3', q: 'Explain DNS propagation and caching.', ans: 'DNS records are cached locally, by ISPs, and root nameservers based on TTL values' }
     ]
   };
 
@@ -471,7 +495,7 @@ export default function CareerHub() {
                     <h3 className="text-base font-bold text-slate-800">{cq.company}</h3>
                     <p className="text-xs text-slate-400">{cq.role}</p>
                     <div className="flex justify-between items-center mt-3">
-                      <span className="text-xs font-bold text-violet-600">{cq.company === 'Google' || cq.company === 'Microsoft' ? '2 Loaded' : 'Unlocking soon'}</span>
+                      <span className="text-xs font-bold text-violet-600">{companyData[cq.company] ? `${companyData[cq.company].length} Loaded` : 'Unlocking soon'}</span>
                       <span className="text-xs font-semibold text-slate-500">Start →</span>
                     </div>
                   </div>
@@ -512,7 +536,7 @@ export default function CareerHub() {
                 {companyScore && (
                   <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 text-xs text-slate-700">
                     <strong className="text-emerald-600 block">Assessment Evaluated</strong>
-                    Excellent. Your solution architecture approach fits Google standards. Code reviews match expected metrics.
+                    Excellent. Your solution architecture approach fits {selectedCompany} standards. Code reviews match expected metrics.
                   </div>
                 )}
               </div>
