@@ -851,140 +851,7 @@ const db = require('./config/db');
         `);
       }
 
-      // Create Community Hub Tables
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS community_rooms (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
-          category VARCHAR(100) NOT NULL,
-          description TEXT,
-          icon VARCHAR(100),
-          type VARCHAR(50) DEFAULT 'chat' CHECK (type IN ('chat', 'voice', 'video')),
-          owner_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-          password VARCHAR(255) DEFAULT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
 
-        CREATE TABLE IF NOT EXISTS community_messages (
-          id SERIAL PRIMARY KEY,
-          room_id INTEGER REFERENCES community_rooms(id) ON DELETE CASCADE,
-          sender_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-          text TEXT,
-          type VARCHAR(50) DEFAULT 'text' CHECK (type IN ('text', 'voice', 'image', 'video', 'pdf', 'document', 'code', 'gif', 'sticker', 'poll', 'announcement')),
-          file_url VARCHAR(500),
-          file_name VARCHAR(255),
-          code_language VARCHAR(50),
-          parent_id INTEGER REFERENCES community_messages(id) ON DELETE CASCADE,
-          reactions JSONB DEFAULT '{}'::jsonb,
-          read_by JSONB DEFAULT '[]'::jsonb,
-          is_pinned BOOLEAN DEFAULT false,
-          is_spam BOOLEAN DEFAULT false,
-          toxicity_score DECIMAL DEFAULT 0.0,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS community_calls (
-          id SERIAL PRIMARY KEY,
-          room_id INTEGER REFERENCES community_rooms(id) ON DELETE CASCADE,
-          type VARCHAR(50) CHECK (type IN ('voice', 'video')),
-          host_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-          status VARCHAR(50) DEFAULT 'active',
-          transcription TEXT DEFAULT '',
-          summary TEXT DEFAULT '',
-          keywords TEXT DEFAULT '',
-          notes TEXT DEFAULT '',
-          action_items TEXT DEFAULT '',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          ended_at TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS call_participants (
-          id SERIAL PRIMARY KEY,
-          call_id INTEGER REFERENCES community_calls(id) ON DELETE CASCADE,
-          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-          joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          left_at TIMESTAMP,
-          speaking_time_seconds INTEGER DEFAULT 0,
-          hand_raised BOOLEAN DEFAULT false,
-          mic_on BOOLEAN DEFAULT true,
-          camera_on BOOLEAN DEFAULT false
-        );
-
-        CREATE TABLE IF NOT EXISTS whiteboard_sessions (
-          room_id INTEGER PRIMARY KEY REFERENCES community_rooms(id) ON DELETE CASCADE,
-          elements JSONB DEFAULT '[]'::jsonb,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS collaborative_notes (
-          room_id INTEGER PRIMARY KEY REFERENCES community_rooms(id) ON DELETE CASCADE,
-          content TEXT DEFAULT '',
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS collaborative_code (
-          room_id INTEGER PRIMARY KEY REFERENCES community_rooms(id) ON DELETE CASCADE,
-          code TEXT DEFAULT '',
-          language VARCHAR(50) DEFAULT 'javascript',
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS community_events (
-          id SERIAL PRIMARY KEY,
-          room_id INTEGER REFERENCES community_rooms(id) ON DELETE CASCADE,
-          title VARCHAR(255) NOT NULL,
-          description TEXT,
-          event_type VARCHAR(100) DEFAULT 'study_session',
-          start_time TIMESTAMP NOT NULL,
-          end_time TIMESTAMP NOT NULL,
-          created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS community_reports (
-          id SERIAL PRIMARY KEY,
-          reporter_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-          reported_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-          message_id INTEGER REFERENCES community_messages(id) ON DELETE SET NULL,
-          reason TEXT NOT NULL,
-          status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'resolved', 'ignored')),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS user_friends (
-          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-          friend_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-          status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'blocked')),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          PRIMARY KEY (user_id, friend_id)
-        );
-      `);
-
-      // Seed Default Rooms if empty
-      const checkRooms = await db.query('SELECT 1 FROM community_rooms LIMIT 1');
-      if (checkRooms.rows.length === 0) {
-        console.log('Seeding default community channels...');
-        await db.query(`
-          INSERT INTO community_rooms (name, category, description, icon, type) VALUES
-          ('general-discussion', 'General Discussion', 'General chat and discussion for all members.', '💬', 'chat'),
-          ('web-development', 'Programming', 'HTML, CSS, JS, React, Next.js, Node.js.', '🌐', 'chat'),
-          ('python', 'Programming', 'Python programming, scripts, and machine learning.', '🐍', 'chat'),
-          ('java', 'Programming', 'Core and Advanced Java topics.', '☕', 'chat'),
-          ('c-plus-plus', 'Programming', 'C++ systems programming and DSA.', '🚀', 'chat'),
-          ('machine-learning', 'Programming', 'AI, Deep Learning, and Neural Networks.', '🤖', 'chat'),
-          ('cyber-security', 'Programming', 'Ethical hacking and network security.', '🛡️', 'chat'),
-          ('cloud-computing', 'Programming', 'AWS, GCP, Azure, and architectures.', '☁️', 'chat'),
-          ('devops', 'Programming', 'CI/CD pipelines, Docker, and Kubernetes.', '♾️', 'chat'),
-          ('dsa-doubt-solving', 'Competitive Programming', 'DSA problems and algorithm explanations.', '🌳', 'chat'),
-          ('competitive-programming', 'Competitive Programming', 'Weekly challenges, contests, and coding battles.', '🏆', 'chat'),
-          ('interview-prep', 'Career Guidance', 'Mock interviews, resumes, and advice.', '💼', 'chat'),
-          ('placement-preparation', 'Career Guidance', 'Jobs and placements discussion.', '🎓', 'chat'),
-          ('general-study-room', 'Study Groups', 'Pomodoro study sessions and collaborative boards.', '📚', 'chat'),
-          ('voice-study-room-1', 'Study Groups', 'Public Voice Calling room for group study.', '🔊', 'voice'),
-          ('voice-coding-discussion', 'Programming', 'Public Voice Calling room for code reviews.', '🔊', 'voice'),
-          ('video-workshop-room', 'Study Groups', 'Public Video Calling room for webinars and classes.', '📹', 'video')
-        `);
-      }
 
       console.log('Database migrations completed successfully.');
     } catch (err) {
@@ -1015,8 +882,6 @@ const db = require('./config/db');
   const itSuiteRoutes = require('./routes/it_suite');
   const chatLearnRoutes = require('./routes/chat_learn');
   const voiceRoutes = require('./routes/voice');
-  const communityRoutes = require('./routes/community');
-  const { handleCommunitySocket } = require('./controllers/communitySocket');
   const http = require('http');
   const { Server } = require('socket.io');
   const { setIoInstance } = require('./utils/system_logger');
@@ -1037,7 +902,6 @@ setIoInstance(io);
 
 io.on('connection', (socket) => {
   console.log('A user connected to real-time sync socket:', socket.id);
-  handleCommunitySocket(io, socket);
   
   socket.on('join-document', ({ documentId, username }) => {
     socket.join(`doc-${documentId}`);
@@ -1205,7 +1069,6 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/it-suite', itSuiteRoutes);
 app.use('/api/chat-learn', chatLearnRoutes);
 app.use('/api/voice', voiceRoutes);
-app.use('/api/community', communityRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
   setHeaders: (res, filepath) => {
     if (filepath.includes('chat_learn') && filepath.includes('files')) {
