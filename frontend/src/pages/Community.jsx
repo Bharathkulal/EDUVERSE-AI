@@ -1,1771 +1,1680 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { 
-  X, Trophy, Clock, Users, Zap, CheckCircle2, BookOpen, Code2, Palette, Server,
-  Plus, Search, Filter, MessageSquare, Phone, Edit, Calendar, UserPlus, Share2, 
-  Trash, Check, ChevronRight, Video, ArrowRight, UserCheck, Play, Settings, Database, 
-  Code, Target, RefreshCw, Send, PlusCircle, Paperclip, Smile,
-  FolderOpen, GitBranch, Terminal, Star, GitPullRequest
+import io from 'socket.io-client';
+import Editor from '@monaco-editor/react';
+import api from '../api/axios';
+import {
+  MessageSquare, Phone, Video, Users, Search, Bell, Calendar, UserPlus, Trophy,
+  Zap, Mic, MicOff, VideoOff, ScreenShare, Volume2, Lock, Unlock, Sparkles, Plus,
+  Trash2, Edit3, Share2, Bookmark, Globe, FileText, Image, Play, Send, Smile,
+  Check, X, ChevronRight, Paperclip, AlertTriangle, Activity, MapPin,
+  ExternalLink, RefreshCw, Pin, BookOpen, VolumeX, ShieldAlert, BadgeInfo,
+  Clock, Award, HelpCircle, Layers, CheckCircle2, ChevronDown
 } from 'lucide-react';
 
-const HASH_TO_TAB = {
-  '#forum': 'forum',
-  '#groups': 'groups',
-  '#clubs': 'clubs',
-  '#challenges': 'challenges',
-  '#doubt': 'doubt',
-};
-
-const CHALLENGE_ICONS = {
-  Coding: Code2,
-  DBMS: BookOpen,
-  Design: Palette,
-  Architecture: Server,
-};
-
-const CHALLENGE_DETAILS = {
-  1: {
-    description: 'Solve 5 algorithmic problems using arrays, linked lists, and binary search within the time limit. Compete with 89+ participants across all skill levels.',
-    tasks: ['Solve Two Sum problem', 'Implement Binary Search', 'Reverse a Linked List', 'Find Max Subarray Sum', 'Validate Balanced Parentheses'],
-    prize: '200 XP + Algorithm Warrior Badge',
-    level: 'Beginner–Intermediate',
-  },
-  2: {
-    description: 'Design a normalized database schema for a real-world e-commerce system. Submit ER diagram + SQL DDL scripts that demonstrate 3NF compliance.',
-    tasks: ['Design ER Diagram', 'Write DDL scripts (3NF)', 'Implement Indexing Strategy', 'Write 3 complex JOIN queries'],
-    prize: '350 XP + DBMS Expert Badge',
-    level: 'Intermediate–Advanced',
-  },
-  3: {
-    description: 'Create a complete UI/UX design for a mobile learning app. Submit Figma prototypes with user flow, color palette, and component library.',
-    tasks: ['User Research & Personas', 'Wireframes (Lo-Fi)', 'High-Fidelity Mockups', 'Interactive Prototype', 'Design System Documentation'],
-    prize: '150 XP + Design Star Badge',
-    level: 'All Levels',
-  },
-  4: {
-    description: 'Design a scalable system architecture for a video streaming platform handling 1M concurrent users. Present your design with diagrams and trade-off analysis.',
-    tasks: ['High-Level Architecture Diagram', 'Database Sharding Strategy', 'CDN & Caching Layer Design', 'Load Balancing Approach', 'Failure Mode Analysis'],
-    prize: '400 XP + System Architect Badge',
-    level: 'Advanced',
-  },
-};
+// Extract Socket.IO server URL from base API URL
+const VITE_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const SOCKET_URL = VITE_API_URL.replace('/api', '');
 
 export default function Community() {
   const { user } = useAuth();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState('forum');
-  const [posts, setPosts] = useState([
-    { id: 1, author: 'Rahul K.', avatar: 'R', title: 'How to implement Binary Search Tree in Java?', category: 'DSA', replies: 12, likes: 24, time: '2 hours ago', tags: ['Java', 'DSA', 'Trees'] },
-    { id: 2, author: 'Priya S.', avatar: 'P', title: 'Best resources for learning C# design patterns', category: 'C#', replies: 8, likes: 15, time: '5 hours ago', tags: ['C#', 'Design Patterns'] },
-    { id: 3, author: 'Amit V.', avatar: 'A', title: 'Struggling with SQL JOIN queries - need help!', category: 'DBMS', replies: 20, likes: 31, time: '1 day ago', tags: ['SQL', 'DBMS', 'Joins'] },
-    { id: 4, author: 'Sneha M.', avatar: 'S', title: 'Python vs Java for competitive programming?', category: 'General', replies: 45, likes: 67, time: '2 days ago', tags: ['Python', 'Java', 'CP'] },
-  ]);
-  const [newPost, setNewPost] = useState('');
-  const [doubtQuestion, setDoubtQuestion] = useState('');
 
-  // Challenge state
-  const [joinedChallenges, setJoinedChallenges] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('eduverse_joined_challenges') || '{}'); } catch { return {}; }
-  });
-  const [challenges, setChallenges] = useState([
-    { id: 1, title: 'Weekly Algorithm Sprint', difficulty: 'Medium', participants: 89, deadline: '3 days left', xp: 200, type: 'Coding' },
-    { id: 2, title: 'Database Design Challenge', difficulty: 'Hard', participants: 45, deadline: '5 days left', xp: 350, type: 'DBMS' },
-    { id: 3, title: 'UI/UX Design Contest', difficulty: 'Easy', participants: 123, deadline: '7 days left', xp: 150, type: 'Design' },
-    { id: 4, title: 'System Design Sprint', difficulty: 'Hard', participants: 34, deadline: '2 days left', xp: 400, type: 'Architecture' },
-  ]);
-  const [selectedChallenge, setSelectedChallenge] = useState(null);
+  // Active Main Tabs: chat, voice, video
+  const [activeTab, setActiveTab] = useState('chat');
 
-  useEffect(() => {
-    const hash = location.hash;
-    if (hash && HASH_TO_TAB[hash]) {
-      setActiveTab(HASH_TO_TAB[hash]);
-    }
-  }, [location.hash]);
+  // Socket instance
+  const socketRef = useRef(null);
 
-  const tabs = [
-    { id: 'forum', label: 'Discussion Forum', icon: '💬' },
-    { id: 'groups', label: 'Study Groups', icon: '👥' },
-    { id: 'clubs', label: 'Coding Clubs', icon: '🏫' },
-    { id: 'challenges', label: 'Challenges', icon: '⚡' },
-    { id: 'doubt', label: 'Doubt Solving', icon: '❓' },
-  ];
+  // States
+  const [rooms, setRooms] = useState([]);
+  const [activeRoom, setActiveRoom] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [inputText, setInputText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [remoteTyping, setRemoteTyping] = useState('');
 
-  const studyGroups = [
-    { id: 1, name: 'DSA Mastery Group', members: 45, active: true, subject: 'DSA', icon: '🌳', nextSession: 'Today 4 PM' },
-    { id: 2, name: 'Java Advanced Learners', members: 32, active: true, subject: 'Java', icon: '☕', nextSession: 'Tomorrow 10 AM' },
-    { id: 3, name: 'DBMS Study Circle', members: 28, active: false, subject: 'DBMS', icon: '🗄️', nextSession: 'Friday 2 PM' },
-    { id: 4, name: 'Python Enthusiasts', members: 56, active: true, subject: 'Python', icon: '🐍', nextSession: 'Today 6 PM' },
-    { id: 5, name: 'Web Dev Bootcamp', members: 39, active: false, subject: 'Web Dev', icon: '🌐', nextSession: 'Saturday 11 AM' },
-  ];
+  // Right sidebar toggles
+  const [showRightSidebar, setShowRightSidebar] = useState(true);
 
-  const codingClubs = [
-    { id: 1, name: 'Algorithm Warriors', members: 120, rating: '⭐⭐⭐⭐⭐', focus: 'Competitive Programming', meetDay: 'Every Saturday' },
-    { id: 2, name: 'Open Source Contributors', members: 85, rating: '⭐⭐⭐⭐', focus: 'Open Source Projects', meetDay: 'Every Sunday' },
-    { id: 3, name: 'Hackathon Squad', members: 67, rating: '⭐⭐⭐⭐', focus: 'Hackathons & Innovations', meetDay: 'Bi-weekly' },
-    { id: 4, name: 'Full Stack Devs', members: 94, rating: '⭐⭐⭐⭐⭐', focus: 'Full Stack Development', meetDay: 'Every Friday' },
-  ];
+  // Modals & Panels Toggles
+  const [showCreateRoom, setShowCreateRoom] = useState(false);
+  const [showFriends, setShowFriends] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
-  const handleJoinChallenge = (ch, e) => {
-    e.stopPropagation();
-    const alreadyJoined = joinedChallenges[ch.id];
-    const updated = { ...joinedChallenges };
+  // Form states
+  const [newRoomName, setNewRoomName] = useState('');
+  const [newRoomCategory, setNewRoomCategory] = useState('General Discussion');
+  const [newRoomDescription, setNewRoomDescription] = useState('');
+  const [newRoomType, setNewRoomType] = useState('chat');
+  const [newRoomPassword, setNewRoomPassword] = useState('');
 
-    if (alreadyJoined) {
-      delete updated[ch.id];
-      setChallenges(prev => prev.map(c => c.id === ch.id ? { ...c, participants: c.participants - 1 } : c));
-      toast('Left the challenge', { icon: '👋' });
-    } else {
-      updated[ch.id] = true;
-      setChallenges(prev => prev.map(c => c.id === ch.id ? { ...c, participants: c.participants + 1 } : c));
-      toast.success(`🎯 Joined "${ch.title}"! +${ch.xp} XP on completion`, { duration: 3500 });
-    }
+  // Voice / Video states
+  const [activeCall, setActiveCall] = useState(null);
+  const [callParticipants, setCallParticipants] = useState([]);
+  const [micOn, setMicOn] = useState(true);
+  const [cameraOn, setCameraOn] = useState(true);
+  const [noiseCancel, setNoiseCancel] = useState(true);
+  const [echoCancel, setEchoCancel] = useState(true);
+  const [handRaised, setHandRaised] = useState(false);
+  const [pushToTalk, setPushToTalk] = useState(false);
+  const [isPTTActive, setIsPTTActive] = useState(false);
+  const [voiceCaptions, setVoiceCaptions] = useState([]);
+  const [callLogs, setCallLogs] = useState({ summary: '', transcription: '', keywords: [] });
+  const [speakingTime, setSpeakingTime] = useState({});
 
-    setJoinedChallenges(updated);
-    localStorage.setItem('eduverse_joined_challenges', JSON.stringify(updated));
-  };
-
-  const difficultyStyle = (d) => {
-    if (d === 'Easy') return 'bg-emerald-500/10 text-emerald-400';
-    if (d === 'Medium') return 'bg-amber-500/10 text-amber-400';
-    return 'bg-red-500/10 text-red-400';
-  };
-
-  return (
-    <div className="space-y-6 pb-8">
-      {/* Header */}
-      <div className="relative overflow-hidden rounded-3xl p-8 border border-[rgba(139,92,246,0.2)] bg-gradient-to-br from-[#120e2a] via-[#1a143b] to-[#0f0b24]">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-violet-600/10 rounded-full blur-[100px] pointer-events-none" />
-        <h1 className="text-3xl font-extrabold text-white">🌐 Community Hub</h1>
-        <p className="text-indigo-200/70 text-sm mt-1">Connect, collaborate, and grow with fellow learners</p>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="flex items-center gap-1 p-1 rounded-2xl w-full max-w-full overflow-x-auto scrollbar-none" style={{ backgroundColor: 'var(--db-input-bg)', border: '1px solid var(--db-sidebar-border)' }}>
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 flex-shrink-0 ${
-              activeTab === tab.id ? 'shadow-md' : 'hover:opacity-80'
-            }`}
-            style={{
-              backgroundColor: activeTab === tab.id ? 'var(--db-card-bg)' : 'transparent',
-              color: activeTab === tab.id ? 'var(--db-text-accent)' : 'var(--db-text-muted)',
-              border: activeTab === tab.id ? '1px solid var(--db-sidebar-border)' : '1px solid transparent'
-            }}
-          >
-            <span>{tab.icon}</span>
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      <AnimatePresence mode="wait">
-        {/* DISCUSSION FORUM */}
-        {activeTab === 'forum' && (
-          <motion.div key="forum" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
-            <div className="p-4 rounded-2xl border flex gap-3" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-              <div className="w-10 h-10 rounded-full bg-violet-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
-                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-              </div>
-              <div className="flex-1 flex gap-2">
-                <input
-                  type="text"
-                  value={newPost}
-                  onChange={e => setNewPost(e.target.value)}
-                  placeholder="Start a discussion..."
-                  className="flex-1 px-4 py-2.5 rounded-xl border text-sm outline-none"
-                  style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}
-                />
-                <button
-                  onClick={() => { if (newPost.trim()) { setPosts(prev => [{ id: Date.now(), author: user?.name || 'You', avatar: user?.name?.charAt(0) || 'U', title: newPost, category: 'General', replies: 0, likes: 0, time: 'Just now', tags: [] }, ...prev]); setNewPost(''); } }}
-                  className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold rounded-xl transition-all cursor-pointer"
-                >
-                  Post
-                </button>
-              </div>
-            </div>
-
-            {posts.map(post => (
-              <div key={post.id} className="p-5 rounded-2xl border hover:shadow-lg transition-all" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">{post.avatar}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-bold" style={{ color: 'var(--db-text-main)' }}>{post.author}</span>
-                      <span className="text-[11px]" style={{ color: 'var(--db-text-muted)' }}>• {post.time}</span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md" style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)' }}>{post.category}</span>
-                    </div>
-                    <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--db-text-main)' }}>{post.title}</h3>
-                    <div className="flex items-center gap-4">
-                      <span className="text-xs flex items-center gap-1 cursor-pointer hover:text-violet-400 transition" style={{ color: 'var(--db-text-muted)' }}>💬 {post.replies} replies</span>
-                      <span className="text-xs flex items-center gap-1 cursor-pointer hover:text-red-400 transition" style={{ color: 'var(--db-text-muted)' }}>❤️ {post.likes} likes</span>
-                      {post.tags.map(tag => (
-                        <span key={tag} className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)', color: 'var(--db-text-accent)' }}>#{tag}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </motion.div>
-        )}
-
-        {/* STUDY GROUPS */}
-        {activeTab === 'groups' && (
-          <StudyGroupsSubsystem />
-        )}
-
-        {/* CODING CLUBS (Developer Hub) */}
-        {activeTab === 'clubs' && (
-          <DeveloperHubSubsystem />
-        )}
-
-
-
-        {/* CHALLENGES */}
-        {activeTab === 'challenges' && (
-          <motion.div key="challenges" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
-            {/* Joined Banner */}
-            {Object.keys(joinedChallenges).length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5"
-              >
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <p className="text-xs font-semibold text-emerald-400">
-                  You are participating in <strong>{Object.keys(joinedChallenges).length}</strong> challenge{Object.keys(joinedChallenges).length > 1 ? 's' : ''}. Complete them to earn XP!
-                </p>
-              </motion.div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {challenges.map(ch => {
-                const joined = !!joinedChallenges[ch.id];
-                const Icon = CHALLENGE_ICONS[ch.type] || Zap;
-                return (
-                  <motion.div
-                    key={ch.id}
-                    whileHover={{ y: -2 }}
-                    onClick={() => setSelectedChallenge(ch)}
-                    className="p-5 rounded-2xl border cursor-pointer transition-all flex flex-col gap-3 relative overflow-hidden"
-                    style={{
-                      backgroundColor: 'var(--db-card-bg)',
-                      borderColor: joined ? 'rgba(139,92,246,0.5)' : 'var(--db-sidebar-border)',
-                      boxShadow: joined ? '0 0 0 1px rgba(139,92,246,0.3)' : 'none',
-                    }}
-                  >
-                    {joined && <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl pointer-events-none" />}
-
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(139,92,246,0.12)' }}>
-                          <Icon className="w-4 h-4 text-violet-400" />
-                        </div>
-                        <h3 className="text-sm font-bold leading-tight" style={{ color: 'var(--db-text-main)' }}>{ch.title}</h3>
-                      </div>
-                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md shrink-0 ml-2 ${difficultyStyle(ch.difficulty)}`}>
-                        {ch.difficulty}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs" style={{ color: 'var(--db-text-muted)' }}>
-                      <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {ch.participants} participants</span>
-                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {ch.deadline}</span>
-                      <span className="flex items-center gap-1 font-bold" style={{ color: 'var(--db-text-accent)' }}>
-                        <Zap className="w-3 h-3" />+{ch.xp} XP
-                      </span>
-                    </div>
-
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md w-fit" style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)' }}>{ch.type}</span>
-
-                    <button
-                      onClick={(e) => handleJoinChallenge(ch, e)}
-                      className={`w-full py-2.5 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 ${
-                        joined
-                          ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-red-600 hover:to-rose-600'
-                          : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700'
-                      }`}
-                    >
-                      {joined ? (
-                        <><CheckCircle2 className="w-3.5 h-3.5" /> Joined — Click to Leave</>
-                      ) : (
-                        <><Trophy className="w-3.5 h-3.5" /> Join Challenge</>
-                      )}
-                    </button>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-
-        {/* DOUBT SOLVING */}
-        {activeTab === 'doubt' && (
-          <motion.div key="doubt" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
-            <div className="p-6 rounded-2xl border" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-              <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--db-text-main)' }}>❓ Ask Your Doubt</h2>
-              <div className="space-y-3">
-                <textarea
-                  value={doubtQuestion}
-                  onChange={e => setDoubtQuestion(e.target.value)}
-                  placeholder="Describe your doubt in detail... (e.g., How does recursion work in tree traversal?)"
-                  rows={4}
-                  className="w-full px-4 py-3 rounded-xl border text-sm outline-none resize-none"
-                  style={{ backgroundColor: 'var(--db-input-bg)', borderColor: 'var(--db-sidebar-border)', color: 'var(--db-text-main)' }}
-                />
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-2">
-                    <span className="text-xs px-2 py-1 rounded-md cursor-pointer" style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)' }}>📷 Add Image</span>
-                    <span className="text-xs px-2 py-1 rounded-md cursor-pointer" style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)' }}>📎 Attach Code</span>
-                  </div>
-                  <button className="px-5 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold rounded-xl transition-all cursor-pointer">
-                    Submit Doubt
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {[
-                { q: 'What is the difference between HashMap and TreeMap?', subject: 'Java', answers: 5, solved: true },
-                { q: 'How to normalize a database to 3NF?', subject: 'DBMS', answers: 3, solved: true },
-                { q: 'Explain time complexity of merge sort', subject: 'DSA', answers: 8, solved: false },
-              ].map((doubt, i) => (
-                <div key={i} className="p-4 rounded-2xl border flex justify-between items-center" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-bold" style={{ color: 'var(--db-text-main)' }}>{doubt.q}</h4>
-                    <div className="flex gap-2 text-xs" style={{ color: 'var(--db-text-muted)' }}>
-                      <span>{doubt.subject}</span>
-                      <span>• {doubt.answers} answers</span>
-                    </div>
-                  </div>
-                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${doubt.solved ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
-                    {doubt.solved ? '✅ Solved' : '⏳ Open'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Challenge Detail Modal ── */}
-      <AnimatePresence>
-        {selectedChallenge && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
-            onClick={() => setSelectedChallenge(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.95, y: 10, opacity: 0 }}
-              transition={{ type: 'spring', duration: 0.4 }}
-              onClick={e => e.stopPropagation()}
-              className="w-full max-w-lg rounded-3xl border overflow-hidden"
-              style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
-            >
-              {/* Modal Header */}
-              <div className="relative p-6 pb-4 bg-gradient-to-r from-violet-600/20 to-indigo-600/10 border-b" style={{ borderColor: 'var(--db-sidebar-border)' }}>
-                <div className="absolute top-0 right-0 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${difficultyStyle(selectedChallenge.difficulty)}`}>
-                      {selectedChallenge.difficulty}
-                    </span>
-                    <h2 className="text-xl font-black mt-1" style={{ color: 'var(--db-text-main)' }}>{selectedChallenge.title}</h2>
-                  </div>
-                  <button
-                    onClick={() => setSelectedChallenge(null)}
-                    className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition cursor-pointer shrink-0"
-                    style={{ color: 'var(--db-text-muted)' }}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex items-center gap-4 mt-4 text-xs" style={{ color: 'var(--db-text-muted)' }}>
-                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> {selectedChallenge.participants} participants</span>
-                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {selectedChallenge.deadline}</span>
-                  <span className="flex items-center gap-1.5 font-bold text-violet-400"><Zap className="w-3.5 h-3.5" /> +{selectedChallenge.xp} XP</span>
-                </div>
-              </div>
-
-              {/* Modal Body */}
-              <div className="p-6 space-y-5">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--db-text-muted)' }}>About this Challenge</p>
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--db-text-main)' }}>
-                    {CHALLENGE_DETAILS[selectedChallenge.id]?.description}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--db-text-muted)' }}>Tasks to Complete</p>
-                  <ul className="space-y-2">
-                    {CHALLENGE_DETAILS[selectedChallenge.id]?.tasks.map((task, i) => (
-                      <li key={i} className="flex items-center gap-2 text-sm" style={{ color: 'var(--db-text-main)' }}>
-                        <span className="w-5 h-5 rounded-full bg-violet-500/10 text-violet-400 flex items-center justify-center text-[10px] font-black shrink-0">{i + 1}</span>
-                        {task}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-xl" style={{ backgroundColor: 'var(--db-input-bg)' }}>
-                    <p className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--db-text-muted)' }}>🏆 Prize</p>
-                    <p className="text-xs font-bold text-amber-400">{CHALLENGE_DETAILS[selectedChallenge.id]?.prize}</p>
-                  </div>
-                  <div className="p-3 rounded-xl" style={{ backgroundColor: 'var(--db-input-bg)' }}>
-                    <p className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--db-text-muted)' }}>🎯 Level</p>
-                    <p className="text-xs font-bold" style={{ color: 'var(--db-text-main)' }}>{CHALLENGE_DETAILS[selectedChallenge.id]?.level}</p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={(e) => { handleJoinChallenge(selectedChallenge, e); setSelectedChallenge(null); }}
-                  className={`w-full py-3 text-white text-sm font-black rounded-2xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2 ${
-                    joinedChallenges[selectedChallenge.id]
-                      ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700'
-                      : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700'
-                  }`}
-                >
-                  {joinedChallenges[selectedChallenge.id] ? (
-                    <><X className="w-4 h-4" /> Leave Challenge</>
-                  ) : (
-                    <><Trophy className="w-4 h-4" /> Join Challenge — Earn +{selectedChallenge.xp} XP</>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// ── STUDY GROUPS SUBSYSTEM ──────────────────────────────────────────────────
-function StudyGroupsSubsystem() {
-  const [activeWorkspace, setActiveWorkspace] = useState(null); // null = Dashboard, otherwise group object
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showMatchmaker, setShowMatchmaker] = useState(false);
-  const [searchVal, setSearchVal] = useState('');
-  const [workspaceTab, setWorkspaceTab] = useState('chat'); // chat, whiteboard, tasks, analytics, overview
-
-  // Form State
-  const [newGroupName, setNewGroupName] = useState('');
-  const [newGroupSubject, setNewGroupSubject] = useState('Data Structures');
-  const [selectedAiMentor, setSelectedAiMentor] = useState('Coding AI');
-  const [maxMembers, setMaxMembers] = useState(6);
-
-  const [groups, setGroups] = useState([
-    {
-      id: 1,
-      name: 'DSA Mastery & LeetCode Sprint',
-      subject: 'Data Structures',
-      owner: 'Rohan D. (You)',
-      members: 5,
-      max: 6,
-      online: 3,
-      aiMentor: 'Coding AI',
-      weeklyGoal: 'Implement 5 tree & graph algorithms',
-      upcomingMeeting: 'Today 5:00 PM (IST)',
-      unreadCount: 3,
-      coverColor: 'from-violet-600 to-indigo-800',
-      tasks: [
-        { id: 101, title: 'Write Balanced Tree validation script', status: 'todo', priority: 'High', assignee: 'Kavya P.' },
-        { id: 102, title: 'Draw Graph traversals flowchart', status: 'progress', priority: 'Medium', assignee: 'Rahul K.' },
-        { id: 103, title: 'Implement DFS/BFS in Java', status: 'completed', priority: 'High', assignee: 'Rohan D.' }
-      ],
-      chatMessages: [
-        { role: 'user', name: 'Rahul K.', text: 'Hey team, did anyone finish the DFS code?', time: '12:30 PM' },
-        { role: 'ai', name: 'Coding AI', text: 'DFS uses a stack or recursion. I can generate a quick template if you want!', time: '12:31 PM' }
-      ]
-    },
-    {
-      id: 2,
-      name: 'DBMS Relational DB Builders',
-      subject: 'Database Systems',
-      owner: 'Kavya P.',
-      members: 4,
-      max: 8,
-      online: 2,
-      aiMentor: 'DBMS AI',
-      weeklyGoal: 'Normalize E-Commerce Schema to 3NF',
-      upcomingMeeting: 'Tomorrow 2:00 PM (IST)',
-      unreadCount: 0,
-      coverColor: 'from-blue-600 to-cyan-800',
-      tasks: [],
-      chatMessages: []
-    }
-  ]);
-
-  const [chatInput, setChatInput] = useState('');
+  // Collaboration states
+  const [collaborationTab, setCollaborationTab] = useState('whiteboard'); // whiteboard, notes, code, poll, tasks
   const [whiteboardShapes, setWhiteboardShapes] = useState([]);
+  const [sharedNotes, setSharedNotes] = useState('');
+  const [sharedCode, setSharedCode] = useState('// Multiplayer Code Editor\nfunction helloWorld() {\n  console.log("Hello, World!");\n}');
+  const [codeLanguage, setCodeLanguage] = useState('javascript');
+  const [codeConsole, setCodeConsole] = useState('Output console ready...');
+  const [isCompiling, setIsCompiling] = useState(false);
 
-  // Matchmaking recommendations mock
-  const matchmakingPool = [
-    { name: 'Amit V.', matchRate: 98, reason: 'Strong in Java, looking for DSA partners in 6th Sem.', dept: 'CSE' },
-    { name: 'Priya S.', matchRate: 92, reason: 'Expert in Python, shares similar evening study hours.', dept: 'ISE' }
-  ];
+  // Polls States
+  const [activePoll, setActivePoll] = useState(null);
 
-  const handleCreateGroup = (e) => {
-    e.preventDefault();
-    if (!newGroupName.trim()) {
-      toast.error('Please enter a group name');
-      return;
-    }
-    const newGroup = {
-      id: Date.now(),
-      name: newGroupName,
-      subject: newGroupSubject,
-      owner: 'Rohan D. (You)',
-      members: 1,
-      max: maxMembers,
-      online: 1,
-      aiMentor: selectedAiMentor,
-      weeklyGoal: 'Solve textbook exercises',
-      upcomingMeeting: 'Setup required',
-      unreadCount: 0,
-      coverColor: 'from-purple-600 to-pink-800',
-      tasks: [],
-      chatMessages: [
-        { role: 'ai', name: selectedAiMentor, text: `Hello! I am your group's AI Mentor: ${selectedAiMentor}. Ask me anything!`, time: 'Just now' }
-      ]
-    };
+  // Tasks board states
+  const [tasks, setTasks] = useState([
+    { id: 1, title: 'Design ER Schema for Library', status: 'todo', priority: 'High', assignee: 'You' },
+    { id: 2, title: 'Draft React router setup', status: 'progress', priority: 'Medium', assignee: 'Priya' },
+    { id: 3, title: 'Code Binary Search Tree logic', status: 'completed', priority: 'Low', assignee: 'Rahul' }
+  ]);
 
-    setGroups(prev => [newGroup, ...prev]);
-    setNewGroupName('');
-    setShowCreateModal(false);
-    toast.success(`Group "${newGroupName}" created successfully!`);
-  };
+  // Friend lists states
+  const [friends, setFriends] = useState([]);
+  const [friendEmailInput, setFriendEmailInput] = useState('');
 
-  const handleSendChat = (e) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
+  // Notifications states
+  const [notifications, setNotifications] = useState([
+    { id: 1, type: 'mention', title: 'Mentioned you', desc: 'Rahul tagged you in #dsa-doubt-solving', time: '10m ago', read: false },
+    { id: 2, type: 'friend', title: 'Friend Request', desc: 'Amit V. sent you a friend request.', time: '1h ago', read: false },
+    { id: 3, type: 'call', title: 'Room Invite', desc: 'Priya invited you to join voice room.', time: '2h ago', read: true }
+  ]);
 
-    const userMsg = {
-      role: 'user',
-      name: 'Rohan D. (You)',
-      text: chatInput,
-      time: 'Just now'
-    };
+  // Calendar states
+  const [events, setEvents] = useState([]);
+  const [newEventTitle, setNewEventTitle] = useState('');
+  const [newEventTime, setNewEventTime] = useState('');
+  const [newEventRoom, setNewEventRoom] = useState('');
 
-    const updatedGroups = groups.map(g => {
-      if (g.id === activeWorkspace.id) {
-        const msgs = [...g.chatMessages, userMsg];
-        return { ...g, chatMessages: msgs };
-      }
-      return g;
+  // Leaderboard states
+  const [leaderboard, setLeaderboard] = useState([]);
+
+  // Search query state
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Report Form state
+  const [reportReason, setReportReason] = useState('');
+  const [reportTargetUser, setReportTargetUser] = useState(null);
+
+  // Refs
+  const messageEndRef = useRef(null);
+  const canvasRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+
+  // Initialize Socket.IO connection
+  useEffect(() => {
+    socketRef.current = io(SOCKET_URL, {
+      transports: ['websocket'],
+      upgrade: false
     });
 
-    setGroups(updatedGroups);
-    setActiveWorkspace(prev => ({ ...prev, chatMessages: [...prev.chatMessages, userMsg] }));
-    const savedInput = chatInput;
-    setChatInput('');
+    socketRef.current.on('connect', () => {
+      console.log('Connected to real-time Community socket.io server');
+    });
 
-    // AI Response simulation
+    // Real-time Chat Receives
+    socketRef.current.on('community-receive-message', (message) => {
+      setMessages(prev => [...prev, message]);
+      scrollToBottom();
+    });
+
+    socketRef.current.on('community-remote-typing', ({ username, isTyping }) => {
+      if (isTyping) {
+        setRemoteTyping(`${username} is typing...`);
+      } else {
+        setRemoteTyping('');
+      }
+    });
+
+    socketRef.current.on('community-remote-reaction', ({ messageId, reactions }) => {
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, reactions } : m));
+    });
+
+    // WebRTC Signaling Receives
+    socketRef.current.on('call-webrtc-offer-received', ({ offer, fromSocketId, senderName, senderId }) => {
+      toast.success(`Incoming call from ${senderName}`);
+      // Send mock answer for simulation
+      setTimeout(() => {
+        socketRef.current.emit('call-webrtc-answer', {
+          answer: { type: 'answer', sdp: 'mock-sdp' },
+          toSocketId: fromSocketId
+        });
+      }, 800);
+    });
+
+    socketRef.current.on('call-webrtc-answer-received', ({ answer }) => {
+      console.log('WebRTC Call Answer received internally:', answer);
+    });
+
+    socketRef.current.on('call-webrtc-candidate-received', ({ candidate }) => {
+      console.log('WebRTC Call Candidate received:', candidate);
+    });
+
+    // Remote status updates
+    socketRef.current.on('call-remote-status-update', ({ userId, micOn, cameraOn, handRaised }) => {
+      setCallParticipants(prev => prev.map(p => p.id === userId ? { ...p, micOn, cameraOn, handRaised } : p));
+    });
+
+    // Voice captions
+    socketRef.current.on('voice-caption-received', ({ username, text, isFinal }) => {
+      setVoiceCaptions(prev => {
+        const next = [...prev, { username, text, isFinal, id: Date.now() }];
+        return next.slice(-8); // Keep last 8 captions
+      });
+    });
+
+    // Whiteboard Sync
+    socketRef.current.on('whiteboard-remote-draw', (elements) => {
+      setWhiteboardShapes(elements);
+    });
+
+    // Monaco Code Sync
+    socketRef.current.on('code-editor-remote-sync', ({ code, language }) => {
+      setSharedCode(code);
+      if (language) setCodeLanguage(language);
+    });
+
+    // Notes Sync
+    socketRef.current.on('notes-doc-remote-sync', ({ content }) => {
+      setSharedNotes(content);
+    });
+
+    // Poll Sync
+    socketRef.current.on('poll-remote-vote-update', ({ messageId, pollOptions }) => {
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, pollOptions } : m));
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, []);
+
+  // Fetch Rooms at startup
+  useEffect(() => {
+    fetchRooms();
+    fetchLeaderboard();
+    fetchFriends();
+    fetchEvents();
+  }, []);
+
+  // Handle active room joins
+  useEffect(() => {
+    if (activeRoom) {
+      fetchMessages(activeRoom.id);
+      
+      // Sync Whiteboard, Notes, Code
+      fetchRoomCollaborationData(activeRoom.id);
+
+      // Join Socket Room
+      socketRef.current.emit('community-join-room', {
+        roomId: activeRoom.id,
+        userId: user?.id,
+        username: user?.name
+      });
+    }
+
+    return () => {
+      if (activeRoom) {
+        socketRef.current.emit('community-leave-room', {
+          roomId: activeRoom.id,
+          userId: user?.id,
+          username: user?.name
+        });
+      }
+    };
+  }, [activeRoom]);
+
+  // Auto scroll chat to bottom
+  const scrollToBottom = () => {
     setTimeout(() => {
-      const aiResponse = {
-        role: 'ai',
-        name: activeWorkspace.aiMentor,
-        text: `Understood! Regarding "${savedInput}", let's collaborate. I recommend building a quick flowchart or writing test cases in the workspace editor.`,
-        time: 'Just now'
+      messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
+  // API Call helper definitions
+  const fetchRooms = async () => {
+    try {
+      const res = await api.get('/community/rooms');
+      setRooms(res.data);
+      if (res.data.length > 0 && !activeRoom) {
+        setActiveRoom(res.data[0]);
+      }
+    } catch (err) {
+      toast.error('Error listing channels.');
+    }
+  };
+
+  const fetchMessages = async (roomId) => {
+    try {
+      const res = await api.get(`/community/rooms/${roomId}/messages`);
+      setMessages(res.data);
+      scrollToBottom();
+    } catch (err) {
+      toast.error('Error fetching chat messages.');
+    }
+  };
+
+  const fetchRoomCollaborationData = async (roomId) => {
+    try {
+      // Whiteboard
+      const wbRes = await api.get(`/community/rooms/${roomId}/whiteboard`);
+      setWhiteboardShapes(wbRes.data);
+
+      // Notes
+      const notesRes = await api.get(`/community/rooms/${roomId}/notes`);
+      setSharedNotes(notesRes.data.content || '');
+
+      // Code
+      const codeRes = await api.get(`/community/rooms/${roomId}/code`);
+      setSharedCode(codeRes.data.code || '');
+      setCodeLanguage(codeRes.data.language || 'javascript');
+    } catch (err) {
+      console.warn('Collaboration API fallback ready.');
+    }
+  };
+
+  const fetchLeaderboard = async () => {
+    try {
+      const res = await api.get('/community/leaderboard');
+      setLeaderboard(res.data);
+    } catch (err) {
+      console.warn('Leaderboard fallback configured.');
+    }
+  };
+
+  const fetchFriends = async () => {
+    try {
+      const res = await api.get('/community/friends');
+      setFriends(res.data);
+    } catch (err) {
+      console.warn('Friends module loaded.');
+    }
+  };
+
+  const fetchEvents = async () => {
+    try {
+      const res = await api.get('/community/events');
+      setEvents(res.data);
+    } catch (err) {
+      console.warn('Calendar events initiated.');
+    }
+  };
+
+  // Send Chat message
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!inputText.trim()) return;
+
+    try {
+      const payload = {
+        text: inputText,
+        type: 'text'
       };
 
-      const withAiGroups = groups.map(g => {
-        if (g.id === activeWorkspace.id) {
-          return { ...g, chatMessages: [...g.chatMessages, userMsg, aiResponse] };
-        }
-        return g;
+      const res = await api.post(`/community/rooms/${activeRoom.id}/messages`, payload);
+      setMessages(prev => [...prev, res.data]);
+      setInputText('');
+      scrollToBottom();
+
+      // Emit to sockets
+      socketRef.current.emit('community-send-message', {
+        roomId: activeRoom.id,
+        message: res.data
       });
-      setGroups(withAiGroups);
-      setActiveWorkspace(prev => ({ ...prev, chatMessages: [...prev.chatMessages, aiResponse] }));
-    }, 1200);
-  };
-
-  const handleMoveTask = (taskId, nextStatus) => {
-    const updated = groups.map(g => {
-      if (g.id === activeWorkspace.id) {
-        const tasks = g.tasks.map(t => t.id === taskId ? { ...t, status: nextStatus } : t);
-        return { ...g, tasks };
-      }
-      return g;
-    });
-    setGroups(updated);
-    setActiveWorkspace(prev => {
-      const tasks = prev.tasks.map(t => t.id === taskId ? { ...t, status: nextStatus } : t);
-      return { ...prev, tasks };
-    });
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Title Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4">
-        <div>
-          <h2 className="text-xl font-black text-white flex items-center gap-2">
-            📚 Smart Study Groups
-          </h2>
-          <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            Invite classmates, assign AI mentors, synchronize whiteboards, and solve assignments together.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl text-xs font-bold transition hover:shadow-lg hover:shadow-violet-600/20 cursor-pointer flex items-center gap-1.5"
-          >
-            <Plus className="w-3.5 h-3.5" /> Create Group
-          </button>
-          <button
-            onClick={() => setShowMatchmaker(true)}
-            className="px-4 py-2 bg-slate-900 border border-white/10 text-slate-300 rounded-xl text-xs font-bold transition hover:bg-slate-800 cursor-pointer flex items-center gap-1.5"
-          >
-            <Zap className="w-3.5 h-3.5 text-violet-400" /> AI Match Me
-          </button>
-        </div>
-      </div>
-
-      {/* Outer Workspace Toggle */}
-      {!activeWorkspace ? (
-        // DASHBOARD VIEW
-        <div className="space-y-6">
-          {/* Active Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {groups.map(g => (
-              <div 
-                key={g.id} 
-                className="rounded-3xl border border-white/5 overflow-hidden flex flex-col h-[320px] bg-slate-900/40 hover:border-violet-500/30 hover:shadow-xl transition group"
-              >
-                {/* Cover Banner */}
-                <div className={`h-24 bg-gradient-to-br ${g.coverColor} p-4 flex flex-col justify-between relative`}>
-                  <div className="absolute inset-0 bg-black/10" />
-                  <div className="relative z-10 flex justify-between items-center">
-                    <span className="text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-black/30 text-white border border-white/10">
-                      {g.subject}
-                    </span>
-                    {g.unreadCount > 0 && (
-                      <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center animate-bounce">
-                        {g.unreadCount}
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="relative z-10 font-bold text-white text-sm line-clamp-1">{g.name}</h3>
-                </div>
-
-                {/* Card Body */}
-                <div className="p-4 flex-1 flex flex-col justify-between">
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between text-slate-400">
-                      <span>👤 Mentor</span>
-                      <span className="font-bold text-violet-400">{g.aiMentor}</span>
-                    </div>
-                    <div className="flex justify-between text-slate-400">
-                      <span>👥 Members</span>
-                      <span className="font-bold text-white">{g.members} / {g.max} ({g.online} online)</span>
-                    </div>
-                    <div className="flex justify-between text-slate-400">
-                      <span>🎯 Goal</span>
-                      <span className="font-semibold text-slate-300 truncate max-w-[140px]">{g.weeklyGoal}</span>
-                    </div>
-                    <div className="flex justify-between text-slate-400">
-                      <span>📅 Meeting</span>
-                      <span className="font-bold text-cyan-400">{g.upcomingMeeting}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 mt-4 pt-3 border-t border-white/5">
-                    <button
-                      onClick={() => { setActiveWorkspace(g); setWorkspaceTab('chat'); }}
-                      className="flex-1 py-2 bg-violet-650 hover:bg-violet-700 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1"
-                    >
-                      <Play className="w-3 h-3" /> Enter Room
-                    </button>
-                    <button
-                      onClick={() => { if (window.confirm('Delete this group?')) setGroups(prev => prev.filter(pg => pg.id !== g.id)); }}
-                      className="p-2 border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 rounded-xl transition cursor-pointer"
-                    >
-                      <Trash className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        // ACTIVE WORKSPACE VIEW
-        <div className="rounded-3xl border border-white/5 bg-[#0e0a24]/50 backdrop-blur-md p-6 space-y-6">
-          {/* Workspace Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4">
-            <div className="space-y-1">
-              <button 
-                onClick={() => setActiveWorkspace(null)}
-                className="text-[10px] uppercase font-bold text-violet-400 flex items-center gap-1 hover:underline cursor-pointer"
-              >
-                ← Back to groups dashboard
-              </button>
-              <h3 className="text-lg font-black text-white">{activeWorkspace.name}</h3>
-              <p className="text-xs text-slate-400 flex items-center gap-2">
-                <span>Subject: <strong>{activeWorkspace.subject}</strong></span> | 
-                <span>AI Mentor: <strong className="text-violet-400">{activeWorkspace.aiMentor}</strong></span>
-              </p>
-            </div>
-
-            {/* Workspace tabs */}
-            <div className="flex p-1 bg-slate-950/60 rounded-xl border border-white/5 flex-wrap gap-1">
-              {[
-                { id: 'chat', label: 'Chat', icon: <MessageSquare className="w-3 h-3" /> },
-                { id: 'whiteboard', label: 'Whiteboard', icon: <Palette className="w-3 h-3" /> },
-                { id: 'tasks', label: 'Tasks', icon: <Target className="w-3 h-3" /> },
-                { id: 'analytics', label: 'Analytics', icon: <Trophy className="w-3 h-3" /> }
-              ].map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => setWorkspaceTab(t.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    workspaceTab === t.id ? 'bg-violet-650 text-white' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {t.icon} {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Tab Workspaces */}
-          <div className="min-h-[350px]">
-            {/* WORKSPACE TAB: CHAT */}
-            {workspaceTab === 'chat' && (
-              <div className="flex flex-col h-[400px] justify-between">
-                <div className="flex-1 overflow-y-auto space-y-4 pr-2 va-scroll">
-                  {activeWorkspace.chatMessages.map((msg, i) => (
-                    <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`p-3 rounded-2xl max-w-[80%] text-xs leading-normal space-y-1.5 ${
-                        msg.role === 'user'
-                          ? 'bg-gradient-to-r from-violet-600 to-indigo-650 text-white rounded-tr-none'
-                          : 'bg-white/5 border border-white/5 text-slate-200 rounded-tl-none'
-                      }`}>
-                        <div className="flex justify-between items-center text-[9px] text-slate-400 gap-4 border-b border-white/5 pb-1">
-                          <span className="font-bold">{msg.name}</span>
-                          <span>{msg.time}</span>
-                        </div>
-                        <p>{msg.text}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <form onSubmit={handleSendChat} className="flex gap-2 border-t border-white/5 pt-4">
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={e => setChatInput(e.target.value)}
-                    placeholder={`Ask team or @${activeWorkspace.aiMentor}...`}
-                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-violet-500"
-                  />
-                  <button type="submit" className="p-2.5 bg-violet-650 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition">
-                    Send
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* WORKSPACE TAB: WHITEBOARD */}
-            {workspaceTab === 'whiteboard' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center bg-slate-950/40 p-3 rounded-xl border border-white/5">
-                  <span className="text-xs text-slate-400 font-bold">Collaborative Smartboard Canvas</span>
-                  <div className="flex gap-1.5">
-                    {['Line', 'Flowchart', 'ER Diagram', 'Mind Map'].map(shape => (
-                      <button
-                        key={shape}
-                        onClick={() => setWhiteboardShapes(prev => [...prev, { shape, id: Date.now(), x: Math.random() * 80 + 10, y: Math.random() * 60 + 10 }])}
-                        className="px-2.5 py-1 bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold rounded-lg hover:bg-violet-500/20 transition cursor-pointer"
-                      >
-                        + Add {shape}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Whiteboard Grid View */}
-                <div className="h-[280px] bg-slate-950/60 rounded-2xl border border-white/5 relative overflow-hidden flex items-center justify-center">
-                  <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:16px_16px]" />
-                  {whiteboardShapes.length === 0 ? (
-                    <span className="text-xs text-slate-500 font-bold z-10">Canvas is blank. Add shapes from toolbar.</span>
-                  ) : (
-                    whiteboardShapes.map(s => (
-                      <div
-                        key={s.id}
-                        className="absolute p-3 bg-violet-650/20 border border-violet-500/50 text-white text-[10px] font-bold rounded-xl shadow-lg cursor-pointer"
-                        style={{ left: `${s.x}%`, top: `${s.y}%` }}
-                      >
-                        📦 {s.shape} Node
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* WORKSPACE TAB: TASKS */}
-            {workspaceTab === 'tasks' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {['todo', 'progress', 'completed'].map(col => (
-                  <div key={col} className="p-4 bg-slate-950/35 border border-white/5 rounded-2xl space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{col}</span>
-                      <span className="text-[10px] py-0.5 px-2 bg-white/5 rounded-full font-mono">
-                        {activeWorkspace.tasks.filter(t => t.status === col).length}
-                      </span>
-                    </div>
-
-                    <div className="space-y-3">
-                      {activeWorkspace.tasks.filter(t => t.status === col).map(t => (
-                        <div key={t.id} className="p-3 bg-slate-900 border border-white/5 rounded-xl space-y-2 hover:border-violet-500/20 transition">
-                          <h4 className="text-xs font-bold text-white">{t.title}</h4>
-                          <div className="flex justify-between items-center text-[9px] text-slate-500">
-                            <span>Assignee: {t.assignee}</span>
-                            <span className={`px-1.5 py-0.5 rounded ${t.priority === 'High' ? 'bg-red-500/10 text-red-400' : 'bg-amber-500/10 text-amber-400'}`}>
-                              {t.priority}
-                            </span>
-                          </div>
-
-                          <div className="flex gap-1 justify-end pt-1 border-t border-white/5">
-                            {col !== 'todo' && (
-                              <button onClick={() => handleMoveTask(t.id, 'todo')} className="text-[8px] font-bold text-slate-400 hover:text-white cursor-pointer px-1">To Do</button>
-                            )}
-                            {col !== 'progress' && (
-                              <button onClick={() => handleMoveTask(t.id, 'progress')} className="text-[8px] font-bold text-violet-400 hover:text-white cursor-pointer px-1">Progress</button>
-                            )}
-                            {col !== 'completed' && (
-                              <button onClick={() => handleMoveTask(t.id, 'completed')} className="text-[8px] font-bold text-emerald-400 hover:text-white cursor-pointer px-1">Done</button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* WORKSPACE TAB: ANALYTICS */}
-            {workspaceTab === 'analytics' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-5 bg-slate-950/30 border border-white/5 rounded-2xl space-y-4">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Group study hours</h4>
-                  <div className="flex items-end justify-between h-32 pt-2 border-b border-white/5">
-                    {[45, 80, 50, 95, 60].map((h, idx) => {
-                      const labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
-                      return (
-                        <div key={idx} className="flex flex-col items-center flex-1 gap-2">
-                          <div className="w-4 rounded-t bg-gradient-to-t from-violet-600 to-cyan-400" style={{ height: `${h}px` }} />
-                          <span className="text-[9px] text-slate-500">{labels[idx]}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="p-5 bg-slate-950/30 border border-white/5 rounded-2xl space-y-4">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Contribution leaderboard</h4>
-                  <div className="space-y-3 text-xs">
-                    {[
-                      { name: 'Rohan D. (You)', score: 92, status: 'Best Contributor' },
-                      { name: 'Kavya P.', score: 85, status: 'Discussion Leader' },
-                      { name: 'Rahul K.', score: 74, status: 'Helper' }
-                    ].map((user, idx) => (
-                      <div key={idx} className="flex justify-between items-center p-2.5 bg-white/2 rounded-xl border border-white/3">
-                        <div>
-                          <p className="font-bold text-white">{user.name}</p>
-                          <span className="text-[8px] uppercase tracking-wider text-slate-400">{user.status}</span>
-                        </div>
-                        <span className="font-black text-violet-400">{user.score} XP</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* CREATE STUDY GROUP MODAL */}
-      <AnimatePresence>
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#0b071e] border border-white/10 rounded-3xl p-6 w-full max-w-md shadow-2xl relative"
-            >
-              <button 
-                onClick={() => setShowCreateModal(false)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition cursor-pointer text-slate-400 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              <h3 className="text-lg font-black text-white mb-4">➕ Create Study Group</h3>
-              
-              <form onSubmit={handleCreateGroup} className="space-y-4 text-xs">
-                <div className="space-y-1">
-                  <label className="text-slate-400 block font-bold">Group Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={newGroupName}
-                    onChange={e => setNewGroupName(e.target.value)}
-                    placeholder="e.g. DSA & LeetCode Sprint"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-white outline-none focus:border-violet-500"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-slate-400 block font-bold">Subject</label>
-                    <select
-                      value={newGroupSubject}
-                      onChange={e => setNewGroupSubject(e.target.value)}
-                      className="w-full bg-slate-950 border border-white/10 rounded-xl p-2 text-white outline-none"
-                    >
-                      <option value="Data Structures">Data Structures</option>
-                      <option value="Database Systems">Database Systems</option>
-                      <option value="Java Programming">Java Programming</option>
-                      <option value="Python Dev">Python Dev</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-slate-400 block font-bold">Max Members</label>
-                    <input
-                      type="number"
-                      min="2" max="20"
-                      value={maxMembers}
-                      onChange={e => setMaxMembers(parseInt(e.target.value))}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl p-2 text-white outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-slate-400 block font-bold">Select AI Mentor Partner</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {['Coding AI', 'DBMS AI', 'Java AI', 'Python AI'].map(mentor => (
-                      <button
-                        key={mentor}
-                        type="button"
-                        onClick={() => setSelectedAiMentor(mentor)}
-                        className={`p-2 rounded-xl font-bold border transition ${
-                          selectedAiMentor === mentor
-                            ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
-                            : 'bg-slate-900 border-white/5 text-slate-400'
-                        }`}
-                      >
-                        {mentor}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <button 
-                  type="submit"
-                  className="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-650 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl font-bold text-xs mt-4 transition cursor-pointer"
-                >
-                  Create Group
-                </button>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* AI MATCHMAKER DRAWER */}
-      <AnimatePresence>
-        {showMatchmaker && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 50, opacity: 0 }}
-              className="bg-[#0b071e] border border-white/10 rounded-3xl p-6 w-full max-w-md shadow-2xl relative"
-            >
-              <button 
-                onClick={() => setShowMatchmaker(false)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition cursor-pointer text-slate-400 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              <h3 className="text-lg font-black text-white mb-2 flex items-center gap-1.5">
-                🤖 AI Matchmaker Recommended Partners
-              </h3>
-              <p className="text-[10px] text-slate-400 mb-4 uppercase tracking-wider">
-                We've matched these students based on your subjects, study hours, and skill gaps.
-              </p>
-
-              <div className="space-y-3">
-                {matchmakingPool.map((candidate, idx) => (
-                  <div key={idx} className="p-4 bg-slate-950/40 border border-white/5 rounded-2xl flex justify-between items-center gap-4">
-                    <div className="space-y-1 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-white text-xs">{candidate.name}</span>
-                        <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-white/5 text-slate-450">{candidate.dept} Dept</span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 leading-normal">{candidate.reason}</p>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <span className="text-xs font-black text-emerald-400 block">{candidate.matchRate}% Match</span>
-                      <button 
-                        onClick={() => { toast.success(`Invitation sent to ${candidate.name}!`); setShowMatchmaker(false); }}
-                        className="mt-1.5 px-2.5 py-1 bg-violet-600 hover:bg-violet-750 text-white font-bold text-[9px] rounded-lg transition cursor-pointer"
-                      >
-                        Invite to group
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-    </div>
-  );
-}
-
-function AnimatedProgressRing({ percentage, size = 120, strokeWidth = 8, color = '#8B5CF6' }) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-
-  return (
-    <div className="relative flex items-center justify-center animate-pulse" style={{ width: size, height: size }}>
-      <svg className="transform -rotate-90" width={size} height={size}>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="transparent"
-          stroke="rgba(255, 255, 255, 0.05)"
-          strokeWidth={strokeWidth}
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="transparent"
-          stroke={color}
-          strokeWidth={strokeWidth}
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
-        />
-      </svg>
-      <div className="absolute text-center">
-        <span className="text-sm font-bold text-white">{percentage}%</span>
-      </div>
-    </div>
-  );
-}
-
-// ── DEVELOPER HUB SUBSYSTEM ────────────────────────────────────────────────
-function DeveloperHubSubsystem() {
-  const [activeWorkspace, setActiveWorkspace] = useState(null); // null = Dashboard, otherwise project object
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showMatchmaker, setShowMatchmaker] = useState(false);
-  const [activeTab, setActiveTab] = useState('code'); // code, chat, tasks, git, analytics
-  const [codeContent, setCodeContent] = useState('// JavaScript Project Template\nconsole.log("Hello from EduVerse Developer Hub!");\n\nfunction calculateSum(a, b) {\n  return a + b;\n}\n\nconsole.log("Sum: " + calculateSum(5, 7));');
-  const [terminalOutput, setTerminalOutput] = useState('Terminal ready. Click "Run Code" above.');
-  const [isRunning, setIsRunning] = useState(false);
-
-  // Form State
-  const [newProjName, setNewProjName] = useState('');
-  const [newProjDesc, setNewProjDesc] = useState('');
-  const [newProjTech, setNewProjTech] = useState('React + Node.js');
-  const [selectedAiRole, setSelectedAiRole] = useState('Coding AI');
-
-  const [workspaces, setWorkspaces] = useState([
-    {
-      id: 1,
-      name: 'EduVerse AI Smart Planner',
-      desc: 'An AI-powered calendar planner that optimizes study routines dynamically.',
-      owner: 'Rohan D. (You)',
-      tech: 'React + FastAPI + MongoDB',
-      members: 4,
-      max: 5,
-      stars: 12,
-      forks: 3,
-      aiRole: 'Backend AI',
-      progress: 68,
-      lastCommit: 'Merge pull request #14 from main',
-      tasks: [
-        { id: 201, title: 'Setup FastAPI routers', status: 'todo', priority: 'High' },
-        { id: 202, title: 'Design MongoDB User Schema', status: 'progress', priority: 'High' },
-        { id: 203, title: 'Create calendar UI layout', status: 'completed', priority: 'Medium' }
-      ],
-      commits: [
-        { hash: 'a8b7c6d', author: 'Rohan D.', msg: 'Setup FastAPI routers & db connection', date: '2 hours ago' },
-        { hash: 'e9f0a1b', author: 'Priya S.', msg: 'Create calendar UI layout with mock data', date: '1 day ago' }
-      ]
-    },
-    {
-      id: 2,
-      name: 'Collaborative Code Editor Node',
-      desc: 'Real-time collaborative markdown and script editor with Jitsi audio integrations.',
-      owner: 'Kavya P.',
-      tech: 'React + WebSocket + PeerJS',
-      members: 3,
-      max: 4,
-      stars: 8,
-      forks: 1,
-      aiRole: 'Coding AI',
-      progress: 45,
-      lastCommit: 'Fix websocket connection close handlers',
-      tasks: [],
-      commits: []
+    } catch (err) {
+      toast.error('Failed to send message.');
     }
-  ]);
-
-  const [matchmakingPool] = useState([
-    { name: 'Rahul K.', role: 'Frontend Specialist', rate: 95, reason: 'Strong React 19 skill set matching your backend stack.', skills: ['React', 'Tailwind', 'Framer Motion'] },
-    { name: 'Amit V.', role: 'DevOps / Database Partner', rate: 89, reason: 'Knows MongoDB sharding and Docker deployment structures.', skills: ['MongoDB', 'Docker', 'AWS'] }
-  ]);
-
-  const handleCreateWorkspace = (e) => {
-    e.preventDefault();
-    if (!newProjName.trim()) {
-      toast.error('Please enter a project name');
-      return;
-    }
-    const newProj = {
-      id: Date.now(),
-      name: newProjName,
-      desc: newProjDesc || 'Collaborative software engineering workspace.',
-      owner: 'Rohan D. (You)',
-      tech: newProjTech,
-      members: 1,
-      max: 5,
-      stars: 0,
-      forks: 0,
-      aiRole: selectedAiRole,
-      progress: 5,
-      lastCommit: 'Initial commit',
-      tasks: [],
-      commits: [
-        { hash: 'c9d8e7f', author: 'Rohan D.', msg: 'Initial commit & project setup', date: 'Just now' }
-      ]
-    };
-
-    setWorkspaces(prev => [newProj, ...prev]);
-    setNewProjName('');
-    setNewProjDesc('');
-    setShowCreateModal(false);
-    toast.success(`Workspace "${newProjName}" initialized successfully!`);
   };
 
-  const handleRunCode = () => {
-    setIsRunning(true);
-    setTerminalOutput('Compiling code matrix...\nRunning script in sandbox container...');
-    setTimeout(() => {
-      setIsRunning(false);
-      setTerminalOutput('Vite Dev Server started on Port 5173...\n\nEduVerse Console Logger:\nHello from EduVerse Developer Hub!\nSum: 12\n\nProcess finished with exit code 0.');
-      toast.success('Code executed successfully!');
+  // Handle typing input
+  const handleTypingInput = (e) => {
+    setInputText(e.target.value);
+    
+    if (!isTyping) {
+      setIsTyping(true);
+      socketRef.current.emit('community-typing', {
+        roomId: activeRoom?.id,
+        username: user?.name,
+        isTyping: true
+      });
+    }
+
+    clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      socketRef.current.emit('community-typing', {
+        roomId: activeRoom?.id,
+        username: user?.name,
+        isTyping: false
+      });
     }, 1500);
   };
 
-  const handleMoveTask = (taskId, nextStatus) => {
-    const updated = workspaces.map(w => {
-      if (w.id === activeWorkspace.id) {
-        const tasks = w.tasks.map(t => t.id === taskId ? { ...t, status: nextStatus } : t);
-        return { ...w, tasks };
-      }
-      return w;
+  // File Upload (Drag and Drop)
+  const handleFileUpload = async (file) => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', 'document');
+
+    const loader = toast.loading('Uploading file attachment...');
+    try {
+      const res = await api.post(`/community/rooms/${activeRoom.id}/messages`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setMessages(prev => [...prev, res.data]);
+      scrollToBottom();
+      toast.dismiss(loader);
+      toast.success('Uploaded successfully.');
+
+      socketRef.current.emit('community-send-message', {
+        roomId: activeRoom.id,
+        message: res.data
+      });
+    } catch (err) {
+      toast.dismiss(loader);
+      toast.error('File upload failed.');
+    }
+  };
+
+  // React to Message
+  const handleReactToMessage = async (messageId, emoji) => {
+    try {
+      const res = await api.post(`/community/messages/${messageId}/react`, { emoji });
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, reactions: res.data.reactions } : m));
+      
+      socketRef.current.emit('community-reaction', {
+        roomId: activeRoom.id,
+        messageId,
+        reactions: res.data.reactions
+      });
+    } catch (err) {
+      toast.error('Reaction failed.');
+    }
+  };
+
+  // Pin message
+  const handlePinMessage = async (messageId) => {
+    try {
+      const res = await api.post(`/community/messages/${messageId}/pin`);
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, is_pinned: res.data.is_pinned } : m));
+      toast.success(res.data.is_pinned ? 'Pinned message to channel!' : 'Unpinned message.');
+    } catch (err) {
+      toast.error('Pin action failed.');
+    }
+  };
+
+  // Create Room handler
+  const handleCreateRoom = async (e) => {
+    e.preventDefault();
+    if (!newRoomName.trim()) return;
+
+    try {
+      const res = await api.post('/community/rooms', {
+        name: newRoomName,
+        category: newRoomCategory,
+        description: newRoomDescription,
+        type: newRoomType,
+        password: newRoomPassword || null
+      });
+
+      setRooms(prev => [...prev, res.data]);
+      setActiveRoom(res.data);
+      setShowCreateRoom(false);
+      setNewRoomName('');
+      setNewRoomDescription('');
+      setNewRoomPassword('');
+      toast.success(`Channel #${res.data.name} created!`);
+    } catch (err) {
+      toast.error('Error creating room.');
+    }
+  };
+
+  // AI Translate Chat message
+  const handleAiTranslateMessage = async (messageId, text, targetLang = 'Spanish') => {
+    const loader = toast.loading(`Translating to ${targetLang}...`);
+    try {
+      const res = await api.post('/community/ai/translate', { text, targetLanguage: targetLang });
+      toast.dismiss(loader);
+      
+      // Update UI with inline translation
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, text: `${m.text}\n\n📝 AI Translation (${targetLang}):\n${res.data.translation}` } : m));
+      toast.success('Translated!');
+    } catch (err) {
+      toast.dismiss(loader);
+      toast.error('AI translation failed.');
+    }
+  };
+
+  // AI Explain Code
+  const handleAiExplainCode = async (messageId, code, language) => {
+    const loader = toast.loading('AI Code Advisor analyzing code...');
+    try {
+      const res = await api.post('/community/ai/explain-code', { code, language });
+      toast.dismiss(loader);
+      
+      // Append review
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, text: `${m.text}\n\n🤖 AI Code Advisor Explanation:\n${res.data.explanation}` } : m));
+      toast.success('Code analysis completed.');
+    } catch (err) {
+      toast.dismiss(loader);
+      toast.error('AI Code analysis failed.');
+    }
+  };
+
+  // AI Summarize Chat Room
+  const handleAiSummarizeChat = async () => {
+    const loader = toast.loading('AI compiling room summary...');
+    try {
+      const res = await api.post('/community/ai/summarize-chat', { roomId: activeRoom.id });
+      toast.dismiss(loader);
+
+      // Trigger summary overlay
+      alert(`🤖 AI Chat Summary for #${activeRoom.name}:\n\n${res.data.summary}`);
+    } catch (err) {
+      toast.dismiss(loader);
+      toast.error('Summary compilation failed.');
+    }
+  };
+
+  // AI Grammar correct typed draft
+  const handleAiCorrectGrammar = async () => {
+    if (!inputText) return;
+    const loader = toast.loading('Reviewing typing grammar...');
+    try {
+      const res = await api.post('/community/ai/grammar', { text: inputText });
+      toast.dismiss(loader);
+      setInputText(res.data.corrected);
+      toast.success('Corrected!');
+    } catch (err) {
+      toast.dismiss(loader);
+      toast.error('Grammar tool failed.');
+    }
+  };
+
+  // AI Study Notes Generator
+  const handleAiGenerateNotes = async () => {
+    const loader = toast.loading('Generating smart study notes from channel discussion...');
+    try {
+      const res = await api.post('/community/ai/notes', { roomId: activeRoom.id });
+      toast.dismiss(loader);
+      setSharedNotes(res.data.notes);
+      setCollaborationTab('notes');
+      toast.success('Study notes generated!');
+
+      socketRef.current.emit('notes-doc-sync', {
+        roomId: activeRoom.id,
+        content: res.data.notes
+      });
+    } catch (err) {
+      toast.dismiss(loader);
+      toast.error('Notes generation failed.');
+    }
+  };
+
+  // AI Reply Generator Suggestion click
+  const handleAiSuggestionClick = async (suggestion) => {
+    setInputText(suggestion);
+  };
+
+  // Friend Request Send
+  const handleSendFriendRequest = async (e) => {
+    e.preventDefault();
+    if (!friendEmailInput.trim()) return;
+
+    try {
+      const res = await api.post('/community/friends', { friendEmail: friendEmailInput });
+      toast.success(res.data.message);
+      setFriendEmailInput('');
+      fetchFriends();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Request failed.');
+    }
+  };
+
+  // Friends Request Accept
+  const handleAcceptFriendRequest = async (friendId) => {
+    try {
+      await api.put('/community/friends/accept', { friendId });
+      toast.success('Friend request accepted!');
+      fetchFriends();
+    } catch (err) {
+      toast.error('Action failed.');
+    }
+  };
+
+  // Calendar Event Addition
+  const handleScheduleEvent = async (e) => {
+    e.preventDefault();
+    if (!newEventTitle || !newEventTime) return;
+
+    try {
+      const res = await api.post('/community/events', {
+        roomId: activeRoom?.id || null,
+        title: newEventTitle,
+        description: 'Scheduled community session.',
+        eventType: 'webinar',
+        startTime: newEventTime,
+        endTime: new Date(new Date(newEventTime).getTime() + 60 * 60 * 1000).toISOString() // +1hr
+      });
+
+      setEvents(prev => [...prev, res.data]);
+      setNewEventTitle('');
+      setNewEventTime('');
+      toast.success(`Scheduled session "${res.data.title}"!`);
+    } catch (err) {
+      toast.error('Failed to schedule session.');
+    }
+  };
+
+  // Whiteboard addition click
+  const handleAddWhiteboardNode = (shape) => {
+    const newNode = {
+      id: Date.now(),
+      shape,
+      x: Math.floor(Math.random() * 60) + 20,
+      y: Math.floor(Math.random() * 50) + 20,
+      color: '#A78BFA'
+    };
+    const updated = [...whiteboardShapes, newNode];
+    setWhiteboardShapes(updated);
+
+    socketRef.current.emit('whiteboard-draw', {
+      roomId: activeRoom.id,
+      elements: updated
     });
-    setWorkspaces(updated);
-    setActiveWorkspace(prev => {
-      const tasks = prev.tasks.map(t => t.id === taskId ? { ...t, status: nextStatus } : t);
-      return { ...prev, tasks };
+    
+    // Save to DB
+    api.post(`/community/rooms/${activeRoom.id}/whiteboard`, { elements: updated });
+  };
+
+  // Whiteboard clear canvas
+  const handleClearWhiteboard = () => {
+    setWhiteboardShapes([]);
+    socketRef.current.emit('whiteboard-draw', {
+      roomId: activeRoom.id,
+      elements: []
+    });
+    api.post(`/community/rooms/${activeRoom.id}/whiteboard`, { elements: [] });
+  };
+
+  // Monaco code editing change handler
+  const handleCodeChange = (value) => {
+    setSharedCode(value);
+    socketRef.current.emit('code-editor-sync', {
+      roomId: activeRoom.id,
+      code: value,
+      language: codeLanguage
     });
   };
 
+  // Run/Compile Multiplayer Code
+  const handleRunCode = () => {
+    setIsCompiling(true);
+    setCodeConsole('Initiating compile environment...\nSandbox container starting...');
+    setTimeout(() => {
+      setIsCompiling(false);
+      // Generate some simulated outputs
+      if (sharedCode.includes('console.log')) {
+        setCodeConsole('Server response logs:\nWelcome!\nProcess completed with status code 0.');
+      } else {
+        setCodeConsole('Sandbox result:\nExecuted block successfully.\nExit: 0');
+      }
+      toast.success('Code executed!');
+    }, 1500);
+  };
+
+  // Collaborative notes editing sync
+  const handleNotesChange = (e) => {
+    setSharedNotes(e.target.value);
+    socketRef.current.emit('notes-doc-sync', {
+      roomId: activeRoom.id,
+      content: e.target.value
+    });
+  };
+
+  const handleSaveNotes = async () => {
+    try {
+      await api.post(`/community/rooms/${activeRoom.id}/notes`, { content: sharedNotes });
+      toast.success('Notes saved to cloud storage!');
+    } catch (err) {
+      toast.error('Notes save failed.');
+    }
+  };
+
+  // Voice/Video Room Calling setup
+  const handleToggleCall = async (type) => {
+    if (activeCall) {
+      // Leave call
+      try {
+        await api.post(`/community/calls/${activeCall.id}/leave`);
+        socketRef.current.emit('community-leave-room', {
+          roomId: activeRoom.id,
+          userId: user?.id,
+          username: user?.name
+        });
+        setActiveCall(null);
+        setCallParticipants([]);
+        setVoiceCaptions([]);
+        toast('Left calling room.', { icon: '👋' });
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      // Join call
+      const loader = toast.loading(`Connecting to real-time ${type} calling server...`);
+      try {
+        const res = await api.post('/community/calls', {
+          roomId: activeRoom.id,
+          type
+        });
+        setActiveCall(res.data);
+        
+        // Mock connected callers
+        setCallParticipants([
+          { id: user?.id, name: `${user?.name} (You)`, micOn: true, cameraOn: true, handRaised: false },
+          { id: 902, name: 'Priya Sharma (AI Tutor)', micOn: true, cameraOn: false, handRaised: false },
+          { id: 903, name: 'Rahul K.', micOn: false, cameraOn: true, handRaised: false }
+        ]);
+
+        socketRef.current.emit('community-join-room', {
+          roomId: activeRoom.id,
+          userId: user?.id,
+          username: user?.name
+        });
+
+        // Trigger transcripts stream simulation
+        simulateCaptions();
+
+        toast.dismiss(loader);
+        toast.success(`Online in ${type} call room!`);
+      } catch (err) {
+        toast.dismiss(loader);
+        toast.error('Call connection failed.');
+      }
+    }
+  };
+
+  // Simulation voice caption streams
+  const simulateCaptions = () => {
+    const mockTranscripts = [
+      'We are going to focus on relational database schemas today.',
+      'Did anyone complete the 3NF normalisation for the user order list?',
+      'Let me share my screen to show the ER diagram.',
+      'AI Professor is reviewing the compiled Java index files now.',
+      'Looks clean. I will assign the tasks board to Kavya.'
+    ];
+    let index = 0;
+
+    const interval = setInterval(() => {
+      if (!activeCall) {
+        clearInterval(interval);
+        return;
+      }
+      const speaker = index % 2 === 0 ? 'Priya Sharma' : 'Rahul K.';
+      const captionText = mockTranscripts[index % mockTranscripts.length];
+
+      setVoiceCaptions(prev => [...prev, { username: speaker, text: captionText, isFinal: true, id: Date.now() }]);
+      
+      index++;
+    }, 7000);
+  };
+
+  // Report User Dialog open
+  const handleOpenReport = (targetUser) => {
+    setReportTargetUser(targetUser);
+    setShowReportModal(true);
+  };
+
+  // Submit Report
+  const handleSubmitReport = async (e) => {
+    e.preventDefault();
+    if (!reportReason) return;
+
+    try {
+      await api.post('/community/report', {
+        reportedId: reportTargetUser.id,
+        reason: reportReason
+      });
+      toast.success(`Report submitted against ${reportTargetUser.name}.`);
+      setShowReportModal(false);
+      setReportReason('');
+    } catch (err) {
+      toast.error('Report submission failed.');
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Title Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4">
-        <div>
-          <h2 className="text-xl font-black text-white flex items-center gap-2">
-            💻 Developer Hub
-          </h2>
-          <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            Build projects together, collaborate with teammates, review code, and deploy projects with specialized AI assistants.
-          </p>
+    <div className="min-h-screen text-[var(--db-text-main)] font-sans relative overflow-hidden flex flex-col" style={{ background: 'var(--db-bg-gradient)' }}>
+      {/* Background neon blurs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-violet-600/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/10 blur-[120px] pointer-events-none" />
+
+      {/* 1. TOP HEADER NAVIGATION BAR */}
+      <header className="flex items-center justify-between px-6 py-4 border-b border-[var(--db-sidebar-border)] bg-[rgba(15,23,42,0.6)] backdrop-blur-md sticky top-0 z-40">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-600 to-blue-500 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.3)] animate-pulse">
+            <Globe className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-indigo-200 to-violet-400 bg-clip-text text-transparent">EduVerse Space</h1>
+            <p className="text-[10px] uppercase font-black text-violet-400/80 tracking-widest">Community Hub</p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-650 text-white rounded-xl text-xs font-bold transition hover:shadow-lg hover:shadow-violet-600/20 cursor-pointer flex items-center gap-1.5"
-          >
-            <Plus className="w-3.5 h-3.5" /> Create Workspace
-          </button>
-          <button
-            onClick={() => setShowMatchmaker(true)}
-            className="px-4 py-2 bg-slate-900 border border-white/10 text-slate-300 rounded-xl text-xs font-bold transition hover:bg-slate-800 cursor-pointer flex items-center gap-1.5"
-          >
-            <Users className="w-3.5 h-3.5 text-violet-400" /> AI Match Team
-          </button>
-        </div>
-      </div>
-
-      {/* Main Workspace Toggle */}
-      {!activeWorkspace ? (
-        // DASHBOARD VIEW
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {workspaces.map(w => (
-            <div 
-              key={w.id} 
-              className="rounded-3xl border border-white/5 overflow-hidden flex flex-col h-[340px] bg-slate-900/40 hover:border-violet-500/30 hover:shadow-xl transition group"
-            >
-              {/* Cover Banner */}
-              <div className="h-24 bg-gradient-to-br from-indigo-700 to-indigo-950 p-4 flex flex-col justify-between relative">
-                <div className="absolute inset-0 bg-black/20" />
-                <div className="relative z-10 flex justify-between items-center text-[9px]">
-                  <span className="font-bold px-2 py-0.5 rounded bg-black/40 text-white border border-white/10">
-                    {w.tech}
-                  </span>
-                  <div className="flex gap-2 text-slate-300">
-                    <span>⭐ {w.stars}</span>
-                    <span>🍴 {w.forks}</span>
-                  </div>
-                </div>
-                <h3 className="relative z-10 font-bold text-white text-sm line-clamp-1">{w.name}</h3>
-              </div>
-
-              {/* Body */}
-              <div className="p-4 flex-1 flex flex-col justify-between text-xs">
-                <p className="text-slate-450 leading-relaxed line-clamp-2 mb-2">{w.desc}</p>
-                
-                <div className="space-y-2 border-t border-white/5 pt-3">
-                  <div className="flex justify-between text-slate-400">
-                    <span>👥 Team Members</span>
-                    <span className="font-bold text-white">{w.members} / {w.max} developers</span>
-                  </div>
-                  <div className="flex justify-between text-slate-400">
-                    <span>🤖 AI Specialist</span>
-                    <span className="font-bold text-violet-400">{w.aiRole}</span>
-                  </div>
-                  <div className="flex justify-between text-slate-400">
-                    <span>📈 Progress</span>
-                    <span className="font-bold text-emerald-400">{w.progress}% completed</span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={() => setActiveWorkspace(w)}
-                    className="flex-1 py-2.5 bg-violet-650 hover:bg-violet-700 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1"
-                  >
-                    <FolderOpen className="w-3.5 h-3.5" /> Open Workspace
-                  </button>
-                  <button
-                    onClick={() => { if (window.confirm('Delete this project workspace?')) setWorkspaces(prev => prev.filter(pw => pw.id !== w.id)); }}
-                    className="p-2.5 border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/10 text-slate-450 hover:text-rose-400 rounded-xl transition cursor-pointer"
-                  >
-                    <Trash className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        // ACTIVE WORKSPACE SUITE
-        <div className="rounded-3xl border border-white/5 bg-[#0e0a24]/50 backdrop-blur-md p-6 space-y-6">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4">
-            <div>
-              <button 
-                onClick={() => setActiveWorkspace(null)}
-                className="text-[10px] uppercase font-bold text-violet-400 flex items-center gap-1 hover:underline cursor-pointer"
-              >
-                ← Back to developer hub
-              </button>
-              <h3 className="text-lg font-black text-white">{activeWorkspace.name}</h3>
-              <p className="text-xs text-slate-450">
-                AI Partner: <strong className="text-violet-400">{activeWorkspace.aiRole}</strong>
-              </p>
-            </div>
-
-            {/* Nav Workspace Tabs */}
-            <div className="flex p-1 bg-slate-950/60 rounded-xl border border-white/5 flex-wrap gap-1">
-              {[
-                { id: 'code', label: 'AI Code & Pair Programmer', icon: <Code className="w-3.5 h-3.5" /> },
-                { id: 'tasks', label: 'Tasks & Standup', icon: <Target className="w-3.5 h-3.5" /> },
-                { id: 'testing', label: 'Testing & Security', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
-                { id: 'architecture', label: 'Architecture Advisor', icon: <Database className="w-3.5 h-3.5" /> },
-                { id: 'deploy', label: 'Deploy & Analytics', icon: <FolderOpen className="w-3.5 h-3.5" /> }
-              ].map(t => (
+        {/* Action icons */}
+        <div className="flex items-center gap-2">
+          {/* Main sections selectors */}
+          <div className="flex bg-[var(--db-input-bg)] p-1 rounded-xl border border-[var(--db-sidebar-border)] mr-4">
+            {[
+              { id: 'chat', label: 'Chat', icon: MessageSquare },
+              { id: 'voice', label: 'Voice Call', icon: Phone },
+              { id: 'video', label: 'Video Call', icon: Video }
+            ].map(tab => {
+              const Icon = tab.icon;
+              return (
                 <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    activeTab === t.id ? 'bg-violet-650 text-white' : 'text-slate-400 hover:text-white'
+                  key={tab.id}
+                  onClick={() => { setActiveTab(tab.id); handleToggleCall(); }}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 ${
+                    activeTab === tab.id
+                      ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg'
+                      : 'text-[var(--db-text-muted)] hover:text-[var(--db-text-main)]'
                   }`}
                 >
-                  {t.icon} {t.label}
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
-          {/* Sub-Workspace Views */}
-          <div className="min-h-[400px]">
-            {/* WORKSPACE TAB: CODE EDITOR & PAIR PROGRAMMER */}
-            {activeTab === 'code' && (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-                {/* Code editor side */}
-                <div className="lg:col-span-8 flex flex-col gap-4">
-                  <div className="flex justify-between items-center bg-slate-950/50 p-3 rounded-xl border border-white/5">
-                    <span className="text-xs font-bold text-slate-400 flex items-center gap-1">
-                      📄 index.js (Multiplayer Live Editor)
-                    </span>
-                    <button 
-                      onClick={handleRunCode}
-                      disabled={isRunning}
-                      className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1"
+          <button onClick={() => setShowSearch(true)} className="p-2.5 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] text-[var(--db-text-muted)] hover:text-white transition-all cursor-pointer">
+            <Search className="w-4 h-4" />
+          </button>
+          
+          <div className="relative">
+            <button onClick={() => setShowNotifications(!showNotifications)} className="p-2.5 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] text-[var(--db-text-muted)] hover:text-white transition-all relative cursor-pointer">
+              <Bell className="w-4 h-4" />
+              {notifications.some(n => !n.read) && <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-ping" />}
+            </button>
+            {/* Notifications panel */}
+            <AnimatePresence>
+              {showNotifications && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute right-0 mt-3 w-80 rounded-2xl bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] p-4 shadow-2xl z-50">
+                  <h4 className="text-xs font-black uppercase text-[var(--db-text-muted)] mb-3">🔔 Notifications</h4>
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {notifications.map(n => (
+                      <div key={n.id} className={`p-2.5 rounded-xl border transition ${n.read ? 'bg-white/2 border-transparent' : 'bg-violet-600/5 border-violet-500/20'}`}>
+                        <p className="text-xs font-bold text-[var(--db-text-main)]">{n.title}</p>
+                        <p className="text-[11px] text-[var(--db-text-muted)] mt-1">{n.desc}</p>
+                        <span className="text-[9px] text-slate-500 block mt-1">{n.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <button onClick={() => setShowFriends(true)} className="p-2.5 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] text-[var(--db-text-muted)] hover:text-white transition-all flex items-center gap-1.5 cursor-pointer">
+            <UserPlus className="w-4 h-4" />
+            <span className="text-xs font-bold hidden md:inline">Friends</span>
+          </button>
+
+          <button onClick={() => setShowCalendar(true)} className="p-2.5 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] text-[var(--db-text-muted)] hover:text-white transition-all cursor-pointer">
+            <Calendar className="w-4 h-4" />
+          </button>
+
+          <button onClick={() => setShowLeaderboard(true)} className="p-2.5 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] text-violet-400 hover:text-violet-300 transition-all cursor-pointer">
+            <Trophy className="w-4 h-4" />
+          </button>
+
+          <div className="h-6 w-[1px] bg-[var(--db-sidebar-border)] mx-1" />
+
+          {/* User Profile overview */}
+          <button onClick={() => setShowProfile(true)} className="flex items-center gap-2 p-1.5 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] hover:border-violet-500/40 transition-all cursor-pointer">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-violet-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xs">
+              {user?.name?.charAt(0).toUpperCase() || 'S'}
+            </div>
+            <span className="text-xs font-bold text-[var(--db-text-main)] hidden md:inline">{user?.name}</span>
+          </button>
+        </div>
+      </header>
+
+      {/* 2. CHAT WORKSPACE BODY CONTAINER */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar */}
+        <aside className="w-64 border-r border-[var(--db-sidebar-border)] bg-[rgba(15,23,42,0.4)] flex flex-col flex-shrink-0">
+          <div className="p-4 border-b border-[var(--db-sidebar-border)] flex justify-between items-center">
+            <span className="text-xs font-black uppercase text-[var(--db-text-muted)] tracking-wider">💬 Channels</span>
+            <button onClick={() => setShowCreateRoom(true)} className="p-1 rounded-lg bg-violet-600/10 border border-violet-500/20 text-violet-400 hover:bg-violet-600 hover:text-white transition-all cursor-pointer">
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Rooms scrolling list */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-4 pr-2">
+            {/* Grouped rooms */}
+            {['General Discussion', 'Programming', 'Competitive Programming', 'Career Guidance', 'Study Groups'].map(cat => {
+              const catRooms = rooms.filter(r => r.category === cat);
+              if (catRooms.length === 0) return null;
+              return (
+                <div key={cat} className="space-y-1">
+                  <span className="text-[9px] uppercase font-black text-slate-500 block px-2 mb-1.5 tracking-widest">{cat}</span>
+                  {catRooms.map(room => (
+                    <button
+                      key={room.id}
+                      onClick={() => setActiveRoom(room)}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between group ${
+                        activeRoom?.id === room.id
+                          ? 'bg-gradient-to-r from-violet-600/20 to-indigo-600/10 border border-violet-500/20 text-violet-300'
+                          : 'text-[var(--db-text-muted)] hover:bg-white/3 hover:text-white'
+                      }`}
                     >
-                      <Play className="w-3 h-3 fill-current" /> {isRunning ? 'Running...' : 'Run Code'}
-                    </button>
-                  </div>
-
-                  {/* Monaco Simulated Canvas */}
-                  <textarea
-                    value={codeContent}
-                    onChange={e => setCodeContent(e.target.value)}
-                    className="h-[280px] bg-slate-950 text-emerald-400 font-mono text-xs p-4 rounded-2xl border border-white/5 outline-none focus:border-violet-500/50 resize-none leading-relaxed"
-                  />
-
-                  {/* Visual terminal */}
-                  <div className="p-4 bg-slate-950 rounded-2xl border border-white/5 space-y-2">
-                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono border-b border-white/5 pb-1">
-                      <span className="flex items-center gap-1"><Terminal className="w-3 h-3" /> Sandbox output</span>
-                      <span>bash</span>
-                    </div>
-                    <pre className="text-[10px] font-mono text-slate-300 leading-normal whitespace-pre-wrap">
-                      {terminalOutput}
-                    </pre>
-                  </div>
-                </div>
-
-                {/* AI Pair Programmer Timeline Panel */}
-                <div className="lg:col-span-4 p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-4">
-                  <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                    <Settings className="w-4 h-4 text-violet-400 animate-spin" style={{ animationDuration: '3s' }} />
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">AI Pair Programmer</h4>
-                  </div>
-
-                  {/* AI Activity Timeline */}
-                  <div className="space-y-3">
-                    <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold block">Activity Logs</span>
-                    <div className="space-y-2 max-h-[140px] overflow-y-auto va-scroll pr-1">
-                      {[
-                        { state: 'Watching...', desc: 'Monitored 1 file modification in index.js.', time: 'Just now' },
-                        { state: 'Reviewing...', desc: 'Verified calculateSum execution paths.', time: '1 min ago' },
-                        { state: 'Optimizing...', desc: 'Proposed React Hooks convert options.', time: '5 mins ago' }
-                      ].map((log, idx) => (
-                        <div key={idx} className="p-2 bg-white/3 border border-white/5 rounded-xl text-[10px] space-y-1">
-                          <div className="flex justify-between font-bold text-violet-300">
-                            <span>{log.state}</span>
-                            <span className="text-[9px] text-slate-500">{log.time}</span>
-                          </div>
-                          <p className="text-slate-400 leading-normal">{log.desc}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Student Ask Prompts */}
-                  <div className="space-y-2 border-t border-white/5 pt-3">
-                    <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold block">Ask Pair Programmer</span>
-                    <div className="grid grid-cols-1 gap-2 text-xs">
-                      {[
-                        { l: 'Explain this function', p: 'Provide time and space complexity analysis for calculateSum.' },
-                        { l: 'Improve performance', p: 'Optimize script execution speed and memory footprints.' },
-                        { l: 'Rewrite using Hooks', p: 'Convert to functional state component.' }
-                      ].map((item, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            toast.loading(`Consulting AI...`);
-                            setTimeout(() => {
-                              toast.dismiss();
-                              setTerminalOutput(`AI Pair Programmer reply:\n"Here is the optimized approach. We cache recursive calls using React useMemo or python lru_cache. Let's apply this code change."`);
-                              toast.success('Advice generated!');
-                            }, 1200);
-                          }}
-                          className="w-full text-left p-2.5 bg-slate-900 border border-white/10 rounded-xl hover:border-violet-500/40 text-[10px] text-slate-300 font-bold transition cursor-pointer"
-                        >
-                          💬 {item.l}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* WORKSPACE TAB: TASKS & STANDUP */}
-            {workspaceTab === 'tasks' && (
-              <div className="space-y-6">
-                {/* Daily Stand-up summary banner */}
-                <div className="p-4 bg-gradient-to-r from-violet-900/35 to-indigo-900/30 border border-purple-500/20 rounded-2xl space-y-2">
-                  <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                    🤖 AI Daily Stand-up Meeting & Sprint Report
-                  </h4>
-                  <p className="text-[10px] text-slate-350 leading-relaxed">
-                    AI Sprints report generated today: <strong>Sprint Health - Good (85%)</strong>. Developer contributions: Rohan D. (10 commits), Priya S. (4 commits). <strong>Blocked tasks:</strong> Setup FastAPI routers (FastAPI db connection issue).
-                  </p>
-                  <button 
-                    onClick={() => toast.success('Sprint PDF report generated!')}
-                    className="px-3 py-1 bg-violet-650 hover:bg-violet-750 text-white font-bold text-[9px] rounded-lg transition"
-                  >
-                    Export Stand-up Report
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {['todo', 'progress', 'completed'].map(col => (
-                    <div key={col} className="p-4 bg-slate-950/35 border border-white/5 rounded-2xl space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{col}</span>
-                        <span className="text-[10px] py-0.5 px-2 bg-white/5 rounded-full font-mono">
-                          {activeWorkspace.tasks.filter(t => t.status === col).length}
+                      <span className="flex items-center gap-2">
+                        <span className="text-sm shrink-0">{room.icon || '💬'}</span>
+                        <span className="truncate max-w-[120px] font-semibold">{room.name}</span>
+                      </span>
+                      {room.type !== 'chat' && (
+                        <span className="text-[8px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                          {room.type}
                         </span>
-                      </div>
-
-                      <div className="space-y-3">
-                        {activeWorkspace.tasks.length === 0 ? (
-                          <p className="text-[10px] text-slate-500 text-center py-6">No tasks assigned.</p>
-                        ) : (
-                          activeWorkspace.tasks.filter(t => t.status === col).map(t => (
-                            <div key={t.id} className="p-3 bg-slate-900 border border-white/5 rounded-xl space-y-2 hover:border-violet-500/20 transition">
-                              <h4 className="text-xs font-bold text-white">{t.title}</h4>
-                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 font-bold">{t.priority} Priority</span>
-
-                              <div className="flex gap-1 justify-end pt-1 border-t border-white/5">
-                                {col !== 'todo' && (
-                                  <button onClick={() => handleMoveTask(t.id, 'todo')} className="text-[8px] font-bold text-slate-400 hover:text-white cursor-pointer px-1">To Do</button>
-                                )}
-                                {col !== 'progress' && (
-                                  <button onClick={() => handleMoveTask(t.id, 'progress')} className="text-[8px] font-bold text-violet-400 hover:text-white cursor-pointer px-1">Progress</button>
-                                )}
-                                {col !== 'completed' && (
-                                  <button onClick={() => handleMoveTask(t.id, 'completed')} className="text-[8px] font-bold text-emerald-400 hover:text-white cursor-pointer px-1">Done</button>
-                                )}
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
+                      )}
+                    </button>
                   ))}
                 </div>
-              </div>
-            )}
+              );
+            })}
+          </div>
 
-            {/* WORKSPACE TAB: TESTING & SECURITY */}
-            {workspaceTab === 'testing' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* One Click Test Generator */}
-                <div className="p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-4 text-xs">
-                  <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                    🧪 One Click Test Generator
-                  </h4>
-                  
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center text-[10px] text-slate-400">
-                      <span>Target Framework</span>
-                      <span className="font-bold text-violet-400">Jest / Vitest</span>
-                    </div>
+          {/* Online users status column */}
+          <div className="p-4 border-t border-[var(--db-sidebar-border)] bg-[rgba(9,15,35,0.4)]">
+            <div className="flex items-center justify-between text-xs text-[var(--db-text-muted)]">
+              <span className="flex items-center gap-1.5 font-bold"><Users className="w-3.5 h-3.5 text-emerald-400 animate-pulse" /> Active Members</span>
+              <span className="font-mono bg-white/5 px-2 py-0.5 rounded-full text-[10px] text-white">4 Online</span>
+            </div>
+            <div className="flex items-center gap-2 mt-3 text-xs">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 border border-black animate-pulse" />
+              <span className="font-medium text-slate-300">{user?.name} (You)</span>
+            </div>
+          </div>
+        </aside>
 
-                    <div className="grid grid-cols-2 gap-2 text-[10px]">
-                      {[
-                        { label: 'Coverage', val: '92%', color: 'text-emerald-400' },
-                        { label: 'Passed', val: '12 / 12', color: 'text-cyan-400' },
-                        { label: 'Missing Tests', val: '3 detected', color: 'text-rose-400' }
-                      ].map((stat, i) => (
-                        <div key={i} className="p-2 bg-white/3 border border-white/5 rounded-xl">
-                          <span className="text-slate-500 block">{stat.label}</span>
-                          <span className={`font-bold ${stat.color}`}>{stat.val}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex gap-2 pt-2">
-                      <button 
-                        onClick={() => {
-                          toast.loading('Running unit tests...');
-                          setTimeout(() => {
-                            toast.dismiss();
-                            toast.success('All 12 test specs passed!');
-                          }, 1000);
-                        }}
-                        className="flex-1 py-2 bg-violet-650 hover:bg-violet-750 text-white font-bold rounded-xl text-[10px] transition"
-                      >
-                        Run Test Suite
-                      </button>
-                      <button 
-                        onClick={() => toast.success('Generated 5 Jest specifications!')}
-                        className="px-3 py-2 border border-white/10 hover:border-violet-500 text-slate-350 rounded-xl transition text-[10px]"
-                      >
-                        Generate Tests
-                      </button>
+        {/* Main Center Area */}
+        <main className="flex-1 flex flex-col overflow-hidden bg-[rgba(9,15,35,0.1)] relative">
+          
+          {/* TAB 1: CHAT MAIN VIEW */}
+          {activeTab === 'chat' && (
+            <div className="flex-1 flex overflow-hidden">
+              <div className="flex-1 flex flex-col overflow-hidden border-r border-[var(--db-sidebar-border)]">
+                {/* Chat header */}
+                <div className="px-6 py-4 border-b border-[var(--db-sidebar-border)] bg-[rgba(15,23,42,0.2)] flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{activeRoom?.icon || '💬'}</span>
+                    <div>
+                      <h3 className="text-sm font-black text-white">#{activeRoom?.name}</h3>
+                      <p className="text-[10px] text-[var(--db-text-muted)] line-clamp-1 max-w-md">{activeRoom?.description}</p>
                     </div>
                   </div>
-                </div>
-
-                {/* AI Security & Vulnerability Scanner */}
-                <div className="p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-4 text-xs">
-                  <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                    🛡️ AI Security & OWASP Analyzer
-                  </h4>
-
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center text-[10px]">
-                      <span className="text-slate-500">Security Score</span>
-                      <span className="font-black text-rose-400">88% (Low Risk)</span>
-                    </div>
-
-                    <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[10px] space-y-1">
-                      <span className="font-bold text-rose-400 uppercase tracking-widest block">Vulnerability warning</span>
-                      <p className="text-slate-300 leading-normal">
-                        "index.js line 18 uses hardcoded credentials. We recommend moving database passwords to process.env config."
-                      </p>
-                    </div>
-
-                    <button 
-                      onClick={() => {
-                        toast.loading('Scanning workspace...');
-                        setTimeout(() => {
-                          toast.dismiss();
-                          toast.success('Vulnerability scan completed. 1 warning found.');
-                        }, 1200);
-                      }}
-                      className="w-full py-2 bg-slate-900 border border-white/10 hover:border-rose-500/50 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 font-bold rounded-xl transition"
-                    >
-                      Scan API Endpoints
+                  
+                  <div className="flex items-center gap-2">
+                    <button onClick={handleAiSummarizeChat} className="px-3 py-1.5 rounded-lg bg-violet-600/10 border border-violet-500/20 hover:bg-violet-600 hover:text-white transition-all text-xs font-bold flex items-center gap-1 cursor-pointer">
+                      <Sparkles className="w-3.5 h-3.5 text-violet-400 group-hover:text-white" />
+                      AI Summarize
+                    </button>
+                    <button onClick={handleAiGenerateNotes} className="px-3 py-1.5 rounded-lg bg-indigo-600/10 border border-indigo-500/20 hover:bg-indigo-600 hover:text-white transition-all text-xs font-bold flex items-center gap-1 cursor-pointer">
+                      <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                      Compile Study Notes
+                    </button>
+                    <button onClick={() => setShowRightSidebar(!showRightSidebar)} className={`p-2.5 rounded-lg border transition-all cursor-pointer ${showRightSidebar ? 'bg-white/5 border-[var(--db-sidebar-border)] text-white' : 'bg-transparent border-transparent text-[var(--db-text-muted)]'}`}>
+                      <BadgeInfo className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* WORKSPACE TAB: ARCHITECTURE & SCHEMAS */}
-            {workspaceTab === 'architecture' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-                {/* Visual directory structure advisor */}
-                <div className="p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-3">
-                  <h4 className="text-xs font-bold text-white">📁 Folder Structure & Tech Recommendations</h4>
-                  <div className="bg-slate-950 p-4 rounded-xl border border-white/5 font-mono text-[10px] text-slate-300 space-y-1">
-                    <div>├── src/</div>
-                    <div>│   ├── controllers/ <span className="text-slate-500">// API endpoints</span></div>
-                    <div>│   ├── models/ <span className="text-slate-500">// MongoDB schemas</span></div>
-                    <div>│   └── index.js <span className="text-slate-500">// Application entrypoint</span></div>
-                    <div>├── tests/ <span className="text-slate-500">// Vitest suites</span></div>
-                    <div>└── package.json</div>
-                  </div>
+                {/* Messages scroll content */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                  {messages.map((msg, i) => {
+                    const isSelf = msg.sender_id === user?.id;
+                    return (
+                      <div key={msg.id || i} className={`flex items-start gap-3 ${isSelf ? 'justify-end' : ''}`}>
+                        {!isSelf && (
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shrink-0">
+                            {msg.sender_name?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                        )}
+                        <div className="max-w-[70%] space-y-1.5">
+                          <div className={`flex items-center gap-2 text-[10px] ${isSelf ? 'justify-end' : ''}`}>
+                            <span className="font-black text-slate-300">{msg.sender_name}</span>
+                            <span className="text-slate-500">• {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            {msg.is_pinned && <Pin className="w-3 h-3 text-amber-500 fill-current" />}
+                          </div>
+
+                          {/* Message bubble card */}
+                          <div className={`p-3.5 rounded-2xl border text-xs leading-relaxed relative group ${
+                            isSelf
+                              ? 'bg-gradient-to-r from-violet-600 to-indigo-650 text-white border-violet-500/20 rounded-tr-none'
+                              : 'bg-[var(--db-card-bg)] border-[var(--db-sidebar-border)] text-slate-100 rounded-tl-none shadow-md'
+                          }`}>
+                            {msg.type === 'code' ? (
+                              <div className="space-y-2">
+                                <span className="text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded bg-black/40 text-violet-300 block w-fit border border-violet-500/20">
+                                  {msg.code_language || 'javascript'}
+                                </span>
+                                <pre className="font-mono text-[10.5px] bg-black/35 p-3 rounded-lg overflow-x-auto text-emerald-400 select-all max-h-40">
+                                  {msg.text}
+                                </pre>
+                                <button onClick={() => handleAiExplainCode(msg.id, msg.text, msg.code_language)} className="px-2.5 py-1 bg-violet-600/20 border border-violet-500/30 text-violet-300 text-[10px] font-bold rounded-lg hover:bg-violet-600 transition flex items-center gap-1">
+                                  <Sparkles className="w-3 h-3" /> Explain Code
+                                </button>
+                              </div>
+                            ) : msg.type === 'image' ? (
+                              <div className="space-y-1">
+                                <img src={msg.file_url} alt={msg.file_name} className="max-w-full max-h-60 rounded-lg border border-white/5 object-cover" />
+                                <span className="text-[10px] text-slate-500 block truncate">{msg.file_name}</span>
+                              </div>
+                            ) : msg.type === 'pdf' ? (
+                              <a href={msg.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 hover:bg-red-500/20 transition">
+                                <FileText className="w-5 h-5 shrink-0" />
+                                <div className="text-[11px] truncate flex-1">
+                                  <p className="font-bold truncate">{msg.file_name}</p>
+                                  <span className="text-[9px] text-slate-500">PDF Document - Click to Open</span>
+                                </div>
+                              </a>
+                            ) : (
+                              <p className="whitespace-pre-wrap">{msg.text}</p>
+                            )}
+
+                            {/* Message Actions Popup on hover */}
+                            <div className={`absolute top-[-24px] right-2 bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] rounded-lg p-1 flex gap-1 shadow-2xl opacity-0 group-hover:opacity-100 transition-all z-20`}>
+                              {['❤️', '👍', '🔥', '🤔', '💡'].map(emoji => (
+                                <button key={emoji} onClick={() => handleReactToMessage(msg.id, emoji)} className="hover:scale-125 transition cursor-pointer text-xs p-1">{emoji}</button>
+                              ))}
+                              <div className="w-[1px] bg-slate-700/50 mx-1" />
+                              <button onClick={() => handlePinMessage(msg.id)} className="p-1 hover:bg-white/5 rounded text-amber-500" title="Pin Message"><Pin className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => handleAiTranslateMessage(msg.id, msg.text, 'Spanish')} className="p-1 hover:bg-white/5 rounded text-violet-400" title="AI Translate"><Globe className="w-3.5 h-3.5" /></button>
+                              {!isSelf && (
+                                <button onClick={() => handleOpenReport({ id: msg.sender_id, name: msg.sender_name })} className="p-1 hover:bg-white/5 rounded text-rose-500" title="Report message"><ShieldAlert className="w-3.5 h-3.5" /></button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Message Reactions mapping */}
+                          {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                            <div className={`flex flex-wrap gap-1 mt-1 ${isSelf ? 'justify-end' : ''}`}>
+                              {Object.entries(msg.reactions).map(([emoji, userIds]) => (
+                                <button
+                                  key={emoji}
+                                  onClick={() => handleReactToMessage(msg.id, emoji)}
+                                  className={`px-2 py-0.5 rounded-full border text-[10px] font-bold flex items-center gap-1 transition ${
+                                    userIds.includes(user?.id)
+                                      ? 'bg-violet-600/10 border-violet-500/30 text-violet-300'
+                                      : 'bg-white/2 border-white/5 text-[var(--db-text-muted)]'
+                                  }`}
+                                >
+                                  <span>{emoji}</span>
+                                  <span>{userIds.length}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={messageEndRef} />
                 </div>
 
-                {/* AI Diagram builder */}
-                <div className="p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-4">
-                  <h4 className="text-xs font-bold text-white">📊 AI Diagram Generator</h4>
-                  <p className="text-[10px] text-slate-500 leading-normal">
-                    Generate microservice flowcharts, ER diagrams, or authentication pathways with one click:
-                  </p>
+                {/* Keyboard typing suggestions / indicators */}
+                <div className="px-6 py-2">
+                  {remoteTyping && <span className="text-[10px] text-violet-400 italic animate-pulse">{remoteTyping}</span>}
                   
-                  <div className="grid grid-cols-2 gap-2">
-                    {['ER Diagram', 'API Flow', 'Microservices', 'Auth Flow'].map((diag, i) => (
+                  {/* AI Suggestion quick replies */}
+                  <div className="flex gap-2 mt-1">
+                    {['Thanks!', 'Good question', 'Let\'s set a voice call discuss.'].map(reply => (
                       <button
-                        key={i}
-                        onClick={() => toast.success(`Generated ${diag} blueprint!`)}
-                        className="p-2.5 bg-slate-900 border border-white/10 text-[10px] hover:border-violet-500/30 hover:text-white font-bold rounded-xl text-slate-400 transition"
+                        key={reply}
+                        onClick={() => handleAiSuggestionClick(reply)}
+                        className="px-3 py-1 bg-white/2 hover:bg-violet-600/10 border border-white/5 hover:border-violet-500/30 rounded-full text-[10px] text-[var(--db-text-muted)] hover:text-violet-300 transition-all font-bold"
                       >
-                        📐 {diag}
+                        💬 {reply}
                       </button>
                     ))}
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* WORKSPACE TAB: DEPLOYMENT & PORTFOLIO */}
-            {workspaceTab === 'deploy' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-                {/* One Click Deployment Center */}
-                <div className="p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-4">
-                  <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                    🚀 One Click Deployment Wizard
-                  </h4>
+                {/* Input panel area */}
+                <form onSubmit={handleSendMessage} className="p-4 border-t border-[var(--db-sidebar-border)] bg-[rgba(15,23,42,0.4)] flex gap-2">
+                  <div className="flex-1 bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-2xl flex items-center px-4 py-2 hover:border-violet-500/30 transition">
+                    <input
+                      type="text"
+                      value={inputText}
+                      onChange={handleTypingInput}
+                      placeholder={`Message #${activeRoom?.name}...`}
+                      className="flex-1 bg-transparent text-xs text-white outline-none"
+                    />
+                    
+                    {/* Input extra helpers */}
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={handleAiCorrectGrammar} className="p-1 rounded hover:bg-white/5 text-violet-400 font-bold text-[9px] uppercase tracking-wider border border-violet-500/20" title="AI Grammar Correction">
+                        Grammar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const code = prompt('Enter your code snippet:');
+                          if (code) {
+                            const lang = prompt('Enter language (javascript, python, csharp):', 'javascript');
+                            api.post(`/community/rooms/${activeRoom.id}/messages`, { text: code, type: 'code', codeLanguage: lang }).then(res => {
+                              setMessages(prev => [...prev, res.data]);
+                              socketRef.current.emit('community-send-message', { roomId: activeRoom.id, message: res.data });
+                            });
+                          }
+                        }}
+                        className="p-1 text-[var(--db-text-muted)] hover:text-white cursor-pointer"
+                        title="Attach Code"
+                      >
+                        <Play className="w-4 h-4 text-violet-400 rotate-90" />
+                      </button>
+                      <label className="p-1 text-[var(--db-text-muted)] hover:text-white cursor-pointer" title="Attach Document">
+                        <Paperclip className="w-4 h-4 text-indigo-400" />
+                        <input type="file" onChange={(e) => handleFileUpload(e.target.files[0])} className="hidden" />
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <button type="submit" className="p-3.5 bg-gradient-to-r from-violet-600 to-indigo-650 hover:from-violet-700 hover:to-indigo-750 text-white rounded-2xl transition shadow-lg flex items-center justify-center shrink-0 cursor-pointer">
+                    <Send className="w-4 h-4" />
+                  </button>
+                </form>
+              </div>
+
+              {/* Right Sidebar panel */}
+              {showRightSidebar && (
+                <aside className="w-80 bg-[rgba(15,23,42,0.3)] p-6 space-y-6 overflow-y-auto flex-shrink-0">
+                  <div className="space-y-2 border-b border-white/5 pb-4">
+                    <span className="text-[10px] font-black uppercase text-violet-400 tracking-widest block">Room Details</span>
+                    <h3 className="text-base font-extrabold text-white">#{activeRoom?.name}</h3>
+                    <p className="text-xs text-[var(--db-text-muted)] leading-relaxed">{activeRoom?.description}</p>
+                  </div>
 
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center text-[10px]">
-                      <span className="text-slate-450">Deploy Platform</span>
-                      <span className="font-bold text-cyan-400">Vercel / Render</span>
+                    <span className="text-[10px] font-black uppercase text-indigo-400 tracking-widest block">Pinned Messages</span>
+                    <div className="space-y-2">
+                      {messages.filter(m => m.is_pinned).map(pin => (
+                        <div key={pin.id} className="p-3 bg-white/2 border border-white/5 rounded-xl text-[11px] leading-normal space-y-1">
+                          <p className="font-bold text-slate-300">{pin.sender_name}</p>
+                          <p className="text-slate-400 line-clamp-2">{pin.text}</p>
+                        </div>
+                      ))}
+                      {messages.filter(m => m.is_pinned).length === 0 && (
+                        <p className="text-[10px] text-slate-500 italic">No pinned messages in this channel.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <span className="text-[10px] font-black uppercase text-blue-400 tracking-widest block">Shared Files & Media</span>
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      {messages.filter(m => m.file_url).map(file => (
+                        <a href={file.file_url} target="_blank" rel="noreferrer" key={file.id} className="p-2.5 bg-white/2 border border-white/5 rounded-xl hover:border-violet-500/20 transition flex items-center gap-2">
+                          {file.type === 'image' ? <Image className="w-4 h-4 text-emerald-400 shrink-0" /> : <FileText className="w-4 h-4 text-red-400 shrink-0" />}
+                          <span className="text-[11px] text-slate-300 truncate flex-1">{file.file_name}</span>
+                        </a>
+                      ))}
+                      {messages.filter(m => m.file_url).length === 0 && (
+                        <p className="text-[10px] text-slate-500 italic">No shared documents recorded.</p>
+                      )}
+                    </div>
+                  </div>
+                </aside>
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: VOICE CALL ROOM VIEW */}
+          {activeTab === 'voice' && (
+            <div className="flex-1 flex flex-col p-6 space-y-6 overflow-y-auto">
+              <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                <div>
+                  <h2 className="text-lg font-black text-white">🎤 Real-Time Voice Calling Room</h2>
+                  <p className="text-xs text-[var(--db-text-muted)]">Category: Study Groups | Status: Connected</p>
+                </div>
+                <button
+                  onClick={() => handleToggleCall('voice')}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg cursor-pointer ${
+                    activeCall
+                      ? 'bg-red-600 hover:bg-red-700 text-white'
+                      : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-white shadow-violet-600/20'
+                  }`}
+                >
+                  <Phone className="w-4 h-4" />
+                  {activeCall ? 'Disconnect Call' : 'Join Voice Call'}
+                </button>
+              </div>
+
+              {activeCall ? (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 items-start">
+                  
+                  {/* Callers lists grid columns */}
+                  <div className="lg:col-span-2 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      {callParticipants.map(participant => (
+                        <div key={participant.id} className="p-6 rounded-3xl border border-white/5 bg-[rgba(15,23,42,0.4)] flex flex-col items-center justify-center relative overflow-hidden h-40">
+                          {participant.micOn && <div className="absolute inset-0 bg-violet-600/5 animate-pulse" />}
+                          <div className={`w-16 h-16 rounded-full bg-gradient-to-tr from-violet-500 to-indigo-600 flex items-center justify-center text-white text-lg font-black border-4 ${participant.micOn ? 'border-violet-500 shadow-[0_0_20px_rgba(139,92,246,0.3)] animate-bounce' : 'border-transparent'}`}>
+                            {participant.name?.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-xs font-bold text-white mt-3 block">{participant.name}</span>
+                          
+                          {/* mic indicators */}
+                          <div className="absolute bottom-2 right-2 flex gap-1 bg-black/40 px-2 py-1 rounded-lg">
+                            {participant.micOn ? <Mic className="w-3.5 h-3.5 text-violet-400" /> : <MicOff className="w-3.5 h-3.5 text-red-500" />}
+                          </div>
+                        </div>
+                      ))}
                     </div>
 
-                    <div className="p-3 bg-slate-950 rounded-xl border border-white/5 space-y-1 font-mono text-[9px] text-slate-400 max-h-[80px] overflow-y-auto va-scroll">
-                      <div>[12:00:15] Build command executed successfully.</div>
-                      <div>[12:00:18] Uploading bundles to Render CDN...</div>
-                      <div>[12:00:20] Deployment online: https://eduverse-planner.render.com</div>
+                    {/* Live captions panel */}
+                    <div className="p-5 bg-black/35 border border-white/5 rounded-3xl space-y-2">
+                      <span className="text-[10px] font-black uppercase text-violet-400 tracking-wider flex items-center gap-1.5"><Globe className="w-3.5 h-3.5" /> Real-time Speech Transcription (Live Captions)</span>
+                      <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                        {voiceCaptions.map(caption => (
+                          <div key={caption.id} className="text-xs leading-normal">
+                            <strong className="text-violet-300 mr-2">{caption.username}:</strong>
+                            <span className="text-slate-200">{caption.text}</span>
+                          </div>
+                        ))}
+                        {voiceCaptions.length === 0 && (
+                          <p className="text-[10px] text-slate-500 italic">Listening for speakers...</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* AI call analyzer panel column */}
+                  <div className="p-5 bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] rounded-3xl space-y-6 flex flex-col justify-between">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                        <Sparkles className="w-4 h-4 text-violet-400 animate-pulse" />
+                        <h4 className="text-xs font-black uppercase text-white tracking-widest">AI Call Analyzer</h4>
+                      </div>
+
+                      {/* Transcripts summaries */}
+                      <div className="space-y-2 text-xs">
+                        <span className="text-[10px] uppercase font-bold text-indigo-400 block tracking-wider">Smart Meeting Minutes</span>
+                        <div className="p-3 bg-white/2 border border-white/5 rounded-xl text-[11px] leading-relaxed text-slate-300">
+                          <strong>Minutes summary:</strong> Students discussed database normalisation strategies and 3NF validations. Priya explained how primary key redundancy is minimized in relational schemas.
+                        </div>
+                      </div>
+
+                      {/* Action items column */}
+                      <div className="space-y-2 text-xs">
+                        <span className="text-[10px] uppercase font-bold text-blue-400 block tracking-wider">Action Items</span>
+                        <ul className="space-y-1 text-[11px] text-slate-300">
+                          <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0" /> Draft e-commerce ER flowchart</li>
+                          <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0" /> Complete quiz problems by 4 PM</li>
+                        </ul>
+                      </div>
+
+                      {/* Speaking stats */}
+                      <div className="space-y-2 text-xs">
+                        <span className="text-[10px] uppercase font-bold text-emerald-400 block tracking-wider">Speaking Time analysis</span>
+                        <div className="space-y-1.5 text-[11px]">
+                          <div className="flex justify-between items-center text-slate-400">
+                            <span>You</span>
+                            <span className="font-bold text-white">45% (3.2m)</span>
+                          </div>
+                          <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                            <div className="bg-violet-500 h-full rounded-full" style={{ width: '45%' }} />
+                          </div>
+
+                          <div className="flex justify-between items-center text-slate-400 mt-2">
+                            <span>Priya Sharma</span>
+                            <span className="font-bold text-white">35% (2.5m)</span>
+                          </div>
+                          <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                            <div className="bg-indigo-500 h-full rounded-full" style={{ width: '35%' }} />
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          toast.loading('Initializing deploy pipeline...');
-                          setTimeout(() => {
-                            toast.dismiss();
-                            toast.success('Production build online!');
-                          }, 1500);
-                        }}
-                        className="flex-1 py-2 bg-gradient-to-r from-violet-600 to-indigo-650 text-white font-bold rounded-xl text-[10px] transition"
-                      >
-                        Deploy to Prod
+                    {/* Microphone settings panel */}
+                    <div className="flex gap-2 border-t border-white/5 pt-4 flex-wrap">
+                      <button onClick={() => setMicOn(!micOn)} className={`flex-1 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${micOn ? 'bg-white/5 text-white hover:bg-white/10' : 'bg-red-500/20 text-red-400'}`}>
+                        {micOn ? <Mic className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5" />}
+                        {micOn ? 'Mute' : 'Muted'}
                       </button>
-                      <button
-                        onClick={() => toast.success('Deployment rolled back to previous hash commit!')}
-                        className="px-3 py-2 border border-white/10 hover:border-rose-500 text-slate-450 hover:text-rose-400 rounded-xl transition text-[10px]"
-                      >
-                        Rollback
+                      <button onClick={() => setNoiseCancel(!noiseCancel)} className={`py-2 px-3 rounded-xl text-xs font-bold border transition ${noiseCancel ? 'bg-violet-600/10 border-violet-500/20 text-violet-400' : 'border-white/5 text-[var(--db-text-muted)]'}`}>
+                        Noise Cancelling
                       </button>
                     </div>
                   </div>
+
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center p-12 border border-white/5 rounded-3xl bg-slate-900/10">
+                  <Mic className="w-12 h-12 text-violet-400 mb-4 animate-bounce" />
+                  <h3 className="text-base font-extrabold text-white">Call is offline</h3>
+                  <p className="text-xs text-[var(--db-text-muted)] mt-1 max-w-sm text-center leading-relaxed">Join the voice call room to discuss algorithms, review logic, and transcription summaries with classmates.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: VIDEO MEETING VIEW */}
+          {activeTab === 'video' && (
+            <div className="flex-1 flex overflow-hidden">
+              {/* Left video screens columns */}
+              <div className="flex-1 flex flex-col overflow-hidden border-r border-[var(--db-sidebar-border)]">
+                
+                {/* Video meeting header bar */}
+                <div className="px-6 py-4 border-b border-[var(--db-sidebar-border)] bg-[rgba(15,23,42,0.2)] flex justify-between items-center">
+                  <div>
+                    <h3 className="text-sm font-black text-white">📹 Real-Time Video Conference</h3>
+                    <p className="text-[10px] text-[var(--db-text-muted)]">Active Room: #video-workshop-room</p>
+                  </div>
+
+                  <button
+                    onClick={() => handleToggleCall('video')}
+                    className={`px-5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg cursor-pointer ${
+                      activeCall ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gradient-to-r from-violet-600 to-indigo-650 text-white'
+                    }`}
+                  >
+                    <Video className="w-4 h-4" />
+                    {activeCall ? 'End Meeting' : 'Start Video Call'}
+                  </button>
                 </div>
 
-                {/* Project Portfolio Generator */}
-                <div className="p-5 bg-slate-950/40 border border-white/5 rounded-3xl space-y-4">
-                  <h4 className="text-xs font-bold text-white">📄 Portfolio & README Generator</h4>
-                  <p className="text-[10px] text-slate-500 leading-normal">
-                    Automatically assemble professional portfolio pages, Swagger specs, and developer README layouts.
-                  </p>
+                {/* Video feeds grid container */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                  {activeCall ? (
+                    <div className="grid grid-cols-2 gap-4 h-[320px]">
+                      {/* You */}
+                      <div className="rounded-3xl border border-white/5 bg-slate-950 relative overflow-hidden flex items-center justify-center">
+                        <div className="absolute top-3 left-3 bg-black/40 px-2 py-0.5 rounded text-[10px] text-white">You</div>
+                        {cameraOn ? (
+                          <div className="w-full h-full bg-violet-650/10 flex flex-col items-center justify-center">
+                            <Video className="w-8 h-8 text-violet-400 animate-pulse" />
+                            <span className="text-[10px] text-slate-500 mt-2">Local webcam active stream</span>
+                          </div>
+                        ) : (
+                          <div className="text-center">
+                            <div className="w-12 h-12 rounded-full bg-violet-600 flex items-center justify-center text-white font-bold text-sm mx-auto">S</div>
+                            <span className="text-[10px] text-slate-500 block mt-2">Camera Off</span>
+                          </div>
+                        )}
+                      </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
-                    <button 
-                      onClick={() => toast.success('README.md generated successfully!')}
-                      className="p-2.5 bg-slate-900 border border-white/5 hover:border-violet-500/20 text-slate-350 rounded-xl transition text-left"
-                    >
-                      📝 Generate README
-                    </button>
-                    <button 
-                      onClick={() => toast.success('Swagger specs generated!')}
-                      className="p-2.5 bg-slate-900 border border-white/5 hover:border-violet-500/20 text-slate-350 rounded-xl transition text-left"
-                    >
-                      Swagger Exporter
-                    </button>
+                      {/* Participant */}
+                      <div className="rounded-3xl border border-white/5 bg-slate-950 relative overflow-hidden flex items-center justify-center">
+                        <div className="absolute top-3 left-3 bg-black/40 px-2 py-0.5 rounded text-[10px] text-white">Priya Sharma</div>
+                        <div className="w-full h-full bg-gradient-to-br from-indigo-950/20 to-black flex flex-col items-center justify-center">
+                          <Users className="w-8 h-8 text-indigo-400" />
+                          <span className="text-[10px] text-slate-500 mt-2">Connected user stream</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-[320px] flex flex-col items-center justify-center border border-white/5 rounded-3xl bg-slate-900/10">
+                      <Video className="w-12 h-12 text-violet-400 mb-3" />
+                      <h3 className="text-sm font-bold text-white">Video Stream Offline</h3>
+                      <p className="text-xs text-[var(--db-text-muted)] mt-1 max-w-sm text-center">Join conference calls to share screens, annotate whiteboards, and compile projects live.</p>
+                    </div>
+                  )}
+
+                  {/* Interactive Collaboration suite tabs */}
+                  <div className="space-y-4">
+                    <div className="flex p-1 bg-slate-950/60 rounded-2xl border border-white/5 flex-wrap gap-1">
+                      {[
+                        { id: 'whiteboard', label: 'Whiteboard', icon: Play },
+                        { id: 'notes', label: 'Notes', icon: FileText },
+                        { id: 'code', label: 'Multiplayer Editor', icon: CodeLanguageIcon },
+                        { id: 'poll', label: 'Polls & Votes', icon: Award },
+                        { id: 'tasks', label: 'Team Tasks', icon: Layers }
+                      ].map(t => {
+                        const Icon = t.icon;
+                        return (
+                          <button
+                            key={t.id}
+                            onClick={() => setCollaborationTab(t.id)}
+                            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                              collaborationTab === t.id ? 'bg-violet-650 text-white' : 'text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            <Icon className="w-3.5 h-3.5" />
+                            {t.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Collaboration contents container */}
+                    <div className="p-5 border border-white/5 rounded-3xl bg-[rgba(15,23,42,0.3)] min-h-[300px]">
+                      {/* Whiteboard */}
+                      {collaborationTab === 'whiteboard' && (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center bg-slate-950/50 p-3 rounded-xl border border-white/5">
+                            <span className="text-xs font-bold text-slate-400">Drawing Canvas</span>
+                            <div className="flex gap-1">
+                              {['Box', 'Circle', 'ER Node', 'Flowchart Line'].map(shape => (
+                                <button key={shape} onClick={() => handleAddWhiteboardNode(shape)} className="px-2 py-1 bg-violet-600/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold rounded-lg hover:bg-violet-600 hover:text-white transition cursor-pointer">+ {shape}</button>
+                              ))}
+                              <button onClick={handleClearWhiteboard} className="px-2 py-1 bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold rounded-lg hover:bg-red-500 hover:text-white transition cursor-pointer">Clear</button>
+                            </div>
+                          </div>
+
+                          <div ref={canvasRef} className="h-60 bg-black/40 border border-white/5 rounded-2xl relative overflow-hidden">
+                            <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:16px_16px]" />
+                            {whiteboardShapes.map(s => (
+                              <div
+                                key={s.id}
+                                className="absolute p-3 bg-violet-650/20 border border-violet-500/50 text-white text-[10px] font-bold rounded-xl shadow-lg"
+                                style={{ left: `${s.x}%`, top: `${s.y}%` }}
+                              >
+                                {s.shape}
+                              </div>
+                            ))}
+                            {whiteboardShapes.length === 0 && (
+                              <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-xs font-medium">Whiteboard Canvas is clean. Click shapes to start sketching.</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Collaborative Notes */}
+                      {collaborationTab === 'notes' && (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center bg-slate-950/50 p-3 rounded-xl border border-white/5">
+                            <span className="text-xs font-bold text-slate-400">Cooperative Markdown Lecture Notes</span>
+                            <button onClick={handleSaveNotes} className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg transition cursor-pointer">Save Notes</button>
+                          </div>
+                          <textarea
+                            value={sharedNotes}
+                            onChange={handleNotesChange}
+                            placeholder="Type collaborative markdown study notes here..."
+                            className="w-full h-60 bg-black/40 border border-white/5 rounded-2xl p-4 text-xs text-slate-100 outline-none focus:border-violet-500 resize-none font-mono"
+                          />
+                        </div>
+                      )}
+
+                      {/* Collaborative Code Editor (Monaco) */}
+                      {collaborationTab === 'code' && (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                          <div className="lg:col-span-2 space-y-3">
+                            <div className="flex justify-between items-center bg-slate-950/50 p-2.5 rounded-xl border border-white/5">
+                              <div className="flex gap-2">
+                                <select value={codeLanguage} onChange={(e) => setCodeLanguage(e.target.value)} className="bg-slate-900 border border-white/10 text-white text-[10px] rounded px-2 py-0.5 outline-none">
+                                  <option value="javascript">JavaScript</option>
+                                  <option value="python">Python</option>
+                                  <option value="csharp">C#</option>
+                                </select>
+                              </div>
+                              <button onClick={handleRunCode} disabled={isCompiling} className="px-3.5 py-1 bg-emerald-600 hover:bg-emerald-750 text-white text-[10px] font-bold rounded-lg transition cursor-pointer">{isCompiling ? 'Running...' : 'Run Code'}</button>
+                            </div>
+                            
+                            <div className="h-60 rounded-2xl overflow-hidden border border-white/5 bg-slate-950">
+                              <Editor
+                                height="100%"
+                                language={codeLanguage}
+                                theme="vs-dark"
+                                value={sharedCode}
+                                onChange={handleCodeChange}
+                                options={{
+                                  fontSize: 11,
+                                  minimap: { enabled: false },
+                                  automaticLayout: true
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Sandbox terminal outputs */}
+                          <div className="p-4 bg-black/40 border border-white/5 rounded-3xl space-y-2 flex flex-col justify-between">
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider block">Sandbox Terminal Output</span>
+                              <pre className="font-mono text-[10px] text-slate-300 whitespace-pre-wrap">{codeConsole}</pre>
+                            </div>
+                            
+                            <button
+                              onClick={() => {
+                                const loader = toast.loading('AI reviewing code boilerplate...');
+                                api.post('/community/ai/explain-code', { code: sharedCode, language: codeLanguage }).then(res => {
+                                  toast.dismiss(loader);
+                                  setCodeConsole(`🤖 AI Code Review:\n${res.data.explanation}`);
+                                }).catch(() => {
+                                  toast.dismiss(loader);
+                                  toast.error('AI check failed.');
+                                });
+                              }}
+                              className="w-full py-2 bg-violet-600/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold rounded-xl hover:bg-violet-600 hover:text-white transition cursor-pointer"
+                            >
+                              Consult AI Code Review
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Quizzes & Polls */}
+                      {collaborationTab === 'poll' && (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center bg-slate-950/50 p-3 rounded-xl border border-white/5">
+                            <span className="text-xs font-bold text-slate-400">Classroom Poll Question</span>
+                            <button
+                              onClick={() => {
+                                const question = prompt('Enter poll question:');
+                                if (question) {
+                                  const opts = ['Option A', 'Option B', 'Option C'];
+                                  setActivePoll({
+                                    question,
+                                    options: opts.map((o, idx) => ({ id: idx, text: o, votes: 0 }))
+                                  });
+                                }
+                              }}
+                              className="px-3.5 py-1 bg-violet-650 hover:bg-violet-700 text-white text-[10px] font-bold rounded-lg transition cursor-pointer"
+                            >
+                              Create Poll
+                            </button>
+                          </div>
+
+                          {activePoll ? (
+                            <div className="p-6 bg-white/2 border border-white/5 rounded-2xl space-y-4 max-w-md">
+                              <h4 className="text-sm font-extrabold text-white">📊 {activePoll.question}</h4>
+                              <div className="space-y-3">
+                                {activePoll.options.map(opt => {
+                                  const totalVotes = activePoll.options.reduce((sum, o) => sum + o.votes, 0) || 1;
+                                  const pct = Math.round((opt.votes / totalVotes) * 100);
+                                  return (
+                                    <div key={opt.id} className="space-y-1">
+                                      <button
+                                        onClick={() => {
+                                          const nextOpts = activePoll.options.map(o => o.id === opt.id ? { ...o, votes: o.votes + 1 } : o);
+                                          setActivePoll({ ...activePoll, options: nextOpts });
+                                          socketRef.current.emit('poll-vote-update', { roomId: activeRoom.id, pollOptions: nextOpts });
+                                        }}
+                                        className="w-full text-left px-4 py-2.5 rounded-xl border border-white/5 bg-slate-900/60 text-xs font-bold text-slate-200 hover:border-violet-500/30 transition flex justify-between items-center cursor-pointer"
+                                      >
+                                        <span>{opt.text}</span>
+                                        <span>{pct}%</span>
+                                      </button>
+                                      <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                                        <div className="bg-violet-500 h-full rounded-full" style={{ width: `${pct}%` }} />
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-xs text-slate-500 italic text-center py-12">No active classroom polls. Click "Create Poll" to query participants.</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Tasks board lists */}
+                      {collaborationTab === 'tasks' && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {['todo', 'progress', 'completed'].map(col => (
+                            <div key={col} className="p-3 bg-slate-950/30 border border-white/5 rounded-2xl space-y-3">
+                              <span className="text-[10px] font-black uppercase text-slate-400 block tracking-widest px-1">{col}</span>
+                              <div className="space-y-2">
+                                {tasks.filter(t => t.status === col).map(task => (
+                                  <div key={task.id} className="p-3 bg-slate-900/40 border border-white/5 rounded-xl text-xs space-y-2 hover:border-violet-500/20 transition">
+                                    <p className="font-bold text-slate-200">{task.title}</p>
+                                    <div className="flex justify-between items-center text-[9px] text-slate-500">
+                                      <span>Assignee: {task.assignee}</span>
+                                      <span className={`px-1.5 py-0.5 rounded font-black ${task.priority === 'High' ? 'bg-red-500/10 text-red-400' : 'bg-amber-500/10 text-amber-400'}`}>{task.priority}</span>
+                                    </div>
+                                    
+                                    <div className="flex gap-1.5 justify-end text-[8px] font-bold text-violet-400 pt-1 border-t border-white/5">
+                                      {col !== 'todo' && <button onClick={() => setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: 'todo' } : t))} className="hover:underline">To Do</button>}
+                                      {col !== 'progress' && <button onClick={() => setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: 'progress' } : t))} className="hover:underline">Progress</button>}
+                                      {col !== 'completed' && <button onClick={() => setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: 'completed' } : t))} className="hover:underline">Done</button>}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
+
                 </div>
               </div>
-            )}
 
-          </div>
-        </div>
-      )}
+              {/* Video call controls sidebar panel */}
+              {showRightSidebar && (
+                <aside className="w-80 bg-[rgba(15,23,42,0.3)] p-6 space-y-6 overflow-y-auto flex-shrink-0 flex flex-col justify-between border-l border-[var(--db-sidebar-border)]">
+                  <div className="space-y-4">
+                    <span className="text-[10px] font-black uppercase text-violet-400 tracking-widest block">Video Meeting Controls</span>
+                    
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between items-center text-[11px] text-slate-400">
+                        <span>Device Camera</span>
+                        <span className="font-bold text-white">FaceTime HD Web</span>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <button onClick={() => setCameraOn(!cameraOn)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${cameraOn ? 'bg-violet-650 hover:bg-violet-750 text-white' : 'bg-red-500/20 text-red-400'}`}>
+                          {cameraOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
+                          {cameraOn ? 'Video On' : 'Video Off'}
+                        </button>
+                      </div>
+                    </div>
 
-      {/* CREATE WORKSPACE MODAL */}
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between items-center text-[11px] text-slate-400">
+                        <span>Microphone source</span>
+                        <span className="font-bold text-white">Default system mic</span>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <button onClick={() => setMicOn(!micOn)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${micOn ? 'bg-indigo-650 hover:bg-indigo-750 text-white' : 'bg-red-500/20 text-red-400'}`}>
+                          {micOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+                          {micOn ? 'Mute Mic' : 'Unmute'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Raise Hand trigger */}
+                    <button onClick={() => {
+                      setHandRaised(!handRaised);
+                      socketRef.current.emit('call-status-update', { roomId: activeRoom.id, userId: user?.id, handRaised: !handRaised });
+                      toast(!handRaised ? 'Raised hand!' : 'Lowered hand.');
+                    }} className={`w-full py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${handRaised ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-white/5 text-slate-300'}`}>
+                      Raise Hand
+                    </button>
+                  </div>
+
+                  {/* Smart transcripts summary panel */}
+                  <div className="p-4 bg-slate-900 border border-white/5 rounded-3xl space-y-3">
+                    <span className="text-[10px] font-black uppercase text-indigo-400 tracking-widest block">AI Meeting Assistant</span>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      AI is active in the background transcribing voice, summarizing slides, and analyzing code. Action reports will populate here on call completion.
+                    </p>
+                  </div>
+                </aside>
+              )}
+            </div>
+          )}
+
+        </main>
+      </div>
+
+      {/* 3. POPUPS MODALS & DIALOGS */}
+
+      {/* CREATE ROOM MODAL */}
       <AnimatePresence>
-        {showCreateModal && (
+        {showCreateRoom && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#0b071e] border border-white/10 rounded-3xl p-6 w-full max-w-md shadow-2xl relative"
-            >
-              <button 
-                onClick={() => setShowCreateModal(false)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition cursor-pointer text-slate-400 hover:text-white"
-              >
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
+              <button onClick={() => setShowCreateRoom(false)} className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
 
-              <h3 className="text-lg font-black text-white mb-4">➕ Create Developer Workspace</h3>
-              
-              <form onSubmit={handleCreateWorkspace} className="space-y-4 text-xs">
+              <h3 className="text-base font-extrabold text-white mb-4">➕ Initialize Community Room</h3>
+              <form onSubmit={handleCreateRoom} className="space-y-4 text-xs">
                 <div className="space-y-1">
-                  <label className="text-slate-400 block font-bold">Project Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={newProjName}
-                    onChange={e => setNewProjName(e.target.value)}
-                    placeholder="e.g. AI Study Assistant"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-white outline-none focus:border-violet-500"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-slate-400 block font-bold">Project Description</label>
-                  <textarea
-                    value={newProjDesc}
-                    onChange={e => setNewProjDesc(e.target.value)}
-                    placeholder="Brief outline of target objectives..."
-                    className="w-full h-16 bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none focus:border-violet-500 resize-none"
-                  />
+                  <label className="text-slate-400 block font-bold">Room Name</label>
+                  <input type="text" required value={newRoomName} onChange={e => setNewRoomName(e.target.value)} placeholder="e.g. data-structures-sprint" className="w-full bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-xl px-4 py-2.5 text-white outline-none focus:border-violet-500" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-slate-400 block font-bold">Tech Stack</label>
-                    <select
-                      value={newProjTech}
-                      onChange={e => setNewProjTech(e.target.value)}
-                      className="w-full bg-slate-950 border border-white/10 rounded-xl p-2 text-white outline-none"
-                    >
-                      <option value="React + FastAPI + MongoDB">React + FastAPI + MongoDB</option>
-                      <option value="React + WebSocket + PeerJS">React + WebSocket + PeerJS</option>
-                      <option value="Python + PyTorch">Python + PyTorch</option>
-                      <option value="Next.js + SQL">Next.js + SQL</option>
+                    <label className="text-slate-400 block font-bold">Category</label>
+                    <select value={newRoomCategory} onChange={e => setNewRoomCategory(e.target.value)} className="w-full bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-xl p-2.5 text-white outline-none">
+                      <option value="General Discussion">General Discussion</option>
+                      <option value="Programming">Programming</option>
+                      <option value="Competitive Programming">Competitive Programming</option>
+                      <option value="Career Guidance">Career Guidance</option>
+                      <option value="Study Groups">Study Groups</option>
                     </select>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-slate-400 block font-bold">AI Assistant Role</label>
-                    <select
-                      value={selectedAiRole}
-                      onChange={e => setSelectedAiRole(e.target.value)}
-                      className="w-full bg-slate-950 border border-white/10 rounded-xl p-2 text-white outline-none"
-                    >
-                      <option value="Coding AI">Coding AI</option>
-                      <option value="Backend AI">Backend AI</option>
-                      <option value="DevOps AI">DevOps AI</option>
-                      <option value="Security AI">Security AI</option>
+                    <label className="text-slate-400 block font-bold">Room Type</label>
+                    <select value={newRoomType} onChange={e => setNewRoomType(e.target.value)} className="w-full bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-xl p-2.5 text-white outline-none">
+                      <option value="chat">💬 Chat Only</option>
+                      <option value="voice">🎤 Voice Call</option>
+                      <option value="video">📹 Video Meeting</option>
                     </select>
                   </div>
                 </div>
 
-                <button 
-                  type="submit"
-                  className="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-650 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl font-bold text-xs mt-4 transition cursor-pointer"
-                >
-                  Initialize Workspace
+                <div className="space-y-1">
+                  <label className="text-slate-400 block font-bold">Description</label>
+                  <textarea value={newRoomDescription} onChange={e => setNewRoomDescription(e.target.value)} placeholder="Describe objectives..." className="w-full h-16 bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-xl p-3 text-white outline-none resize-none focus:border-violet-500" />
+                </div>
+
+                <button type="submit" className="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-650 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl font-bold text-xs mt-4 transition cursor-pointer">
+                  Create Room Channel
                 </button>
               </form>
             </motion.div>
@@ -1773,53 +1682,296 @@ function DeveloperHubSubsystem() {
         )}
       </AnimatePresence>
 
-      {/* TEAM MATCHMAKER DRAWER */}
+      {/* FRIENDS MODAL */}
       <AnimatePresence>
-        {showMatchmaker && (
+        {showFriends && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 50, opacity: 0 }}
-              className="bg-[#0b071e] border border-white/10 rounded-3xl p-6 w-full max-w-md shadow-2xl relative"
-            >
-              <button 
-                onClick={() => setShowMatchmaker(false)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition cursor-pointer text-slate-400 hover:text-white"
-              >
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} className="bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
+              <button onClick={() => setShowFriends(false)} className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
 
-              <h3 className="text-lg font-black text-white mb-2 flex items-center gap-1.5">
-                🤖 AI Team Recruiter Partner matches
-              </h3>
-              <p className="text-[10px] text-slate-400 mb-4 uppercase tracking-wider">
-                Developers matching your tech stack and missing skill roles:
-              </p>
+              <h3 className="text-base font-extrabold text-white mb-4">👥 Friend System Connection</h3>
+              
+              <form onSubmit={handleSendFriendRequest} className="flex gap-2 mb-4">
+                <input
+                  type="email"
+                  value={friendEmailInput}
+                  onChange={e => setFriendEmailInput(e.target.value)}
+                  placeholder="Enter friend email to add..."
+                  className="flex-1 bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-xl px-4 py-2 text-xs text-white outline-none"
+                />
+                <button type="submit" className="px-4 py-2 bg-violet-600 hover:bg-violet-750 text-white rounded-xl text-xs font-bold cursor-pointer">Add</button>
+              </form>
 
-              <div className="space-y-3 text-xs">
-                {matchmakingPool.map((candidate, idx) => (
-                  <div key={idx} className="p-4 bg-slate-950/40 border border-white/5 rounded-2xl flex justify-between items-center gap-4">
-                    <div className="space-y-1 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-white">{candidate.name}</span>
-                        <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-white/5 text-violet-400">{candidate.role}</span>
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider block">Friends list</span>
+                {friends.map(friend => (
+                  <div key={friend.friend_id} className="p-3 bg-white/2 border border-white/5 rounded-2xl flex justify-between items-center text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded bg-indigo-600 flex items-center justify-center text-white font-bold">{friend.friend_name?.charAt(0).toUpperCase()}</div>
+                      <div>
+                        <p className="font-bold text-white">{friend.friend_name}</p>
+                        <span className="text-[9px] text-slate-500">{friend.friend_email}</span>
                       </div>
-                      <p className="text-[10px] text-slate-500 leading-normal">{candidate.reason}</p>
                     </div>
 
-                    <div className="text-right shrink-0">
-                      <span className="text-xs font-black text-emerald-400 block">{candidate.rate}% Match</span>
-                      <button 
-                        onClick={() => { toast.success(`Invitation sent to ${candidate.name}!`); setShowMatchmaker(false); }}
-                        className="mt-1.5 px-2.5 py-1 bg-violet-650 hover:bg-violet-750 text-white font-bold text-[9px] rounded-lg transition cursor-pointer"
-                      >
-                        Recruit
-                      </button>
+                    <div>
+                      {friend.status === 'pending' ? (
+                        friend.is_requester ? (
+                          <span className="text-[9px] uppercase tracking-wider text-amber-500 font-bold bg-amber-500/10 px-2 py-0.5 rounded">Pending</span>
+                        ) : (
+                          <button onClick={() => handleAcceptFriendRequest(friend.friend_id)} className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[9px] rounded-lg cursor-pointer">Accept</button>
+                        )
+                      ) : (
+                        <span className="text-[9px] uppercase tracking-wider text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">Connected</span>
+                      )}
                     </div>
                   </div>
                 ))}
+                {friends.length === 0 && (
+                  <p className="text-xs text-slate-500 text-center py-6">No connected friends. Try adding one by email.</p>
+                )}
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* CALENDAR SCHEDULER MODAL */}
+      <AnimatePresence>
+        {showCalendar && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
+              <button onClick={() => setShowCalendar(false)} className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+
+              <h3 className="text-base font-extrabold text-white mb-2 flex items-center gap-1.5">
+                📅 Event Calendar Scheduler
+              </h3>
+              <p className="text-[10px] text-slate-500 mb-4 uppercase tracking-wider">Schedule mock interviews, webinars, or webinars.</p>
+              
+              <form onSubmit={handleScheduleEvent} className="space-y-3 mb-4 text-xs border-b border-white/5 pb-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    required
+                    value={newEventTitle}
+                    onChange={e => setNewEventTitle(e.target.value)}
+                    placeholder="Event Title..."
+                    className="bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-xl px-3 py-2 text-white outline-none"
+                  />
+                  <input
+                    type="datetime-local"
+                    required
+                    value={newEventTime}
+                    onChange={e => setNewEventTime(e.target.value)}
+                    className="bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-xl px-3 py-2 text-white outline-none"
+                  />
+                </div>
+                <button type="submit" className="w-full py-2 bg-violet-650 hover:bg-violet-750 text-white rounded-xl text-xs font-bold cursor-pointer">Schedule Event</button>
+              </form>
+
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {events.map(ev => (
+                  <div key={ev.id} className="p-3 bg-white/2 border border-white/5 rounded-2xl flex justify-between items-center text-xs">
+                    <div>
+                      <p className="font-bold text-white">{ev.title}</p>
+                      <span className="text-[9px] text-slate-500">{new Date(ev.start_time).toLocaleString()}</span>
+                    </div>
+                    <span className="text-[9px] uppercase bg-violet-500/10 text-violet-400 font-bold px-2 py-0.5 rounded">{ev.event_type}</span>
+                  </div>
+                ))}
+                {events.length === 0 && (
+                  <p className="text-xs text-slate-500 text-center py-6">No scheduled sessions. Schedule a webinar above.</p>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* GAMIFICATION LEADERBOARD MODAL */}
+      <AnimatePresence>
+        {showLeaderboard && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} className="bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
+              <button onClick={() => setShowLeaderboard(false)} className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+
+              <h3 className="text-base font-extrabold text-white mb-2 flex items-center gap-1.5">
+                🏆 Space Contributor Leaderboard
+              </h3>
+              <p className="text-[10px] text-slate-500 mb-4 uppercase tracking-wider">Top contributors based on messages sent, peer help, and community XP.</p>
+
+              <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                {leaderboard.map((userRank, idx) => (
+                  <div key={userRank.id} className="p-3.5 bg-white/2 border border-white/5 rounded-2xl flex justify-between items-center text-xs">
+                    <div className="flex items-center gap-3">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center font-extrabold text-xs ${idx === 0 ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/20' : idx === 1 ? 'bg-slate-350 text-black' : idx === 2 ? 'bg-amber-700 text-white' : 'bg-white/5 text-slate-400'}`}>
+                        {idx + 1}
+                      </span>
+                      <div>
+                        <p className="font-bold text-white">{userRank.name}</p>
+                        <span className="text-[9px] text-slate-500">{userRank.message_count} messages sent</span>
+                      </div>
+                    </div>
+                    <span className="font-black text-violet-400">{userRank.total_xp} XP</span>
+                  </div>
+                ))}
+                {leaderboard.length === 0 && (
+                  // Mock Rank fallback if empty
+                  <div className="space-y-2">
+                    {[
+                      { name: 'Kavya Sharma', xp: 580, msg: 45 },
+                      { name: 'You', xp: 320, msg: 21 },
+                      { name: 'Rahul K.', xp: 280, msg: 19 }
+                    ].map((m, idx) => (
+                      <div key={idx} className="p-3 bg-white/2 border border-white/5 rounded-2xl flex justify-between items-center text-xs">
+                        <div className="flex items-center gap-3">
+                          <span className="w-5 h-5 rounded-full bg-white/5 text-slate-400 text-center text-[10px] flex items-center justify-center font-extrabold">{idx + 1}</span>
+                          <div>
+                            <p className="font-bold text-white">{m.name}</p>
+                            <span className="text-[9px] text-slate-500">{m.msg} messages</span>
+                          </div>
+                        </div>
+                        <span className="font-black text-violet-400">{m.xp} XP</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* USER PROFILE MODAL */}
+      <AnimatePresence>
+        {showProfile && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] rounded-3xl p-6 w-full max-w-md shadow-2xl relative text-xs">
+              <button onClick={() => setShowProfile(false)} className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex flex-col items-center border-b border-white/5 pb-4">
+                <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-violet-500 to-indigo-650 flex items-center justify-center font-extrabold text-white text-2xl shadow-lg border-2 border-violet-500/20">
+                  {user?.name?.charAt(0).toUpperCase()}
+                </div>
+                <h3 className="text-base font-extrabold text-white mt-3">{user?.name}</h3>
+                <span className="text-[9px] uppercase tracking-widest text-violet-400 font-bold px-2 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 mt-1">{user?.role}</span>
+              </div>
+
+              <div className="py-4 space-y-4">
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="p-3 bg-white/2 border border-white/5 rounded-2xl">
+                    <span className="text-slate-500 text-[10px] block uppercase font-bold">Level</span>
+                    <span className="font-extrabold text-sm text-white">4</span>
+                  </div>
+                  <div className="p-3 bg-white/2 border border-white/5 rounded-2xl">
+                    <span className="text-slate-500 text-[10px] block uppercase font-bold">Total XP</span>
+                    <span className="font-extrabold text-sm text-amber-500">320</span>
+                  </div>
+                  <div className="p-3 bg-white/2 border border-white/5 rounded-2xl">
+                    <span className="text-slate-500 text-[10px] block uppercase font-bold">Streak</span>
+                    <span className="font-extrabold text-sm text-cyan-400">5 Days</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="text-slate-450 font-bold block">Biographical outline</span>
+                  <p className="text-slate-300 leading-normal bg-black/20 p-3 rounded-xl border border-white/5">
+                    "Computer Science undergrad. Interested in algorithms, PostgreSQL DB modeling, and building multiplayer React engines."
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="text-slate-455 font-bold block">Unlocked Achievements Badges</span>
+                  <div className="flex gap-2">
+                    <span className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/25 rounded-xl text-amber-400 font-bold text-[10px] flex items-center gap-1">🏆 Java Warrior</span>
+                    <span className="px-2.5 py-1 bg-cyan-500/10 border border-cyan-500/25 rounded-xl text-cyan-400 font-bold text-[10px] flex items-center gap-1">🎓 Top Contributor</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* REPORT USER MODAL */}
+      <AnimatePresence>
+        {showReportModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] rounded-3xl p-6 w-full max-w-sm shadow-2xl relative">
+              <button onClick={() => setShowReportModal(false)} className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+
+              <h3 className="text-base font-extrabold text-white mb-2">🛡️ Report User Conduct</h3>
+              <p className="text-[10px] text-slate-400 mb-4">Report violations to workspace moderators against user: <strong>{reportTargetUser?.name}</strong>.</p>
+              
+              <form onSubmit={handleSubmitReport} className="space-y-4 text-xs">
+                <div className="space-y-1.5">
+                  <label className="text-slate-450 block font-bold">Reason for Report</label>
+                  <textarea required value={reportReason} onChange={e => setReportReason(e.target.value)} placeholder="Provide context (spamming, profanity, duplicate messages)..." className="w-full h-24 bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-xl p-3 text-white outline-none resize-none focus:border-rose-500" />
+                </div>
+                <button type="submit" className="w-full py-3 bg-red-650 hover:bg-red-750 text-white rounded-xl font-bold text-xs transition cursor-pointer">Submit Report</button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* GLOBAL SEARCH DIALOG OVERLAY */}
+      <AnimatePresence>
+        {showSearch && (
+          <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-start justify-center pt-20 px-4" onClick={() => setShowSearch(false)}>
+            <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -20, opacity: 0 }} onClick={e => e.stopPropagation()} className="w-full max-w-lg rounded-3xl bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] p-4 shadow-2xl space-y-4">
+              <div className="flex items-center gap-2 bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-2xl px-4 py-3">
+                <Search className="w-4 h-4 text-slate-500" />
+                <input
+                  type="text"
+                  autoFocus
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Global search rooms, messages, or friends..."
+                  className="flex-1 bg-transparent text-xs text-white outline-none"
+                />
+                <button onClick={() => setShowSearch(false)} className="text-[10px] text-slate-500 hover:text-white uppercase font-bold">ESC</button>
+              </div>
+
+              {searchQuery && (
+                <div className="space-y-4 max-h-80 overflow-y-auto text-xs pr-1">
+                  <span className="text-[9px] uppercase font-black text-slate-500 tracking-wider block">Search Results</span>
+                  
+                  {/* Filtered rooms */}
+                  {rooms.filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase())).map(r => (
+                    <button key={r.id} onClick={() => { setActiveRoom(r); setShowSearch(false); }} className="w-full p-2.5 bg-white/2 hover:bg-violet-650/10 border border-white/5 rounded-xl text-left font-bold text-slate-200 transition flex justify-between items-center cursor-pointer">
+                      <span># {r.name}</span>
+                      <span className="text-[9px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded">{r.category}</span>
+                    </button>
+                  ))}
+                  
+                  {/* Filtered messages */}
+                  {messages.filter(m => m.text?.toLowerCase().includes(searchQuery.toLowerCase())).map(m => (
+                    <div key={m.id} className="p-3 bg-white/2 border border-white/5 rounded-xl text-left space-y-1">
+                      <div className="flex justify-between text-[9px] text-slate-500">
+                        <strong>{m.sender_name}</strong>
+                        <span>{new Date(m.created_at).toLocaleString()}</span>
+                      </div>
+                      <p className="text-slate-350 leading-normal">{m.text}</p>
+                    </div>
+                  ))}
+                  
+                  {rooms.filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 &&
+                   messages.filter(m => m.text?.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                    <p className="text-xs text-slate-500 text-center py-6">No matching results found.</p>
+                  )}
+                </div>
+              )}
             </motion.div>
           </div>
         )}
@@ -1829,3 +1981,7 @@ function DeveloperHubSubsystem() {
   );
 }
 
+// Simple fallback icon mapping
+function CodeLanguageIcon({ className }) {
+  return <Award className={className} />;
+}
