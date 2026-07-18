@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import Editor from '@monaco-editor/react';
 import { 
   X, Trophy, Clock, Users, Zap, CheckCircle2, BookOpen, Code2, Palette, Server,
   Plus, Search, Filter, MessageSquare, Phone, Edit, Calendar, UserPlus, Share2, 
@@ -228,80 +229,7 @@ export default function Community() {
 
         {/* CHALLENGES */}
         {activeTab === 'challenges' && (
-          <motion.div key="challenges" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
-            {/* Joined Banner */}
-            {Object.keys(joinedChallenges).length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5"
-              >
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <p className="text-xs font-semibold text-emerald-400">
-                  You are participating in <strong>{Object.keys(joinedChallenges).length}</strong> challenge{Object.keys(joinedChallenges).length > 1 ? 's' : ''}. Complete them to earn XP!
-                </p>
-              </motion.div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {challenges.map(ch => {
-                const joined = !!joinedChallenges[ch.id];
-                const Icon = CHALLENGE_ICONS[ch.type] || Zap;
-                return (
-                  <motion.div
-                    key={ch.id}
-                    whileHover={{ y: -2 }}
-                    onClick={() => setSelectedChallenge(ch)}
-                    className="p-5 rounded-2xl border cursor-pointer transition-all flex flex-col gap-3 relative overflow-hidden"
-                    style={{
-                      backgroundColor: 'var(--db-card-bg)',
-                      borderColor: joined ? 'rgba(139,92,246,0.5)' : 'var(--db-sidebar-border)',
-                      boxShadow: joined ? '0 0 0 1px rgba(139,92,246,0.3)' : 'none',
-                    }}
-                  >
-                    {joined && <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl pointer-events-none" />}
-
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(139,92,246,0.12)' }}>
-                          <Icon className="w-4 h-4 text-violet-400" />
-                        </div>
-                        <h3 className="text-sm font-bold leading-tight" style={{ color: 'var(--db-text-main)' }}>{ch.title}</h3>
-                      </div>
-                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md shrink-0 ml-2 ${difficultyStyle(ch.difficulty)}`}>
-                        {ch.difficulty}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs" style={{ color: 'var(--db-text-muted)' }}>
-                      <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {ch.participants} participants</span>
-                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {ch.deadline}</span>
-                      <span className="flex items-center gap-1 font-bold" style={{ color: 'var(--db-text-accent)' }}>
-                        <Zap className="w-3 h-3" />+{ch.xp} XP
-                      </span>
-                    </div>
-
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md w-fit" style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)' }}>{ch.type}</span>
-
-                    <button
-                      onClick={(e) => handleJoinChallenge(ch, e)}
-                      className={`w-full py-2.5 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 ${
-                        joined
-                          ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-red-600 hover:to-rose-600'
-                          : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700'
-                      }`}
-                    >
-                      {joined ? (
-                        <><CheckCircle2 className="w-3.5 h-3.5" /> Joined — Click to Leave</>
-                      ) : (
-                        <><Trophy className="w-3.5 h-3.5" /> Join Challenge</>
-                      )}
-                    </button>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
+          <AIChallengeArena user={user} />
         )}
 
         {/* DOUBT SOLVING */}
@@ -1825,6 +1753,598 @@ function DeveloperHubSubsystem() {
         )}
       </AnimatePresence>
 
+    </div>
+  );
+}
+
+// ── AI CHALLENGE ARENA SUBSYSTEM ──────────────────────────────────────────
+function AIChallengeArena({ user }) {
+  const [view, setView] = useState('dashboard'); // dashboard, matchmaking, arena, results, admin
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [selectedChallenge, setSelectedChallenge] = useState(null);
+  const [battleType, setBattleType] = useState('solo'); // solo, 1v1, team, ai
+  const [aiDifficulty, setAiDifficulty] = useState('Medium'); // Easy, Medium, Hard, Expert, Master, Grandmaster
+  
+  // Game states
+  const [timeRemaining, setTimeRemaining] = useState(600); // 10 minutes count
+  const [codeContent, setCodeContent] = useState('// Write your coding solution here...\nfunction solve(input) {\n  return input;\n}');
+  const [consoleOutput, setConsoleOutput] = useState('Terminal ready. Run code to execute logic...');
+  const [isCompiling, setIsCompiling] = useState(false);
+  const [opponentProgress, setOpponentProgress] = useState(0);
+  const [aiAnalyzerFeed, setAiAnalyzerFeed] = useState([
+    '🤖 AI Judge: Ready to evaluate constraints...',
+    '🤖 AI Assistant: Keep track of potential array index bounds!'
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [arenaChat, setArenaChat] = useState([
+    { sender: 'AI Judge', text: 'Match initiated. Best of luck developers!' }
+  ]);
+
+  // Results Screen Data
+  const [resultData, setResultData] = useState({
+    winner: 'You',
+    runnerUp: 'Simulated Peer',
+    score: 92,
+    accuracy: 95,
+    quality: 90,
+    complexity: 'O(N log N) time, O(1) space',
+    strengths: ['Optimal search structure', 'Clean variable naming', 'Edge case checks covered'],
+    weaknesses: ['Redundant condition checks in helper', 'Could add inline documentation'],
+    feedback: 'Excellent work. Your binary search variant handles duplicates correctly. Optimize the loop conditions for maximum throughput.'
+  });
+
+  // Admin states
+  const [customChallenges, setCustomChallenges] = useState([]);
+  const [newTitle, setNewTitle] = useState('');
+  const [newDifficulty, setNewDifficulty] = useState('Medium');
+  const [newCategory, setNewCategory] = useState('Algorithms');
+  const [newXp, setNewXp] = useState(250);
+
+  // Mock list of challenges
+  const categories = [
+    'All', 'Programming', 'Data Structures', 'Algorithms', 'AI', 'Machine Learning', 
+    'Web Dev', 'Cyber Security', 'Cloud Computing', 'Database', 'SQL', 'Aptitude', 'Quiz Battle'
+  ];
+
+  const challengesList = [
+    { id: 1, title: 'Weekly Algorithm Sprint', difficulty: 'Medium', category: 'Algorithms', xp: 200, coins: 50, estTime: '20 min', successRate: '82%', trending: true, activePlayers: 14, prize: '$100 Pool' },
+    { id: 2, title: 'Database Optimization Battle', difficulty: 'Hard', category: 'Database', xp: 350, coins: 100, estTime: '30 min', successRate: '54%', trending: false, activePlayers: 8, prize: 'DBMS Master Badge' },
+    { id: 3, title: 'React Performance Contest', difficulty: 'Medium', category: 'Web Dev', xp: 150, coins: 40, estTime: '15 min', successRate: '88%', trending: true, activePlayers: 29, prize: 'React Frame' },
+    { id: 4, title: 'AI Neural Net Architecture', difficulty: 'Hard', category: 'Machine Learning', xp: 400, coins: 120, estTime: '45 min', successRate: '32%', trending: true, activePlayers: 5, prize: 'AI Badge' },
+    { id: 5, title: 'SQL Query Speedrun', difficulty: 'Easy', category: 'SQL', xp: 100, coins: 20, estTime: '10 min', successRate: '94%', trending: false, activePlayers: 42, prize: '50 Coins' }
+  ];
+
+  // Matchmaking simulation
+  useEffect(() => {
+    let interval;
+    if (view === 'matchmaking') {
+      let progress = 0;
+      interval = setInterval(() => {
+        progress += 25;
+        if (progress >= 100) {
+          clearInterval(interval);
+          setView('arena');
+          setTimeRemaining(600);
+          setOpponentProgress(0);
+          simulateOpponent();
+        }
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [view]);
+
+  // Game timer countdown simulation
+  useEffect(() => {
+    let interval;
+    if (view === 'arena' && timeRemaining > 0) {
+      interval = setInterval(() => {
+        setTimeRemaining(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [view, timeRemaining]);
+
+  // Simulate opponent activity in 1v1 Battle
+  const simulateOpponent = () => {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.floor(Math.random() * 15) + 5;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(interval);
+      }
+      setOpponentProgress(progress);
+    }, 4000);
+
+    // AI Analysis simulation streams
+    setTimeout(() => {
+      setAiAnalyzerFeed(prev => [...prev, '🤖 AI Judge: Opponent has successfully run public test cases.']);
+    }, 8000);
+    setTimeout(() => {
+      setAiAnalyzerFeed(prev => [...prev, '🤖 AI Advisor: Your time complexity is lower than your opponent’s. Keep optimizing.']);
+    }, 15000);
+  };
+
+  // Compile / Run Code simulation
+  const handleRunCode = () => {
+    setIsCompiling(true);
+    setConsoleOutput('Compiling code...\nVerifying assertions in virtual container sandbox...');
+    setTimeout(() => {
+      setIsCompiling(false);
+      setConsoleOutput('Output:\nTest Case 1 passed: Input: [2, 7, 11, 15] Target: 9 => Success!\nTest Case 2 passed: Input: [3, 2, 4] Target: 6 => Success!\nCompilation status: Clean.\nExecuted in 45ms.');
+      toast.success('Test cases completed successfully!');
+    }, 1200);
+  };
+
+  // Submit Solution / AI Judge evaluation simulation
+  const handleSubmitSolution = () => {
+    const loader = toast.loading('AI Judge is performing comprehensive evaluations...');
+    setTimeout(() => {
+      toast.dismiss(loader);
+      toast.success('Evaluation complete! Transitioning to result board.');
+      setView('results');
+    }, 2000);
+  };
+
+  // Filtered challenges
+  const filteredChallenges = challengesList.filter(ch => 
+    activeCategory === 'All' || ch.category === activeCategory
+  );
+
+  return (
+    <div className="space-y-6 pb-8">
+      {/* ARENA HEADER STATUS WIDGETS */}
+      <div className="flex justify-between items-center bg-slate-900/60 p-4 border border-[var(--db-sidebar-border)] rounded-2xl">
+        <div className="flex items-center gap-2">
+          <Trophy className="w-5 h-5 text-violet-400" />
+          <div>
+            <h2 className="text-sm font-extrabold text-white font-sans">EDUVERSE AI Battle Arena</h2>
+            <p className="text-[10px] uppercase font-black text-violet-400/80 tracking-wider">Level 12 • Season 4 Pass Active</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 text-xs font-bold">
+          <span className="flex items-center gap-1"><Zap className="w-3.5 h-3.5 text-amber-500 fill-current" /> Streak: 5 Days</span>
+          <span className="bg-violet-650/20 border border-violet-500/20 px-3 py-1 rounded-xl text-violet-400 font-extrabold cursor-pointer hover:bg-violet-600 hover:text-white transition" onClick={() => setView('admin')}>Admin Panel</span>
+        </div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        
+        {/* VIEW 1: ARENA DASHBOARD */}
+        {view === 'dashboard' && (
+          <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+            
+            {/* Category Selectors */}
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1">
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition cursor-pointer border ${
+                    activeCategory === cat
+                      ? 'bg-violet-650 border-violet-500 text-white shadow-lg shadow-violet-600/10'
+                      : 'bg-[var(--db-card-bg)] border-[var(--db-sidebar-border)] text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {/* Dashboard Sections Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              {/* Challenges Columns */}
+              <div className="lg:col-span-2 space-y-6">
+                
+                {/* Daily Sprints & bot Battles */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  {/* Daily instant challenge widget */}
+                  <div className="p-5 rounded-3xl border border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent space-y-3 relative overflow-hidden">
+                    <span className="absolute right-3 top-3 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded">Daily Blitz</span>
+                    <Zap className="w-8 h-8 text-amber-400" />
+                    <div>
+                      <h4 className="text-sm font-extrabold text-white">Daily Coding Challenge</h4>
+                      <p className="text-[11px] text-slate-450 mt-1">Implement an optimized LRU cache with O(1) lookup speed constraints.</p>
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <button onClick={() => { setBattleType('solo'); setView('matchmaking'); }} className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-black text-[10px] font-black rounded-xl transition cursor-pointer">Play Solo</button>
+                      <button onClick={() => { setBattleType('ai'); setView('matchmaking'); }} className="px-3.5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[10px] font-black rounded-xl transition cursor-pointer">Battle AI</button>
+                    </div>
+                  </div>
+
+                  {/* 1v1 challenge matching */}
+                  <div className="p-5 rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-transparent space-y-3 relative overflow-hidden">
+                    <span className="absolute right-3 top-3 bg-violet-500/10 text-violet-400 border border-violet-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded">Multiplayer</span>
+                    <Users className="w-8 h-8 text-violet-400" />
+                    <div>
+                      <h4 className="text-sm font-extrabold text-white">Ranked 1v1 Battle</h4>
+                      <p className="text-[11px] text-slate-455 mt-1">Match instantly with peers globally in your skill class.</p>
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <button onClick={() => { setBattleType('1v1'); setView('matchmaking'); }} className="px-4 py-1.5 bg-violet-650 hover:bg-violet-750 text-white text-[10px] font-black rounded-xl transition cursor-pointer">Find Match</button>
+                      <button onClick={() => { setBattleType('team'); setView('matchmaking'); }} className="px-4 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[10px] font-black rounded-xl transition cursor-pointer">Team Sprint (3v3)</button>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Challenges listing block */}
+                <div className="space-y-4">
+                  <span className="text-[10px] font-black uppercase text-slate-500 block tracking-widest">🔥 Live & Featured Competitions</span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredChallenges.map(ch => (
+                      <div key={ch.id} className="p-5 rounded-3xl bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] flex flex-col justify-between gap-3 relative overflow-hidden hover:border-violet-500/20 transition-all">
+                        {ch.trending && <span className="absolute top-3 right-3 text-[9px] uppercase font-black px-2 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-violet-400">Trending</span>}
+                        
+                        <div className="space-y-1">
+                          <span className="text-[9px] font-bold text-slate-500 uppercase">{ch.category}</span>
+                          <h4 className="text-xs font-black text-white">{ch.title}</h4>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-1.5 text-center bg-black/20 p-2 rounded-xl text-[10px]">
+                          <div>
+                            <span className="text-slate-500 block text-[8px]">XP</span>
+                            <span className="font-bold text-violet-400">+{ch.xp}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block text-[8px]">Est Time</span>
+                            <span className="font-bold text-slate-300">{ch.estTime}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block text-[8px]">Rate</span>
+                            <span className="font-bold text-emerald-400">{ch.successRate}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="text-slate-500">{ch.activePlayers} active now</span>
+                          <button onClick={() => { setSelectedChallenge(ch); setView('matchmaking'); }} className="px-3.5 py-1.5 bg-violet-650 hover:bg-violet-750 text-white rounded-xl font-bold cursor-pointer transition">Launch Arena</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Sidebar Widget rankings */}
+              <div className="space-y-6">
+                
+                {/* Mini Leaderboard ranking */}
+                <div className="p-5 rounded-3xl bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] space-y-4">
+                  <div className="flex items-center gap-1.5 border-b border-white/5 pb-2">
+                    <Trophy className="w-4 h-4 text-violet-400" />
+                    <span className="text-[10px] font-black uppercase text-white tracking-wider">Arena Leaderboard</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {[
+                      { rank: 1, name: 'Ananya S.', rating: 2840, title: 'Grandmaster' },
+                      { rank: 2, name: 'Rahul K.', rating: 2420, title: 'Master' },
+                      { rank: 3, name: 'Kavya Sharma', rating: 2190, title: 'Expert' }
+                    ].map(userRank => (
+                      <div key={userRank.rank} className="flex justify-between items-center text-xs p-2 bg-white/2 rounded-xl border border-white/5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[10px] text-slate-500">#{userRank.rank}</span>
+                          <div>
+                            <p className="font-bold text-white">{userRank.name}</p>
+                            <span className="text-[9px] text-violet-400 font-bold uppercase">{userRank.title}</span>
+                          </div>
+                        </div>
+                        <span className="font-mono font-bold text-slate-355">{userRank.rating} ELO</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* AI Skills constraints radar review */}
+                <div className="p-5 rounded-3xl bg-slate-900/40 border border-white/5 space-y-3">
+                  <span className="text-[10px] font-black uppercase text-indigo-400 block tracking-widest">🤖 AI Career Recommendation</span>
+                  <p className="text-[11px] text-slate-405 leading-normal">
+                    AI predicts you have a <strong>91% match</strong> for Web Dev SRE roles. Improve your *Database Queries & Optimization* stats in the arena to unlock higher tiers.
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
+
+          </motion.div>
+        )}
+
+        {/* VIEW 2: ANIMATED MATCHMAKER RADAR */}
+        {view === 'matchmaking' && (
+          <motion.div key="matchmaking" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center p-12 border border-white/5 rounded-3xl bg-slate-955/40 min-h-[350px]">
+            <div className="relative w-28 h-28 flex items-center justify-center mb-6">
+              <div className="absolute inset-0 rounded-full border border-violet-500/40 animate-ping" />
+              <div className="absolute inset-2 rounded-full border border-violet-500/20 animate-pulse" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center text-white font-extrabold shadow-[0_0_30px_rgba(139,92,246,0.4)]">
+                AI
+              </div>
+            </div>
+            
+            <h3 className="text-base font-extrabold text-white">
+              {battleType === 'ai' ? `Initiating Battle vs AI Bot (${aiDifficulty})` : 'Finding Competitive Match...'}
+            </h3>
+            <p className="text-xs text-[var(--db-text-muted)] mt-1.5 max-w-sm text-center">
+              Evaluating ELO ratings, topic accuracy profiles, and setting up sandbox runtime environments.
+            </p>
+
+            {battleType === 'ai' && (
+              <div className="mt-4 flex gap-1 bg-slate-900 p-1 rounded-xl border border-white/5">
+                {['Easy', 'Medium', 'Hard', 'Grandmaster'].map(d => (
+                  <button
+                    key={d}
+                    onClick={() => setAiDifficulty(d)}
+                    className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition ${aiDifficulty === d ? 'bg-violet-650 text-white' : 'text-slate-500 hover:text-white'}`}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* VIEW 3: LIVE BATTLE ARENA */}
+        {view === 'arena' && (
+          <motion.div key="arena" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Left Side constraints column */}
+            <div className="space-y-4">
+              <div className="p-5 rounded-3xl bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] space-y-4 h-[350px] overflow-y-auto">
+                <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                  <span className="text-[10px] font-black uppercase text-violet-400 tracking-wider">Problem Description</span>
+                  <span className="font-mono text-xs text-amber-500 font-extrabold">⏳ {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}</span>
+                </div>
+
+                <div className="space-y-3 text-xs leading-relaxed text-slate-205">
+                  <h3 className="text-sm font-extrabold text-white font-sans">Find First Duplicate Elements</h3>
+                  <p>
+                    Given an array of integers `nums`, find the first recurring duplicate index. If no duplicates exist, return `-1`.
+                  </p>
+                  <p className="font-mono bg-black/30 p-2.5 rounded-lg border border-white/5 text-[11px]">
+                    Input: nums = [2, 1, 3, 5, 3, 2]<br />
+                    Output: 3
+                  </p>
+                  <div>
+                    <span className="font-bold text-slate-400">Constraints:</span>
+                    <ul className="list-disc pl-4 space-y-1 mt-1 text-[11px] text-slate-450">
+                      <li>Time Complexity: O(N) constraint</li>
+                      <li>Space Complexity: O(N) or lower</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Execution console output */}
+              <div className="p-5 rounded-3xl bg-black/45 border border-white/5 space-y-2 h-[180px] flex flex-col justify-between">
+                <div>
+                  <span className="text-[9px] font-black uppercase text-slate-500 block tracking-widest">Sandbox Terminal Output</span>
+                  <pre className="font-mono text-[10px] text-slate-300 overflow-y-auto max-h-24 whitespace-pre-wrap">{consoleOutput}</pre>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={handleRunCode} disabled={isCompiling} className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition cursor-pointer">{isCompiling ? 'Compiling...' : 'Run Code'}</button>
+                  <button onClick={handleSubmitSolution} className="flex-1 py-2 bg-gradient-to-r from-violet-600 to-indigo-650 text-white rounded-xl text-xs font-bold hover:opacity-90 transition cursor-pointer">Submit Solution</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Monaco code workspace panel */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="rounded-3xl border border-[var(--db-sidebar-border)] bg-slate-950 overflow-hidden h-[350px]">
+                <Editor
+                  height="100%"
+                  language="javascript"
+                  theme="vs-dark"
+                  value={codeContent}
+                  onChange={(val) => setCodeContent(val)}
+                  options={{
+                    fontSize: 12,
+                    minimap: { enabled: false },
+                    automaticLayout: true
+                  }}
+                />
+              </div>
+
+              {/* Multiplayer / bot activity panel */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* Opponent Progress indicators */}
+                <div className="p-4 bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] rounded-3xl space-y-3">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-white flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-indigo-400" /> Opponent Progress</span>
+                    <span className="font-mono font-bold text-indigo-400">{opponentProgress}%</span>
+                  </div>
+                  <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                    <div className="bg-gradient-to-r from-indigo-500 to-violet-600 h-full rounded-full transition-all duration-1000" style={{ width: `${opponentProgress}%` }} />
+                  </div>
+                  <p className="text-[10px] text-slate-500 italic">
+                    {opponentProgress === 100 ? 'Opponent submitted solution!' : 'Opponent is writing solution code...'}
+                  </p>
+                </div>
+
+                {/* AI Live analysis helper */}
+                <div className="p-4 bg-slate-900 border border-white/5 rounded-3xl space-y-2">
+                  <span className="text-[10px] font-black uppercase text-amber-500 block tracking-widest flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 animate-pulse" /> AI Live Assessor</span>
+                  <div className="space-y-1.5 max-h-16 overflow-y-auto pr-1 text-slate-350">
+                    {aiAnalyzerFeed.map((feed, idx) => (
+                      <p key={idx} className="text-[10px] leading-normal">{feed}</p>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </motion.div>
+        )}
+
+        {/* VIEW 4: RESULTS DASHBOARD */}
+        {view === 'results' && (
+          <motion.div key="results" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+            
+            {/* Header victory banner */}
+            <div className="p-8 rounded-3xl border border-emerald-500/20 bg-gradient-to-tr from-emerald-500/5 to-transparent text-center space-y-2 relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(rgba(16,185,129,0.04)_1px,transparent_1px)] [background-size:20px_20px]" />
+              <h2 className="text-2xl font-black text-white font-sans">🏆 Victory! You Won the Battle</h2>
+              <p className="text-xs text-slate-400">Evaluated in real-time by the EDUVERSE AI Judge Sandbox</p>
+            </div>
+
+            {/* Comparison statistics grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              <div className="lg:col-span-2 space-y-6">
+                
+                {/* Metric comparisons */}
+                <div className="p-5 rounded-3xl bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] space-y-4">
+                  <span className="text-[10px] font-black uppercase text-slate-505 block tracking-widest">Performance comparison</span>
+                  
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="p-4 bg-white/2 border border-white/5 rounded-2xl">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">AI Judge Score</span>
+                      <span className="text-lg font-black text-white">{resultData.score}/100</span>
+                    </div>
+                    <div className="p-4 bg-white/2 border border-white/5 rounded-2xl">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Accuracy rate</span>
+                      <span className="text-lg font-black text-emerald-400">{resultData.accuracy}%</span>
+                    </div>
+                    <div className="p-4 bg-white/2 border border-white/5 rounded-2xl">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Code Quality</span>
+                      <span className="text-lg font-black text-violet-400">{resultData.quality}%</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 text-xs">
+                    <span className="font-bold text-slate-400">Complexity evaluated:</span>
+                    <p className="font-mono text-slate-200">{resultData.complexity}</p>
+                  </div>
+                </div>
+
+                {/* AI Review detail breakdown */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-5 rounded-3xl bg-emerald-500/5 border border-emerald-500/10 space-y-2">
+                    <span className="text-[10px] font-black uppercase text-emerald-400 block tracking-widest">💪 Strengths</span>
+                    <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-350">
+                      {resultData.strengths.map((str, idx) => <li key={idx}>{str}</li>)}
+                    </ul>
+                  </div>
+
+                  <div className="p-5 rounded-3xl bg-rose-500/5 border border-rose-500/10 space-y-2">
+                    <span className="text-[10px] font-black uppercase text-rose-400 block tracking-widest">⏳ Optimization Points</span>
+                    <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-355">
+                      {resultData.weaknesses.map((weak, idx) => <li key={idx}>{weak}</li>)}
+                    </ul>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* AI Recommendations sidebar panel */}
+              <div className="p-5 rounded-3xl bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] space-y-6">
+                <div className="space-y-2 border-b border-white/5 pb-4">
+                  <span className="text-[10px] font-black uppercase text-violet-400 tracking-widest block">AI Mentor Feedback</span>
+                  <p className="text-[11px] leading-relaxed text-slate-300">{resultData.feedback}</p>
+                </div>
+
+                {/* Badges and certificates rewards buttons */}
+                <div className="space-y-3">
+                  <button onClick={() => toast.success('Certificate download initialized!')} className="w-full py-2.5 bg-violet-650 hover:bg-violet-750 text-white rounded-xl text-[10px] uppercase font-black tracking-wider transition cursor-pointer font-sans font-bold">Download Certificate</button>
+                  <button onClick={() => setView('dashboard')} className="w-full py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl text-[10px] uppercase font-black tracking-wider transition cursor-pointer font-sans font-bold">Return to Arena</button>
+                </div>
+              </div>
+
+            </div>
+
+          </motion.div>
+        )}
+
+        {/* VIEW 5: ADMIN CREATOR LOG PANEL */}
+        {view === 'admin' && (
+          <motion.div key="admin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+            <div className="flex justify-between items-center border-b border-white/5 pb-4">
+              <div>
+                <h3 className="text-base font-extrabold text-white">⚙️ Arena Administrator Panel</h3>
+                <p className="text-xs text-[var(--db-text-muted)]">Configure prompts, audit contest profiles, and schedule events</p>
+              </div>
+              <button onClick={() => setView('dashboard')} className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-bold rounded-xl cursor-pointer">Exit Panel</button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              {/* Form creation constraints column */}
+              <div className="lg:col-span-2 p-5 bg-[var(--db-card-bg)] border border-[var(--db-sidebar-border)] rounded-3xl space-y-4">
+                <span className="text-[10px] font-black uppercase text-white tracking-widest block font-sans font-bold">Add New Challenge Template</span>
+                
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!newTitle) return;
+                  setCustomChallenges(prev => [...prev, { title: newTitle, difficulty: newDifficulty, category: newCategory, xp: newXp }]);
+                  setNewTitle('');
+                  toast.success(`Template "${newTitle}" created!`);
+                }} className="space-y-4 text-xs">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-slate-400 font-bold block">Challenge Title</label>
+                      <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} required placeholder="e.g. Reverse Binary Trees" className="w-full bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-xl px-3 py-2 text-white outline-none focus:border-violet-500" />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-slate-450 font-bold block">Category</label>
+                      <select value={newCategory} onChange={e => setNewCategory(e.target.value)} className="w-full bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-xl p-2 text-white outline-none">
+                        <option value="Algorithms">Algorithms</option>
+                        <option value="Data Structures">Data Structures</option>
+                        <option value="Database">Database</option>
+                        <option value="Web Dev">Web Dev</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-slate-450 font-bold block">Difficulty ELO</label>
+                      <select value={newDifficulty} onChange={e => setNewDifficulty(e.target.value)} className="w-full bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-xl p-2 text-white outline-none">
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-slate-455 font-bold block">XP Allocation</label>
+                      <input type="number" value={newXp} onChange={e => setNewXp(parseInt(e.target.value))} className="w-full bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-xl px-3 py-2 text-white outline-none focus:border-violet-500" />
+                    </div>
+                  </div>
+
+                  <button type="submit" className="w-full py-2.5 bg-violet-650 hover:bg-violet-750 text-white rounded-xl font-bold cursor-pointer transition">Commit Template</button>
+                </form>
+              </div>
+
+              {/* Audit trail list logs column */}
+              <div className="p-5 rounded-3xl bg-slate-900/40 border border-white/5 space-y-4">
+                <span className="text-[10px] font-black uppercase text-indigo-400 block tracking-widest font-sans font-bold">Audit Trail Log</span>
+                
+                <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1 text-[10px]">
+                  {[
+                    '✓ Custom template "Optimized Array Search" approved by evaluator',
+                    '✓ Tournament "College Sprint July" scheduled for 2026-07-28',
+                    '✓ Audit completed: no sandbox anomalies detected',
+                    '✓ User "Rahul K." ELO updated (+45 ELO)'
+                  ].map((log, idx) => (
+                    <div key={idx} className="p-2 bg-white/2 rounded-lg border border-white/5 font-mono text-slate-350">
+                      {log}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </motion.div>
+        )}
+
+      </AnimatePresence>
     </div>
   );
 }
