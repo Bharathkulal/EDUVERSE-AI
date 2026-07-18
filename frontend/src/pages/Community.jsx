@@ -66,6 +66,41 @@ export default function Community() {
   ]);
   const [newPost, setNewPost] = useState('');
   const [doubtQuestion, setDoubtQuestion] = useState('');
+  const [selectedDoubt, setSelectedDoubt] = useState(null);
+  const [newReplyText, setNewReplyText] = useState('');
+  const [doubts, setDoubts] = useState([
+    {
+      id: 1,
+      q: 'What is the difference between HashMap and TreeMap?',
+      subject: 'Java',
+      answers: 2,
+      solved: true,
+      answersList: [
+        { author: 'AI Tutor', avatar: '🤖', text: 'HashMap is based on a hash table and offers O(1) average time complexity for operations. TreeMap is based on a Red-Black tree structure, offering O(log n) time complexity, and keeps its keys sorted.', time: '2h ago' },
+        { author: 'Rohan D.', avatar: 'R', text: 'Use HashMap unless you explicitly need sorting/ordering of keys!', time: '1h ago' }
+      ]
+    },
+    {
+      id: 2,
+      q: 'How to normalize a database to 3NF?',
+      subject: 'DBMS',
+      answers: 1,
+      solved: true,
+      answersList: [
+        { author: 'AI Tutor', avatar: '🤖', text: 'A table is in 3NF if it is in 2NF and there are no transitive dependencies. In other words, every non-key column must depend directly on the primary key, rather than on another non-key column.', time: '3h ago' }
+      ]
+    },
+    {
+      id: 3,
+      q: 'Explain time complexity of merge sort',
+      subject: 'DSA',
+      answers: 1,
+      solved: false,
+      answersList: [
+        { author: 'AI Tutor', avatar: '🤖', text: 'Merge Sort works by recursively dividing the array in half (log N steps) and merging them back (O(N) work per step). Thus, the total complexity is always O(N log N) in all cases.', time: '4h ago' }
+      ]
+    },
+  ]);
 
   // Challenge state
   const [joinedChallenges, setJoinedChallenges] = useState(() => {
@@ -251,7 +286,26 @@ export default function Community() {
                     <span className="text-xs px-2 py-1 rounded-md cursor-pointer" style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)' }}>📷 Add Image</span>
                     <span className="text-xs px-2 py-1 rounded-md cursor-pointer" style={{ backgroundColor: 'var(--db-badge-bg)', color: 'var(--db-badge-text)' }}>📎 Attach Code</span>
                   </div>
-                  <button className="px-5 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold rounded-xl transition-all cursor-pointer">
+                  <button
+                    onClick={() => {
+                      if (!doubtQuestion.trim()) {
+                        toast.error('Please describe your doubt before submitting.');
+                        return;
+                      }
+                      const newDoubt = {
+                        id: Date.now(),
+                        q: doubtQuestion,
+                        subject: 'General',
+                        answers: 0,
+                        solved: false,
+                        answersList: []
+                      };
+                      setDoubts(prev => [newDoubt, ...prev]);
+                      setDoubtQuestion('');
+                      toast.success('Doubt submitted successfully!');
+                    }}
+                    className="px-5 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold rounded-xl transition-all cursor-pointer"
+                  >
                     Submit Doubt
                   </button>
                 </div>
@@ -259,12 +313,13 @@ export default function Community() {
             </div>
 
             <div className="space-y-3">
-              {[
-                { q: 'What is the difference between HashMap and TreeMap?', subject: 'Java', answers: 5, solved: true },
-                { q: 'How to normalize a database to 3NF?', subject: 'DBMS', answers: 3, solved: true },
-                { q: 'Explain time complexity of merge sort', subject: 'DSA', answers: 8, solved: false },
-              ].map((doubt, i) => (
-                <div key={i} className="p-4 rounded-2xl border flex justify-between items-center" style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}>
+              {doubts.map((doubt, i) => (
+                <div
+                  key={doubt.id || i}
+                  onClick={() => setSelectedDoubt(doubt)}
+                  className="p-4 rounded-2xl border flex justify-between items-center hover:border-violet-500/30 transition cursor-pointer"
+                  style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
+                >
                   <div className="space-y-1">
                     <h4 className="text-sm font-bold" style={{ color: 'var(--db-text-main)' }}>{doubt.q}</h4>
                     <div className="flex gap-2 text-xs" style={{ color: 'var(--db-text-muted)' }}>
@@ -372,6 +427,122 @@ export default function Community() {
                     <><Trophy className="w-4 h-4" /> Join Challenge — Earn +{selectedChallenge.xp} XP</>
                   )}
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedDoubt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+            onClick={() => setSelectedDoubt(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 10, opacity: 0 }}
+              transition={{ type: 'spring', duration: 0.4 }}
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-xl rounded-3xl border overflow-hidden flex flex-col max-h-[85vh]"
+              style={{ backgroundColor: 'var(--db-card-bg)', borderColor: 'var(--db-sidebar-border)' }}
+            >
+              {/* Header */}
+              <div className="p-6 border-b bg-gradient-to-r from-violet-600/10 to-indigo-600/5" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-violet-400 bg-violet-500/10 border border-violet-500/20 px-2.5 py-0.5 rounded-lg">{selectedDoubt.subject}</span>
+                    <h3 className="text-base font-extrabold text-white mt-2 leading-snug">{selectedDoubt.q}</h3>
+                  </div>
+                  <button onClick={() => setSelectedDoubt(null)} className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition cursor-pointer">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Answers Area */}
+              <div className="p-6 overflow-y-auto space-y-4 flex-1">
+                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider block">💬 Discussion & Answers ({selectedDoubt.answersList?.length || 0})</span>
+                
+                <div className="space-y-3">
+                  {selectedDoubt.answersList?.map((ans, idx) => (
+                    <div key={idx} className="p-4 rounded-2xl bg-white/2 border border-white/5 space-y-2">
+                      <div className="flex items-center gap-2 text-[10px]">
+                        <div className="w-6 h-6 rounded-full bg-violet-650 flex items-center justify-center text-white font-bold text-[10px]">{ans.avatar}</div>
+                        <strong className="text-slate-200">{ans.author}</strong>
+                        <span className="text-slate-500">• {ans.time}</span>
+                      </div>
+                      <p className="text-xs text-slate-350 leading-relaxed whitespace-pre-wrap">{ans.text}</p>
+                    </div>
+                  ))}
+
+                  {(!selectedDoubt.answersList || selectedDoubt.answersList.length === 0) && (
+                    <p className="text-xs text-slate-500 italic text-center py-4">No answers yet. Share your knowledge or consult AI Tutor!</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Form Input for Answers */}
+              <div className="p-4 border-t bg-slate-950/40" style={{ borderColor: 'var(--db-sidebar-border)' }}>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newReplyText}
+                    onChange={e => setNewReplyText(e.target.value)}
+                    placeholder="Provide your solution or answer..."
+                    className="flex-1 bg-[var(--db-input-bg)] border border-[var(--db-sidebar-border)] rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-violet-500"
+                  />
+                  <button
+                    onClick={() => {
+                      if (!newReplyText.trim()) return;
+                      const newAns = {
+                        author: user?.name || 'You',
+                        avatar: user?.name?.charAt(0).toUpperCase() || 'U',
+                        text: newReplyText,
+                        time: 'Just now'
+                      };
+                      const updatedAnswers = [...(selectedDoubt.answersList || []), newAns];
+                      
+                      setDoubts(prev => prev.map(d => d.id === selectedDoubt.id ? { ...d, answers: updatedAnswers.length, answersList: updatedAnswers } : d));
+                      setSelectedDoubt(prev => ({ ...prev, answers: updatedAnswers.length, answersList: updatedAnswers }));
+                      setNewReplyText('');
+                      toast.success('Solution posted successfully!');
+                    }}
+                    className="px-4 py-2 bg-violet-600 hover:bg-violet-750 text-white font-bold text-xs rounded-xl cursor-pointer transition"
+                  >
+                    Reply
+                  </button>
+                </div>
+                
+                {/* AI Tutor Help Trigger */}
+                <div className="flex justify-between items-center mt-2.5">
+                  <span className="text-[10px] text-slate-500">Peer discussions are monitored by AI Judge.</span>
+                  <button
+                    onClick={() => {
+                      const loader = toast.loading('AI Tutor is generating solution explanation...');
+                      setTimeout(() => {
+                        toast.dismiss(loader);
+                        const newAns = {
+                          author: 'AI Tutor',
+                          avatar: '🤖',
+                          text: `Here is the optimized analysis for "${selectedDoubt.q}":\nWe can resolve this using standard design patterns. Verify space complexity parameters to maintain latency constraints.`,
+                          time: 'Just now'
+                        };
+                        const updatedAnswers = [...(selectedDoubt.answersList || []), newAns];
+                        setDoubts(prev => prev.map(d => d.id === selectedDoubt.id ? { ...d, answers: updatedAnswers.length, answersList: updatedAnswers } : d));
+                        setSelectedDoubt(prev => ({ ...prev, answers: updatedAnswers.length, answersList: updatedAnswers }));
+                        toast.success('AI Tutor explanation generated!');
+                      }, 1500);
+                    }}
+                    className="text-[10px] font-bold text-violet-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    ✨ Ask AI Tutor
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
