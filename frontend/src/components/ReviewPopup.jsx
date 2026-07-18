@@ -79,10 +79,10 @@ export default function ReviewPopup() {
 
   // 1. Tracks user activity & time
   useEffect(() => {
-    if (!user || user.role === 'admin' || user.review_submitted || localSubmittedRef.current) return;
-
-    // Load saved active time
+    if (!user) return;
     const userId = user.id;
+    const localReviewDone = localStorage.getItem(`eduverse_review_submitted_${userId}`) === 'true';
+    if (user.role === 'admin' || user.review_submitted || localSubmittedRef.current || localReviewDone) return;
     const storedTime = localStorage.getItem(`eduverse_review_active_time_${userId}`);
     activeTimeRef.current = storedTime ? parseInt(storedTime, 10) : 0;
 
@@ -154,7 +154,8 @@ export default function ReviewPopup() {
     }
   }, [suggestion]);
 
-  if (!user || user.role === 'admin' || user.review_submitted || localSubmittedRef.current) return null;
+  const localReviewDone = user ? localStorage.getItem(`eduverse_review_submitted_${user.id}`) === 'true' : false;
+  if (!user || user.role === 'admin' || user.review_submitted || localSubmittedRef.current || localReviewDone) return null;
 
   const handlePostpone = () => {
     const userId = user.id;
@@ -222,6 +223,7 @@ export default function ReviewPopup() {
       // Update auth context locally & set submit flag
       user.review_submitted = true;
       localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem(`eduverse_review_submitted_${userId}`, 'true');
       localSubmittedRef.current = true;
       
       setSubmitted(true);

@@ -232,7 +232,7 @@ router.post(
 router.get('/me', authenticate, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, name, email, role, created_at, profile_completed FROM users WHERE id = $1',
+      'SELECT id, name, email, role, created_at, profile_completed, review_submitted FROM users WHERE id = $1',
       [req.user.id]
     );
     if (result.rows.length === 0) {
