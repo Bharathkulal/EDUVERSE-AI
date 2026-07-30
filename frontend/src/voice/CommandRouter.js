@@ -31,6 +31,13 @@ export async function routeCommand(intentResult, userRole = 'student') {
   const commandDef = COMMAND_REGISTRY.find(c => c.intent === intent);
   
   if (!commandDef) {
+    if (intent === 'IGNORE') {
+      return {
+        success: true,
+        action: 'NONE',
+        response: ''
+      };
+    }
     if (intent === 'UNKNOWN') {
       return {
         success: false,

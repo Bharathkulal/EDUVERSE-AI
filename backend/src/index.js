@@ -830,6 +830,35 @@ const db = require('./config/db');
           folder_path VARCHAR(255) DEFAULT 'General',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS innovation_ideas (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          title VARCHAR(255) NOT NULL,
+          problem TEXT NOT NULL,
+          solution TEXT NOT NULL,
+          target_audience VARCHAR(255),
+          industry VARCHAR(100) DEFAULT 'Technology',
+          country VARCHAR(100) DEFAULT 'Global',
+          status VARCHAR(50) DEFAULT 'draft',
+          overall_score INTEGER DEFAULT 0,
+          evaluation_data JSONB,
+          market_data JSONB,
+          bizmodel_data JSONB,
+          finance_data JSONB,
+          mvp_data JSONB,
+          pitch_data JSONB,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS innovation_documents (
+          id SERIAL PRIMARY KEY,
+          idea_id INTEGER REFERENCES innovation_ideas(id) ON DELETE CASCADE,
+          doc_type VARCHAR(50) NOT NULL,
+          content JSONB NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
       `);
 
       await db.query(`
@@ -882,6 +911,8 @@ const db = require('./config/db');
   const itSuiteRoutes = require('./routes/it_suite');
   const chatLearnRoutes = require('./routes/chat_learn');
   const voiceRoutes = require('./routes/voice');
+  const innovationRoutes = require('./routes/innovation');
+  const mathRoutes = require('./routes/math');
   const http = require('http');
   const { Server } = require('socket.io');
   const { setIoInstance } = require('./utils/system_logger');
@@ -1069,6 +1100,8 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/it-suite', itSuiteRoutes);
 app.use('/api/chat-learn', chatLearnRoutes);
 app.use('/api/voice', voiceRoutes);
+app.use('/api/innovation', innovationRoutes);
+app.use('/api/math', mathRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
   setHeaders: (res, filepath) => {
     if (filepath.includes('chat_learn') && filepath.includes('files')) {

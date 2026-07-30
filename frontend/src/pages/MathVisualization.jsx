@@ -1,2047 +1,1095 @@
-import { useState, useEffect, cloneElement } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import GlobalBackButton from '../components/GlobalBackButton';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, ChevronRight, ChevronLeft, Play, Pause, RotateCcw, 
-  Settings2, Activity, BrainCircuit, FunctionSquare, Rocket, X,
-  Layers, BookOpen, Target, Lightbulb, Zap, ArrowRight,
-  SkipBack, SkipForward, FastForward
-} from 'lucide-react';
-import NotebookEngine from '../components/MathEngines/NotebookEngine';
-import MathBackground from '../components/MathBackground';
 import { useTheme } from '../context/ThemeContext';
-import ThemeToggleButton from '../components/ThemeToggleButton';
+import GlobalBackButton from '../components/GlobalBackButton';
+import {
+  BrainCircuit, Play, Pause, SkipBack, SkipForward, RotateCcw,
+  Mic, MicOff, Upload, FileText, Keyboard, Copy, Download,
+  ChevronDown, ChevronRight, Zap, Target, BookOpen, Lightbulb,
+  Star, Clock, Cpu, TrendingUp, CheckCircle2, AlertCircle,
+  X, Plus, Settings2, FastForward, Volume2, Camera
+} from 'lucide-react';
+import axios from 'axios';
 import './DashboardTheme.css';
 
-export default function MathVisualization() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { isDarkMode } = useTheme();
-  
-  // State
-  const [selectedMethod, setSelectedMethod] = useState(() => {
-    return location.state?.initialMethod || null;
-  });
+/* ─────────────────────────────────────────────────────────────────────────
+   LATEX RENDERER  (Simple inline renderer without external deps)
+───────────────────────────────────────────────────────────────────────── */
+function LatexRender({ tex = '', className = '' }) {
+  const rendered = useMemo(() => {
+    if (!tex) return '';
+    return tex
+      .replace(/\\dfrac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)')
+      .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)')
+      .replace(/\\sqrt\{([^}]+)\}/g, '√($1)')
+      .replace(/\\sqrt/g, '√')
+      .replace(/\\approx/g, '≈')
+      .replace(/\\pm/g, '±')
+      .replace(/\\cdot/g, '·')
+      .replace(/\\times/g, '×')
+      .replace(/\\div/g, '÷')
+      .replace(/\\leq/g, '≤')
+      .replace(/\\geq/g, '≥')
+      .replace(/\\neq/g, '≠')
+      .replace(/\\infty/g, '∞')
+      .replace(/\\alpha/g, 'α')
+      .replace(/\\beta/g, 'β')
+      .replace(/\\gamma/g, 'γ')
+      .replace(/\\theta/g, 'θ')
+      .replace(/\\pi/g, 'π')
+      .replace(/\\sigma/g, 'σ')
+      .replace(/\\rawText/g, '')
+      .replace(/\\value/g, '')
+      .replace(/\\varepsilon/g, 'ε')
+      .replace(/\\epsilon/g, 'ε')
+      .replace(/\\Delta/g, 'Δ')
+      .replace(/\\delta/g, 'δ')
+      .replace(/\\int/g, '∫')
+      .replace(/\\sum/g, 'Σ')
+      .replace(/\\prod/g, 'Π')
+      .replace(/\\partial/g, '∂')
+      .replace(/\\nabla/g, '∇')
+      .replace(/\\in/g, '∈')
+      .replace(/\\subset/g, '⊂')
+      .replace(/\\cup/g, '∪')
+      .replace(/\\cap/g, '∩')
+      .replace(/\\forall/g, '∀')
+      .replace(/\\exists/g, '∃')
+      .replace(/\\Rightarrow/g, '⟹')
+      .replace(/\\rightarrow/g, '→')
+      .replace(/\\left/g, '')
+      .replace(/\\right/g, '')
+      .replace(/\\arrow/g, '→')
+      .replace(/\\checkmark/g, '✓')
+      .replace(/\\text\{([^}]*)\}/g, '$1')
+      .replace(/\{([^}]*)\}/g, '$1')
+      .replace(/\^([a-zA-Z0-9]+)/g, '^$1')
+      .replace(/_([a-zA-Z0-9]+)/g, '_$1')
+      .replace(/\\\\/g, '')
+      .replace(/\\/g, '');
+  }, [tex]);
+
+  return <span className={className} style={{ fontFamily: "serif" }}>{rendered}</span>;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   CANVAS GRAPH ENGINE
+───────────────────────────────────────────────────────────────────────── */
+function GraphCanvas({ graphData, isDark }) {
+  const canvasRef = useRef(null);
+  const stateRef = useRef({ offsetX: 0, offsetY: 0, scale: 60, dragging: false, lastX: 0, lastY: 0 });
+
+  const evalExpr = useCallback((expr, x) => {
+    try {
+      const cleanExpr = expr
+        .replace(/Math\./g, '')
+        .replace(/sin/g, 'Math.sin')
+        .replace(/cos/g, 'Math.cos')
+        .replace(/tan/g, 'Math.tan')
+        .replace(/pow/g, 'Math.pow')
+        .replace(/exp/g, 'Math.exp')
+        .replace(/log/g, 'Math.log')
+        .replace(/pi/g, 'Math.PI')
+        .replace(/E/g, 'Math.E')
+        .replace(/sqrt/g, 'Math.sqrt')
+        .replace(/x\^2/g, 'x*x')
+        .replace(/x\^3/g, 'x*x*x');
+      return new Function('x', 'Math', '"use strict"; return (' + cleanExpr + ');')(x, Math);
+    } catch { return NaN; }
+  }, []);
+
+  const draw = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const { offsetX, offsetY, scale } = stateRef.current;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = isDark ? '#0d0b1e' : '#f8fafc';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)';
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+    const originX = W / 2 + offsetX;
+    const originY = H / 2 + offsetY;
+    const step = scale;
+    for (let x = originX % step; x < W; x += step) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = originY % step; y < H; y += step) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+    // Axes
+    ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, originY); ctx.lineTo(W, originY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(originX, 0); ctx.lineTo(originX, H); ctx.stroke();
+
+    // Axis arrows
+    ctx.fillStyle = isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.4)';
+    ctx.beginPath(); ctx.moveTo(W - 8, originY - 4); ctx.lineTo(W, originY); ctx.lineTo(W - 8, originY + 4); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(originX - 4, 8); ctx.lineTo(originX, 0); ctx.lineTo(originX + 4, 8); ctx.fill();
+
+    // Axis labels
+    ctx.fillStyle = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)';
+    ctx.font = '11px Inter, sans-serif';
+    ctx.fillText('x', W - 14, originY - 8);
+    ctx.fillText('y', originX + 8, 14);
+
+    // Tick marks
+    ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)';
+    ctx.lineWidth = 1;
+    const tickRange = Math.ceil(W / step) + 2;
+    for (let i = -tickRange; i <= tickRange; i++) {
+      if (i === 0) continue;
+      const px = originX + i * step;
+      ctx.beginPath(); ctx.moveTo(px, originY - 4); ctx.lineTo(px, originY + 4); ctx.stroke();
+      ctx.fillStyle = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+      ctx.fillText(i, px - 4, originY + 16);
+    }
+    const tickRangeY = Math.ceil(H / step) + 2;
+    for (let i = -tickRangeY; i <= tickRangeY; i++) {
+      if (i === 0) continue;
+      const py = originY - i * step;
+      ctx.beginPath(); ctx.moveTo(originX - 4, py); ctx.lineTo(originX + 4, py); ctx.stroke();
+      ctx.fillStyle = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+      ctx.fillText(i, originX + 7, py + 4);
+    }
+
+    // Shaded regions
+    if (graphData?.shadedRegions) {
+      graphData.shadedRegions.forEach(region => {
+        const { fromX, toX, color } = region;
+        if (graphData.equations && graphData.equations[0]) {
+          const expr = graphData.equations[0].expression;
+          ctx.beginPath();
+          let started = false;
+          const pxStart = originX + fromX * scale;
+          const pxEnd = originX + toX * scale;
+          ctx.moveTo(pxStart, originY);
+          for (let px = pxStart; px <= pxEnd; px += 1) {
+            const xVal = (px - originX) / scale;
+            const yVal = evalExpr(expr, xVal);
+            if (!isFinite(yVal) || isNaN(yVal)) continue;
+            const py = originY - yVal * scale;
+            if (!started) { ctx.lineTo(px, py); started = true; }
+            else ctx.lineTo(px, py);
+          }
+          ctx.lineTo(pxEnd, originY);
+          ctx.closePath();
+          ctx.fillStyle = color || 'rgba(16, 185, 129, 0.15)';
+          ctx.fill();
+        }
+      });
+    }
+
+    // Plot equations
+    if (graphData?.equations) {
+      graphData.equations.forEach(eq => {
+        const { expression, color } = eq;
+        ctx.strokeStyle = color || '#10b981';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = color || '#10b981';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        let penDown = false;
+        for (let px = 0; px < W; px += 1) {
+          const xVal = (px - originX) / scale;
+          const yVal = evalExpr(expression, xVal);
+          if (!isFinite(yVal) || isNaN(yVal) || Math.abs(yVal) > 1e5) { penDown = false; continue; }
+          const py = originY - yVal * scale;
+          if (!penDown) { ctx.moveTo(px, py); penDown = true; }
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      });
+    }
+
+    // Plot points
+    if (graphData?.points) {
+      graphData.points.forEach(pt => {
+        const px = originX + pt.x * scale;
+        const py = originY - pt.y * scale;
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, Math.PI * 2);
+        ctx.fillStyle = pt.color || '#ef4444';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = isDark ? '#fff' : '#1e293b';
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.fillText(pt.label || `(${pt.x}, ${pt.y})`, px + 10, py - 8);
+      });
+    }
+  }, [graphData, isDark, evalExpr]);
 
   useEffect(() => {
-    if (location.state?.initialMethod) {
-      setSelectedMethod(location.state.initialMethod);
-    }
-  }, [location.state]);
-  
-  const [showFormula, setShowFormula] = useState(false); // Formula intermediate page
-  const [formulaPage, setFormulaPage] = useState(0); // Current formula page index
-  const [funcId, setFuncId] = useState('reciprocal');
-  const [a, setA] = useState('0');
-  const [b, setB] = useState('1');
-  const [n, setN] = useState('4');
-  
-  // Bisection Method States
-  const [bisectionProblemId, setBisectionProblemId] = useState('bis1');
-  const [bisectionIterations, setBisectionIterations] = useState('5');
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const parent = canvas.parentElement;
+    canvas.width = parent.clientWidth;
+    canvas.height = parent.clientHeight;
+    draw();
+  }, [draw, graphData]);
 
-  // Newton's Interpolation States
-  const [newtonQuestionId, setNewtonQuestionId] = useState('q9');
-  const [newtonDirection, setNewtonDirection] = useState('Forward');
-  const [newtonTargetX, setNewtonTargetX] = useState('1895');
+  // Interaction handlers
+  const handleWheel = useCallback((e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.85 : 1.18;
+    stateRef.current.scale = Math.max(20, Math.min(300, stateRef.current.scale * delta));
+    draw();
+  }, [draw]);
 
-  // Newton's Difference (Differentiation) States
-  const [newtonDiffQuestionId, setNewtonDiffQuestionId] = useState('qd12');
-  const [newtonDiffDirection, setNewtonDiffDirection] = useState('Forward');
-  const [newtonDiffTargetX, setNewtonDiffTargetX] = useState('1.2');
+  const handleMouseDown = useCallback((e) => {
+    stateRef.current.dragging = true;
+    stateRef.current.lastX = e.clientX;
+    stateRef.current.lastY = e.clientY;
+  }, []);
 
-  // Simpson's 1/3 Rule States
-  const [simpson13ProblemId, setSimpson13ProblemId] = useState('s13_q1');
-  const [simpson13FuncId, setSimpson13FuncId] = useState('reciprocal');
-  const [simpson13A, setSimpson13A] = useState('0');
-  const [simpson13B, setSimpson13B] = useState('1');
-  const [simpson13N, setSimpson13N] = useState('4');
+  const handleMouseMove = useCallback((e) => {
+    if (!stateRef.current.dragging) return;
+    stateRef.current.offsetX += e.clientX - stateRef.current.lastX;
+    stateRef.current.offsetY += e.clientY - stateRef.current.lastY;
+    stateRef.current.lastX = e.clientX;
+    stateRef.current.lastY = e.clientY;
+    draw();
+  }, [draw]);
 
-  // Simpson's 3/8 Rule States
-  const [simpson38ProblemId, setSimpson38ProblemId] = useState('s38_q1');
-  const [simpson38FuncId, setSimpson38FuncId] = useState('reciprocal');
-  const [simpson38A, setSimpson38A] = useState('0');
-  const [simpson38B, setSimpson38B] = useState('1');
-  const [simpson38N, setSimpson38N] = useState('6');
+  const handleMouseUp = useCallback(() => { stateRef.current.dragging = false; }, []);
 
-  // RK4 States
-  const [rkProblemId, setRkProblemId] = useState('rk_q1');
-  const [rkFuncId, setRkFuncId] = useState('y_minus_x');
-  const [rkX0, setRkX0] = useState('0');
-  const [rkY0, setRkY0] = useState('2');
-  const [rkH, setRkH] = useState('0.1');
-  const [rkSteps, setRkSteps] = useState('1');
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    return () => canvas.removeEventListener('wheel', handleWheel);
+  }, [handleWheel]);
 
-  // Matrix Multiplication States
-  const [matMulQuestionId, setMatMulQuestionId] = useState('mm_q5');
-  const [taylorQuestionId, setTaylorQuestionId] = useState('taylor_q1');
-  const [eulerQuestionId, setEulerQuestionId] = useState('euler_q1');
-  const [modifiedEulerQuestionId, setModifiedEulerQuestionId] = useState('me_q1');
-  const [adamsMoultonQuestionId, setAdamsMoultonQuestionId] = useState('am_q1');
+  return (
+    <div className="relative w-full h-full">
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full cursor-grab active:cursor-grabbing rounded-xl"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      />
+      <div className="absolute top-3 right-3 flex flex-col gap-1">
+        <button onClick={() => { stateRef.current.scale *= 1.2; draw(); }} className="w-7 h-7 rounded-lg bg-white/10 backdrop-blur text-white text-xs font-bold hover:bg-white/20 transition flex items-center justify-center">+</button>
+        <button onClick={() => { stateRef.current.scale /= 1.2; draw(); }} className="w-7 h-7 rounded-lg bg-white/10 backdrop-blur text-white text-xs font-bold hover:bg-white/20 transition flex items-center justify-center">−</button>
+        <button onClick={() => { stateRef.current.scale = 60; stateRef.current.offsetX = 0; stateRef.current.offsetY = 0; draw(); }} className="w-7 h-7 rounded-lg bg-white/10 backdrop-blur text-white text-xs font-bold hover:bg-white/20 transition flex items-center justify-center">⌖</button>
+      </div>
+      <div className="absolute bottom-3 left-3 text-xs text-white/40 select-none">Scroll to zoom · Drag to pan</div>
+    </div>
+  );
+}
 
-  // Execution Control State
-  const [playbackState, setPlaybackState] = useState('IDLE');
+/* ─────────────────────────────────────────────────────────────────────────
+   MATH KEYBOARD
+───────────────────────────────────────────────────────────────────────── */
+const MATH_KEYS = [
+  ['x²', 'x³', 'xⁿ', '√', '∫', 'Σ', 'π', '∞'],
+  ['sin(', 'cos(', 'tan(', 'ln(', 'log(', 'e^', '|x|', 'd/dx'],
+  ['α', 'β', 'γ', 'θ', 'λ', 'μ', 'σ', 'ω'],
+  ['≤', '≥', '≠', '±', '÷', '×', '(', ')'],
+  ['lim ', 'lim x→0 ', 'lim x→∞ ', 'integrate ', 'differentiate ', 'Matrix(', '→', '←'],
+];
+const KEY_INSERT_MAP = {
+  'x²': '^2', 'x³': '^3', 'xⁿ': '^', '√': 'sqrt(', '∫': 'integrate ',
+  'Σ': 'sum ', 'π': 'pi', '∞': 'infinity', 'e^': 'e^(', '|x|': 'abs(',
+  'd/dx': 'differentiate ', '≤': '<=', '≥': '>=', '≠': '!=', '±': '+-',
+  '÷': '/', '×': '*',
+};
+
+function MathKeyboard({ onInsert, onClose }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 10, scale: 0.96 }}
+      className="absolute bottom-full left-0 mb-2 z-50 p-4 rounded-2xl border border-purple-500/30 bg-[#0d0a20]/95 backdrop-blur-xl shadow-2xl shadow-purple-900/40"
+      style={{ minWidth: 420 }}
+    >
+      <div className="flex justify-between items-center mb-3">
+        <span className="text-xs font-bold text-purple-300 uppercase tracking-widest">Math Keyboard</span>
+        <button onClick={onClose} className="text-white/40 hover:text-white transition"><X size={14} /></button>
+      </div>
+      <div className="space-y-1.5">
+        {MATH_KEYS.map((row, ri) => (
+          <div key={ri} className="flex flex-wrap gap-1.5">
+            {row.map(key => (
+              <button
+                key={key}
+                onClick={() => onInsert(KEY_INSERT_MAP[key] || key)}
+                className="px-2.5 py-1.5 rounded-lg bg-white/8 hover:bg-purple-500/25 border border-white/10 hover:border-purple-400/40 text-white text-xs font-mono transition-all duration-150 active:scale-95"
+              >{key}</button>
+            ))}
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   STEP CARD
+───────────────────────────────────────────────────────────────────────── */
+function StepCard({ step, index, isActive, isDark, animDelay }) {
+  const [typed, setTyped] = useState('');
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    if (!isActive) { setTyped(''); setDone(false); return; }
+    const full = step.explanation || '';
+    let i = 0;
+    setTyped('');
+    setDone(false);
+    const iv = setInterval(() => {
+      i++;
+      setTyped(full.slice(0, i));
+      if (i >= full.length) { clearInterval(iv); setDone(true); }
+    }, 18);
+    return () => clearInterval(iv);
+  }, [isActive, step.explanation]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: animDelay * 0.1, type: 'spring', stiffness: 120 }}
+      className={`relative rounded-2xl border p-5 transition-all duration-300 ${
+        isActive
+          ? 'border-emerald-500/60 bg-emerald-500/8 shadow-lg shadow-emerald-500/10'
+          : isDark
+            ? 'border-white/10 bg-white/4 hover:border-white/20'
+            : 'border-slate-200 bg-white hover:border-slate-300'
+      }`}
+    >
+      {isActive && (
+        <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl bg-gradient-to-b from-emerald-400 to-teal-500" />
+      )}
+      <div className="flex items-start gap-4">
+        <div className={`flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold ${
+          isActive ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-white/10 text-white/50'
+        }`}>
+          {step.number}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className={`font-bold text-sm mb-3 ${isActive ? 'text-emerald-300' : 'text-white/70'}`}>{step.title}</h4>
+          
+          {/* Equation rows */}
+          <div className="space-y-2 mb-3">
+            {step.formula && (
+              <div className="flex items-start gap-2">
+                <span className="text-xs text-purple-400 font-bold w-20 flex-shrink-0 pt-0.5">Formula</span>
+                <div className="px-3 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-200 text-sm font-mono">
+                  <LatexRender tex={step.formula} />
+                </div>
+              </div>
+            )}
+            {step.substitution && (
+              <div className="flex items-start gap-2">
+                <span className="text-xs text-blue-400 font-bold w-20 flex-shrink-0 pt-0.5">Substitute</span>
+                <div className="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-200 text-sm font-mono">
+                  <LatexRender tex={step.substitution} />
+                </div>
+              </div>
+            )}
+            {step.calculation && (
+              <div className="flex items-start gap-2">
+                <span className="text-xs text-amber-400 font-bold w-20 flex-shrink-0 pt-0.5">Calculate</span>
+                <div className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-200 text-sm font-mono">
+                  <LatexRender tex={step.calculation} />
+                </div>
+              </div>
+            )}
+            {step.result && (
+              <div className="flex items-start gap-2">
+                <span className="text-xs text-emerald-400 font-bold w-20 flex-shrink-0 pt-0.5">Result</span>
+                <div className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 text-sm font-bold font-mono">
+                  <LatexRender tex={step.result} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Explanation */}
+          {isActive && (
+            <p className="text-xs text-white/65 leading-relaxed border-t border-white/10 pt-3 mt-2">
+              {typed}<span className={`inline-block w-0.5 h-3 bg-emerald-400 ml-0.5 ${done ? 'opacity-0' : 'animate-pulse'}`} />
+            </p>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   MAIN COMPONENT
+───────────────────────────────────────────────────────────────────────── */
+export default function MathVisualization() {
+  const { isDarkMode: isDark } = useTheme();
+
+  // Input state
+  const [problem, setProblem] = useState('');
+  const [explanationMode, setExplanationMode] = useState('Intermediate');
+  const [showKeyboard, setShowKeyboard] = useState(false);
+  const [showModeMenu, setShowModeMenu] = useState(false);
+
+  // Result state
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Playback state
+  const [playback, setPlayback] = useState('IDLE'); // IDLE | PLAYING | PAUSED | DONE
+  const [currentStep, setCurrentStep] = useState(-1);
   const [speed, setSpeed] = useState(1);
-  const [currentExplanation, setCurrentExplanation] = useState('Waiting for execution to start...');
+  const playbackRef = useRef(null);
 
-  const PREDEFINED_FUNCTIONS = [
-    { id: 'reciprocal', label: 'f(x) = 1 / (1 + x)', expr: (x) => 1 / (1 + x), desc: 'Reciprocal rational function' },
-    { id: 'sin', label: 'f(x) = sin(x) + 2', expr: (x) => Math.sin(x) + 2, desc: 'Smooth trigonometric curve' },
-    { id: 'quadratic', label: 'f(x) = x² / 4 + 1', expr: (x) => (x * x) / 4 + 1, desc: 'Polynomial parabola' },
-    { id: 'exponential', label: 'f(x) = e^(x/2)', expr: (x) => Math.exp(x / 2), desc: 'Exponential growth curve' },
-  ];
+  // Voice state
+  const [voiceActive, setVoiceActive] = useState(false);
+  const recognitionRef = useRef(null);
 
-  const NEWTON_QUESTIONS = [
-    {
-      id: 'q9',
-      label: 'Q9: Census Population (1895 - Forward)',
-      x: [1891, 1901, 1911, 1921, 1931],
-      y: [46, 66, 81, 93, 101],
-      xLabel: 'Year (x)',
-      yLabel: 'Population (y) (in thousands)',
-      defaultTarget: 1895,
-      defaultDirection: 'Forward',
-      question: '9. The population of a town in the decennial census was as given below. Estimate the population for the year 1895 using Newton\u2019s forward difference interpolation formula.'
-    },
-    {
-      id: 'q10',
-      label: 'Q10: Census Population (1925 - Backward)',
-      x: [1891, 1901, 1911, 1921, 1931],
-      y: [46, 66, 81, 93, 101],
-      xLabel: 'Year (x)',
-      yLabel: 'Population (y) (in thousands)',
-      defaultTarget: 1925,
-      defaultDirection: 'Backward',
-      question: '10. The population of a town in the decennial census was as given below. Estimate the population for the year 1925 using Newton\u2019s backward difference interpolation formula.'
-    },
-    {
-      id: 'q8',
-      label: 'Q8: Cubic Polynomial y(4) (Forward)',
-      x: [0, 1, 2, 3],
-      y: [1, 0, 1, 10],
-      xLabel: 'x',
-      yLabel: 'y',
-      defaultTarget: 4,
-      defaultDirection: 'Forward',
-      question: '8. Find the cubic polynomial which takes the following values y(0)=1, y(1)=0, y(2)=1 and y(3)=10. And obtain y(4) using Newton\u2019s forward difference interpolation formula.'
-    },
-    {
-      id: 'q11',
-      label: 'Q11: Series First Term (x=1 - Forward)',
-      x: [3, 4, 5, 6, 7, 8, 9],
-      y: [2.7, 6.4, 12.5, 21.6, 34.3, 51.2, 72.9],
-      xLabel: 'X',
-      yLabel: 'Y',
-      defaultTarget: 1,
-      defaultDirection: 'Forward',
-      question: '11. In the table below the values of y are consecutive terms of a series of which the number 21.6 is the 6th term. Find the first term of the series (x=1) using Newton\u2019s forward difference interpolation formula.'
+  // History state
+  const [history, setHistory] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('mathHistory') || '[]'); } catch { return []; }
+  });
+  const [showHistory, setShowHistory] = useState(false);
+
+  // PDF state
+  const [pdfProblems, setPdfProblems] = useState([]);
+  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  // Tabs
+  const [activeTab, setActiveTab] = useState('steps'); // steps | graph | metrics | suggestions
+
+  const inputRef = useRef(null);
+
+  // ── Playback engine ──────────────────────────────────────
+  useEffect(() => {
+    if (playback !== 'PLAYING' || !result?.steps) return;
+    if (currentStep >= result.steps.length - 1) {
+      setPlayback('DONE');
+      return;
     }
-  ];
+    const delay = (2200 / speed);
+    playbackRef.current = setTimeout(() => {
+      setCurrentStep(prev => prev + 1);
+    }, delay);
+    return () => clearTimeout(playbackRef.current);
+  }, [playback, currentStep, result, speed]);
 
-  const NEWTON_DIFF_QUESTIONS = [
-    {
-      id: 'qd12',
-      label: 'Q12: dy/dx & d\u00B2y/dx\u00B2 at x=1.2 (Forward)',
-      x: [1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2],
-      y: [2.7183, 3.3201, 4.0552, 4.9530, 6.0496, 7.3891, 7.0250],
-      xLabel: 'x',
-      yLabel: 'y',
-      defaultTarget: 1.2,
-      defaultDirection: 'Forward',
-      question: 'From the following table of values of x and y, obtain dy/dx and d\u00B2y/dx\u00B2 for x = 1.2 using Newton\u2019s forward difference formula.'
-    },
-    {
-      id: 'qd13',
-      label: 'Q13: dy/dx & d\u00B2y/dx\u00B2 at x=6 (Backward)',
-      x: [0, 1, 2, 3, 4, 5, 6],
-      y: [6.9897, 7.4036, 7.7815, 8.1291, 8.4510, 8.7506, 9.0309],
-      xLabel: 'x',
-      yLabel: 'y',
-      defaultTarget: 6,
-      defaultDirection: 'Backward',
-      question: 'From the following table of values of x and y, obtain dy/dx and d\u00B2y/dx\u00B2 for x = 6 using Newton\u2019s backward difference formula.'
-    }
-  ];
-
-  const SIMPSON_13_QUESTIONS = [
-    {
-      id: 's13_q1',
-      label: 'Q1: Evaluate ∫[0 to 1] sin(πx) dx (h = 0.5) (Photo Q3)',
-      question: 'Evaluate: I = ∫ [0 to 1] ( sin(πx) ) dx using Simpson\'s 1/3rd Rule with h = 0.5.'
-    },
-    {
-      id: 's13_q2',
-      label: 'Q2: Evaluate ∫[0 to 1] √(1-x²) dx (h = 0.2) (Photo Q2a)',
-      question: 'Evaluate: I = ∫ [0 to 1] ( √(1-x²) ) dx using Simpson\'s 1/3rd Rule with h = 0.2.'
-    },
-    {
-      id: 'custom',
-      label: 'Custom Equation',
-      question: 'Custom Simpson\'s 1/3 Rule problem.'
-    }
-  ];
-
-  const SIMPSON_38_QUESTIONS = [
-    {
-      id: 's38_q1',
-      label: 'Q1: Evaluate ∫[0 to 1] cos(x) dx (h = 0.2) (Photo Q1)',
-      question: 'Evaluate: I = ∫ [0 to 1] ( cos(x) ) dx using Simpson\'s 3/8th Rule when h = 0.2.'
-    },
-    {
-      id: 's38_q2',
-      label: 'Q2: Evaluate ∫[0 to π/2] √(cos θ) dθ (n = 6) (Photo Q2)',
-      question: 'Find the approximate value of ∫ [0 to π/2] ( √(cos θ) ) dθ dividing the interval into 6 parts using Simpson\'s 3/8th Rule.'
-    },
-    {
-      id: 'custom',
-      label: 'Custom Equation',
-      question: 'Custom Simpson\'s 3/8 Rule problem.'
-    }
-  ];
-
-  const RK_QUESTIONS = [
-    {
-      id: 'rk_q1',
-      label: 'Q1: dy/dx = y - x, y(0)=2, find y(0.1) (h = 0.1) (Photo Q1)',
-      question: 'Given that dy/dx = y - x where y(0) = 2 and h = 0.1, find y(0.1) using Runge Kutta 4th order method.'
-    },
-    {
-      id: 'rk_q2',
-      label: 'Q2: dy/dx = x + y, y(0)=1, find y(0.2) (h = 0.1)',
-      question: 'Given that dy/dx = x + y where y(0) = 1, find y(0.2) in 2 steps of h = 0.1 using Runge Kutta 4th order method.'
-    },
-    {
-      id: 'custom',
-      label: 'Custom ODE',
-      question: 'Custom Runge-Kutta 4th order method problem.'
-    }
-  ];
-
-  const TAYLOR_QUESTIONS = [
-    {
-      id: 'taylor_q1',
-      label: 'Q1: dy/dx = x - y², y(0)=1, find y(0.1) (Photo Q1)',
-      question: 'Given dy/dx = x - y² with y(0) = 1, find y(0.1) correct to 4 decimal places using Taylor\'s Series Method.'
-    },
-    {
-      id: 'taylor_q2',
-      label: 'Q2: dy/dx = x - y, y(0)=1, find y(0.1)',
-      question: 'Given dy/dx = x - y with y(0) = 1, find y(0.1) correct to 4 decimal places using Taylor\'s Series Method.'
-    },
-    {
-      id: 'custom',
-      label: 'Custom ODE',
-      question: 'Custom Taylor\'s Series Method problem.'
-    }
-  ];
-
-  const EULER_QUESTIONS = [
-    {
-      id: 'euler_q1',
-      label: 'Q1: dy/dx = -y, y(0)=1, find y(0.04) (Photo Q1)',
-      question: 'Given dy/dx = -y with y(0) = 1 and step size h = 0.01, find y(0.01), y(0.02), y(0.03), y(0.04) using Euler\'s Method.'
-    },
-    {
-      id: 'euler_q2',
-      label: 'Q2: dy/dx = x + y, y(0)=0, find y(0.6) (Photo Q2)',
-      question: 'Given dy/dx = x + y with y(0) = 0 and step size h = 0.2, compute y(0.2), y(0.4), y(0.6) using Euler\'s Method.'
-    },
-    {
-      id: 'custom',
-      label: 'Custom ODE',
-      question: 'Custom Euler\'s Method problem.'
-    }
-  ];
-
-  const MODIFIED_EULER_QUESTIONS = [
-    {
-      id: 'me_q1',
-      label: 'Q1: dy/dx = x² + y, y(0)=1, find y(0.1) (h=0.05) (Photo Q1)',
-      question: 'Given dy/dx = x² + y with y(0) = 1 and step size h = 0.05, compute y(0.05) and y(0.1) using Modified Euler\'s Method.'
-    },
-    {
-      id: 'me_q2',
-      label: 'Q2: dy/dx = 2 + √xy, y(1)=1, find y(2.0) (h=0.5) (Photo Q2)',
-      question: 'Given dy/dx = 2 + √xy with y(1) = 1 and step size h = 0.5, compute y(1.5) and y(2.0) using Modified Euler\'s Method.'
-    },
-    {
-      id: 'custom',
-      label: 'Custom ODE',
-      question: 'Custom Modified Euler\'s Method problem.'
-    }
-  ];
-
-  const ADAMS_MOULTON_QUESTIONS = [
-    {
-      id: 'am_q1',
-      label: 'Q1: dy/dx = 1 + y², y(0)=0, find y(0.8) (h=0.2) (Photo Q1)',
-      question: 'Given dy/dx = 1 + y² with y(0) = 0 and step size h = 0.2, compute y(0.8) using Adams-Moulton Predictor-Corrector Method given starting values y(0.2)=0.2027, y(0.4)=0.4228, y(0.6)=0.6891.'
-    },
-    {
-      id: 'am_q2',
-      label: 'Q2: dy/dx = x² + y, y(0)=1, find y(0.5) (h=0.1) (Photo Q2)',
-      question: 'Given dy/dx = x² + y with y(0) = 1 and step size h = 0.1, compute y(0.5) using Adams-Moulton Predictor-Corrector Method with starting values calculated via RK4.'
-    },
-    {
-      id: 'custom',
-      label: 'Custom ODE',
-      question: 'Custom Adams-Moulton Predictor-Corrector Method problem.'
-    }
-  ];
-
-  // Matrix Multiplication Questions (from photo)
-  const MATRIX_MUL_QUESTIONS = [
-    {
-      id: 'mm_q5',
-      label: 'Q5: A = [[0,1],[1,0]], Find A² (Photo Q5)',
-      question: 'Given A = [[0,1],[1,0]], find A² = A × A using Matrix Multiplication.',
-      type: 'square',
-      matA: [[0,1],[1,0]],
-      matB: [[0,1],[1,0]],
-      description: 'A is a permutation matrix. Compute A² = A × A.'
-    },
-    {
-      id: 'mm_q6',
-      label: 'Q6: A = [[1,0],[0,0]], B = [[0,0],[1,1]], Find AB (Photo Q6)',
-      question: 'Given A = [[1,0],[0,0]] and B = [[0,0],[1,1]], find the product AB using Matrix Multiplication.',
-      type: 'product',
-      matA: [[1,0],[0,0]],
-      matB: [[0,0],[1,1]],
-      description: 'A is an idempotent matrix. Compute the product AB.'
-    },
-    {
-      id: 'mm_q7',
-      label: 'Q7: Orthogonal - Rotation Matrix A (cos θ)',
-      question: 'Given A = [[cos θ, -sin θ],[sin θ, cos θ]], show that A is orthogonal by verifying AAᵀ = I.',
-      type: 'orthogonal_2x2',
-      matA: [['cos θ', '-sin θ'], ['sin θ', 'cos θ']],
-      matB: [['cos θ', 'sin θ'], ['-sin θ', 'cos θ']],
-      description: 'A is a 2D rotation matrix. Multiply A by its transpose Aᵀ (since Aᵀ = A⁻¹ for orthogonal matrices) and verify it equals Identity Matrix I.'
-    },
-    {
-      id: 'mm_q8',
-      label: 'Q8: Orthogonal - 3x3 Fractional Matrix B',
-      question: 'Given B = [[-2/3, 1/3, 2/3],[2/3, 2/3, 1/3],[1/3, -2/3, 2/3]], show that B is orthogonal by verifying BBᵀ = I.',
-      type: 'orthogonal_3x3',
-      matA: [[-2/3, 1/3, 2/3], [2/3, 2/3, 1/3], [1/3, -2/3, 2/3]],
-      matB: [[-2/3, 2/3, 1/3], [1/3, 2/3, -2/3], [2/3, 1/3, 2/3]],
-      description: 'B is a 3x3 matrix with fractional entries. Multiply B by its transpose Bᵀ and verify that the product is the 3x3 Identity Matrix I.'
-    }
-  ];
-
-  const CARDS = [
-    { 
-      id: 'Bisection Method', 
-      title: 'Bisection Method', 
-      desc: 'Iteratively bracket and find root of a function using interval halving.', 
-      status: 'Intermediate', 
-      time: '15 mins', 
-      xp: '100 XP', 
-      progress: 80,
-      tags: ['Root Finding', 'Interval Halving', 'f(a)·f(b) < 0'],
-      colorTheme: 'blue',
-      btnClass: 'bg-blue-600 hover:bg-blue-700 text-white',
-      badgeClass: 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400',
-      icon: '📐'
-    },
-    { 
-      id: 'Newton\u2019s Interpolation', 
-      title: 'Newton\u2019s Interpolation', 
-      desc: 'Estimate values between data points using forward/backward difference polynomials.', 
-      status: 'Intermediate', 
-      time: '20 mins', 
-      xp: '120 XP', 
-      progress: 60,
-      tags: ['Equal Intervals', 'Forward Diff', 'Backward Diff'],
-      colorTheme: 'cyan',
-      btnClass: 'bg-cyan-600 hover:bg-cyan-700 text-white',
-      badgeClass: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-600 dark:text-cyan-400',
-      icon: '📈'
-    },
-    { 
-      id: 'Newton\u2019s Difference', 
-      title: 'Newton\u2019s Difference', 
-      desc: 'Obtain first (dy/dx) and second (d\u00B2y/dx\u00B2) derivatives from difference tables.', 
-      status: 'Advanced', 
-      time: '15 mins', 
-      xp: '150 XP', 
-      progress: 40,
-      tags: ['First Derivative', 'Second Derivative', 'Table Diff'],
-      colorTheme: 'emerald',
-      btnClass: 'bg-emerald-600 hover:bg-emerald-700 text-white',
-      badgeClass: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
-      icon: '📊'
-    },
-    { 
-      id: 'Trapezoidal Rule', 
-      title: 'Trapezoidal Rule', 
-      desc: 'Calculate the approximate area under a curve using boundary nodes.', 
-      status: 'Beginner', 
-      time: '10 mins', 
-      xp: '80 XP', 
-      progress: 90,
-      tags: ['Integration', 'Linear Segments', 'Area Approx'],
-      colorTheme: 'violet',
-      btnClass: 'bg-violet-600 hover:bg-violet-700 text-white',
-      badgeClass: 'bg-violet-500/10 border-violet-500/20 text-violet-600 dark:text-violet-400',
-      icon: '〰️'
-    },
-    { 
-      id: 'Simpson\u2019s 1/3 Rule', 
-      title: 'Simpson\u2019s 1/3 Rule', 
-      desc: 'Higher accuracy quadratic polynomial area approximation.', 
-      status: 'Intermediate', 
-      time: '15 mins', 
-      xp: '100 XP', 
-      progress: 75,
-      tags: ['Integration', 'Quadratic', 'Even n'],
-      colorTheme: 'amber',
-      btnClass: 'bg-amber-500 hover:bg-amber-600 text-white',
-      badgeClass: 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400',
-      icon: '📐'
-    },
-    { 
-      id: 'Simpson\u2019s 3/8 Rule', 
-      title: 'Simpson\u2019s 3/8 Rule', 
-      desc: 'Cubic polynomial boundaries for high precision integration.', 
-      status: 'Advanced', 
-      time: '20 mins', 
-      xp: '150 XP', 
-      progress: 30,
-      tags: ['Integration', 'Cubic', 'Multiple of 3'],
-      colorTheme: 'rose',
-      btnClass: 'bg-rose-500 hover:bg-rose-600 text-white',
-      badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400',
-      icon: '🌀'
-    },
-    { 
-      id: 'RK4', 
-      title: 'RK4 Method', 
-      desc: 'Solve ordinary differential equations step-by-step.', 
-      status: 'Advanced', 
-      time: '25 mins', 
-      xp: '200 XP', 
-      progress: 10,
-      tags: ['ODE Solver', '4th Order', 'Single Step'],
-      colorTheme: 'sky',
-      btnClass: 'bg-sky-500 hover:bg-sky-600 text-white',
-      badgeClass: 'bg-sky-500/10 border-sky-500/20 text-sky-600 dark:text-sky-400',
-      icon: '🧪'
-    },
-    { 
-      id: "Taylor's Method", 
-      title: "Taylor's Method", 
-      desc: "Solve ordinary differential equations by approximating solutions with Taylor series polynomials.", 
-      status: 'Advanced', 
-      time: '20 mins', 
-      xp: '150 XP', 
-      progress: 0,
-      tags: ['ODE Solver', 'Power Series', 'Successive Derivatives'],
-      colorTheme: 'rose',
-      btnClass: 'bg-rose-500 hover:bg-rose-600 text-white',
-      badgeClass: 'bg-rose-500/10 border-rose-500/20 text-rose-650 dark:text-rose-455',
-      icon: '📈'
-    },
-    { 
-      id: "Euler's Method", 
-      title: "Euler's Method", 
-      desc: "Solve ordinary differential equations step-by-step using tangent line approximations.", 
-      status: 'Intermediate', 
-      time: '15 mins', 
-      xp: '100 XP', 
-      progress: 0,
-      tags: ['ODE Solver', 'Tangent Slope', 'First Order'],
-      colorTheme: 'emerald',
-      btnClass: 'bg-emerald-500 hover:bg-emerald-600 text-white',
-      badgeClass: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
-      icon: '📐'
-    },
-    { 
-      id: "Modified Euler's Method", 
-      title: "Modified Euler's Method", 
-      desc: "Solve ordinary differential equations step-by-step using predictor-corrector average slope approximations.", 
-      status: 'Advanced', 
-      time: '20 mins', 
-      xp: '150 XP', 
-      progress: 0,
-      tags: ['ODE Solver', 'Predictor Corrector', 'Second Order'],
-      colorTheme: 'teal',
-      btnClass: 'bg-teal-500 hover:bg-teal-656 text-white',
-      badgeClass: 'bg-teal-500/10 border-teal-500/20 text-teal-650 dark:text-teal-400',
-      icon: '📈'
-    },
-    { 
-      id: "Adams-Moulton Method", 
-      title: "Adams-Moulton Method", 
-      desc: "Solve ordinary differential equations step-by-step using 4th-order predictor-corrector multi-step methods.", 
-      status: 'Advanced', 
-      time: '25 mins', 
-      xp: '180 XP', 
-      progress: 0,
-      tags: ['ODE Solver', 'Predictor Corrector', 'Multi-Step'],
-      colorTheme: 'indigo',
-      btnClass: 'bg-indigo-500 hover:bg-indigo-600 text-white',
-      badgeClass: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-650 dark:text-indigo-400',
-      icon: '📈'
-    }
-  ];
-
-  // Formula data for each method
-  const FORMULA_DATA = {
-    'Bisection Method': {
-      features: [
-        { icon: BookOpen, title: 'Interval Halving', desc: 'Guaranteed convergence for continuous functions.' },
-        { icon: Target,   title: 'Root Finding',     desc: 'Finds real roots of f(x) = 0.' },
-        { icon: Lightbulb, title: 'Photo Problem',    desc: 'Solve f(x) = x³ - x - 1 = 0.' },
-      ],
-      formulas: [
-        {
-          title: 'Bisection Formula',
-          formula: 'x_n = (a + b) / 2',
-          variables: [
-            { sym: 'a, b', def: 'Interval boundaries where f(a) · f(b) < 0' },
-            { sym: 'x_n',  def: 'Midpoint approximation of root' },
-            { sym: 'f(x_n)', def: 'Function value. Sets new boundary matching sign.' },
-          ]
-        }
-      ]
-    },
-    'Newton\u2019s Interpolation': {
-      features: [
-        { icon: BookOpen, title: 'Best for equal intervals', desc: 'Useful when data points are equally spaced.' },
-        { icon: Target, title: 'High Accuracy', desc: 'Provides accurate results within the given range.' },
-        { icon: Lightbulb, title: 'Applications', desc: 'Engineering, Physics, Economics, and many more.' },
-      ],
-      formulas: [
-        {
-          title: 'Newton\u2019s Forward Interpolation Formula',
-          formula: 'P(x) = y\u2080 + u\u0394y\u2080 + u(u\u22121)/2! \u0394\u00B2y\u2080 + u(u\u22121)(u\u22122)/3! \u0394\u00B3y\u2080 + ...',
-          variables: [
-            { sym: 'u', def: '(x \u2212 x\u2080) / h' },
-            { sym: 'x\u2080', def: 'First value of x' },
-            { sym: 'h', def: 'Common difference between x values' },
-            { sym: '\u0394y\u2080', def: 'First forward difference' },
-            { sym: '\u0394\u00B2y\u2080', def: 'Second forward difference' },
-            { sym: '\u0394\u00B3y\u2080', def: 'Third forward difference' },
-          ]
-        },
-        {
-          title: 'Newton\u2019s Backward Interpolation Formula',
-          formula: 'P(x) = y\u2099 + u\u2207y\u2099 + u(u+1)/2! \u2207\u00B2y\u2099 + u(u+1)(u+2)/3! \u2207\u00B3y\u2099 + ...',
-          variables: [
-            { sym: 'u', def: '(x \u2212 x\u2099) / h' },
-            { sym: 'x\u2099', def: 'Last value of x' },
-            { sym: 'h', def: 'Common difference between x values' },
-            { sym: '\u2207y\u2099', def: 'First backward difference' },
-            { sym: '\u2207\u00B2y\u2099', def: 'Second backward difference' },
-            { sym: '\u2207\u00B3y\u2099', def: 'Third backward difference' },
-          ]
-        },
-      ]
-    },
-    'Newton\u2019s Difference': {
-      features: [
-        { icon: BookOpen, title: 'Differentiation from tables', desc: 'Compute derivatives from tabulated data.' },
-        { icon: Target, title: 'Multiple orders', desc: 'Find first and second order derivatives.' },
-        { icon: Lightbulb, title: 'Applications', desc: 'Rate of change, slope analysis, curve fitting.' },
-      ],
-      formulas: [
-        {
-          title: 'Newton\u2019s Forward Differentiation Formula',
-          formula: 'dy/dx = 1/h [\u0394y\u2080 \u2212 1/2 \u0394\u00B2y\u2080 + 1/3 \u0394\u00B3y\u2080 \u2212 ...]',
-          variables: [
-            { sym: 'h', def: 'Step size (common difference)' },
-            { sym: '\u0394y\u2080', def: 'First forward difference at x\u2080' },
-            { sym: '\u0394\u00B2y\u2080', def: 'Second forward difference at x\u2080' },
-            { sym: '\u0394\u00B3y\u2080', def: 'Third forward difference at x\u2080' },
-          ]
-        },
-        {
-          title: 'Newton\u2019s Backward Differentiation Formula',
-          formula: 'dy/dx = 1/h [\u2207y\u2099 + 1/2 \u2207\u00B2y\u2099 + 1/3 \u2207\u00B3y\u2099 + ...]',
-          variables: [
-            { sym: 'h', def: 'Step size (common difference)' },
-            { sym: '\u2207y\u2099', def: 'First backward difference at x\u2099' },
-            { sym: '\u2207\u00B2y\u2099', def: 'Second backward difference at x\u2099' },
-            { sym: '\u2207\u00B3y\u2099', def: 'Third backward difference at x\u2099' },
-          ]
-        },
-      ]
-    },
-    'Trapezoidal Rule': {
-      features: [
-        { icon: BookOpen, title: 'Simple integration', desc: 'Approximates area using trapezoids.' },
-        { icon: Target, title: 'First order accuracy', desc: 'Error is O(h\u00B2) for smooth functions.' },
-        { icon: Lightbulb, title: 'Applications', desc: 'Area calculation, numerical integration.' },
-      ],
-      formulas: [
-        {
-          title: 'Trapezoidal Rule Formula',
-          formula: '\u222Bf(x)dx \u2248 h/2 [f(x\u2080) + 2\u2211f(x\u1D62) + f(x\u2099)]',
-          variables: [
-            { sym: 'h', def: '(b \u2212 a) / n — Step size' },
-            { sym: 'a, b', def: 'Lower and upper limits of integration' },
-            { sym: 'n', def: 'Number of sub-intervals' },
-            { sym: 'f(x\u2080)', def: 'Function value at first point' },
-            { sym: 'f(x\u2099)', def: 'Function value at last point' },
-            { sym: '\u2211f(x\u1D62)', def: 'Sum of function values at interior points' },
-          ]
-        },
-      ]
-    },
-    'Simpson\u2019s 1/3 Rule': {
-      features: [
-        { icon: BookOpen, title: 'Quadratic approximation', desc: 'Uses parabolic arcs for higher accuracy.' },
-        { icon: Target, title: 'Higher order accuracy', desc: 'Error is O(h\u2074) — better than Trapezoidal.' },
-        { icon: Lightbulb, title: 'Requirement', desc: 'Number of intervals must be even.' },
-      ],
-      formulas: [
-        {
-          title: 'Simpson\u2019s 1/3 Rule Formula',
-          formula: '\u222Bf(x)dx \u2248 h/3 [f(x\u2080) + 4\u2211f(x_odd) + 2\u2211f(x_even) + f(x\u2099)]',
-          variables: [
-            { sym: 'h', def: '(b \u2212 a) / n — Step size' },
-            { sym: 'n', def: 'Number of sub-intervals (must be even)' },
-            { sym: '\u2211f(x_odd)', def: 'Sum of function values at odd-indexed points' },
-            { sym: '\u2211f(x_even)', def: 'Sum of function values at even-indexed points' },
-          ]
-        },
-      ]
-    },
-    'Simpson\u2019s 3/8 Rule': {
-      features: [
-        { icon: BookOpen, title: 'Cubic approximation', desc: 'Uses cubic polynomial for precision.' },
-        { icon: Target, title: 'High precision', desc: 'Better accuracy for smooth curves.' },
-        { icon: Lightbulb, title: 'Requirement', desc: 'Number of intervals must be multiple of 3.' },
-      ],
-      formulas: [
-        {
-          title: 'Simpson\u2019s 3/8 Rule Formula',
-          formula: '\u222Bf(x)dx \u2248 3h/8 [f(x\u2080) + 3\u2211f(x\u1D62\u22603n) + 2\u2211f(x\u1D62\u22610) + f(x\u2099)]',
-          variables: [
-            { sym: 'h', def: '(b \u2212 a) / n — Step size' },
-            { sym: 'n', def: 'Number of sub-intervals (multiple of 3)' },
-          ]
-        },
-      ]
-    },
-    'RK4': {
-      features: [
-        { icon: BookOpen, title: 'ODE Solver', desc: 'Solves ordinary differential equations numerically.' },
-        { icon: Target, title: 'Fourth-order accuracy', desc: 'Error is O(h\u2075) per step.' },
-        { icon: Lightbulb, title: 'Applications', desc: 'Physics simulations, population models.' },
-      ],
-      formulas: [
-        {
-          title: 'Runge-Kutta 4th Order Method',
-          formula: 'y\u2099\u208A\u2081 = y\u2099 + (1/6)(k\u2081 + 2k\u2082 + 2k\u2083 + k\u2084)',
-          variables: [
-            { sym: 'k\u2081', def: 'h \u00B7 f(x\u2099, y\u2099)' },
-            { sym: 'k\u2082', def: 'h \u00B7 f(x\u2099 + h/2, y\u2099 + k\u2081/2)' },
-            { sym: 'k\u2083', def: 'h \u00B7 f(x\u2099 + h/2, y\u2099 + k\u2082/2)' },
-            { sym: 'k\u2084', def: 'h \u00B7 f(x\u2099 + h, y\u2099 + k\u2083)' },
-            { sym: 'h', def: 'Step size' },
-          ]
-        },
-      ]
-    },
-    "Taylor's Method": {
-      features: [
-        { icon: BookOpen, title: 'Power Series Solution', desc: 'Approximates solutions of differential equations by calculating terms of its Taylor series.' },
-        { icon: Target, title: 'High-Order Derivatives', desc: 'Requires successive differentiation of the ODE function at the initial point.' },
-        { icon: Lightbulb, title: 'Photo Problem', desc: 'Q1: Solve dy/dx = x - y² with y(0)=1 up to 4th-order derivative.' },
-      ],
-      formulas: [
-        {
-          title: 'Taylor\'s Series Expansion',
-          formula: 'y(x) = y\u2080 + (x - x\u2080)y\'\u2080 + (x - x\u2080)\u00B2/2! · y\'\'\u2080 + (x - x\u2080)\u00B3/3! · y\'\'\'\u2080 + (x - x\u2080)\u2074/4! · y\u207F\u2080',
-          variables: [
-            { sym: 'x\u2080, y\u2080', def: 'Initial condition coordinates' },
-            { sym: 'y\'\u2080', def: 'f(x\u2080, y\u2080) — first derivative value' },
-            { sym: 'y\'\'\u2080', def: 'y\'\' evaluated at (x\u2080, y\u2080)' },
-            { sym: 'y\'\'\'\u2080', def: 'y\'\'\' evaluated at (x\u2080, y\u2080)' },
-            { sym: 'y\u207F\u2080', def: 'Fourth derivative y⁽⁴⁾ evaluated at (x\u2080, y\u2080)' },
-          ]
-        }
-      ]
-    },
-    "Euler's Method": {
-      features: [
-        { icon: BookOpen, title: 'Tangent Linear Solver', desc: 'Solves ordinary differential equations numerically using step-by-step tangent line approximations.' },
-        { icon: Target, title: 'First-order Accuracy', desc: 'Local truncation error is O(h²), while global error is O(h).' },
-        { icon: Lightbulb, title: 'Photo Problems', desc: 'Q1: solve dy/dx = -y, y(0)=1, h=0.01. Q2: solve dy/dx = x + y, y(0)=0, h=0.2.' },
-      ],
-      formulas: [
-        {
-          title: 'Euler\'s Iterative Formula',
-          formula: 'y\u2099\u208A\u2081 = y\u2099 + h · f(x\u2099, y\u2099)',
-          variables: [
-            { sym: 'x\u2099, y\u2099', def: 'Coordinates at step n' },
-            { sym: 'h', def: 'Step size' },
-            { sym: 'f(x\u2099, y\u2099)', def: 'Derivative function dy/dx evaluating tangent slope' },
-            { sym: 'y\u2099\u208A\u2081', def: 'Approximated value of y at next step coordinate x\u2099 + h' },
-          ]
-        }
-      ]
-    },
-    "Modified Euler's Method": {
-      features: [
-        { icon: BookOpen, title: 'Predictor-Corrector Solver', desc: 'Solves ordinary differential equations step-by-step using midpoint average slope estimations.' },
-        { icon: Target, title: 'Second-order Accuracy', desc: 'Local truncation error is O(h³), while global error is O(h²).' },
-        { icon: Lightbulb, title: 'Photo Problems', desc: 'Q1: solve dy/dx = x² + y, y(0)=1, h=0.05. Q2: solve dy/dx = 2 + √xy, y(1)=1, h=0.5.' },
-      ],
-      formulas: [
-        {
-          title: 'Modified Euler\'s Iterative Formula',
-          formula: 'y\u2099\u208A\u2081 = y\u2099 + h \u00B7 f(x\u2099 + h/2, y\u2099 + (h/2)f(x\u2099, y\u2099))',
-          variables: [
-            { sym: 'x\u2099, y\u2099', def: 'Coordinates at step n' },
-            { sym: 'h', def: 'Step size' },
-            { sym: 'f(x\u2099, y\u2099)', def: 'Tangent slope evaluating derivative dy/dx at starting point' },
-            { sym: 'y_pred', def: 'Euler predicted y at midpoint: y\u2099 + (h/2)f(x\u2099, y\u2099)' },
-            { sym: 'x\u2099 + h/2', def: 'Midpoint x coordinate' },
-            { sym: 'y\u2099\u208A\u2081', def: 'Approximated value of y at next step coordinate x\u2099 + h' }
-          ]
-        }
-      ]
-    },
-    "Adams-Moulton Method": {
-      features: [
-        { icon: BookOpen, title: '4-Step Predictor-Corrector', desc: 'Solves ordinary differential equations numerically using an explicit predictor and an implicit corrector.' },
-        { icon: Target, title: 'Fourth-order Accuracy', desc: 'Local truncation error is O(h⁵), while global error is O(h⁴).' },
-        { icon: Lightbulb, title: 'Photo Problems', desc: 'Q1: solve dy/dx = 1 + y², y(0)=0, h=0.2, target y(0.8) with given starting values. Q2: solve dy/dx = x² + y, y(0)=1, h=0.1, target y(0.5).' },
-      ],
-      formulas: [
-        {
-          title: 'Adams-Bashforth Predictor Formula (Explicit)',
-          formula: 'y\u2099\u208A\u2081\u1D56 = y\u2099 + (h/24) [55 f\u2099 - 59 f\u2099\u208B\u2081 + 37 f\u2099\u208B\u2082 - 9 f\u2099\u208B\u2083]',
-          variables: [
-            { sym: 'x\u2099, y\u2099', def: 'Coordinates at current step n' },
-            { sym: 'h', def: 'Step size' },
-            { sym: 'f\u2099, f\u2099\u208B\u2081, ...', def: 'Evaluated derivative values at current and past points' },
-            { sym: 'y\u2099\u208A\u2081\u1D56', def: 'Adams-Bashforth predicted y value at step n+1' }
-          ]
-        },
-        {
-          title: 'Adams-Moulton Corrector Formula (Implicit)',
-          formula: 'y\u2099\u208A\u2081\u1D9c = y\u2099 + (h/24) [9 f(x\u2099\u208A\u2081, y\u2099\u208A\u2081\u1D56) + 19 f\u2099 - 5 f\u2099\u208B\u2081 + f\u2099\u208B\u2082]',
-          variables: [
-            { sym: 'f(x\u2099\u208A\u2081, y\u2099\u208A\u2081\u1D56)', def: 'Derivative evaluated at predicted next point' },
-            { sym: 'y\u2099\u208A\u2081\u1D9c', def: 'Corrected final y value at step n+1' }
-          ]
-        }
-      ]
-    },
-    'Matrix Multiplication': {
-      features: [
-        { icon: BookOpen, title: 'Row × Column Rule', desc: 'Each entry C[i][j] is the dot product of row i of A with column j of B.' },
-        { icon: Target, title: 'Dimension Requirement', desc: 'A (m×n) × B (n×p) → C (m×p). Inner dimensions must match.' },
-        { icon: Lightbulb, title: 'Problems', desc: 'Q5-Q6: Matrix products. Q7-Q8: Orthogonal matrix verifications (AAᵀ = I).' },
-      ],
-      formulas: [
-        {
-          title: 'Matrix Multiplication Formula',
-          formula: 'C[i][j] = \u03A3 A[i][k] \u00B7 B[k][j]  (k = 1 to n)',
-          variables: [
-            { sym: 'A', def: 'm \u00D7 n matrix (left operand)' },
-            { sym: 'B', def: 'n \u00D7 p matrix (right operand)' },
-            { sym: 'C', def: 'm \u00D7 p result matrix' },
-            { sym: 'i', def: 'Row index of result matrix C' },
-            { sym: 'j', def: 'Column index of result matrix C' },
-            { sym: 'k', def: 'Summation index running from 1 to n' },
-          ]
-        },
-        {
-          title: 'Orthogonal Matrix Verification',
-          formula: 'A \u00D7 A\u1D40 = A\u1D40 \u00D7 A = I',
-          variables: [
-            { sym: 'A', def: 'A square matrix' },
-            { sym: 'A\u1D40', def: 'Transpose of matrix A (rows and columns swapped)' },
-            { sym: 'I', def: 'Identity Matrix' },
-          ]
-        },
-        {
-          title: '2\u00D72 Matrix Multiplication (Expanded)',
-          formula: '[[a,b],[c,d]] \u00D7 [[e,f],[g,h]] = [[ae+bg, af+bh],[ce+dg, cf+dh]]',
-          variables: [
-            { sym: 'C[1][1]', def: 'a\u00B7e + b\u00B7g  (Row 1 \u00B7 Col 1)' },
-            { sym: 'C[1][2]', def: 'a\u00B7f + b\u00B7h  (Row 1 \u00B7 Col 2)' },
-            { sym: 'C[2][1]', def: 'c\u00B7e + d\u00B7g  (Row 2 \u00B7 Col 1)' },
-            { sym: 'C[2][2]', def: 'c\u00B7f + d\u00B7h  (Row 2 \u00B7 Col 2)' },
-          ]
-        },
-      ]
-    },
+  const handlePlay = () => {
+    if (playback === 'DONE') { setCurrentStep(-1); setTimeout(() => { setCurrentStep(0); setPlayback('PLAYING'); }, 50); return; }
+    if (playback === 'IDLE') { setCurrentStep(0); setPlayback('PLAYING'); return; }
+    if (playback === 'PAUSED') { setPlayback('PLAYING'); return; }
+    setPlayback('PAUSED');
   };
 
-  const activeFunction = PREDEFINED_FUNCTIONS.find(f => f.id === funcId);
-  const activeQuestion = NEWTON_QUESTIONS.find(q => q.id === newtonQuestionId);
-  const activeDiffQuestion = NEWTON_DIFF_QUESTIONS.find(qd => qd.id === newtonDiffQuestionId);
-  const activeSimpson13Question = SIMPSON_13_QUESTIONS.find(q => q.id === simpson13ProblemId);
-  const activeSimpson38Question = SIMPSON_38_QUESTIONS.find(q => q.id === simpson38ProblemId);
-  const activeRKQuestion = RK_QUESTIONS.find(q => q.id === rkProblemId);
-  const activeMatMulQuestion = MATRIX_MUL_QUESTIONS.find(q => q.id === matMulQuestionId);
-  const activeTaylorQuestion = TAYLOR_QUESTIONS.find(q => q.id === taylorQuestionId);
-  const activeEulerQuestion = EULER_QUESTIONS.find(q => q.id === eulerQuestionId);
-  const activeModifiedEulerQuestion = MODIFIED_EULER_QUESTIONS.find(q => q.id === modifiedEulerQuestionId);
-  const activeAdamsMoultonQuestion = ADAMS_MOULTON_QUESTIONS.find(q => q.id === adamsMoultonQuestionId);
-
-  // Engine Event Handlers
-  const handleExplanationUpdate = (text) => {
-    setCurrentExplanation(text);
+  const handleNext = () => {
+    if (!result?.steps) return;
+    setPlayback('PAUSED');
+    setCurrentStep(p => Math.min(p + 1, result.steps.length - 1));
   };
 
-  const handleExecutionFinished = () => {
-    setPlaybackState('FINISHED');
-  };
-
-  const handlePlayPause = () => {
-    if (playbackState === 'FINISHED' || playbackState === 'IDLE') {
-      setPlaybackState('IDLE');
-      setCurrentExplanation('Waiting for execution to start...');
-      setTimeout(() => setPlaybackState('PLAYING'), 150);
-    } else if (playbackState === 'PLAYING') {
-      setPlaybackState('PAUSED');
-    } else if (playbackState === 'PAUSED') {
-      setPlaybackState('PLAYING');
-    }
+  const handlePrev = () => {
+    setPlayback('PAUSED');
+    setCurrentStep(p => Math.max(p - 1, 0));
   };
 
   const handleReplay = () => {
-    setPlaybackState('IDLE');
-    setCurrentExplanation('Waiting for execution to start...');
-    setTimeout(() => setPlaybackState('PLAYING'), 150);
+    clearTimeout(playbackRef.current);
+    setCurrentStep(-1);
+    setPlayback('IDLE');
+    setTimeout(() => { setCurrentStep(0); setPlayback('PLAYING'); }, 100);
   };
 
-  const handleCardClick = (cardId) => {
-    setSelectedMethod(cardId);
-    setShowFormula(true);
-    setFormulaPage(0);
-  };
-
-  const handleLaunchSimulator = () => {
-    setShowFormula(false);
-    setPlaybackState('IDLE');
-  };
-
-  const renderActiveEngine = () => {
-    let engineElement = null;
-
-    if (selectedMethod === 'Bisection Method') {
-      engineElement = (
-        <NotebookEngine
-          bisectionProblemId={bisectionProblemId}
-          bisectionIterations={bisectionIterations}
-        />
-      );
-    } else if (selectedMethod === 'Trapezoidal Rule') {
-      engineElement = (
-        <NotebookEngine 
-          func={activeFunction} 
-          a={parseFloat(a)} 
-          b={parseFloat(b)} 
-          n={parseInt(n)} 
-        />
-      );
-    } else if (selectedMethod === 'Newton\u2019s Interpolation') {
-      engineElement = (
-        <NotebookEngine
-          dataset={activeQuestion}
-          targetX={parseFloat(newtonTargetX)}
-          direction={newtonDirection}
-        />
-      );
-    } else if (selectedMethod === 'Newton\u2019s Difference') {
-      engineElement = (
-        <NotebookEngine
-          dataset={activeDiffQuestion}
-          targetX={parseFloat(newtonDiffTargetX)}
-          direction={newtonDiffDirection}
-        />
-      );
-    } else if (selectedMethod === 'Simpson\u2019s 1/3 Rule' || selectedMethod === "Simpson's 1/3 Rule") {
-      engineElement = (
-        <NotebookEngine
-          dataset={activeSimpson13Question}
-          func={activeFunction}
-          a={parseFloat(simpson13A)}
-          b={parseFloat(simpson13B)}
-          n={parseInt(simpson13N)}
-        />
-      );
-    } else if (selectedMethod === 'Simpson\u2019s 3/8 Rule' || selectedMethod === "Simpson's 3/8 Rule") {
-      engineElement = (
-        <NotebookEngine
-          dataset={activeSimpson38Question}
-          func={activeFunction}
-          a={parseFloat(simpson38A)}
-          b={parseFloat(simpson38B)}
-          n={parseInt(simpson38N)}
-        />
-      );
-    } else if (selectedMethod === 'RK4') {
-      engineElement = (
-        <NotebookEngine
-          dataset={activeRKQuestion}
-          rkX0={parseFloat(rkX0)}
-          rkY0={parseFloat(rkY0)}
-          rkH={parseFloat(rkH)}
-          rkSteps={parseInt(rkSteps)}
-          rkFuncId={rkFuncId}
-        />
-      );
-    } else if (selectedMethod === "Euler's Method") {
-      return (
-        <NotebookEngine
-          dataset={activeEulerQuestion}
-          rkX0={parseFloat(rkX0)}
-          rkY0={parseFloat(rkY0)}
-          rkH={parseFloat(rkH)}
-          rkSteps={parseInt(rkSteps)}
-          rkFuncId={rkFuncId}
-          method={selectedMethod}
-          playbackState={playbackState}
-          speed={speed}
-          onExplain={handleExplanationUpdate}
-          onFinish={handleExecutionFinished}
-        />
-      );
-    } else if (selectedMethod === "Modified Euler's Method") {
-      return (
-        <NotebookEngine
-          dataset={activeModifiedEulerQuestion}
-          rkX0={parseFloat(rkX0)}
-          rkY0={parseFloat(rkY0)}
-          rkH={parseFloat(rkH)}
-          rkSteps={parseInt(rkSteps)}
-          rkFuncId={rkFuncId}
-          method={selectedMethod}
-          playbackState={playbackState}
-          speed={speed}
-          onExplain={handleExplanationUpdate}
-          onFinish={handleExecutionFinished}
-        />
-      );
-    } else if (selectedMethod === "Adams-Moulton Method") {
-      return (
-        <NotebookEngine
-          dataset={activeAdamsMoultonQuestion}
-          rkX0={parseFloat(rkX0)}
-          rkY0={parseFloat(rkY0)}
-          rkH={parseFloat(rkH)}
-          rkSteps={parseInt(rkSteps)}
-          rkFuncId={rkFuncId}
-          method={selectedMethod}
-          playbackState={playbackState}
-          speed={speed}
-          onExplain={handleExplanationUpdate}
-          onFinish={handleExecutionFinished}
-        />
-      );
-    } else if (selectedMethod === "Taylor's Method") {
-      engineElement = (
-        <NotebookEngine
-          dataset={activeTaylorQuestion}
-          rkX0={parseFloat(rkX0)}
-          rkY0={parseFloat(rkY0)}
-          rkH={parseFloat(rkH)}
-          rkFuncId={rkFuncId}
-        />
-      );
-    } else if (selectedMethod === 'Matrix Multiplication') {
-      engineElement = (
-        <NotebookEngine
-          matMulQuestion={activeMatMulQuestion}
-        />
-      );
+  // ── Solve ─────────────────────────────────────────────────
+  const handleSolve = async (q = null) => {
+    const query = q || problem.trim();
+    if (!query) { setError('Please enter a mathematical problem to solve.'); return; }
+    setLoading(true);
+    setError('');
+    setResult(null);
+    setPlayback('IDLE');
+    setCurrentStep(-1);
+    setActiveTab('steps');
+    try {
+      const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await axios.post(API + '/api/math/solve', { problem: query, explanationMode });
+      if (!res.data.validation?.isValid && res.data.validation?.message) {
+        setError(res.data.validation.message);
+        setResult(res.data);
+      } else {
+        setResult(res.data);
+        const entry = { problem: query, topic: res.data.analysis?.topic, ts: Date.now(), mode: explanationMode };
+        const newHistory = [entry, ...history.filter(h => h.problem !== query)].slice(0, 20);
+        setHistory(newHistory);
+        localStorage.setItem('mathHistory', JSON.stringify(newHistory));
+        setTimeout(() => { setCurrentStep(0); setPlayback('PLAYING'); }, 400);
+      }
+    } catch (err) {
+      setError('Failed to connect to server. Check your connection or backend service.');
+    } finally {
+      setLoading(false);
     }
-
-    if (!engineElement) {
-      return (
-        <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
-          <Activity className="w-16 h-16 mb-4 opacity-20" />
-          <p className="text-xl font-bold">Engine Offline</p>
-          <p className="text-sm">The {selectedMethod} notebook engine is currently under construction.</p>
-        </div>
-      );
-    }
-
-    return cloneElement(engineElement, {
-      method: selectedMethod,
-      playbackState,
-      speed,
-      onExplain: handleExplanationUpdate,
-      onFinish: handleExecutionFinished,
-      onPlaybackStateChange: setPlaybackState
-    });
   };
 
-  const getTopQuestionText = () => {
-    if (selectedMethod === 'Bisection Method') {
-      return bisectionProblemId === 'bis1'
-        ? 'Find the real root of the equation f(x) = x³ - x - 1 = 0'
-        : 'Find the real root of the equation f(x) = x³ - 4x - 9 = 0';
-    } else if (selectedMethod === 'Trapezoidal Rule') {
-      return `Evaluate: I = \u222B [${a} to ${b}] ( ${activeFunction?.label?.split('=')[1]?.trim() || ''} ) dx using Trapezoidal Rule.`;
-    } else if (selectedMethod === 'Newton\u2019s Interpolation') {
-      return activeQuestion?.question || '';
-    } else if (selectedMethod === 'Newton\u2019s Difference') {
-      return activeDiffQuestion?.question || '';
-    } else if (selectedMethod === 'Simpson\u2019s 1/3 Rule' || selectedMethod === "Simpson's 1/3 Rule") {
-      if (simpson13ProblemId === 'custom') {
-        return `Evaluate: I = \u222B [${simpson13A} to ${simpson13B}] ( ${activeFunction?.label?.split('=')[1]?.trim() || ''} ) dx using Simpson's 1/3 Rule.`;
-      }
-      return activeSimpson13Question?.question || '';
-    } else if (selectedMethod === 'Simpson\u2019s 3/8 Rule' || selectedMethod === "Simpson's 3/8 Rule") {
-      if (simpson38ProblemId === 'custom') {
-        return `Evaluate: I = \u222B [${simpson38A} to ${simpson38B}] ( ${activeFunction?.label?.split('=')[1]?.trim() || ''} ) dx using Simpson's 3/8 Rule.`;
-      }
-      return activeSimpson38Question?.question || '';
-    } else if (selectedMethod === 'RK4') {
-      if (rkProblemId === 'custom') {
-        const RK_FUNCTIONS = {
-          'y_minus_x': "dy/dx = y - x",
-          'x_plus_y':  "dy/dx = x + y",
-          'minus_2xy': "dy/dx = -2xy",
-          'y_plus_x2': "dy/dx = y + x\u00B2"
-        };
-        const odeStr = RK_FUNCTIONS[rkFuncId] || "dy/dx = y - x";
-        return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${ (parseFloat(rkX0) + parseInt(rkSteps) * parseFloat(rkH)).toFixed(2) }) in ${rkSteps} step(s) of h = ${rkH} using RK4.`;
-      }
-      return activeRKQuestion?.question || '';
-    } else if (selectedMethod === "Taylor's Method") {
-      if (taylorQuestionId === 'custom') {
-        const RK_FUNCTIONS = {
-          'y_minus_x': "dy/dx = y - x",
-          'x_plus_y':  "dy/dx = x + y",
-          'minus_2xy': "dy/dx = -2xy",
-          'y_plus_x2': "dy/dx = y + x\u00B2"
-        };
-        const odeStr = RK_FUNCTIONS[rkFuncId] || "dy/dx = y - x";
-        return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${rkH}) using Taylor's Series Method.`;
-      }
-      return activeTaylorQuestion?.question || '';
-    } else if (selectedMethod === "Euler's Method") {
-      if (eulerQuestionId === 'custom') {
-        const RK_FUNCTIONS = {
-          'y_minus_x': "dy/dx = y - x",
-          'x_plus_y':  "dy/dx = x + y",
-          'minus_2xy': "dy/dx = -2xy",
-          'y_plus_x2': "dy/dx = y + x\u00B2"
-        };
-        const odeStr = RK_FUNCTIONS[rkFuncId] || "dy/dx = y - x";
-        return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${ (parseFloat(rkX0) + parseInt(rkSteps) * parseFloat(rkH)).toFixed(2) }) in ${rkSteps} step(s) of h = ${rkH} using Euler's Method.`;
-      }
-      return activeEulerQuestion?.question || '';
-    } else if (selectedMethod === "Modified Euler's Method") {
-      if (modifiedEulerQuestionId === 'custom') {
-        const RK_FUNCTIONS = {
-          'y_minus_x': "dy/dx = y - x",
-          'x_plus_y':  "dy/dx = x + y",
-          'minus_2xy': "dy/dx = -2xy",
-          'y_plus_x2': "dy/dx = y + x\u00B2",
-          'x2_plus_y': "dy/dx = x² + y",
-          'two_plus_sqrt_xy': "dy/dx = 2 + √xy"
-        };
-        const odeStr = RK_FUNCTIONS[rkFuncId] || "dy/dx = y - x";
-        return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${ (parseFloat(rkX0) + parseInt(rkSteps) * parseFloat(rkH)).toFixed(2) }) in ${rkSteps} step(s) of h = ${rkH} using Modified Euler's Method.`;
-      }
-      return activeModifiedEulerQuestion?.question || '';
-    } else if (selectedMethod === "Adams-Moulton Method") {
-      if (adamsMoultonQuestionId === 'custom') {
-        const RK_FUNCTIONS = {
-          'y_minus_x': "dy/dx = y - x",
-          'x_plus_y':  "dy/dx = x + y",
-          'minus_2xy': "dy/dx = -2xy",
-          'y_plus_x2': "dy/dx = y + x\u00B2",
-          'x2_plus_y': "dy/dx = x² + y",
-          'two_plus_sqrt_xy': "dy/dx = 2 + √xy"
-        };
-        const odeStr = RK_FUNCTIONS[rkFuncId] || "dy/dx = y - x";
-        return `Given ${odeStr}, y(${rkX0}) = ${rkY0}, find y(${ (parseFloat(rkX0) + 4 * parseFloat(rkH)).toFixed(2) }) using Adams-Moulton predictor-corrector.`;
-      }
-      return activeAdamsMoultonQuestion?.question || '';
-    } else if (selectedMethod === 'Matrix Multiplication') {
-      return activeMatMulQuestion?.question || 'Compute matrix product using row × column dot product rule.';
+  // ── Voice ─────────────────────────────────────────────────
+  const handleVoice = () => {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      setError('Voice input not supported in this browser. Try Chrome.'); return;
     }
-    return `Solving math system using ${selectedMethod}.`;
+    if (voiceActive) { recognitionRef.current?.stop(); setVoiceActive(false); return; }
+    const SR = window.webkitSpeechRecognition || window.SpeechRecognition;
+    const r = new SR();
+    r.lang = 'en-US'; r.interimResults = false;
+    r.onresult = (e) => {
+      const t = e.results[0][0].transcript;
+      const cleaned = t
+        .replace(/square/gi, '^2').replace(/cube/gi, '^3').replace(/squared/gi, '^2')
+        .replace(/cubed/gi, '^3').replace(/plus/gi, '+').replace(/minus/gi, '-')
+        .replace(/times/gi, '*').replace(/divided by/gi, '/').replace(/equals/gi, '=')
+        .replace(/to the power of/gi, '^').replace(/pi/gi, 'pi').replace(/infinity/gi, 'infinity')
+        .replace(/sine/gi, 'sin').replace(/cosine/gi, 'cos').replace(/tangent/gi, 'tan');
+      setProblem(cleaned);
+      setVoiceActive(false);
+    };
+    r.onerror = () => setVoiceActive(false);
+    r.onend = () => setVoiceActive(false);
+    recognitionRef.current = r;
+    r.start();
+    setVoiceActive(true);
   };
 
-  // =============================================
-  // VIEW 1: CARD SELECTION DASHBOARD
-  // =============================================
-  if (!selectedMethod) {
-    return (
-      <MathBackground>
-        {/* Header breadcrumb */}
-        <header className="h-16 flex items-center justify-between px-8 relative z-20 bg-[var(--db-card-bg)]/30 border-b border-[var(--db-card-border)] backdrop-blur-sm">
-          <div className="flex items-center">
-            <GlobalBackButton className="mr-4" />
-            <div className="flex items-center text-sm font-medium text-[var(--db-text-muted)] gap-2">
-              <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span> <ChevronRight className="w-4 h-4" />
-              <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects')}>Subjects</span> <ChevronRight className="w-4 h-4" />
-              <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects/math-proto', { state: { activeView: 'practical' } })}>Mathematics</span> <ChevronRight className="w-4 h-4" />
-              <span className="text-emerald-500 font-bold">Numerical Methods</span>
-            </div>
-          </div>
-          <ThemeToggleButton />
-        </header>
+  // ── Image OCR ─────────────────────────────────────────────
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      setLoading(true);
+      try {
+        const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await axios.post(API + '/api/math/ocr', { image: ev.target.result });
+        if (res.data.equation) { setProblem(res.data.equation); inputRef.current?.focus(); }
+      } catch { setError('OCR failed. Please try typing the equation.'); }
+      finally { setLoading(false); }
+    };
+    reader.readAsDataURL(file);
+  };
 
-        <main className="max-w-7xl mx-auto w-full px-8 py-8 relative z-10">
-          {/* Title Section */}
-          <div className="mb-10 text-left flex flex-col gap-2">
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => navigate('/subjects/math-proto', { state: { activeView: 'practical' } })}
-                className="p-3 bg-[var(--db-card-bg)] hover:bg-[var(--db-btn-secondary-hover)] border border-[var(--db-card-border)] rounded-2xl transition shadow-sm text-[var(--db-text-main)] flex items-center justify-center"
-                title="Back to Mathematics Lab"
-              >
-                <ArrowLeft className="w-6 h-6" />
-              </button>
-              <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-[var(--db-text-main)]">
-                NUMERICAL METHODS LAB
-              </h1>
-            </div>
-            <p className="text-[var(--db-text-secondary)] text-lg mt-1">Select a mathematical runtime engine to execute your solution live.</p>
-          </div>
+  // ── PDF ───────────────────────────────────────────────────
+  const handlePdfUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPdfLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await axios.post(API + '/api/math/extract-pdf', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setPdfProblems(res.data.problems || []);
+      setShowPdfModal(true);
+    } catch { setError('PDF extraction failed.'); }
+    finally { setPdfLoading(false); }
+  };
 
-          {/* Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {CARDS.map((card, index) => (
-              <motion.div
-                key={card.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08, type: 'spring', stiffness: 100 }}
-                whileHover={{ y: -8, scale: 1.02 }}
-                onClick={() => handleCardClick(card.id)}
-                className="relative rounded-[24px] cursor-pointer group overflow-hidden border border-[var(--db-card-border)]/65 bg-[var(--db-card-bg)]/45 dark:bg-[var(--db-card-bg)]/70 backdrop-blur-xl hover:border-emerald-500/40 hover:scale-[1.01] transition-all duration-500 shadow-lg hover:shadow-emerald-500/5 p-6 flex flex-col justify-between min-h-[380px]"
-              >
-                {/* Light flowing background color */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/5 via-blue-500/5 to-teal-500/5 dark:from-emerald-500/10 dark:via-blue-500/10 dark:to-teal-500/10 opacity-70 group-hover:opacity-100 transition-opacity duration-500 bg-loop" style={{ backgroundSize: '200% 200%' }} />
+  // ── Copy Answer ───────────────────────────────────────────
+  const handleCopyAnswer = () => {
+    if (!result?.answers) return;
+    navigator.clipboard.writeText(result.answers.join(', '));
+  };
 
-                {/* Top border highlight */}
-                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-${card.colorTheme === 'amber' ? 'amber-500' : card.colorTheme === 'emerald' ? 'emerald-500' : card.colorTheme}-500/40 to-transparent`} />
+  // ── Download PDF ──────────────────────────────────────────
+  const handleDownloadPdf = async () => {
+    if (!result) return;
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      doc.setFontSize(18);
+      doc.text('EDUVERSE AI — Math Solution', 14, 22);
+      doc.setFontSize(12);
+      doc.text('Problem: ' + problem, 14, 35);
+      doc.text('Topic: ' + (result.analysis?.topic || ''), 14, 45);
+      doc.text('Algorithm: ' + (result.analysis?.algorithm || ''), 14, 55);
+      doc.text('', 14, 65);
+      doc.text('Steps:', 14, 72);
+      let y = 82;
+      (result.steps || []).forEach((step, i) => {
+        if (y > 270) { doc.addPage(); y = 20; }
+        doc.setFontSize(11);
+        doc.text('Step ' + step.number + ': ' + step.title, 14, y); y += 8;
+        doc.setFontSize(9);
+        doc.text('Formula: ' + (step.formula || ''), 18, y); y += 6;
+        doc.text('Explanation: ' + (step.explanation || ''), 18, y, { maxWidth: 175 }); y += 12;
+      });
+      if (result.answers?.length) {
+        doc.setFontSize(13);
+        doc.text('Final Answer: ' + result.answers.join(', '), 14, y + 5);
+      }
+      doc.save('math-solution-' + Date.now() + '.pdf');
+    } catch { setError('PDF download requires browser PDF support.'); }
+  };
 
-                <div className="relative z-10 space-y-4">
-                  {/* Top Row: Icon and Method Number + Title */}
-                  <div className="flex gap-4 items-start text-left">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${card.badgeClass}`}>
-                      <span className="text-xl">{card.icon}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[9px] uppercase tracking-widest font-extrabold text-[var(--db-text-muted)]">
-                        METHOD {index + 1}
-                      </span>
-                      <h3 className="text-base font-bold text-[var(--db-text-main)] mt-0.5 group-hover:text-emerald-450 transition-colors">
-                        {card.title}
-                      </h3>
-                    </div>
-                  </div>
+  // ── Insert from keyboard ─────────────────────────────────
+  const handleKeyboardInsert = (val) => {
+    const el = inputRef.current;
+    if (!el) { setProblem(p => p + val); return; }
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const newVal = problem.slice(0, start) + val + problem.slice(end);
+    setProblem(newVal);
+    setTimeout(() => { el.setSelectionRange(start + val.length, start + val.length); el.focus(); }, 0);
+  };
 
-                  {/* Description */}
-                  <p className="text-[var(--db-text-secondary)] text-xs leading-relaxed text-left line-clamp-2">
-                    {card.desc}
-                  </p>
+  const MODES = ['Beginner', 'Intermediate', 'Engineering', 'Competitive Exams', 'Professor Mode', 'Only Formula', 'Quick Answer'];
+  const EXAMPLE_PROBLEMS = [
+    { label: 'Quadratic', q: 'x^2 + 4x + 4 = 0' },
+    { label: 'Bisection', q: 'x^3 - x - 1 = 0' },
+    { label: 'Integral', q: 'integrate x^2 sin(x)' },
+    { label: 'Derivative', q: 'differentiate e^(x^2)' },
+    { label: 'Limit', q: 'lim x→0 sinx/x' },
+    { label: 'Matrix', q: 'determinant of matrix [[2,3],[1,4]]' },
+  ];
 
-                  {/* Tag Pills */}
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {card.tags.map((tag, idx) => (
-                      <span key={idx} className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-[var(--db-card-border)] bg-[var(--db-card-bg-elevated)]/50 text-[var(--db-text-secondary)]">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+  // Topology badge color
+  const complexityColor = {
+    Easy: 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30',
+    Medium: 'text-amber-400 bg-amber-500/15 border-amber-500/30',
+    Hard: 'text-rose-400 bg-rose-500/15 border-rose-500/30',
+  };
 
-                  {/* Difficulty, Time, XP row */}
-                  <div className="flex items-center gap-3 text-[11px] pt-1">
-                    <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] border ${
-                      card.status === 'Beginner' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' :
-                      card.status === 'Intermediate' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400' :
-                      'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
-                    }`}>
-                      {card.status}
-                    </span>
-                    <span className="text-[var(--db-text-muted)]">•</span>
-                    <span className="text-[var(--db-text-secondary)] font-medium font-mono">{card.time}</span>
-                    <span className="text-[var(--db-text-muted)]">•</span>
-                    <span className="text-emerald-555 dark:text-emerald-400 font-bold font-mono">{card.xp}</span>
-                  </div>
-                </div>
-
-                {/* Progress bar section */}
-                <div className="relative z-10 mt-4 pt-3 border-t border-[var(--db-card-border)] space-y-1.5 text-left">
-                  <div className="flex items-center justify-between text-[10px] font-bold text-[var(--db-text-muted)]">
-                    <span>Progress</span>
-                    <span>{card.progress}%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-800/50 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full transition-all duration-500 ${
-                        card.colorTheme === 'blue' ? 'bg-blue-500' :
-                        card.colorTheme === 'cyan' ? 'bg-cyan-500' :
-                        card.colorTheme === 'emerald' ? 'bg-emerald-500' :
-                        card.colorTheme === 'violet' ? 'bg-violet-500' :
-                        card.colorTheme === 'amber' ? 'bg-amber-500' :
-                        card.colorTheme === 'rose' ? 'bg-rose-500' :
-                        'bg-sky-500'
-                      }`}
-                      style={{ width: `${card.progress}%` }} 
-                      />
-                  </div>
-                </div>
-
-                {/* Action button at bottom */}
-                <button className={`relative z-10 w-full py-2.5 mt-5 font-bold rounded-xl text-xs transition duration-200 flex items-center justify-center gap-1.5 ${card.btnClass}`}>
-                  <span>Launch Simulator</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-
-              </motion.div>
-            ))}
-          </div>
-        </main>
-      </MathBackground>
-    );
-  }
-
-  // =============================================
-  // VIEW 2: FORMULA INTERMEDIATE PAGE
-  // =============================================
-  if (showFormula && selectedMethod) {
-    const methodFormulas = FORMULA_DATA[selectedMethod];
-    const currentCard = CARDS.find(c => c.id === selectedMethod);
-    const currentFormula = methodFormulas?.formulas?.[formulaPage] || methodFormulas?.formulas?.[0];
-    const totalPages = methodFormulas?.formulas?.length || 1;
-
-    return (
-      <MathBackground>
-        {/* Header */}
-        <header className="h-16 flex items-center justify-between px-8 relative z-20 bg-[var(--db-card-bg)]/30 border-b border-[var(--db-card-border)] backdrop-blur-sm">
-          <div className="flex items-center">
-            <button
-              onClick={() => { setSelectedMethod(null); setShowFormula(false); }}
-              className="px-4 py-1.5 hover:bg-[var(--db-btn-secondary-hover)] rounded-xl transition font-bold flex items-center gap-1.5 text-sm text-[var(--db-text-secondary)] border border-[var(--db-card-border)] bg-[var(--db-card-bg)]"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              <span>Back to Topics</span>
-            </button>
-          </div>
-          <ThemeToggleButton />
-        </header>
-
-        <main className="max-w-7xl mx-auto w-full px-8 py-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            
-            {/* LEFT PANEL — Method Info Card */}
-            <div className="lg:col-span-2">
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ type: 'spring', stiffness: 80 }}
-                className="rounded-2xl p-8 h-full flex flex-col border border-[var(--db-card-border)] bg-[var(--db-card-bg)] shadow-md"
-              >
-                {/* Status Badge */}
-                <span className="self-start text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border bg-emerald-500/15 text-emerald-500 border-emerald-500/30 mb-6">
-                  ONLINE
-                </span>
-
-                {/* Title */}
-                <h2 className="text-3xl font-extrabold text-[var(--db-text-main)] mb-3">{currentCard?.title}</h2>
-                <p className="text-[var(--db-text-secondary)] text-sm leading-relaxed mb-8">{currentCard?.desc}</p>
-
-                {/* Features */}
-                <div className="space-y-5 mb-8 flex-1">
-                  {methodFormulas?.features?.map((feat, i) => (
-                    <div key={i} className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-emerald-500/10 border border-emerald-500/25">
-                        <feat.icon className="w-5 h-5 text-emerald-550" />
-                      </div>
-                      <div>
-                        <h4 className="text-[var(--db-text-main)] font-bold text-sm">{feat.title}</h4>
-                        <p className="text-[var(--db-text-muted)] text-xs">{feat.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Launch Button */}
-                <button
-                  onClick={handleLaunchSimulator}
-                  className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-lg rounded-2xl flex items-center justify-center gap-3 transition-all shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 active:scale-[0.98]"
-                >
-                  Launch Simulator <Rocket className="w-5 h-5" />
-                </button>
-              </motion.div>
-            </div>
-
-            {/* RIGHT PANEL — Formula Display */}
-            <div className="lg:col-span-3">
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ type: 'spring', stiffness: 80, delay: 0.1 }}
-                className="rounded-2xl p-8 h-full flex flex-col border border-[var(--db-card-border)] bg-[var(--db-card-bg)] shadow-md"
-              >
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-emerald-500/10 border border-emerald-500/25">
-                      <FunctionSquare className="w-5 h-5 text-emerald-550" />
-                    </div>
-                    <span className="text-emerald-500 font-extrabold text-lg">Formula</span>
-                  </div>
-                  <button onClick={() => { setSelectedMethod(null); setShowFormula(false); }} className="p-2 hover:bg-[var(--db-btn-secondary-hover)] rounded-lg transition text-[var(--db-text-muted)] hover:text-[var(--db-text-main)]">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {/* Formula Title */}
-                <h3 className="text-xl font-bold text-[var(--db-text-main)] mb-6">{currentFormula?.title}</h3>
-
-                {/* Formula Box */}
-                <div className="rounded-xl p-6 mb-6 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)]">
-                  <p className="text-emerald-600 dark:text-emerald-300 text-xl md:text-2xl font-mono text-center leading-relaxed tracking-wide">
-                    {currentFormula?.formula}
-                  </p>
-                </div>
-
-                {/* Variables */}
-                <div className="flex-1">
-                  <h4 className="text-[var(--db-text-main)] font-bold text-lg mb-4">Where:</h4>
-                  <ul className="space-y-3">
-                    {currentFormula?.variables?.map((v, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <span className="text-emerald-550 font-mono font-bold text-sm shrink-0 mt-0.5">• {v.sym}</span>
-                        <span className="text-[var(--db-text-secondary)] text-sm">= {v.def}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-8 pt-6 border-t border-[var(--db-card-border)]">
-                    <button
-                      onClick={() => setFormulaPage(Math.max(0, formulaPage - 1))}
-                      disabled={formulaPage === 0}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition border border-[var(--db-card-border)] ${formulaPage === 0 ? 'text-[var(--db-text-muted)] cursor-not-allowed' : 'text-[var(--db-text-secondary)] hover:bg-[var(--db-btn-secondary-hover)]'}`}
-                    >
-                      <ChevronLeft className="w-4 h-4" /> Previous
-                    </button>
-                    
-                    <div className="flex gap-2">
-                      {Array.from({ length: totalPages }).map((_, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setFormulaPage(i)}
-                          className={`w-3 h-3 rounded-full transition ${i === formulaPage ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-[var(--db-text-muted)] hover:bg-[var(--db-text-secondary)]'}`}
-                        />
-                      ))}
-                    </div>
-                    
-                    <button
-                      onClick={() => setFormulaPage(Math.min(totalPages - 1, formulaPage + 1))}
-                      disabled={formulaPage === totalPages - 1}
-                      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition ${formulaPage === totalPages - 1 ? 'text-[var(--db-text-muted)] cursor-not-allowed border border-[var(--db-card-border)]' : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20'}`}
-                    >
-                      Next <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-              </motion.div>
-            </div>
-          </div>
-        </main>
-      </MathBackground>
-    );
-  }
-
-  // =============================================
-  // VIEW 3: VISUAL SOLVER LAYOUT (DYNAMIC THEME)
-  // =============================================
   return (
-    <div className={`h-screen w-full overflow-hidden flex flex-col font-sans db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'}`} style={{ backgroundColor: 'var(--db-bg)', color: 'var(--db-text-main)' }}>
+    <div className={'min-h-screen transition-colors duration-300 ' + (isDark ? 'bg-[#070313] text-slate-100' : 'bg-slate-50 text-slate-900')}>
       
-      {/* HEADER BREADCRUMB */}
-      <header className="h-16 shrink-0 bg-[var(--db-card-bg)] border-b border-[var(--db-header-border)] flex items-center justify-between px-8 shadow-sm relative z-10">
-        <div className="flex items-center">
-          <GlobalBackButton className="mr-4" />
-          <div className="flex items-center text-sm font-medium text-[var(--db-text-muted)] gap-2">
-            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span> <ChevronRight className="w-4 h-4" />
-            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects')}>Subjects</span> <ChevronRight className="w-4 h-4" />
-            <span className="hover:text-[var(--db-text-main)] cursor-pointer" onClick={() => navigate('/subjects/math-proto', { state: { activeView: 'practical' } })}>Mathematics</span> <ChevronRight className="w-4 h-4" />
-            <span className="text-emerald-500 font-bold">{selectedMethod}</span>
-          </div>
+      {/* AMBIENT BACKGROUND GLOWS */}
+      {isDark && (
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-purple-600/8 rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[400px] bg-emerald-600/6 rounded-full blur-[120px]" />
+          <div className="absolute top-1/2 left-0 w-[300px] h-[300px] bg-blue-600/6 rounded-full blur-[100px]" />
         </div>
-        <ThemeToggleButton />
-      </header>
+      )}
 
-      {/* MAIN CONTENT */}
-      <main className="flex-1 p-4 gap-4 flex flex-row h-[calc(100vh-64px)] max-w-[1920px] mx-auto w-full overflow-hidden">
+      <div className="relative z-10 max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-6">
         
-        {/* LEFT PANEL: INPUT SYSTEM */}
-        <div className="w-full lg:w-1/4 lg:min-w-[280px] lg:h-full rounded-2xl flex flex-col shrink-0 overflow-hidden bg-[var(--db-card-bg)] border border-[var(--db-card-border)] shadow-md">
-          
-          <div className="flex-1 overflow-y-auto p-5 pb-2">
-            <div className="mb-4">
-              <h2 className="text-lg font-extrabold text-[var(--db-text-main)] flex items-center gap-2">
-                <FunctionSquare className="w-5 h-5 text-emerald-500" /> Math Engine
-              </h2>
-              <p className="text-[var(--db-text-muted)] text-xs mt-1">Configure inputs and watch numerical methods solve live.</p>
+        {/* HEADER */}
+        <div className="flex items-start justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <GlobalBackButton />
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                  <BrainCircuit size={20} className="text-white" />
+                </div>
+                <div>
+                  <h1 className={'text-2xl font-black tracking-tight leading-tight ' + (isDark ? 'bg-gradient-to-r from-purple-300 via-indigo-300 to-cyan-300 bg-clip-text text-transparent' : 'text-slate-900')}>
+                    AI Mathematics Laboratory
+                  </h1>
+                  <p className="text-xs text-white/40 mt-0.5">Wolfram Alpha × GeoGebra × Symbolab — Powered by AI</p>
+                </div>
+              </div>
             </div>
-
-            {/* Method Selector */}
-            <div className="mb-4">
-              <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5">Select Method</label>
-              <select 
-                value={selectedMethod}
-                onChange={(e) => {
-                  setSelectedMethod(e.target.value);
-                  setPlaybackState('IDLE');
-                }}
-                className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-              >
-                {CARDS.map(c => (
-                  <option key={c.id} value={c.id}>{c.title}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Conditional Input Rendering */}
-            {selectedMethod === 'Bisection Method' ? (
-              <>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Equation</label>
-                  <select 
-                    value={bisectionProblemId}
-                    onChange={(e) => { setBisectionProblemId(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                  >
-                    <option value="bis1">f(x) = x³ - x - 1 = 0</option>
-                    <option value="bis2">f(x) = x³ - 4x - 9 = 0</option>
-                  </select>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Iterations (Max 10)</label>
-                  <input 
-                    type="number" min="1" max="10" value={bisectionIterations} 
-                    onChange={e => { setBisectionIterations(e.target.value); setPlaybackState('IDLE'); }} 
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                  />
-                </div>
-              </>
-            ) : selectedMethod === 'Trapezoidal Rule' ? (
-              <>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Target Function f(x)</label>
-                  <select 
-                    value={funcId}
-                    onChange={(e) => { setFuncId(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                  >
-                    {PREDEFINED_FUNCTIONS.map(f => (
-                      <option key={f.id} value={f.id}>{f.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Lower [a]</label>
-                    <input type="number" step="0.1" value={a} onChange={e => { setA(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Upper [b]</label>
-                    <input type="number" step="0.1" value={b} onChange={e => { setB(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Steps (n)</label>
-                    <input type="number" min="1" max="20" value={n} onChange={e => { setN(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                  </div>
-                </div>
-              </>
-            ) : selectedMethod === 'Newton\u2019s Interpolation' ? (
-              <>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
-                  <select 
-                    value={newtonQuestionId}
-                    onChange={(e) => {
-                      setNewtonQuestionId(e.target.value);
-                      const targetQ = NEWTON_QUESTIONS.find(q => q.id === e.target.value);
-                      setNewtonTargetX(targetQ.defaultTarget.toString());
-                      setNewtonDirection(targetQ.defaultDirection);
-                      setPlaybackState('IDLE');
-                    }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                  >
-                    {NEWTON_QUESTIONS.map(q => (
-                      <option key={q.id} value={q.id}>{q.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Interpolation Direction</label>
-                  <div className="flex p-1 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-input-border)]">
-                    {['Forward', 'Backward'].map(dir => (
-                      <button
-                        key={dir}
-                        type="button"
-                        onClick={() => { setNewtonDirection(dir); setPlaybackState('IDLE'); }}
-                        className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${newtonDirection === dir ? 'bg-emerald-500 text-white shadow' : 'text-[var(--db-text-secondary)] hover:text-[var(--db-text-main)]'}`}
-                      >
-                        {dir}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Estimate Value at (x)</label>
-                  <input 
-                    type="number" step="0.01" value={newtonTargetX} 
-                    onChange={e => { setNewtonTargetX(e.target.value); setPlaybackState('IDLE'); }} 
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                  />
-                </div>
-              </>
-            ) : selectedMethod === 'Newton\u2019s Difference' ? (
-              <>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
-                  <select 
-                    value={newtonDiffQuestionId}
-                    onChange={(e) => {
-                      setNewtonDiffQuestionId(e.target.value);
-                      const targetQ = NEWTON_DIFF_QUESTIONS.find(q => q.id === e.target.value);
-                      setNewtonDiffTargetX(targetQ.defaultTarget.toString());
-                      setNewtonDiffDirection(targetQ.defaultDirection);
-                      setPlaybackState('IDLE');
-                    }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                  >
-                    {NEWTON_DIFF_QUESTIONS.map(q => (
-                      <option key={q.id} value={q.id}>{q.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Interpolation Direction</label>
-                  <div className="flex p-1 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-input-border)]">
-                    {['Forward', 'Backward'].map(dir => (
-                      <button
-                        key={dir}
-                        type="button"
-                        onClick={() => { setNewtonDiffDirection(dir); setPlaybackState('IDLE'); }}
-                        className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${newtonDiffDirection === dir ? 'bg-emerald-500 text-white shadow' : 'text-[var(--db-text-secondary)] hover:text-[var(--db-text-main)]'}`}
-                      >
-                        {dir}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Evaluate Derivative at (x)</label>
-                  <input 
-                    type="number" step="0.01" value={newtonDiffTargetX} 
-                    onChange={e => { setNewtonDiffTargetX(e.target.value); setPlaybackState('IDLE'); }} 
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                  />
-                </div>
-              </>
-            ) : selectedMethod === 'Simpson\u2019s 1/3 Rule' || selectedMethod === "Simpson's 1/3 Rule" ? (
-              <>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
-                  <select 
-                    value={simpson13ProblemId}
-                    onChange={(e) => { setSimpson13ProblemId(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                  >
-                    {SIMPSON_13_QUESTIONS.map(q => (
-                      <option key={q.id} value={q.id}>{q.label}</option>
-                    ))}
-                  </select>
-                </div>
-                {simpson13ProblemId === 'custom' && (
-                  <>
-                    <div className="mb-4">
-                      <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Target Function f(x)</label>
-                      <select 
-                        value={funcId}
-                        onChange={(e) => { setFuncId(e.target.value); setPlaybackState('IDLE'); }}
-                        className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                      >
-                        {PREDEFINED_FUNCTIONS.map(f => (
-                          <option key={f.id} value={f.id}>{f.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3 mb-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Lower [a]</label>
-                        <input type="number" step="0.1" value={simpson13A} onChange={e => { setSimpson13A(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Upper [b]</label>
-                        <input type="number" step="0.1" value={simpson13B} onChange={e => { setSimpson13B(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Steps (n)</label>
-                        <input type="number" min="2" max="20" step="2" value={simpson13N} onChange={e => { setSimpson13N(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </>
-            ) : selectedMethod === 'Simpson\u2019s 3/8 Rule' || selectedMethod === "Simpson's 3/8 Rule" ? (
-              <>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
-                  <select 
-                    value={simpson38ProblemId}
-                    onChange={(e) => { setSimpson38ProblemId(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                  >
-                    {SIMPSON_38_QUESTIONS.map(q => (
-                      <option key={q.id} value={q.id}>{q.label}</option>
-                    ))}
-                  </select>
-                </div>
-                {simpson38ProblemId === 'custom' && (
-                  <>
-                    <div className="mb-4">
-                      <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Target Function f(x)</label>
-                      <select 
-                        value={funcId}
-                        onChange={(e) => { setFuncId(e.target.value); setPlaybackState('IDLE'); }}
-                        className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                      >
-                        {PREDEFINED_FUNCTIONS.map(f => (
-                          <option key={f.id} value={f.id}>{f.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3 mb-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Lower [a]</label>
-                        <input type="number" step="0.1" value={simpson38A} onChange={e => { setSimpson38A(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Upper [b]</label>
-                        <input type="number" step="0.1" value={simpson38B} onChange={e => { setSimpson38B(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Steps (n)</label>
-                        <input type="number" min="3" max="21" step="3" value={simpson38N} onChange={e => { setSimpson38N(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </>
-            ) : selectedMethod === 'RK4' ? (
-              <>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
-                  <select 
-                    value={rkProblemId}
-                    onChange={(e) => { setRkProblemId(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                  >
-                    {RK_QUESTIONS.map(q => (
-                      <option key={q.id} value={q.id}>{q.label}</option>
-                    ))}
-                  </select>
-                </div>
-                {rkProblemId === 'custom' && (
-                  <>
-                    <div className="mb-4">
-                      <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">ODE dy/dx = f(x,y)</label>
-                      <select 
-                        value={rkFuncId}
-                        onChange={(e) => { setRkFuncId(e.target.value); setPlaybackState('IDLE'); }}
-                        className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                      >
-                        <option value="y_minus_x">dy/dx = y - x</option>
-                        <option value="x_plus_y">dy/dx = x + y</option>
-                        <option value="minus_2xy">dy/dx = -2xy</option>
-                        <option value="y_plus_x2">dy/dx = y + x\u00B2</option>
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial x\u2080</label>
-                        <input type="number" step="0.1" value={rkX0} onChange={e => { setRkX0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial y\u2080</label>
-                        <input type="number" step="0.1" value={rkY0} onChange={e => { setRkY0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Step size (h)</label>
-                        <input type="number" step="0.05" min="0.01" max="1" value={rkH} onChange={e => { setRkH(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Steps Count</label>
-                        <input type="number" min="1" max="10" value={rkSteps} onChange={e => { setRkSteps(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </>
-            ) : selectedMethod === "Taylor's Method" ? (
-              <>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
-                  <select 
-                    value={taylorQuestionId}
-                    onChange={(e) => { setTaylorQuestionId(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                  >
-                    {TAYLOR_QUESTIONS.map(q => (
-                      <option key={q.id} value={q.id}>{q.label}</option>
-                    ))}
-                  </select>
-                </div>
-                {taylorQuestionId === 'custom' && (
-                  <>
-                    <div className="mb-4">
-                      <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">ODE dy/dx = f(x,y)</label>
-                      <select 
-                        value={rkFuncId}
-                        onChange={(e) => { setRkFuncId(e.target.value); setPlaybackState('IDLE'); }}
-                        className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                      >
-                        <option value="y_minus_x">dy/dx = y - x</option>
-                        <option value="x_plus_y">dy/dx = x + y</option>
-                        <option value="minus_2xy">dy/dx = -2xy</option>
-                        <option value="y_plus_x2">dy/dx = y + x\u00B2</option>
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3 mb-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial x₀</label>
-                        <input type="number" step="0.1" value={rkX0} onChange={e => { setRkX0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial y₀</label>
-                        <input type="number" step="0.1" value={rkY0} onChange={e => { setRkY0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Target x</label>
-                        <input type="number" step="0.05" min="0.01" max="1" value={rkH} onChange={e => { setRkH(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </>
-            ) : selectedMethod === "Euler's Method" ? (
-              <>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
-                  <select 
-                    value={eulerQuestionId}
-                    onChange={(e) => { setEulerQuestionId(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                  >
-                    {EULER_QUESTIONS.map(q => (
-                      <option key={q.id} value={q.id}>{q.label}</option>
-                    ))}
-                  </select>
-                </div>
-                {eulerQuestionId === 'custom' && (
-                  <>
-                    <div className="mb-4">
-                      <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">ODE dy/dx = f(x,y)</label>
-                      <select 
-                        value={rkFuncId}
-                        onChange={(e) => { setRkFuncId(e.target.value); setPlaybackState('IDLE'); }}
-                        className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                      >
-                        <option value="y_minus_x">dy/dx = y - x</option>
-                        <option value="x_plus_y">dy/dx = x + y</option>
-                        <option value="minus_2xy">dy/dx = -2xy</option>
-                        <option value="y_plus_x2">dy/dx = y + x\u00B2</option>
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial x₀</label>
-                        <input type="number" step="0.1" value={rkX0} onChange={e => { setRkX0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial y₀</label>
-                        <input type="number" step="0.1" value={rkY0} onChange={e => { setRkY0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Step size (h)</label>
-                        <input type="number" step="0.05" min="0.01" max="1" value={rkH} onChange={e => { setRkH(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Steps Count</label>
-                        <input type="number" min="1" max="10" value={rkSteps} onChange={e => { setRkSteps(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </>
-            ) : selectedMethod === "Modified Euler's Method" ? (
-              <>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Question</label>
-                  <select 
-                    value={modifiedEulerQuestionId}
-                    onChange={(e) => { setModifiedEulerQuestionId(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                  >
-                    {MODIFIED_EULER_QUESTIONS.map(q => (
-                      <option key={q.id} value={q.id}>{q.label}</option>
-                    ))}
-                  </select>
-                </div>
-                {modifiedEulerQuestionId === 'custom' && (
-                  <>
-                    <div className="mb-4">
-                      <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">ODE dy/dx = f(x,y)</label>
-                      <select 
-                        value={rkFuncId}
-                        onChange={(e) => { setRkFuncId(e.target.value); setPlaybackState('IDLE'); }}
-                        className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]"
-                      >
-                        <option value="y_minus_x">dy/dx = y - x</option>
-                        <option value="x_plus_y">dy/dx = x + y</option>
-                        <option value="minus_2xy">dy/dx = -2xy</option>
-                        <option value="y_plus_x2">dy/dx = y + x²</option>
-                        <option value="x2_plus_y">dy/dx = x² + y</option>
-                        <option value="two_plus_sqrt_xy">dy/dx = 2 + √xy</option>
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial x₀</label>
-                        <input type="number" step="0.1" value={rkX0} onChange={e => { setRkX0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Initial y₀</label>
-                        <input type="number" step="0.1" value={rkY0} onChange={e => { setRkY0(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Step size (h)</label>
-                        <input type="number" step="0.05" min="0.01" max="1" value={rkH} onChange={e => { setRkH(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Steps Count</label>
-                        <input type="number" min="1" max="10" value={rkSteps} onChange={e => { setRkSteps(e.target.value); setPlaybackState('IDLE'); }} className="w-full text-sm font-bold rounded-xl px-3 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-emerald-500 outline-none text-[var(--db-text-main)]" />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </>
-            ) : selectedMethod === 'Matrix Multiplication' ? (
-              <>
-                <div className="mb-4">
-                  <label className="block text-[10px] font-bold text-[var(--db-text-muted)] uppercase tracking-wider mb-1.5 font-sans">Select Problem</label>
-                  <select 
-                    value={matMulQuestionId}
-                    onChange={(e) => { setMatMulQuestionId(e.target.value); setPlaybackState('IDLE'); }}
-                    className="w-full text-sm font-bold rounded-xl px-4 py-2.5 bg-[var(--db-input-bg)] border border-[var(--db-input-border)] focus:ring-2 focus:ring-indigo-500 outline-none text-[var(--db-text-main)]"
-                  >
-                    {MATRIX_MUL_QUESTIONS.map(q => (
-                      <option key={q.id} value={q.id}>{q.label}</option>
-                    ))}
-                  </select>
-                </div>
-                {activeMatMulQuestion && (
-                  <div className="rounded-xl p-4 bg-[var(--db-card-bg-elevated)] border border-[var(--db-card-border)] space-y-3">
-                    <p className="text-[10px] font-black uppercase tracking-wider text-indigo-500">Matrix Preview</p>
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <div className="text-center">
-                        <p className="text-[9px] text-[var(--db-text-muted)] mb-1 font-bold">Matrix A</p>
-                        <div className="font-mono text-xs text-[var(--db-text-main)] border border-[var(--db-card-border)] rounded-lg p-2 bg-[var(--db-card-bg)]">
-                          {activeMatMulQuestion.matA.map((row, i) => (
-                            <div key={i} className="flex gap-2 justify-center">
-                              {row.map((v, j) => <span key={j} className="min-w-[3.5rem] text-center inline-block">{v}</span>)}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <span className="text-[var(--db-text-muted)] font-bold text-lg">×</span>
-                      <div className="text-center">
-                        <p className="text-[9px] text-[var(--db-text-muted)] mb-1 font-bold">Matrix B</p>
-                        <div className="font-mono text-xs text-[var(--db-text-main)] border border-[var(--db-card-border)] rounded-lg p-2 bg-[var(--db-card-bg)]">
-                          {activeMatMulQuestion.matB.map((row, i) => (
-                            <div key={i} className="flex gap-2 justify-center">
-                              {row.map((v, j) => <span key={j} className="min-w-[3.5rem] text-center inline-block">{v}</span>)}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-[var(--db-text-muted)] leading-relaxed">{activeMatMulQuestion.description}</p>
-                  </div>
-                )}
-              </>
-            ) : null}
           </div>
+          <button onClick={() => setShowHistory(!showHistory)} className="px-3 py-2 rounded-xl bg-white/8 hover:bg-white/12 border border-white/10 text-white/60 hover:text-white text-xs font-medium transition flex items-center gap-2">
+            <Clock size={13} /> History
+          </button>
+        </div>
 
-          {/* Playback Controls */}
-          <div className="p-4 pt-2 shrink-0 border-t border-[var(--db-card-border)]">
-            <div className="rounded-2xl p-4 flex flex-col gap-3 bg-[var(--db-card-bg-elevated)] shadow-sm">
-              
-              {/* Speed Controller */}
-              <div className="flex justify-between items-center p-1 rounded-xl bg-[var(--db-input-bg)] border border-[var(--db-card-border)]">
-                {[0.5, 1, 1.5, 2].map(s => (
-                  <button 
-                    key={s} 
-                    onClick={() => setSpeed(s)}
-                    className={`flex-1 py-1 text-xs font-bold rounded-lg transition-all ${speed === s ? 'bg-emerald-500 text-white shadow' : 'text-[var(--db-text-muted)] hover:text-[var(--db-text-main)]'}`}
-                  >
-                    {s}×
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6">
+          {/* ── LEFT COLUMN ─────────────────────────────────── */}
+          <div className="space-y-6">
+
+            {/* INPUT PANEL */}
+            <div className={'rounded-3xl border p-6 ' + (isDark ? 'bg-white/4 border-white/10 backdrop-blur-sm' : 'bg-white border-slate-200 shadow-lg shadow-slate-100')}>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                <span className="text-xs font-bold text-purple-400 uppercase tracking-widest">AI Input Engine</span>
+              </div>
+
+              {/* Main input */}
+              <div className="relative">
+                <textarea
+                  ref={inputRef}
+                  value={problem}
+                  onChange={e => setProblem(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSolve(); }}
+                  placeholder="Type any mathematical equation, problem or expression...&#10;&#10;Examples: x³ − x − 1 = 0 · integrate x²sin(x) · lim x→0 sin(x)/x · differentiate e^(x²)"
+                  rows={4}
+                  className={'w-full rounded-2xl px-5 py-4 text-sm font-mono resize-none focus:outline-none transition-all duration-200 leading-relaxed ' + (
+                    isDark
+                      ? 'bg-[#0d0920] border border-purple-500/20 text-purple-100 placeholder:text-white/20 focus:border-purple-400/50 focus:shadow-lg focus:shadow-purple-500/10'
+                      : 'bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:border-purple-300 focus:shadow-lg focus:shadow-purple-100'
+                  )}
+                />
+                {showKeyboard && (
+                  <AnimatePresence>
+                    <MathKeyboard onInsert={handleKeyboardInsert} onClose={() => setShowKeyboard(false)} />
+                  </AnimatePresence>
+                )}
+              </div>
+
+              {/* Example chips */}
+              <div className="flex flex-wrap gap-2 mt-3">
+                {EXAMPLE_PROBLEMS.map(ex => (
+                  <button key={ex.label} onClick={() => { setProblem(ex.q); inputRef.current?.focus(); }} className="px-3 py-1 rounded-full bg-white/6 hover:bg-purple-500/15 border border-white/10 hover:border-purple-400/30 text-xs text-white/50 hover:text-purple-300 transition-all duration-150">
+                    {ex.label}
                   </button>
                 ))}
               </div>
 
-              {/* Main Controls Row */}
-              <div className="grid grid-cols-4 gap-2">
-                <button 
-                  onClick={() => setPlaybackState('PREV')}
-                  disabled={playbackState === 'IDLE'}
-                  title="Previous Step"
-                  className="bg-[var(--db-input-bg)] border border-[var(--db-card-border)] hover:border-emerald-500/50 hover:bg-[var(--db-btn-secondary-hover)] text-[var(--db-text-main)] font-bold py-2.5 rounded-xl flex items-center justify-center transition active:scale-95 disabled:opacity-40"
-                >
-                  <SkipBack className="w-4 h-4" />
+              {/* Controls row */}
+              <div className="flex flex-wrap items-center gap-3 mt-4">
+                {/* Math Keyboard */}
+                <button onClick={() => setShowKeyboard(!showKeyboard)} title="Math Keyboard" className={'p-2.5 rounded-xl border transition-all duration-150 ' + (showKeyboard ? 'bg-purple-500/20 border-purple-400/40 text-purple-300' : 'bg-white/6 border-white/10 text-white/50 hover:bg-white/10 hover:text-white')}>
+                  <Keyboard size={15} />
                 </button>
 
-                <button 
-                  onClick={handlePlayPause}
-                  title={playbackState === 'PLAYING' ? 'Pause' : 'Play'}
-                  className="col-span-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 shadow-md shadow-emerald-500/10"
-                >
-                  {playbackState === 'PLAYING' ? <Pause className="w-4.5 h-4.5" /> : <Play className="w-4.5 h-4.5" />}
-                  <span className="text-xs uppercase tracking-wider">{playbackState === 'PLAYING' ? 'Pause' : 'Solve'}</span>
+                {/* Voice */}
+                <button onClick={handleVoice} title="Voice Input" className={'p-2.5 rounded-xl border transition-all duration-150 ' + (voiceActive ? 'bg-rose-500/20 border-rose-400/40 text-rose-300 animate-pulse' : 'bg-white/6 border-white/10 text-white/50 hover:bg-white/10 hover:text-white')}>
+                  {voiceActive ? <MicOff size={15} /> : <Mic size={15} />}
                 </button>
 
-                <button 
-                  onClick={() => setPlaybackState('NEXT')}
-                  disabled={playbackState === 'FINISHED' || playbackState === 'IDLE'}
-                  title="Next Step"
-                  className="bg-[var(--db-input-bg)] border border-[var(--db-card-border)] hover:border-emerald-500/50 hover:bg-[var(--db-btn-secondary-hover)] text-[var(--db-text-main)] font-bold py-2.5 rounded-xl flex items-center justify-center transition active:scale-95 disabled:opacity-40"
+                {/* Image OCR */}
+                <label title="Upload Image" className="p-2.5 rounded-xl border border-white/10 bg-white/6 text-white/50 hover:bg-white/10 hover:text-white transition-all duration-150 cursor-pointer">
+                  <Camera size={15} />
+                  <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                </label>
+
+                {/* PDF */}
+                <label title="Upload PDF" className="p-2.5 rounded-xl border border-white/10 bg-white/6 text-white/50 hover:bg-white/10 hover:text-white transition-all duration-150 cursor-pointer">
+                  <FileText size={15} />
+                  <input type="file" accept=".pdf" className="hidden" onChange={handlePdfUpload} />
+                </label>
+
+                {/* Explanation Mode */}
+                <div className="relative">
+                  <button onClick={() => setShowModeMenu(!showModeMenu)} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/6 hover:bg-white/10 border border-white/10 text-xs text-white/60 hover:text-white transition-all">
+                    <Settings2 size={12} /> {explanationMode} <ChevronDown size={10} />
+                  </button>
+                  <AnimatePresence>
+                    {showModeMenu && (
+                      <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="absolute top-full mt-1 left-0 z-50 bg-[#0d0920] border border-purple-500/30 rounded-xl overflow-hidden shadow-xl min-w-40">
+                        {MODES.map(m => (
+                          <button key={m} onClick={() => { setExplanationMode(m); setShowModeMenu(false); }} className={'w-full text-left px-4 py-2.5 text-xs hover:bg-purple-500/15 transition ' + (m === explanationMode ? 'text-purple-300 bg-purple-500/10' : 'text-white/60')}>
+                            {m}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* SOLVE BUTTON */}
+                <button
+                  onClick={() => handleSolve()}
+                  disabled={loading || !problem.trim()}
+                  className="ml-auto flex items-center gap-2.5 px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-purple-700/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97]"
                 >
-                  <SkipForward className="w-4 h-4" />
+                  {loading ? (
+                    <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Solving...</>
+                  ) : (
+                    <><Zap size={15} /> Solve</>
+                  )}
                 </button>
-              </div>
-
-              {/* Auxiliary Controls Row */}
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => setPlaybackState('SKIP')}
-                  disabled={playbackState === 'FINISHED' || playbackState === 'IDLE'}
-                  className="flex-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-200/20 py-2 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold tracking-wide uppercase transition active:scale-95 disabled:opacity-40"
-                >
-                  <FastForward className="w-3.5 h-3.5" /> Skip Animation
-                </button>
-                <button 
-                  onClick={handleReplay} 
-                  title="Replay Solution"
-                  className="w-12 bg-[var(--db-input-bg)] border border-[var(--db-card-border)] hover:border-emerald-500/50 hover:bg-[var(--db-btn-secondary-hover)] text-[var(--db-text-main)] rounded-xl flex items-center justify-center transition active:scale-95"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        {/* MIDDLE PANEL: ANIMATION ENGINE */}
-        <div className="w-full lg:flex-1 min-h-[400px] lg:h-full rounded-2xl flex flex-col relative overflow-hidden shrink-0 bg-[var(--db-card-bg)] border border-[var(--db-card-border)] shadow-md">
-          {/* Question Display */}
-          <div className="shrink-0 px-6 py-3 flex items-center gap-3 bg-[var(--db-card-bg-elevated)] border-b border-[var(--db-card-border)]">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-            <span className="text-[12px] font-bold text-[var(--db-text-secondary)] font-sans tracking-wide">
-              {getTopQuestionText()}
-            </span>
-          </div>
-
-          {/* Status bar */}
-          <div className="px-6 py-2 flex items-center gap-2 border-b border-[var(--db-card-border)]">
-            <span className="text-emerald-500 text-[10px] font-black uppercase tracking-widest">
-              {playbackState === 'IDLE' ? 'READY TO EXECUTE' : playbackState === 'PLAYING' ? 'EXECUTING...' : playbackState === 'PAUSED' ? 'PAUSED' : 'COMPLETE'}
-            </span>
-            <div className="flex-1 h-1 rounded-full overflow-hidden ml-2 bg-[var(--db-input-bg)] border border-[var(--db-card-border)]">
-              <div className={`h-full bg-emerald-500 rounded-full transition-all ${playbackState === 'PLAYING' ? 'animate-pulse' : ''}`} style={{ width: playbackState === 'FINISHED' ? '100%' : playbackState === 'PLAYING' ? '60%' : '15%' }}></div>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-hidden">
-            {renderActiveEngine()}
-          </div>
-        </div>
-
-        {/* RIGHT PANEL: AI EXPLAINER */}
-        <div className="w-full lg:w-1/4 lg:min-w-[280px] lg:h-full flex flex-col gap-4 shrink-0">
-          <div className="flex-1 rounded-2xl p-5 text-[var(--db-text-main)] flex flex-col relative overflow-hidden bg-[var(--db-card-bg)] border border-[var(--db-card-border)] shadow-md">
-            <div className="absolute -top-10 -right-10 opacity-5 pointer-events-none">
-              <BrainCircuit className="w-64 h-64 text-emerald-500" />
-            </div>
-            
-            <div className="flex items-center gap-3 mb-5 relative z-10 pb-4 border-b border-[var(--db-card-border)]">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                <Settings2 className="w-5 h-5 text-emerald-500" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-[var(--db-text-main)]">Execution Trace</h3>
-                <p className="text-[10px] uppercase tracking-widest text-emerald-500 font-bold">Live Interpreter</p>
               </div>
             </div>
 
-            <div className="flex-1 relative z-10 font-mono text-[13px] leading-relaxed text-emerald-50 flex flex-col">
-              <div className="mb-4 text-slate-500">
-                &gt; Analyzing runtime parameters...<br/>
-                &gt; Method: {selectedMethod}<br/>
-                {selectedMethod === 'Trapezoidal Rule' ? (
-                  <>&gt; Interval: [{a}, {b}], Steps: {n}<br/></>
-                ) : (
-                  <>&gt; Target X: {selectedMethod === 'Newton\u2019s Difference' ? newtonDiffTargetX : newtonTargetX}<br/></>
-                )}
-                &gt; Standby.
-              </div>
-
-              {playbackState !== 'IDLE' && (
-                <AnimatePresence mode="wait">
-                  <motion.div 
-                    key={currentExplanation}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="p-4 rounded-r-lg bg-emerald-500/10 border-l-2 border-emerald-500 text-[var(--db-text-main)]"
-                  >
-                    <span className="text-emerald-500 font-bold mb-1 block">CURRENT STEP:</span>
-                    {currentExplanation}
-                  </motion.div>
-                </AnimatePresence>
-              )}
-
-              {playbackState === 'FINISHED' && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-4 text-emerald-500 font-bold"
-                >
-                  &gt; Execution completed successfully.
+            {/* ERROR MESSAGE */}
+            <AnimatePresence>
+              {error && (
+                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-2xl border border-rose-500/30 bg-rose-500/8 p-4 flex items-start gap-3">
+                  <AlertCircle size={16} className="text-rose-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-rose-300">{error}</p>
+                  <button onClick={() => setError('')} className="ml-auto text-white/30 hover:text-white"><X size={14} /></button>
                 </motion.div>
               )}
-            </div>
+            </AnimatePresence>
+
+            {/* RESULT SECTION */}
+            <AnimatePresence>
+              {result && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+
+                  {/* AI Analysis Banner */}
+                  <div className={'rounded-2xl border p-5 ' + (isDark ? 'bg-white/4 border-white/10' : 'bg-white border-slate-200')}>
+                    <div className="flex flex-wrap gap-4 items-center justify-between">
+                      <div className="flex flex-wrap gap-3">
+                        <div className="flex items-center gap-2">
+                          <BrainCircuit size={14} className="text-purple-400" />
+                          <span className="text-xs text-white/40">Topic</span>
+                          <span className="text-xs font-bold text-purple-300 px-2 py-0.5 rounded-lg bg-purple-500/10 border border-purple-500/20">{result.analysis?.topic}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Cpu size={14} className="text-blue-400" />
+                          <span className="text-xs text-white/40">Algorithm</span>
+                          <span className="text-xs font-bold text-blue-300 px-2 py-0.5 rounded-lg bg-blue-500/10 border border-blue-500/20">{result.analysis?.algorithm}</span>
+                        </div>
+                        <div className={'text-xs font-bold px-2 py-0.5 rounded-lg border ' + (complexityColor[result.analysis?.complexity] || complexityColor.Easy)}>
+                          {result.analysis?.complexity}
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-white/40">
+                          <Target size={11} className="text-emerald-400" />
+                          <span className="text-emerald-400 font-bold">{result.analysis?.confidence}%</span> confidence
+                        </div>
+                      </div>
+
+                      {/* Playback Controls */}
+                      <div className="flex items-center gap-2">
+                        <button onClick={handlePrev} disabled={currentStep <= 0} className="p-1.5 rounded-lg bg-white/8 hover:bg-white/14 text-white/60 hover:text-white disabled:opacity-30 transition"><SkipBack size={13} /></button>
+                        <button onClick={handlePlay} className="p-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/30 transition active:scale-95">
+                          {playback === 'PLAYING' ? <Pause size={14} /> : <Play size={14} />}
+                        </button>
+                        <button onClick={handleNext} disabled={!result.steps || currentStep >= result.steps.length - 1} className="p-1.5 rounded-lg bg-white/8 hover:bg-white/14 text-white/60 hover:text-white disabled:opacity-30 transition"><SkipForward size={13} /></button>
+                        <button onClick={handleReplay} className="p-1.5 rounded-lg bg-white/8 hover:bg-white/14 text-white/60 hover:text-white transition"><RotateCcw size={13} /></button>
+                        {/* Speed */}
+                        <select value={speed} onChange={e => setSpeed(parseFloat(e.target.value))} className="px-2 py-1 rounded-lg bg-white/8 border border-white/10 text-white/60 text-xs focus:outline-none">
+                          {[0.25, 0.5, 1, 1.5, 2].map(s => <option key={s} value={s}>{s}×</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Progress bar */}
+                    {result.steps && (
+                      <div className="mt-4 flex items-center gap-3">
+                        <span className="text-xs text-white/30">{Math.max(0, currentStep + 1)}/{result.steps.length}</span>
+                        <div className="flex-1 h-1.5 rounded-full bg-white/8 overflow-hidden">
+                          <motion.div
+                            className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-500"
+                            animate={{ width: result.steps.length ? (currentStep + 1) / result.steps.length * 100 + '%' : '0%' }}
+                            transition={{ type: 'spring', stiffness: 100 }}
+                          />
+                        </div>
+                        {playback === 'DONE' && <CheckCircle2 size={14} className="text-emerald-400" />}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* TAB SWITCHER */}
+                  <div className="flex gap-1 p-1 rounded-xl bg-white/6 border border-white/10 w-fit">
+                    {[['steps', 'Steps'], ['graph', 'Graph'], ['metrics', 'Metrics'], ['suggestions', 'AI Tips']].map(([id, label]) => (
+                      <button key={id} onClick={() => setActiveTab(id)} className={'px-4 py-2 rounded-lg text-xs font-bold transition-all ' + (activeTab === id ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30' : 'text-white/40 hover:text-white/70')}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* TAB CONTENT */}
+                  <AnimatePresence mode="wait">
+                    <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
+
+                      {/* ── STEPS TAB ─── */}
+                      {activeTab === 'steps' && (
+                        <div className="space-y-3">
+                          {(result.steps || []).map((step, i) => (
+                            <StepCard key={i} step={step} index={i} isActive={i === currentStep} isDark={isDark} animDelay={i} />
+                          ))}
+                        </div>
+                      )}
+
+                      {/* ── GRAPH TAB ─── */}
+                      {activeTab === 'graph' && (
+                        <div className={'rounded-2xl border overflow-hidden ' + (isDark ? 'bg-white/4 border-white/10' : 'bg-white border-slate-200')} style={{ height: 440 }}>
+                          {result.graph && result.graph.type !== 'none' ? (
+                            <GraphCanvas graphData={result.graph} isDark={isDark} />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center h-full gap-4 text-white/30">
+                              <TrendingUp size={40} className="opacity-20" />
+                              <p className="text-sm">No graph available for this problem type.</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* ── METRICS TAB ─── */}
+                      {activeTab === 'metrics' && result.liveMetrics && (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                          {[
+                            { label: 'Convergence', value: result.liveMetrics.convergenceRate, icon: TrendingUp, color: 'purple' },
+                            { label: 'Tolerance', value: result.liveMetrics.tolerance, icon: Target, color: 'blue' },
+                            { label: 'Memory', value: result.liveMetrics.memoryEstimate, icon: Cpu, color: 'emerald' },
+                            { label: 'Complexity', value: result.liveMetrics.timeComplexity, icon: Zap, color: 'amber' },
+                          ].map(m => (
+                            <div key={m.label} className={'rounded-2xl border p-5 ' + (isDark ? 'bg-white/4 border-white/10' : 'bg-white border-slate-200')}>
+                              <m.icon size={18} className={'text-' + m.color + '-400 mb-3'} />
+                              <p className="text-xs text-white/40 mb-1">{m.label}</p>
+                              <p className="text-sm font-bold text-white">{m.value}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* ── SUGGESTIONS TAB ─── */}
+                      {activeTab === 'suggestions' && result.suggestions && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {[
+                            { title: 'Similar Questions', items: result.suggestions.similarQuestions, icon: BookOpen, color: 'purple' },
+                            { title: 'Practice Problems', items: result.suggestions.practiceProblems, icon: Target, color: 'blue' },
+                            { title: 'Shortcuts & Tricks', items: result.suggestions.shortcuts, icon: Zap, color: 'amber' },
+                            { title: 'Exam Tips', items: result.suggestions.examTips, icon: Star, color: 'emerald' },
+                            { title: 'Common Mistakes', items: result.suggestions.commonMistakes, icon: AlertCircle, color: 'rose' },
+                          ].map(section => (
+                            section.items?.length > 0 && (
+                              <div key={section.title} className={'rounded-2xl border p-5 ' + (isDark ? 'bg-white/4 border-white/10' : 'bg-white border-slate-200')}>
+                                <div className="flex items-center gap-2 mb-3">
+                                  <section.icon size={14} className={'text-' + section.color + '-400'} />
+                                  <span className={'text-xs font-bold uppercase tracking-wider text-' + section.color + '-400'}>{section.title}</span>
+                                </div>
+                                <ul className="space-y-2">
+                                  {section.items.map((item, i) => (
+                                    <li key={i} className="flex items-start gap-2 text-xs text-white/60 leading-relaxed">
+                                      <ChevronRight size={10} className={'text-' + section.color + '-400 mt-1 flex-shrink-0'} />
+                                      {item}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* ── RIGHT COLUMN ──────────────────────────────────── */}
+          <div className="space-y-5">
+
+            {/* SOLUTION CARD */}
+            <AnimatePresence>
+              {result?.answers && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent p-6"
+                >
+                  <div className="flex items-center gap-2 mb-4">
+                    <CheckCircle2 size={16} className="text-emerald-400" />
+                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Final Answer</span>
+                  </div>
+                  <div className="space-y-2 mb-5">
+                    {result.answers.map((ans, i) => (
+                      <div key={i} className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                        <p className="text-lg font-bold text-emerald-300 font-mono">
+                          <LatexRender tex={ans} />
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={handleCopyAnswer} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-white/8 hover:bg-white/14 border border-white/10 text-xs text-white/60 hover:text-white transition">
+                      <Copy size={12} /> Copy
+                    </button>
+                    <button onClick={handleDownloadPdf} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-white/8 hover:bg-white/14 border border-white/10 text-xs text-white/60 hover:text-white transition">
+                      <Download size={12} /> PDF
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* HISTORY PANEL */}
+            <AnimatePresence>
+              {showHistory && (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className={'rounded-3xl border p-5 ' + (isDark ? 'bg-white/4 border-white/10' : 'bg-white border-slate-200')}>
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-xs font-bold text-white/60 uppercase tracking-widest flex items-center gap-2"><Clock size={12} /> Recent History</span>
+                    <button onClick={() => { setHistory([]); localStorage.removeItem('mathHistory'); }} className="text-xs text-white/30 hover:text-rose-400 transition">Clear</button>
+                  </div>
+                  {history.length === 0 ? (
+                    <p className="text-xs text-white/30 text-center py-6">No history yet. Solve a problem to get started.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-80 overflow-y-auto">
+                      {history.map((h, i) => (
+                        <button key={i} onClick={() => { setProblem(h.problem); setShowHistory(false); handleSolve(h.problem); }} className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-white/8 transition group">
+                          <p className="text-xs font-mono text-white/70 group-hover:text-white truncate">{h.problem}</p>
+                          <p className="text-[10px] text-white/30 mt-0.5">{h.topic} · {h.mode}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* EMPTY STATE */}
+            {!result && !loading && (
+              <div className={'rounded-3xl border p-8 text-center ' + (isDark ? 'bg-white/3 border-white/8' : 'bg-white border-slate-200')}>
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/20 flex items-center justify-center mx-auto mb-5">
+                  <BrainCircuit size={28} className="text-purple-400" />
+                </div>
+                <h3 className="font-bold text-white/70 mb-2">AI Math Engine Ready</h3>
+                <p className="text-xs text-white/35 leading-relaxed mb-6">Type any mathematical problem — from basic algebra to advanced numerical methods. The AI automatically identifies the topic, selects the optimal algorithm, and walks through every step.</p>
+                <div className="space-y-2">
+                  {EXAMPLE_PROBLEMS.map(ex => (
+                    <button key={ex.label} onClick={() => { setProblem(ex.q); handleSolve(ex.q); }} className="w-full text-left px-4 py-2.5 rounded-xl bg-white/6 hover:bg-purple-500/10 border border-white/8 hover:border-purple-500/25 transition group">
+                      <span className="text-xs font-bold text-purple-400 group-hover:text-purple-300">{ex.label}</span>
+                      <span className="text-xs text-white/35 font-mono ml-3">{ex.q}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* LOADING STATE */}
+            {loading && (
+              <div className={'rounded-3xl border p-8 text-center ' + (isDark ? 'bg-white/3 border-white/8' : 'bg-white border-slate-200')}>
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-purple-500/15 border border-purple-500/25 flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-purple-500/30 border-t-purple-400 rounded-full animate-spin" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-purple-300">AI Solving...</p>
+                    <p className="text-xs text-white/30 mt-1">Analyzing topic · Selecting algorithm · Computing steps</p>
+                  </div>
+                  <div className="w-full space-y-2">
+                    {['Detecting equation type', 'Selecting optimal algorithm', 'Computing step-by-step solution', 'Generating graph data'].map((s, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: i * 0.2 + 's' }} />
+                        <span className="text-xs text-white/35">{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+      </div>
 
-      </main>
+      {/* PDF MODAL */}
+      <AnimatePresence>
+        {showPdfModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-6">
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-[#0d0920] border border-purple-500/30 rounded-3xl p-6 w-full max-w-lg shadow-2xl">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-white">Extracted Problems from PDF</h3>
+                <button onClick={() => setShowPdfModal(false)} className="text-white/30 hover:text-white"><X size={18} /></button>
+              </div>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {pdfProblems.map((p, i) => (
+                  <button key={i} onClick={() => { setProblem(p); setShowPdfModal(false); }} className="w-full text-left px-4 py-3 rounded-xl bg-white/6 hover:bg-purple-500/10 border border-white/8 hover:border-purple-500/25 transition">
+                    <span className="text-xs text-white/40 mr-2">#{i + 1}</span>
+                    <span className="text-sm font-mono text-white/80">{p}</span>
+                  </button>
+                ))}
+                {pdfProblems.length === 0 && <p className="text-center text-xs text-white/30 py-8">No solvable equations found in this PDF.</p>}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

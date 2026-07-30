@@ -38,9 +38,22 @@ Response format:
 export async function parseIntent(transcript, memory = {}) {
   const clean = transcript.trim().toLowerCase();
 
-  // Skip empty input
-  if (!clean || clean.length < 2) {
-    return buildUnknown(transcript);
+  // Skip empty input or conversational fillers
+  const ignoredPhrases = [
+    'yes', 'hello', 'hi', 'eduverse', 'hey eduverse', 'hello eduverse',
+    'yes i am listening', 'i am listening', 'listening', 'ok', 'okay', 'right'
+  ];
+  if (!clean || clean.length < 2 || ignoredPhrases.includes(clean)) {
+    return {
+      intent: 'IGNORE',
+      confidence: 1.0,
+      parameters: {},
+      response: '',
+      requires_confirmation: false,
+      rawTranscript: transcript,
+      source: 'fallback',
+      timestamp: Date.now(),
+    };
   }
 
   // Try LLM first

@@ -44,6 +44,7 @@ const Community = lazy(() => import('./pages/Community'));
 const CareerHub = lazy(() => import('./pages/CareerHub'));
 const ExamCommandCenter = lazy(() => import('./pages/ExamCommandCenter'));
 const DebateArena = lazy(() => import('./pages/DebateArena'));
+const InnovationHub = lazy(() => import('./pages/InnovationHub'));
 // Command AI Page
 const CommandAIDashboard = lazy(() => import('./pages/CommandAIDashboard'));
 // Python AI Learning Platform
@@ -158,8 +159,8 @@ export default function App() {
             <Route path="/dsa/tree" element={<ProtectedRoute><TreeVisualization /></ProtectedRoute>} />
             <Route path="/dsa/graph" element={<ProtectedRoute><GraphVisualization /></ProtectedRoute>} />
             <Route path="/mathematics/numerical-methods" element={<ProtectedRoute><MathVisualization /></ProtectedRoute>} />
-            <Route path="/mathematics/calculus" element={<ProtectedRoute><CalculusVisualization /></ProtectedRoute>} />
-            <Route path="/mathematics/linear-algebra" element={<ProtectedRoute><LinearAlgebraVisualization /></ProtectedRoute>} />
+            <Route path="/mathematics/calculus" element={<ProtectedRoute><MathVisualization /></ProtectedRoute>} />
+            <Route path="/mathematics/linear-algebra" element={<ProtectedRoute><MathVisualization /></ProtectedRoute>} />
             <Route path="/dsa/stack/simulator" element={<ProtectedRoute><Layout><ExecutionSimulator /></Layout></ProtectedRoute>} />
             <Route path="/foc" element={<ProtectedRoute><Layout><FocVisualization /></Layout></ProtectedRoute>} />
             <Route path="/techverse" element={<ProtectedRoute><Layout><TechVerse /></Layout></ProtectedRoute>} />
@@ -184,8 +185,11 @@ export default function App() {
             <Route path="/typing-quest" element={<ProtectedRoute><Layout><TypingQuest /></Layout></ProtectedRoute>} />
             <Route path="/coding-battle" element={<ProtectedRoute><Layout><CodingBattleSystem /></Layout></ProtectedRoute>} />
 
-            {/* Career Hub & Community */}
+            {/* Career Hub, Innovation & Community */}
             <Route path="/career-hub" element={<ProtectedRoute><Layout><CareerHub /></Layout></ProtectedRoute>} />
+            <Route path="/innovation-hub" element={<ProtectedRoute><Layout><InnovationHub /></Layout></ProtectedRoute>} />
+            <Route path="/exam-command" element={<ProtectedRoute><Layout><ExamCommandCenter /></Layout></ProtectedRoute>} />
+            <Route path="/debate-arena" element={<ProtectedRoute><Layout><DebateArena /></Layout></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><Layout><Community /></Layout></ProtectedRoute>} />
 
             {/* Python AI Learning Platform */}
