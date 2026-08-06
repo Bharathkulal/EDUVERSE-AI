@@ -159,8 +159,8 @@ export default function App() {
             <Route path="/dsa/tree" element={<ProtectedRoute><TreeVisualization /></ProtectedRoute>} />
             <Route path="/dsa/graph" element={<ProtectedRoute><GraphVisualization /></ProtectedRoute>} />
             <Route path="/mathematics/numerical-methods" element={<ProtectedRoute><MathVisualization /></ProtectedRoute>} />
-            <Route path="/mathematics/calculus" element={<ProtectedRoute><MathVisualization /></ProtectedRoute>} />
-            <Route path="/mathematics/linear-algebra" element={<ProtectedRoute><MathVisualization /></ProtectedRoute>} />
+            <Route path="/mathematics/calculus" element={<ProtectedRoute><CalculusVisualization /></ProtectedRoute>} />
+            <Route path="/mathematics/linear-algebra" element={<ProtectedRoute><LinearAlgebraVisualization /></ProtectedRoute>} />
             <Route path="/dsa/stack/simulator" element={<ProtectedRoute><Layout><ExecutionSimulator /></Layout></ProtectedRoute>} />
             <Route path="/foc" element={<ProtectedRoute><Layout><FocVisualization /></Layout></ProtectedRoute>} />
             <Route path="/techverse" element={<ProtectedRoute><Layout><TechVerse /></Layout></ProtectedRoute>} />
