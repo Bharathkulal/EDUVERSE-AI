@@ -143,6 +143,7 @@ export default function LandingPage() {
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const [scrolled, setScrolled] = useState(false);
   const [demoOpen, setDemoOpen] = useState(false);
+  const [selectedFeature, setSelectedFeature] = useState(null);
 
   const { login, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
@@ -572,28 +573,36 @@ export default function LandingPage() {
                 icon: <Brain className="text-[#a78bfa] w-5 h-5" />, 
                 title: 'AI Powered Learning', 
                 desc: 'Lessons that adapt to how you learn — pace, style, gaps and strengths.',
-                glowClass: 'glow-purple'
+                glowClass: 'glow-purple',
+                detailedDesc: 'Our system constructs a custom neurological-style profile of your strengths, learning speed, and concept retention. It automatically adjusts content delivery, difficulty parameters, and recommendations in real-time.',
+                highlights: ['Dynamic Content Scaling', 'Concept Retention Engine', 'Real-Time Skill Gap Detection']
               },
               { 
                 icon: <Compass className="text-[#3b82f6] w-5 h-5" />, 
                 title: 'Personalized Roadmaps', 
                 desc: 'Custom learning paths from beginner to job-ready, planned by AI.',
-                glowClass: 'glow-blue'
+                glowClass: 'glow-blue',
+                detailedDesc: 'No static courses. EduVerse generates visual node-based paths dynamically based on your career targets, prerequisite knowledge, and immediate feedback loop. Drag, zoom, and modify your journey as you grow.',
+                highlights: ['Visual Node Navigation', 'Career-Goal Target Engine', 'Interactive Path Modification']
               },
               { 
                 icon: <Terminal className="text-[#06b6d4] w-5 h-5" />, 
                 title: 'Interactive Coding Labs', 
                 desc: 'Practice in a real in-browser IDE with hints, tests and AI review.',
-                glowClass: 'glow-cyan'
+                glowClass: 'glow-cyan',
+                detailedDesc: 'Write, compile, and run code directly in the browser. EduVerse features pre-loaded sandboxes for Python, C#, advanced Java, and databases. Powered by terminal trace lines, syntax hints, and instant AI compiler reviews.',
+                highlights: ['Multi-Language Compilers', 'Datapath & Query Tracing', 'Instant AI Feedback Code Reviews']
               },
               { 
                 icon: <BarChart3 className="text-[#f59e0b] w-5 h-5" />, 
                 title: 'Smart Progress Tracking', 
                 desc: 'Skill graphs, weekly insights and predictions on your readiness.',
-                glowClass: 'glow-amber'
+                glowClass: 'glow-amber',
+                detailedDesc: 'Monitor your trajectory with advanced mathematical modeling. Track your daily consistency streaks, target completion metrics, visual competency graphs, and predictive analytics that forecast exam readiness.',
+                highlights: ['Predictive Readiness Analytics', 'Visual Competency Graphs', 'Consistent Streak Calibration']
               },
             ].map((card, i) => (
-              <Reveal key={i} variant="scale-in" delay={i * 0.1} className={`glass card-glow ${card.glowClass} rounded-3xl p-7 relative overflow-hidden flex flex-col justify-between h-64`}>
+              <Reveal key={i} variant="scale-in" delay={i * 0.1} className={`glass card-glow ${card.glowClass} rounded-3xl p-7 relative overflow-hidden flex flex-col justify-between h-64 group`}>
                 <div>
                   <div className="w-10 h-10 rounded-full flex items-center justify-center border icon-container mb-5">
                     {card.icon}
@@ -601,9 +610,13 @@ export default function LandingPage() {
                   <h3 className="font-display text-base font-bold text-white mb-2">{card.title}</h3>
                   <p className="text-xs text-white/50 leading-relaxed">{card.desc}</p>
                 </div>
-                <div className="text-[11px] font-medium text-white/40 hover:text-white/80 transition-colors cursor-pointer flex items-center gap-1.5">
-                  Learn more <ArrowRight size={11} className="transition-transform group-hover:translate-x-1" />
-                </div>
+                <button
+                  onClick={() => setSelectedFeature(card)}
+                  className="inline-flex items-center gap-1.5 px-4.5 py-2 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 rounded-full text-[11px] font-bold text-white/70 hover:text-white transition duration-200 cursor-pointer self-start"
+                >
+                  <span>Learn more</span>
+                  <ArrowRight size={11} className="text-white/50 group-hover:translate-x-0.5 transition-transform" />
+                </button>
               </Reveal>
             ))}
           </div>
@@ -1321,6 +1334,75 @@ export default function LandingPage() {
       </footer>
 
       <WatchDemoModal isOpen={demoOpen} onClose={() => setDemoOpen(false)} />
+
+      {/* Feature Detail Modal */}
+      <AnimatePresence>
+        {selectedFeature && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedFeature(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-black/70"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 20, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              onClick={e => e.stopPropagation()}
+              className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-[#0b0f19] p-8 shadow-2xl"
+            >
+              {/* Glow Accent */}
+              <div className={`absolute -top-24 -left-24 w-48 h-48 rounded-full blur-[80px] opacity-25 ${
+                selectedFeature.glowClass === 'glow-purple' ? 'bg-[#a78bfa]' :
+                selectedFeature.glowClass === 'glow-blue' ? 'bg-[#3b82f6]' :
+                selectedFeature.glowClass === 'glow-cyan' ? 'bg-[#06b6d4]' : 'bg-[#f59e0b]'
+              }`} />
+
+              <div className="flex justify-between items-start relative z-10">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 backdrop-blur-sm">
+                  {selectedFeature.icon}
+                </div>
+                <button 
+                  onClick={() => setSelectedFeature(null)}
+                  className="rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white p-2 transition cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mt-6 relative z-10 text-left">
+                <h3 className="font-display text-2xl font-black text-white">{selectedFeature.title}</h3>
+                <p className="mt-4 text-xs text-white/60 leading-relaxed font-semibold">{selectedFeature.detailedDesc}</p>
+
+                <div className="mt-6 border-t border-white/5 pt-6">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-emerald-400 mb-3">Key Features</h4>
+                  <ul className="space-y-2.5">
+                    {selectedFeature.highlights.map((item, idx) => (
+                      <li key={idx} className="flex items-center gap-2 text-xs font-bold text-white/80">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-end relative z-10">
+                <button 
+                  onClick={() => setSelectedFeature(null)}
+                  className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-50 hover:to-teal-500 text-white text-xs font-bold rounded-xl active:scale-95 transition cursor-pointer shadow-lg shadow-emerald-950/20 border-0"
+                >
+                  Got it, thanks!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
