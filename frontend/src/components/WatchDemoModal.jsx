@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 // Synthesize UI sound effects via Web Audio API so it requires no external assets
 const playSound = (type) => {
@@ -117,6 +118,7 @@ const stopBackgroundMusic = () => {
 
 export default function WatchDemoModal({ isOpen, onClose }) {
   const navigate = useNavigate();
+  const { startGuestSession } = useAuth();
   const [activeTab, setActiveTab] = useState('menu'); // 'menu', 'video', 'tour', 'sandbox', 'mobile'
   
   // Header state
@@ -676,7 +678,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                     </div>
                   </div>
                   <button 
-                    onClick={() => { onClose(); navigate('/subjects'); }}
+                    onClick={() => { startGuestSession(); onClose(); navigate('/subjects'); }}
                     className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-slate-950 text-xs font-bold rounded-xl transition"
                   >
                     Launch Full Sandbox
@@ -695,6 +697,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                       key={idx}
                       onClick={() => {
                         playSound('click');
+                        startGuestSession();
                         onClose();
                         navigate(card.link);
                       }}

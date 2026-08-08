@@ -64,7 +64,7 @@ const TOP_LEVEL_PATHS = [
 ];
 
 export default function Layout({ children }) {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, guestTimeLeft, guestAiRequests, guestExpired } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const { goBack, canGoBack, clearHistory } = useNavHistory();
   const { executeCommand } = useCommandAI();
@@ -162,12 +162,14 @@ export default function Layout({ children }) {
   };
 
   return (
-    <div className={`db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'}`}>
+    <div className={`db-page-wrapper ${isDarkMode ? 'dark-theme' : 'light-theme'} relative`}>
       <ReviewPopup />
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
+      
+      <div className={`flex w-full h-full ${user?.isGuest && guestExpired ? 'filter blur-[8px] pointer-events-none select-none' : ''}`}>
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
 
       <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 h-screen lg:h-full transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col justify-between p-6`}
         style={{ 
@@ -605,6 +607,115 @@ export default function Layout({ children }) {
           </div>
         </div>
       )}
-    </div>
+      </div> {/* closes flex w-full h-full */}
+
+    {/* Floating Demo Dashboard */}
+    {user?.isGuest && !guestExpired && (
+      <div className="fixed bottom-6 right-6 z-40 max-w-sm rounded-2xl border border-amber-500/20 bg-slate-950/80 backdrop-blur-md p-4 shadow-xl flex items-center gap-3.5">
+        <div className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+        <div className="text-left">
+          <div className="text-[10px] font-black uppercase tracking-wider text-amber-400">Guest Sandbox Mode</div>
+          <div className="flex items-center gap-3 mt-1">
+            <span className="text-[11px] text-slate-350 font-bold">Time left: <strong className="font-mono text-xs text-white">{Math.floor(guestTimeLeft / 60)}:{(guestTimeLeft % 60).toString().padStart(2, '0')}</strong></span>
+            <span className="text-[11px] text-slate-350 font-bold">AI Quota: <strong className="font-mono text-xs text-white">{guestAiRequests} left</strong></span>
+          </div>
+          <p className="text-[8px] text-slate-500 mt-1 font-semibold">⚠️ Progress is temporary and will not be saved.</p>
+        </div>
+        <button
+          onClick={() => {
+            logout();
+            navigate('/?login=true');
+          }}
+          className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-[10px] rounded-lg transition-transform active:scale-95 cursor-pointer border-0"
+        >
+          Sign Up
+        </button>
+      </div>
+    )}
+
+    {/* Guest Session Expired Overlay Modal */}
+    {user?.isGuest && guestExpired && (
+      <div className="fixed inset-0 z-[100] backdrop-blur-xl bg-slate-950/80 flex items-center justify-center p-6 select-none">
+        <motion.div 
+          initial={{ scale: 0.95, y: 15, opacity: 0 }}
+          animate={{ scale: 1, y: 0, opacity: 1 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+          className="relative w-full max-w-lg rounded-3xl border border-white/10 bg-[#0b0f19] p-8 shadow-2xl text-center overflow-hidden"
+        >
+          {/* Glow Arc */}
+          <div className="absolute -top-24 -left-24 w-48 h-48 rounded-full blur-[80px] opacity-25 bg-[#8b5cf6]" />
+          
+          <span className="inline-flex h-14 w-14 place-items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 shadow-lg mb-6">
+            ⚠️
+          </span>
+          
+          <h2 className="font-display text-2xl font-black text-white leading-tight">Your Guest Trial Has Expired</h2>
+          <p className="mt-3 text-xs text-white/50 leading-relaxed font-semibold max-w-md mx-auto">
+            Your 3-minute temporary guest learning session has completed. Claim your free account now to save all your work and unlock unlimited learning tools.
+          </p>
+
+          <div className="mt-6 border-t border-white/5 pt-6 text-left">
+            <h4 className="text-xs font-black uppercase tracking-wider text-emerald-450 mb-3.5">Exclusive Member Benefits:</h4>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs font-bold text-white/80 font-sans">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                Unlimited AI Usage
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                Save Your Progress
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                Cloud Workspaces
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                Earn Certificates
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                Global Leaderboards
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                AI History & Logs
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <button 
+              onClick={() => {
+                logout();
+                navigate('/register');
+              }}
+              className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl active:scale-95 transition cursor-pointer shadow-lg shadow-emerald-950/20 border-0"
+            >
+              Create Free Account
+            </button>
+            <button 
+              onClick={() => {
+                logout();
+                navigate('/?login=true');
+              }}
+              className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white text-xs font-bold rounded-xl active:scale-95 transition cursor-pointer border border-white/10"
+            >
+              Sign In
+            </button>
+            <button 
+              onClick={() => {
+                logout();
+                navigate('/');
+              }}
+              className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white text-xs font-bold rounded-xl active:scale-95 transition cursor-pointer border-0"
+            >
+              Continue Later
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    )}
+  </div>
   );
 }

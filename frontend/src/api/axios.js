@@ -50,7 +50,8 @@ api.interceptors.response.use(
     return res;
   },
   (err) => {
-    if (err.response?.status === 401) {
+    const isGuest = localStorage.getItem('token') === 'guest_token_session';
+    if (err.response?.status === 401 && !isGuest) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       if (window.location.pathname !== '/' || !window.location.search.includes('login=true')) {
