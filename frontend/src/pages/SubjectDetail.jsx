@@ -379,7 +379,7 @@ export default function SubjectDetail() {
               <>
                 <h2 className="text-xl font-semibold">{activeTopic.title}</h2>
                 <div className="prose prose-slate mt-4 max-w-none dark:prose-invert">
-                  <p className="text-slate-705 dark:text-slate-300 whitespace-pre-wrap">{activeTopic.content}</p>
+                  <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{activeTopic.content}</p>
                   {activeTopic.notes && (
                     <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-900/30">
                       <h3 className="font-medium text-amber-800 dark:text-amber-300">Notes</h3>
