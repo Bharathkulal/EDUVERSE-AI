@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -25,11 +25,11 @@ const HASH_TO_TAB = {
 };
 
 const TABS = [
-  { id: 'forum',      label: 'Discussion',  icon: MessageSquare,  color: 'purple' },
-  { id: 'groups',     label: 'Study Groups',icon: Users,          color: 'blue'   },
-  { id: 'clubs',      label: 'Dev Clubs',   icon: Code2,          color: 'cyan'   },
-  { id: 'challenges', label: 'Challenges',  icon: Trophy,         color: 'amber'  },
-  { id: 'doubt',      label: 'Doubts',      icon: AlertCircle,    color: 'rose'   },
+  { id: 'forum', label: 'Discussion', icon: MessageSquare, color: 'purple' },
+  { id: 'groups', label: 'Study Groups', icon: Users, color: 'blue' },
+  { id: 'clubs', label: 'Dev Clubs', icon: Code2, color: 'cyan' },
+  { id: 'challenges', label: 'Challenges', icon: Trophy, color: 'amber' },
+  { id: 'doubt', label: 'Doubts', icon: AlertCircle, color: 'rose' },
 ];
 
 const CHALLENGE_DETAILS = {
@@ -65,11 +65,11 @@ const CHALLENGE_DETAILS = {
 function StatCard({ icon: Icon, label, value, color }) {
   const colors = {
     purple: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
-    blue:   'text-blue-400 bg-blue-500/10 border-blue-500/20',
-    cyan:   'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
-    amber:  'text-amber-400 bg-amber-500/10 border-amber-500/20',
-    rose:   'text-rose-400 bg-rose-500/10 border-rose-500/20',
-    emerald:'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+    blue: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+    cyan: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+    amber: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+    rose: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
+    emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
   };
   return (
     <div className="rounded-2xl border bg-white/3 border-white/8 p-4 flex items-center gap-3">
@@ -97,27 +97,33 @@ export default function Community() {
 
   // Forum state
   const [posts, setPosts] = useState([
-    { id: 1, author: 'Rahul K.',  avatar: 'R', title: 'How to implement Binary Search Tree in Java?',     category: 'DSA',     replies: 12, likes: 24, time: '2h ago',   tags: ['Java','DSA','Trees'] },
-    { id: 2, author: 'Priya S.',  avatar: 'P', title: 'Best resources for learning C# design patterns',   category: 'C#',      replies: 8,  likes: 15, time: '5h ago',   tags: ['C#','Design Patterns'] },
-    { id: 3, author: 'Amit V.',   avatar: 'A', title: 'Struggling with SQL JOIN queries — need help!',     category: 'DBMS',    replies: 20, likes: 31, time: '1d ago',   tags: ['SQL','DBMS','Joins'] },
-    { id: 4, author: 'Sneha M.',  avatar: 'S', title: 'Python vs Java for competitive programming?',       category: 'General', replies: 45, likes: 67, time: '2d ago',   tags: ['Python','Java','CP'] },
-    { id: 5, author: 'Kavya P.',  avatar: 'K', title: 'Best approach to dynamic programming problems?',    category: 'DSA',     replies: 33, likes: 52, time: '3d ago',   tags: ['DP','Algorithms'] },
+    { id: 1, author: 'Rahul K.', avatar: 'R', title: 'How to implement Binary Search Tree in Java?', category: 'DSA', replies: 12, likes: 24, time: '2h ago', tags: ['Java', 'DSA', 'Trees'] },
+    { id: 2, author: 'Priya S.', avatar: 'P', title: 'Best resources for learning C# design patterns', category: 'C#', replies: 8, likes: 15, time: '5h ago', tags: ['C#', 'Design Patterns'] },
+    { id: 3, author: 'Amit V.', avatar: 'A', title: 'Struggling with SQL JOIN queries — need help!', category: 'DBMS', replies: 20, likes: 31, time: '1d ago', tags: ['SQL', 'DBMS', 'Joins'] },
+    { id: 4, author: 'Sneha M.', avatar: 'S', title: 'Python vs Java for competitive programming?', category: 'General', replies: 45, likes: 67, time: '2d ago', tags: ['Python', 'Java', 'CP'] },
+    { id: 5, author: 'Kavya P.', avatar: 'K', title: 'Best approach to dynamic programming problems?', category: 'DSA', replies: 33, likes: 52, time: '3d ago', tags: ['DP', 'Algorithms'] },
   ]);
   const [newPost, setNewPost] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Doubt state
   const [doubts, setDoubts] = useState([
-    { id: 1, q: 'What is the difference between HashMap and TreeMap?', subject: 'Java',  answers: 2, solved: true,  answersList: [
-      { author: 'AI Tutor', avatar: '🤖', text: 'HashMap is based on a hash table (O(1) avg). TreeMap is Red-Black tree based (O(log n)), keeps keys sorted.', time: '2h ago' },
-      { author: 'Rohan D.', avatar: 'R',  text: 'Use HashMap unless you explicitly need key ordering!', time: '1h ago' }
-    ]},
-    { id: 2, q: 'How to normalize a database to 3NF?',                 subject: 'DBMS',  answers: 1, solved: true,  answersList: [
-      { author: 'AI Tutor', avatar: '🤖', text: 'A table is in 3NF if in 2NF with no transitive dependencies. Every non-key column must depend only on the primary key.', time: '3h ago' }
-    ]},
-    { id: 3, q: 'Explain time complexity of merge sort',                subject: 'DSA',   answers: 1, solved: false, answersList: [
-      { author: 'AI Tutor', avatar: '🤖', text: 'Merge Sort recursively splits (log N) and merges (O(N) per step). Total: O(N log N) in all cases.', time: '4h ago' }
-    ]},
+    {
+      id: 1, q: 'What is the difference between HashMap and TreeMap?', subject: 'Java', answers: 2, solved: true, answersList: [
+        { author: 'AI Tutor', avatar: '🤖', text: 'HashMap is based on a hash table (O(1) avg). TreeMap is Red-Black tree based (O(log n)), keeps keys sorted.', time: '2h ago' },
+        { author: 'Rohan D.', avatar: 'R', text: 'Use HashMap unless you explicitly need key ordering!', time: '1h ago' }
+      ]
+    },
+    {
+      id: 2, q: 'How to normalize a database to 3NF?', subject: 'DBMS', answers: 1, solved: true, answersList: [
+        { author: 'AI Tutor', avatar: '🤖', text: 'A table is in 3NF if in 2NF with no transitive dependencies. Every non-key column must depend only on the primary key.', time: '3h ago' }
+      ]
+    },
+    {
+      id: 3, q: 'Explain time complexity of merge sort', subject: 'DSA', answers: 1, solved: false, answersList: [
+        { author: 'AI Tutor', avatar: '🤖', text: 'Merge Sort recursively splits (log N) and merges (O(N) per step). Total: O(N log N) in all cases.', time: '4h ago' }
+      ]
+    },
   ]);
   const [doubtQuestion, setDoubtQuestion] = useState('');
   const [selectedDoubt, setSelectedDoubt] = useState(null);
@@ -125,10 +131,10 @@ export default function Community() {
 
   // Challenge state
   const [challenges, setChallenges] = useState([
-    { id: 1, title: 'Weekly Algorithm Sprint',  difficulty: 'Medium', participants: 89,  deadline: '3 days left', xp: 200, type: 'Coding' },
-    { id: 2, title: 'Database Design Challenge', difficulty: 'Hard',   participants: 45,  deadline: '5 days left', xp: 350, type: 'DBMS' },
-    { id: 3, title: 'UI/UX Design Contest',      difficulty: 'Easy',   participants: 123, deadline: '7 days left', xp: 150, type: 'Design' },
-    { id: 4, title: 'System Design Sprint',      difficulty: 'Hard',   participants: 34,  deadline: '2 days left', xp: 400, type: 'Architecture' },
+    { id: 1, title: 'Weekly Algorithm Sprint', difficulty: 'Medium', participants: 89, deadline: '3 days left', xp: 200, type: 'Coding' },
+    { id: 2, title: 'Database Design Challenge', difficulty: 'Hard', participants: 45, deadline: '5 days left', xp: 350, type: 'DBMS' },
+    { id: 3, title: 'UI/UX Design Contest', difficulty: 'Easy', participants: 123, deadline: '7 days left', xp: 150, type: 'Design' },
+    { id: 4, title: 'System Design Sprint', difficulty: 'Hard', participants: 34, deadline: '2 days left', xp: 400, type: 'Architecture' },
   ]);
   const [joinedChallenges, setJoinedChallenges] = useState(() => {
     try { return JSON.parse(localStorage.getItem('ev_joined_challenges') || '{}'); } catch { return {}; }
@@ -138,8 +144,8 @@ export default function Community() {
   // Study Groups state
   const [groups, setGroups] = useState([
     { id: 1, name: 'DSA Mastery & LeetCode Sprint', subject: 'Data Structures', members: 5, max: 6, online: 3, aiMentor: 'Coding AI', meeting: 'Today 5:00 PM', coverColor: 'from-purple-600 to-indigo-800' },
-    { id: 2, name: 'DBMS Relational DB Builders',   subject: 'Database Systems', members: 4, max: 8, online: 2, aiMentor: 'DBMS AI',   meeting: 'Tomorrow 2 PM', coverColor: 'from-blue-600 to-cyan-800' },
-    { id: 3, name: 'Python Enthusiasts',             subject: 'Python',           members: 9, max:12, online: 5, aiMentor: 'Python AI', meeting: 'Today 6 PM',    coverColor: 'from-emerald-600 to-teal-800' },
+    { id: 2, name: 'DBMS Relational DB Builders', subject: 'Database Systems', members: 4, max: 8, online: 2, aiMentor: 'DBMS AI', meeting: 'Tomorrow 2 PM', coverColor: 'from-blue-600 to-cyan-800' },
+    { id: 3, name: 'Python Enthusiasts', subject: 'Python', members: 9, max: 12, online: 5, aiMentor: 'Python AI', meeting: 'Today 6 PM', coverColor: 'from-emerald-600 to-teal-800' },
   ]);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
@@ -147,10 +153,10 @@ export default function Community() {
 
   // Clubs state
   const codingClubs = [
-    { id: 1, name: 'Algorithm Warriors',      members: 120, focus: 'Competitive Programming', meetDay: 'Every Saturday', rating: 5 },
-    { id: 2, name: 'Open Source Contributors',members: 85,  focus: 'Open Source Projects',     meetDay: 'Every Sunday',   rating: 4 },
-    { id: 3, name: 'Hackathon Squad',         members: 67,  focus: 'Hackathons & Innovations', meetDay: 'Bi-weekly',      rating: 4 },
-    { id: 4, name: 'Full Stack Devs',         members: 94,  focus: 'Full Stack Development',   meetDay: 'Every Friday',   rating: 5 },
+    { id: 1, name: 'Algorithm Warriors', members: 120, focus: 'Competitive Programming', meetDay: 'Every Saturday', rating: 5 },
+    { id: 2, name: 'Open Source Contributors', members: 85, focus: 'Open Source Projects', meetDay: 'Every Sunday', rating: 4 },
+    { id: 3, name: 'Hackathon Squad', members: 67, focus: 'Hackathons & Innovations', meetDay: 'Bi-weekly', rating: 4 },
+    { id: 4, name: 'Full Stack Devs', members: 94, focus: 'Full Stack Development', meetDay: 'Every Friday', rating: 5 },
   ];
 
   useEffect(() => {
@@ -175,7 +181,7 @@ export default function Community() {
   };
 
   const diffBadge = (d) => {
-    if (d === 'Easy')   return 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30';
+    if (d === 'Easy') return 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30';
     if (d === 'Medium') return 'text-amber-400 bg-amber-500/15 border-amber-500/30';
     return 'text-rose-400 bg-rose-500/15 border-rose-500/30';
   };
@@ -226,9 +232,9 @@ export default function Community() {
         {/* ── STAT STRIP ─────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <StatCard icon={MessageSquare} label="Discussions" value="1.2K" color="purple" />
-          <StatCard icon={Users}         label="Study Groups" value="38"   color="blue"   />
-          <StatCard icon={Trophy}        label="Challenges"   value="12"   color="amber"  />
-          <StatCard icon={CheckCircle2}  label="Doubts Solved"value="847"  color="emerald"/>
+          <StatCard icon={Users} label="Study Groups" value="38" color="blue" />
+          <StatCard icon={Trophy} label="Challenges" value="12" color="amber" />
+          <StatCard icon={CheckCircle2} label="Doubts Solved" value="847" color="emerald" />
         </div>
 
         {/* ── TAB NAVIGATION ─────────────────────────────────── */}
@@ -240,11 +246,10 @@ export default function Community() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex-shrink-0 cursor-pointer ${
-                  isActive
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex-shrink-0 cursor-pointer ${isActive
                     ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
                     : 'text-white/40 hover:text-white/70 hover:bg-white/6'
-                }`}
+                  }`}
               >
                 <Icon size={13} />
                 {tab.label}
@@ -634,18 +639,18 @@ export default function Community() {
                 {activeTabMeta && <activeTabMeta.icon size={24} className="text-purple-400" />}
               </div>
               <h3 className="font-bold text-white/70 text-center text-sm mb-2">
-                {activeTab === 'forum'       && 'Discussion Forum'}
-                {activeTab === 'groups'      && 'Study Groups'}
-                {activeTab === 'clubs'       && 'Developer Clubs'}
-                {activeTab === 'challenges'  && 'Community Challenges'}
-                {activeTab === 'doubt'       && 'Doubt Clearing'}
+                {activeTab === 'forum' && 'Discussion Forum'}
+                {activeTab === 'groups' && 'Study Groups'}
+                {activeTab === 'clubs' && 'Developer Clubs'}
+                {activeTab === 'challenges' && 'Community Challenges'}
+                {activeTab === 'doubt' && 'Doubt Clearing'}
               </h3>
               <p className="text-xs text-white/30 text-center leading-relaxed mb-5">
-                {activeTab === 'forum'       && 'Post questions, share knowledge, and discuss topics with the community.'}
-                {activeTab === 'groups'      && 'Form study groups with AI mentors, shared whiteboards, and task boards.'}
-                {activeTab === 'clubs'       && 'Join specialized developer clubs and collaborate on real projects.'}
-                {activeTab === 'challenges'  && 'Compete in weekly challenges, earn XP, and collect achievement badges.'}
-                {activeTab === 'doubt'       && 'Get your doubts solved by peers and AI tutors within minutes.'}
+                {activeTab === 'forum' && 'Post questions, share knowledge, and discuss topics with the community.'}
+                {activeTab === 'groups' && 'Form study groups with AI mentors, shared whiteboards, and task boards.'}
+                {activeTab === 'clubs' && 'Join specialized developer clubs and collaborate on real projects.'}
+                {activeTab === 'challenges' && 'Compete in weekly challenges, earn XP, and collect achievement badges.'}
+                {activeTab === 'doubt' && 'Get your doubts solved by peers and AI tutors within minutes.'}
               </p>
 
               {/* Quick links */}
@@ -723,10 +728,10 @@ export default function Community() {
               </div>
               <div className="space-y-2.5">
                 {[
-                  { name: 'Rahul K.',  subject: 'Solving DSA problems',    color: 'from-violet-500 to-indigo-600' },
-                  { name: 'Priya S.',  subject: 'In Study Group: Python',  color: 'from-blue-500 to-cyan-600' },
-                  { name: 'Amit V.',   subject: 'Answering SQL doubts',     color: 'from-emerald-500 to-teal-600' },
-                  { name: 'Kavya P.', subject: 'Weekly Algorithm Sprint',  color: 'from-amber-500 to-orange-600' },
+                  { name: 'Rahul K.', subject: 'Solving DSA problems', color: 'from-violet-500 to-indigo-600' },
+                  { name: 'Priya S.', subject: 'In Study Group: Python', color: 'from-blue-500 to-cyan-600' },
+                  { name: 'Amit V.', subject: 'Answering SQL doubts', color: 'from-emerald-500 to-teal-600' },
+                  { name: 'Kavya P.', subject: 'Weekly Algorithm Sprint', color: 'from-amber-500 to-orange-600' },
                 ].map(member => (
                   <div key={member.name} className="flex items-center gap-3">
                     <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${member.color} flex items-center justify-center text-white text-[10px] font-black flex-shrink-0`}>
@@ -750,11 +755,11 @@ export default function Community() {
               </div>
               <div className="space-y-2">
                 {[
-                  { rank: 1, name: 'Rohan D.',  xp: 1840, medal: '🥇' },
-                  { rank: 2, name: 'Kavya P.',  xp: 1620, medal: '🥈' },
-                  { rank: 3, name: 'Priya S.',  xp: 1450, medal: '🥉' },
-                  { rank: 4, name: 'Rahul K.',  xp: 1230, medal: '4'  },
-                  { rank: 5, name: 'Sneha M.',  xp: 980,  medal: '5'  },
+                  { rank: 1, name: 'Rohan D.', xp: 1840, medal: '🥇' },
+                  { rank: 2, name: 'Kavya P.', xp: 1620, medal: '🥈' },
+                  { rank: 3, name: 'Priya S.', xp: 1450, medal: '🥉' },
+                  { rank: 4, name: 'Rahul K.', xp: 1230, medal: '4' },
+                  { rank: 5, name: 'Sneha M.', xp: 980, medal: '5' },
                 ].map(entry => (
                   <div key={entry.rank} className="flex items-center gap-3 py-1">
                     <span className="text-sm w-6 text-center">{entry.medal}</span>
@@ -833,11 +838,10 @@ export default function Community() {
                 </div>
                 <button
                   onClick={() => { handleJoinChallenge(selectedChallenge); setSelectedChallenge(null); }}
-                  className={`w-full py-3 text-white text-sm font-black rounded-2xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2 ${
-                    joinedChallenges[selectedChallenge.id]
+                  className={`w-full py-3 text-white text-sm font-black rounded-2xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2 ${joinedChallenges[selectedChallenge.id]
                       ? 'bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500'
                       : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500'
-                  }`}
+                    }`}
                 >
                   {joinedChallenges[selectedChallenge.id]
                     ? <><X size={15} /> Leave Challenge</>

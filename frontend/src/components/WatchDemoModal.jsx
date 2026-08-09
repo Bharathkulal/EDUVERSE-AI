@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, Pause, Volume2, VolumeX, X, Maximize2, Minimize2, 
@@ -117,6 +117,25 @@ const stopBackgroundMusic = () => {
   }
 };
 
+function TypingText({ text, speed = 25 }) {
+  const [displayedText, setDisplayedText] = useState('');
+  useEffect(() => {
+    setDisplayedText('');
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < text.length) {
+        setDisplayedText(prev => prev + text.charAt(i));
+        i++;
+      } else {
+        clearInterval(interval);
+      }
+    }, speed);
+    return () => clearInterval(interval);
+  }, [text, speed]);
+
+  return <span>{displayedText}</span>;
+}
+
 export default function WatchDemoModal({ isOpen, onClose }) {
   const navigate = useNavigate();
   const { startGuestSession } = useAuth();
@@ -204,8 +223,9 @@ export default function WatchDemoModal({ isOpen, onClose }) {
   const [simulatedDarkMode, setSimulatedDarkMode] = useState(true);
   const [showDeviceInfo, setShowDeviceInfo] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
 
-  const simulatorSteps = [
+  const simulatorSteps = useRef([
     { screen: 'home', desc: 'Home Screen' },
     { screen: 'dashboard', desc: 'Open Dashboard' },
     { screen: 'learn', desc: 'Open Learn Modules' },
@@ -215,19 +235,77 @@ export default function WatchDemoModal({ isOpen, onClose }) {
     { screen: 'coding-terminal', desc: 'Execute Python Code' },
     { screen: 'ai-chat', desc: 'AI Explains Output' },
     { screen: 'notes', desc: 'Generate Study Notes' }
-  ];
+  ]).current;
 
+  // Handle step changes safely and synchronously
+  const goToStep = useCallback((stepIndex) => {
+    try {
+      const idx = (stepIndex + simulatorSteps.length) % simulatorSteps.length;
+      setDemoStep(idx);
+      setCurrentScreen(simulatorSteps[idx].screen);
+    } catch (e) {
+      console.error("Animation step transition crash:", e);
+      // Auto-restart recovery mechanism
+      setDemoStep(0);
+      setCurrentScreen('home');
+    }
+  }, [simulatorSteps]);
+
+  // Main Autoplay Timer with proper dependencies, clean up and hover pause support
   useEffect(() => {
-    if (!demoRunning) return;
+    if (activeTab !== 'mobile' || !demoRunning || isHovered || !isOpen) {
+      return;
+    }
     const timer = setInterval(() => {
-      setDemoStep(prev => {
-        const next = (prev + 1) % simulatorSteps.length;
-        setCurrentScreen(simulatorSteps[next].screen);
-        return next;
-      });
-    }, 3500);
+      goToStep(demoStep + 1);
+    }, 3800);
     return () => clearInterval(timer);
-  }, [demoRunning]);
+  }, [activeTab, demoRunning, isHovered, isOpen, demoStep, goToStep]);
+
+  // Keyboard navigation listener (ArrowRight/Left to navigate, Space to toggle play/pause)
+  useEffect(() => {
+    if (activeTab !== 'mobile' || !isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight') {
+        playSound('click');
+        goToStep(demoStep + 1);
+      } else if (e.key === 'ArrowLeft') {
+        playSound('click');
+        goToStep(demoStep - 1);
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        playSound('click');
+        setDemoRunning(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTab, isOpen, demoStep, goToStep]);
+
+  // Touch Swipe Gesture Tracking
+  const touchStart = useRef(0);
+  const handleTouchStart = (e) => {
+    touchStart.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e) => {
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStart.current - touchEnd;
+    if (Math.abs(diff) > 55) {
+      playSound('click');
+      if (diff > 0) {
+        goToStep(demoStep + 1); // Swipe left -> next
+      } else {
+        goToStep(demoStep - 1); // Swipe right -> prev
+      }
+    }
+  };
+
+  const handleDoubleClickRestart = () => {
+    playSound('success');
+    goToStep(0);
+    setDemoRunning(true);
+    toast.success("Demo restarted!");
+  };
 
   const handleMouseMove = (e) => {
     const card = e.currentTarget;
@@ -239,6 +317,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
 
   const handleMouseLeave = () => {
     setMousePos({ x: 0, y: 0 });
+    setIsHovered(false);
   };
 
   // Toggle fullscreen
@@ -843,9 +922,13 @@ export default function WatchDemoModal({ isOpen, onClose }) {
 
                 {/* Device Canvas Showcase */}
                 <div 
-                  className="relative flex justify-center items-center py-10 min-h-[580px] bg-[#03060c]/50 rounded-3xl border border-white/5 overflow-hidden select-none"
+                  className="relative flex justify-center items-center py-10 min-h-[580px] bg-[#03060c]/50 rounded-3xl border border-white/5 overflow-hidden select-none cursor-grab active:cursor-grabbing"
                   onMouseMove={handleMouseMove}
                   onMouseLeave={handleMouseLeave}
+                  onMouseEnter={() => setIsHovered(true)}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                  onDoubleClick={handleDoubleClickRestart}
                 >
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.06)_0%,transparent_70%)] pointer-events-none" />
 
@@ -1009,17 +1092,36 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                     </span>
                   </div>
                   
-                  <div className="flex gap-1.5">
-                    {simulatorSteps.map((step, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => { setDemoStep(idx); setCurrentScreen(step.screen); setDemoRunning(false); playSound('click'); }}
-                        className={`w-2.5 h-2.5 rounded-full transition cursor-pointer border-0 ${
-                          demoStep === idx ? 'bg-blue-500 scale-125' : 'bg-slate-800 hover:bg-slate-700'
-                        }`}
-                        title={step.desc}
-                      />
-                    ))}
+                  <div className="flex items-center gap-2">
+                    {simulatorSteps.map((step, idx) => {
+                      const isActive = demoStep === idx;
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            goToStep(idx);
+                            setDemoRunning(false); // Pause autoplay on manual navigation
+                            playSound('click');
+                          }}
+                          className={`relative h-2 rounded-full overflow-hidden transition-all duration-305 cursor-pointer border-0 ${
+                            isActive ? 'w-8 bg-slate-800' : 'w-2 bg-slate-800 hover:bg-slate-700'
+                          }`}
+                          title={step.desc}
+                        >
+                          {isActive && demoRunning && !isHovered && (
+                            <motion.div
+                              initial={{ width: '0%' }}
+                              animate={{ width: '100%' }}
+                              transition={{ duration: 3.8, ease: 'linear' }}
+                              className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500"
+                            />
+                          )}
+                          {isActive && (!demoRunning || isHovered) && (
+                            <div className="absolute inset-0 bg-blue-500" />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1128,266 +1230,282 @@ function SimulatedScreenContent({ screen, setScreen, isDarkMode, isPortrait, isD
       )}
 
       {/* 2. Main simulated screen page */}
-      <div className="flex-1 overflow-y-auto px-3.5 py-2 space-y-4 custom-sidebar-scroll select-none">
-        
-        {/* SCREEN 1: Home View */}
-        {screen === 'home' && (
-          <div className="space-y-4 text-left">
-            <div>
-              <span className="text-[9px] uppercase font-black tracking-wider text-blue-400">EduVerse AI Platform</span>
-              <h4 className="text-sm font-black leading-tight flex items-center gap-1.5 mt-0.5">
-                Hello Student 👋
-              </h4>
-              <p className="text-[10px] text-slate-500 leading-none mt-1">Welcome Back</p>
-            </div>
+      <div className="flex-1 overflow-y-auto px-3.5 py-2 space-y-4 custom-sidebar-scroll select-none relative min-h-[300px]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={screen}
+            initial={{ opacity: 0, scale: 0.96, x: 12, filter: 'drop-shadow(0 0 0px rgba(59,130,246,0))' }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1, 
+              x: 0, 
+              filter: 'drop-shadow(0 4px 12px rgba(59,130,246,0.12))' 
+            }}
+            exit={{ opacity: 0, scale: 0.96, x: -12 }}
+            transition={{ duration: 0.22, ease: 'easeInOut' }}
+            className="w-full space-y-4"
+          >
+            {/* SCREEN 1: Home View */}
+            {screen === 'home' && (
+              <div className="space-y-4 text-left">
+                <div>
+                  <span className="text-[9px] uppercase font-black tracking-wider text-blue-400">EduVerse AI Platform</span>
+                  <h4 className="text-sm font-black leading-tight flex items-center gap-1.5 mt-0.5">
+                    Hello Student 👋
+                  </h4>
+                  <p className="text-[10px] text-slate-500 leading-none mt-1">Welcome Back</p>
+                </div>
 
-            {/* Quick Actions Grid */}
-            <div className="space-y-2">
-              <span className="text-[9px] font-black uppercase text-slate-500">Quick Actions</span>
-              <div className="grid grid-cols-2 gap-1.5">
-                {[
-                  { label: 'Learn', icon: '📚', target: 'learn' },
-                  { label: 'AI Tutor', icon: '🤖', target: 'ai-chat' },
-                  { label: 'Coding Lab', icon: '💻', target: 'coding' },
-                  { label: 'Mathematics', icon: '🧮', target: 'math' },
-                  { label: 'Science Lab', icon: '🧪', target: 'learn' },
-                  { label: 'Dashboard', icon: '📊', target: 'dashboard' }
-                ].map((act, idx) => (
-                  <div 
-                    key={idx} 
-                    onClick={() => { setScreen(act.target); playSound('click'); }}
-                    className={`p-2 rounded-xl border flex items-center gap-2 ${cardBg} hover:border-blue-500/30 transition cursor-pointer active:scale-95`}
-                  >
-                    <span className="text-base">{act.icon}</span>
-                    <strong className="text-[9px] font-black">{act.label}</strong>
+                {/* Quick Actions Grid */}
+                <div className="space-y-2">
+                  <span className="text-[9px] font-black uppercase text-slate-500">Quick Actions</span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[
+                      { label: 'Learn', icon: '📚', target: 'learn' },
+                      { label: 'AI Tutor', icon: '🤖', target: 'ai-chat' },
+                      { label: 'Coding Lab', icon: '💻', target: 'coding' },
+                      { label: 'Mathematics', icon: '🧮', target: 'math' },
+                      { label: 'Science Lab', icon: '🧪', target: 'learn' },
+                      { label: 'Dashboard', icon: '📊', target: 'dashboard' }
+                    ].map((act, idx) => (
+                      <div 
+                        key={idx} 
+                        onClick={() => { setScreen(act.target); playSound('click'); }}
+                        className={`p-2 rounded-xl border flex items-center gap-2 ${cardBg} hover:border-blue-500/30 transition cursor-pointer active:scale-95`}
+                      >
+                        <span className="text-base">{act.icon}</span>
+                        <strong className="text-[9px] font-black">{act.label}</strong>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            {/* Recent Progress */}
-            <div className="space-y-2">
-              <span className="text-[9px] font-black uppercase text-slate-500">Recent Learning</span>
-              <div className="space-y-1.5">
-                {[
-                  { name: 'Continue Python', progress: 65, color: 'bg-emerald-500' },
-                  { name: 'Continue Java', progress: 42, color: 'bg-blue-500' }
-                ].map((prog, idx) => (
-                  <div key={idx} className={`p-2 rounded-xl border ${cardBg}`}>
-                    <div className="flex justify-between text-[8px] font-bold">
-                      <span>{prog.name}</span>
-                      <span>{prog.progress}%</span>
+                {/* Recent Progress */}
+                <div className="space-y-2">
+                  <span className="text-[9px] font-black uppercase text-slate-500">Recent Learning</span>
+                  <div className="space-y-1.5">
+                    {[
+                      { name: 'Continue Python', progress: 65, color: 'bg-emerald-500' },
+                      { name: 'Continue Java', progress: 42, color: 'bg-blue-500' }
+                    ].map((prog, idx) => (
+                      <div key={idx} className={`p-2 rounded-xl border ${cardBg}`}>
+                        <div className="flex justify-between text-[8px] font-bold">
+                          <span>{prog.name}</span>
+                          <span>{prog.progress}%</span>
+                        </div>
+                        <div className="w-full h-1 bg-slate-800 rounded-full mt-1.5 overflow-hidden">
+                          <div className={`h-full ${prog.color}`} style={{ width: `${prog.progress}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SCREEN 2: Dashboard View */}
+            {screen === 'dashboard' && (
+              <div className="space-y-4">
+                <div>
+                  <span className="text-[9px] uppercase font-black text-blue-400">Student Analytics</span>
+                  <h4 className="text-sm font-black mt-0.5">My Learning Center</h4>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className={`p-2.5 rounded-xl border ${cardBg}`}>
+                    <span className="text-[8px] text-slate-500 uppercase font-black block">Total XP</span>
+                    <strong className="text-sm font-extrabold mt-1 block">1,850 XP</strong>
+                  </div>
+                  <div className={`p-2.5 rounded-xl border ${cardBg}`}>
+                    <span className="text-[8px] text-slate-500 uppercase font-black block">Rank Tier</span>
+                    <strong className="text-sm text-teal-400 font-extrabold mt-1 block">Level 12</strong>
+                  </div>
+                </div>
+
+                <div className={`p-3 rounded-xl border ${cardBg} space-y-2`}>
+                  <span className="text-[9px] font-black uppercase text-slate-500">Weekly Activity Log</span>
+                  <div className="flex justify-between items-end h-16 pt-2">
+                    {[45, 60, 30, 90, 15, 75, 50].map((h, idx) => (
+                      <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                        <div className="w-2.5 bg-gradient-to-t from-blue-500 to-indigo-500 rounded-t" style={{ height: `${h}%` }} />
+                        <span className="text-[7px] text-slate-650">Day {idx + 1}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SCREEN 3: Learn Subjects View */}
+            {screen === 'learn' && (
+              <div className="space-y-4">
+                <div>
+                  <span className="text-[9px] uppercase font-black text-blue-400">Modules Catalog</span>
+                  <h4 className="text-sm font-black mt-0.5">Academic Subjects</h4>
+                </div>
+
+                <div className="space-y-2">
+                  {[
+                    { title: 'Core Java Programming', desc: 'Object-oriented logic compilers.', icon: '☕', label: '12 topics' },
+                    { title: 'Advanced Python IDE', desc: 'Data structures & algorithm visualizer.', icon: '🐍', label: '8 topics' },
+                    { title: 'Mathematics Studio', desc: 'Step-by-step calculus solvers.', icon: '🧮', label: '15 topics' }
+                  ].map((sub, idx) => (
+                    <div key={idx} className={`p-3 rounded-2xl border flex gap-3 items-start ${cardBg}`}>
+                      <span className="text-2xl">{sub.icon}</span>
+                      <div className="text-left">
+                        <strong className="text-[10px] font-extrabold block leading-tight">{sub.title}</strong>
+                        <span className="text-[8px] text-slate-400 block mt-1 leading-snug">{sub.desc}</span>
+                        <span className="text-[7px] uppercase font-black text-blue-400 mt-2 block">{sub.label}</span>
+                      </div>
                     </div>
-                    <div className="w-full h-1 bg-slate-800 rounded-full mt-1.5 overflow-hidden">
-                      <div className={`h-full ${prog.color}`} style={{ width: `${prog.progress}%` }} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* SCREEN 4: Mathematics input screen */}
+            {screen === 'math' && (
+              <div className="space-y-4">
+                <div>
+                  <span className="text-[9px] uppercase font-black text-blue-400">Mathematics Studio</span>
+                  <h4 className="text-sm font-black mt-0.5">Equation Solver</h4>
+                </div>
+
+                <div className={`p-3 rounded-xl border ${cardBg} space-y-3`}>
+                  <label className="text-[9px] font-bold text-slate-400 block">Input Formula:</label>
+                  <div className="bg-slate-950 border border-white/10 rounded-lg p-2 font-mono text-[10px] text-emerald-400">
+                    y = 3x^2 + 5x - 2
+                  </div>
+                  <div className="w-full h-8 bg-blue-600 rounded-lg flex items-center justify-center text-[9px] font-black uppercase text-white animate-pulse">
+                    Clicking Solve...
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SCREEN 5: Mathematics solved screen */}
+            {screen === 'math-solved' && (
+              <div className="space-y-4">
+                <div>
+                  <span className="text-[9px] uppercase font-black text-teal-400">Derivation Results</span>
+                  <h4 className="text-sm font-black mt-0.5">Step-by-Step Solve</h4>
+                </div>
+
+                <div className="space-y-2">
+                  {[
+                    { title: 'Step 1: Identify coordinates', text: 'Quadratic equation a=3, b=5, c=-2' },
+                    { title: 'Step 2: Calculate Delta Δ', text: 'Δ = b² - 4ac = 25 + 24 = 49' },
+                    { title: 'Step 3: Extract roots variables', text: 'x = (-5 ± √49) / 6 => x = 1/3, -2' }
+                  ].map((step, idx) => (
+                    <div key={idx} className={`p-2.5 rounded-xl border ${cardBg} text-left`}>
+                      <strong className="text-[9px] font-extrabold text-blue-400 block">{step.title}</strong>
+                      <span className="text-[8px] text-slate-400 block mt-1 leading-normal">{step.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* SCREEN 6: Coding IDE screen */}
+            {screen === 'coding' && (
+              <div className="space-y-4">
+                <div>
+                  <span className="text-[9px] uppercase font-black text-blue-400">Python compiler</span>
+                  <h4 className="text-sm font-black mt-0.5">Coding Sandbox</h4>
+                </div>
+
+                <div className="flex-grow flex flex-col font-mono text-[9px] leading-normal bg-slate-950 border border-white/10 rounded-xl overflow-hidden p-3 h-28 justify-between">
+                  <span className="text-emerald-400 block text-left">
+                    def sum(a, b):<br />
+                    &nbsp;&nbsp;&nbsp;&nbsp;return a + b<br />
+                    <br />
+                    print(sum(4, 5))
+                  </span>
+                  <span className="text-[7px] text-slate-650 block border-t border-white/5 pt-1 text-right">Click Run Code...</span>
+                </div>
+              </div>
+            )}
+
+            {/* SCREEN 7: Coding IDE output screen */}
+            {screen === 'coding-terminal' && (
+              <div className="space-y-4">
+                <div>
+                  <span className="text-[9px] uppercase font-black text-teal-400">Execution Output</span>
+                  <h4 className="text-sm font-black mt-0.5">Terminal Logs</h4>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="font-mono text-[10px] bg-black p-3 rounded-lg text-emerald-400 border border-white/10 text-left">
+                    $ python script.py<br />
+                    9<br />
+                    <br />
+                    [Process completed successfully]
+                  </div>
+                  <div className={`p-2.5 rounded-xl border ${cardBg} flex gap-2 items-center`}>
+                    <span className="text-sm">🤖</span>
+                    <span className="text-[8px] text-slate-400 leading-snug">
+                      <strong>AI explanation:</strong> <TypingText text="The code declares a function adding parameters 4 and 5 returning 9." speed={22} />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SCREEN 8: AI Chat tutor screen */}
+            {screen === 'ai-chat' && (
+              <div className="space-y-4 flex flex-col h-full justify-between pb-1 text-left">
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-[9px] uppercase font-black text-blue-400">Classroom Guide</span>
+                    <h4 className="text-sm font-black mt-0.5">AI Classroom Guide</h4>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex flex-col items-end">
+                      <div className="bg-blue-600 text-white p-2 rounded-xl rounded-tr-none text-[9px] max-w-[85%] leading-normal text-left">
+                        Explain recursion in JavaScript.
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <div className="bg-slate-900 border border-white/10 text-slate-350 p-2 rounded-xl rounded-tl-none text-[9px] max-w-[85%] leading-relaxed text-left">
+                        <TypingText text="Recursion occurs when a function calls itself until reaching a base condition parameters." speed={24} />
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SCREEN 2: Dashboard View */}
-        {screen === 'dashboard' && (
-          <div className="space-y-4">
-            <div>
-              <span className="text-[9px] uppercase font-black text-blue-400">Student Analytics</span>
-              <h4 className="text-sm font-black mt-0.5">My Learning Center</h4>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div className={`p-2.5 rounded-xl border ${cardBg}`}>
-                <span className="text-[8px] text-slate-500 uppercase font-black block">Total XP</span>
-                <strong className="text-sm font-extrabold mt-1 block">1,850 XP</strong>
-              </div>
-              <div className={`p-2.5 rounded-xl border ${cardBg}`}>
-                <span className="text-[8px] text-slate-500 uppercase font-black block">Rank Tier</span>
-                <strong className="text-sm text-teal-400 font-extrabold mt-1 block">Level 12</strong>
-              </div>
-            </div>
-
-            <div className={`p-3 rounded-xl border ${cardBg} space-y-2`}>
-              <span className="text-[9px] font-black uppercase text-slate-500">Weekly Activity Log</span>
-              <div className="flex justify-between items-end h-16 pt-2">
-                {[45, 60, 30, 90, 15, 75, 50].map((h, idx) => (
-                  <div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="w-2.5 bg-gradient-to-t from-blue-500 to-indigo-500 rounded-t" style={{ height: `${h}%` }} />
-                    <span className="text-[7px] text-slate-650">Day {idx + 1}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SCREEN 3: Learn Subjects View */}
-        {screen === 'learn' && (
-          <div className="space-y-4">
-            <div>
-              <span className="text-[9px] uppercase font-black text-blue-400">Modules Catalog</span>
-              <h4 className="text-sm font-black mt-0.5">Academic Subjects</h4>
-            </div>
-
-            <div className="space-y-2">
-              {[
-                { title: 'Core Java Programming', desc: 'Object-oriented logic compilers.', icon: '☕', label: '12 topics' },
-                { title: 'Advanced Python IDE', desc: 'Data structures & algorithm visualizer.', icon: '🐍', label: '8 topics' },
-                { title: 'Mathematics Studio', desc: 'Step-by-step calculus solvers.', icon: '🧮', label: '15 topics' }
-              ].map((sub, idx) => (
-                <div key={idx} className={`p-3 rounded-2xl border flex gap-3 items-start ${cardBg}`}>
-                  <span className="text-2xl">{sub.icon}</span>
-                  <div className="text-left">
-                    <strong className="text-[10px] font-extrabold block leading-tight">{sub.title}</strong>
-                    <span className="text-[8px] text-slate-400 block mt-1 leading-snug">{sub.desc}</span>
-                    <span className="text-[7px] uppercase font-black text-blue-400 mt-2 block">{sub.label}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* SCREEN 4: Mathematics input screen */}
-        {screen === 'math' && (
-          <div className="space-y-4">
-            <div>
-              <span className="text-[9px] uppercase font-black text-blue-400">Mathematics Studio</span>
-              <h4 className="text-sm font-black mt-0.5">Equation Solver</h4>
-            </div>
-
-            <div className={`p-3 rounded-xl border ${cardBg} space-y-3`}>
-              <label className="text-[9px] font-bold text-slate-400 block">Input Formula:</label>
-              <div className="bg-slate-950 border border-white/10 rounded-lg p-2 font-mono text-[10px] text-emerald-400">
-                y = 3x^2 + 5x - 2
-              </div>
-              <div className="w-full h-8 bg-blue-600 rounded-lg flex items-center justify-center text-[9px] font-black uppercase text-white animate-pulse">
-                Clicking Solve...
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SCREEN 5: Mathematics solved screen */}
-        {screen === 'math-solved' && (
-          <div className="space-y-4">
-            <div>
-              <span className="text-[9px] uppercase font-black text-teal-400">Derivation Results</span>
-              <h4 className="text-sm font-black mt-0.5">Step-by-Step Solve</h4>
-            </div>
-
-            <div className="space-y-2">
-              {[
-                { title: 'Step 1: Identify coordinates', text: 'Quadratic equation a=3, b=5, c=-2' },
-                { title: 'Step 2: Calculate Delta Δ', text: 'Δ = b² - 4ac = 25 + 24 = 49' },
-                { title: 'Step 3: Extract roots variables', text: 'x = (-5 ± √49) / 6 => x = 1/3, -2' }
-              ].map((step, idx) => (
-                <div key={idx} className={`p-2.5 rounded-xl border ${cardBg} text-left`}>
-                  <strong className="text-[9px] font-extrabold text-blue-400 block">{step.title}</strong>
-                  <span className="text-[8px] text-slate-400 block mt-1 leading-normal">{step.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* SCREEN 6: Coding IDE screen */}
-        {screen === 'coding' && (
-          <div className="space-y-4">
-            <div>
-              <span className="text-[9px] uppercase font-black text-blue-400">Python compiler</span>
-              <h4 className="text-sm font-black mt-0.5">Coding Sandbox</h4>
-            </div>
-
-            <div className="flex-grow flex flex-col font-mono text-[9px] leading-normal bg-slate-950 border border-white/10 rounded-xl overflow-hidden p-3 h-28 justify-between">
-              <span className="text-emerald-400 block text-left">
-                def sum(a, b):<br />
-                &nbsp;&nbsp;&nbsp;&nbsp;return a + b<br />
-                <br />
-                print(sum(4, 5))
-              </span>
-              <span className="text-[7px] text-slate-650 block border-t border-white/5 pt-1 text-right">Click Run Code...</span>
-            </div>
-          </div>
-        )}
-
-        {/* SCREEN 7: Coding IDE output screen */}
-        {screen === 'coding-terminal' && (
-          <div className="space-y-4">
-            <div>
-              <span className="text-[9px] uppercase font-black text-teal-400">Execution Output</span>
-              <h4 className="text-sm font-black mt-0.5">Terminal Logs</h4>
-            </div>
-
-            <div className="space-y-2">
-              <div className="font-mono text-[10px] bg-black p-3 rounded-lg text-emerald-400 border border-white/10 text-left">
-                $ python script.py<br />
-                9<br />
-                <br />
-                [Process completed successfully]
-              </div>
-              <div className={`p-2.5 rounded-xl border ${cardBg} flex gap-2 items-center`}>
-                <span className="text-sm">🤖</span>
-                <span className="text-[8px] text-slate-400 leading-snug"><strong>AI explanation:</strong> The code declares a function adding parameters 4 and 5 returning 9.</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SCREEN 8: AI Chat tutor screen */}
-        {screen === 'ai-chat' && (
-          <div className="space-y-4 flex flex-col h-full justify-between pb-1 text-left">
-            <div className="space-y-3">
-              <div>
-                <span className="text-[9px] uppercase font-black text-blue-400">Classroom Guide</span>
-                <h4 className="text-sm font-black mt-0.5">AI Classroom Guide</h4>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex flex-col items-end">
-                  <div className="bg-blue-600 text-white p-2 rounded-xl rounded-tr-none text-[9px] max-w-[85%] leading-normal text-left">
-                    Explain recursion in JavaScript.
-                  </div>
-                </div>
-                <div className="flex flex-col items-start">
-                  <div className="bg-slate-900 border border-white/10 text-slate-350 p-2 rounded-xl rounded-tl-none text-[9px] max-w-[85%] leading-relaxed text-left">
-                    Recursion occurs when a function calls itself until reaching a base condition parameters.
-                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* SCREEN 9: Generated Notes checklist screen */}
-        {screen === 'notes' && (
-          <div className="space-y-4">
-            <div>
-              <span className="text-[9px] uppercase font-black text-blue-400">Notes Engine</span>
-              <h4 className="text-sm font-black mt-0.5">Study Material</h4>
-            </div>
-
-            <div className={`p-3 rounded-xl border ${cardBg} space-y-2`}>
-              <span className="text-[9px] font-black uppercase text-slate-500 block mb-1">Generated Checklists:</span>
-              {[
-                'Recursion Stack Frame',
-                'Base Condition Variables',
-                'Tail Call Optimizations'
-              ].map((note, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-[9px] text-slate-300">
-                  <span className="text-teal-400">✓</span>
-                  <span>{note}</span>
+            {/* SCREEN 9: Generated Notes checklist screen */}
+            {screen === 'notes' && (
+              <div className="space-y-4">
+                <div>
+                  <span className="text-[9px] uppercase font-black text-blue-400">Notes Engine</span>
+                  <h4 className="text-sm font-black mt-0.5">Study Material</h4>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
 
+                <div className={`p-3 rounded-xl border ${cardBg} space-y-2`}>
+                  <span className="text-[9px] font-black uppercase text-slate-500 block mb-1">Generated Checklists:</span>
+                  {[
+                    'Recursion Stack Frame',
+                    'Base Condition Variables',
+                    'Tail Call Optimizations'
+                  ].map((note, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-[9px] text-slate-300">
+                      <span className="text-teal-400">✓</span>
+                      <span>{note}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* 3. Bottom OS Navigation bar */}
       {!isDesktop && (
-        <div className={`h-11 border-t ${borderCol} flex items-center justify-between px-4 text-[9px] font-black uppercase text-slate-500 z-40 relative bg-slate-950/80`}>
+        <div className={`h-11 border-t ${borderCol} flex items-center justify-between px-4 text-[9px] font-black uppercase text-slate-500 z-40 relative bg-slate-955/80`}>
           {[
             { name: 'Home', screen: 'home', icon: '🏠' },
             { name: 'Learn', screen: 'learn', icon: '📚' },

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -6,6 +6,8 @@ import api from '../api/axios';
 import heroCharacter from '../assets/hero_character.png';
 import { FileText, FileSpreadsheet, Presentation, Plus, Upload, FolderOpen, ArrowRight, Palette } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useDashboardData } from '../hooks/useDashboardData';
+import DashboardSkeleton from '../components/DashboardSkeleton';
 
 // ── Animated Counter Hook ──────────────────────────────
 function CountUp({ end, duration = 800 }) {
@@ -70,214 +72,188 @@ function CircularProgress({ percentage, size = 70, strokeWidth = 6, color = '#a7
   );
 }
 
+// ── Session timer configuration (in minutes) ─────────────────────────
+const SESSION_DURATION_MINUTES = 2;
+
 export default function StudentDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [dbData, setDbData] = useState(null);
-  const [analytics, setAnalytics] = useState(null);
-  const [goals, setGoals] = useState([]);
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [heatmapData, setHeatmapData] = useState([]);
-  const [itDocs, setItDocs] = useState([]);
 
-  const wordUploadRef = useRef(null);
+  // ── All data + loading states come from the robust hook ──────────────
+  const {
+    dbData, analytics, goals: hookGoals, leaderboard,
+    heatmapData, itDocs: hookItDocs,
+    loading, error, isStale, lastRefresh, isGuest: dashIsGuest,
+    isOffline, refresh,
+  } = useDashboardData(user);
+
+  const wordUploadRef  = useRef(null);
   const excelUploadRef = useRef(null);
   const slidesUploadRef = useRef(null);
-  
-  // Local state for goals management
-  const [newGoalTitle, setNewGoalTitle] = useState('');
+
+  // Local writable copies so CRUD ops update immediately
+  const [goals,   setGoals]   = useState([]);
+  const [itDocs,  setItDocs]  = useState([]);
+
+  useEffect(() => { if (hookGoals.length)    setGoals(hookGoals);    }, [hookGoals]);
+  useEffect(() => { if (hookItDocs.length)   setItDocs(hookItDocs);  }, [hookItDocs]);
+
+  // Local state for goals form
+  const [newGoalTitle,    setNewGoalTitle]    = useState('');
   const [newGoalPriority, setNewGoalPriority] = useState('medium');
-  const [addingGoal, setAddingGoal] = useState(false);
+  const [addingGoal,      setAddingGoal]      = useState(false);
   const [generatingGoals, setGeneratingGoals] = useState(false);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // ── Session timer state ──────────────────────────────────────────────
+  const [sessionEnded,  setSessionEnded]  = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(SESSION_DURATION_MINUTES * 60);
+  const countdownRef = useRef(null);
 
-  // Fetch real database progress and analytics
-  const fetchAllData = () => {
-    Promise.all([
-      api.get('/progress/dashboard'),
-      api.get('/progress/analytics'),
-      api.get('/progress/goals'),
-      api.get('/progress/leaderboard'),
-      api.get('/progress/heatmap'),
-      api.get('/it-suite/files')
-    ])
-      .then(([dashRes, analyticsRes, goalsRes, leaderboardRes, heatmapRes, itRes]) => {
-        setDbData(dashRes.data);
-        setAnalytics(analyticsRes.data);
-        setGoals(goalsRes.data);
-        setLeaderboard(leaderboardRes.data.leaderboard || []);
-        setHeatmapData(heatmapRes.data.heatmapData || []);
-        setItDocs(itRes.data.documents || []);
-      })
-      .catch((err) => {
-        console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data');
-      })
-      .finally(() => setLoading(false));
+  const startSessionTimer = useCallback(() => {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    setTimeRemaining(SESSION_DURATION_MINUTES * 60);
+    countdownRef.current = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev <= 1) { clearInterval(countdownRef.current); setSessionEnded(true); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  // Start session timer once data is ready
+  useEffect(() => {
+    if (!loading && !sessionEnded) startSessionTimer();
+  }, [loading]); // eslint-disable-line
+
+  useEffect(() => {
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+  }, []);
+
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
   };
 
+  // ── IT Suite helpers (only available to real users) ──────────────────
   const handleLaunchApp = async (type) => {
+    if (dashIsGuest) { toast('Sign up to access ' + type + '!'); return; }
     const typedDocs = itDocs.filter(d => d.type === type && !d.is_in_recycle_bin);
-    if (typedDocs.length > 0) {
-      navigate(`/it-suite/${type}/${typedDocs[0].id}`);
-    } else {
-      await handleNewDocument(type);
-    }
+    if (typedDocs.length > 0) navigate(`/it-suite/${type}/${typedDocs[0].id}`);
+    else await handleNewDocument(type);
   };
 
   const handleNewDocument = async (type) => {
+    if (dashIsGuest) { toast('Sign up to create documents!'); return; }
     try {
       const res = await api.post('/it-suite/documents', {
-        name: `Untitled ${type.charAt(0).toUpperCase() + type.slice(1)}`,
-        type
+        name: `Untitled ${type.charAt(0).toUpperCase() + type.slice(1)}`, type
       });
       toast.success(`Created new ${type.toUpperCase()} document`);
       navigate(`/it-suite/${type}/${res.data.id}`);
-    } catch (err) {
-      toast.error('Failed to create new document');
-    }
+    } catch { toast.error('Failed to create new document'); }
   };
 
   const handleUploadDocument = async (type, event) => {
+    if (dashIsGuest) { toast('Sign up to upload documents!'); return; }
     const file = event.target.files[0];
     if (!file) return;
-    
     const reader = new FileReader();
     reader.onload = async (e) => {
       let content = e.target.result;
       const name = file.name;
-      
       if (type === 'excel' && file.name.endsWith('.csv')) {
         const rows = content.split('\n');
         const sheetData = {};
         rows.forEach((row, rIdx) => {
-          const cols = row.split(',');
-          cols.forEach((colVal, cIdx) => {
-            const cellRef = `${String.fromCharCode(65 + cIdx)}${rIdx + 1}`;
-            sheetData[cellRef] = { value: colVal.trim() };
+          row.split(',').forEach((colVal, cIdx) => {
+            sheetData[`${String.fromCharCode(65 + cIdx)}${rIdx + 1}`] = { value: colVal.trim() };
           });
         });
-        content = JSON.stringify({
-          activeSheet: 'Sheet1',
-          sheets: {
-            'Sheet1': {
-              data: sheetData,
-              cols: {},
-              rows: {},
-              frozenRows: 0,
-              frozenCols: 0
-            }
-          }
-        });
+        content = JSON.stringify({ activeSheet: 'Sheet1', sheets: { Sheet1: { data: sheetData, cols: {}, rows: {}, frozenRows: 0, frozenCols: 0 } } });
       }
-      
       try {
-        const res = await api.post('/it-suite/documents', {
-          name: name.substring(0, name.lastIndexOf('.')) || name,
-          type,
-          content
-        });
+        const res = await api.post('/it-suite/documents', { name: name.substring(0, name.lastIndexOf('.')) || name, type, content });
         toast.success(`Uploaded ${name} successfully!`);
         const itRes = await api.get('/it-suite/files');
         setItDocs(itRes.data.documents || []);
         navigate(`/it-suite/${type}/${res.data.id}`);
-      } catch (err) {
-        toast.error('Failed to upload document');
-      }
+      } catch { toast.error('Failed to upload document'); }
     };
     reader.readAsText(file);
   };
 
-  useEffect(() => {
-    fetchAllData();
-  }, []);
-
-  // Handle Goal CRUD
+  // ── Goal CRUD ────────────────────────────────────────────────────────
   const handleAddGoal = async (e) => {
     e.preventDefault();
     if (!newGoalTitle.trim() || addingGoal) return;
+    if (dashIsGuest) {
+      const mockGoal = { id: Date.now(), title: newGoalTitle, priority: newGoalPriority, completed: false, xp_reward: newGoalPriority === 'high' ? 40 : 20 };
+      setGoals(prev => [mockGoal, ...prev]);
+      setNewGoalTitle('');
+      return;
+    }
     setAddingGoal(true);
     try {
-      const res = await api.post('/progress/goals', {
-        title: newGoalTitle,
-        priority: newGoalPriority,
-        xp_reward: newGoalPriority === 'high' ? 40 : newGoalPriority === 'medium' ? 20 : 10
-      });
-      setGoals([res.data, ...goals]);
+      const res = await api.post('/progress/goals', { title: newGoalTitle, priority: newGoalPriority, xp_reward: newGoalPriority === 'high' ? 40 : newGoalPriority === 'medium' ? 20 : 10 });
+      setGoals(prev => [res.data, ...prev]);
       setNewGoalTitle('');
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setAddingGoal(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setAddingGoal(false); }
   };
 
   const handleToggleGoal = async (id, currentCompleted) => {
+    if (dashIsGuest) { setGoals(prev => prev.map(g => g.id === id ? { ...g, completed: !currentCompleted } : g)); return; }
     try {
-      const res = await api.put(`/progress/goals/${id}`, {
-        completed: !currentCompleted
-      });
-      // Update goals list state
-      setGoals(goals.map(g => g.id === id ? res.data : g));
-      // Refresh user stats (XP, level) in background
+      const res = await api.put(`/progress/goals/${id}`, { completed: !currentCompleted });
+      setGoals(prev => prev.map(g => g.id === id ? res.data : g));
       const dashRes = await api.get('/progress/dashboard');
-      setDbData(dashRes.data);
-    } catch (err) {
-      console.error(err);
-    }
+      // silent update not needed here - hook auto-refreshes
+    } catch (err) { console.error(err); }
   };
 
   const handleDeleteGoal = async (id) => {
+    if (dashIsGuest) { setGoals(prev => prev.filter(g => g.id !== id)); return; }
     try {
       await api.delete(`/progress/goals/${id}`);
-      setGoals(goals.filter(g => g.id !== id));
-    } catch (err) {
-      console.error(err);
-    }
+      setGoals(prev => prev.filter(g => g.id !== id));
+    } catch (err) { console.error(err); }
   };
 
   const handleGenerateAiGoals = async () => {
     if (generatingGoals) return;
+    if (dashIsGuest) { toast('AI goal generation requires a free account!'); return; }
     setGeneratingGoals(true);
     try {
       const res = await api.post('/progress/goals/ai-generate');
-      setGoals([...res.data.goals, ...goals]);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setGeneratingGoals(false);
-    }
+      setGoals(prev => [...res.data.goals, ...prev]);
+    } catch (err) { console.error(err); }
+    finally { setGeneratingGoals(false); }
   };
 
-  // Values derived from database APIs
-  const totalXP = dbData?.profile?.xp || 0;
-  const userStreak = dbData?.profile?.streak || 0;
-  const userCoins = Math.round(totalXP * 0.1);
-  const completedLessons = dbData?.completedLessons || 0;
-  const studyHours = dbData?.studyHours || 0;
-  const quizAvg = dbData?.quizScores?.average || 0;
-  const codingAvg = dbData?.codingScores?.average || 0;
+  // ── Derived values ───────────────────────────────────────────────────
+  const totalXP            = dbData?.profile?.xp || 0;
+  const userStreak         = dbData?.profile?.streak || 0;
+  const userCoins          = Math.round(totalXP * 0.1);
+  const completedLessons   = dbData?.completedLessons || 0;
+  const studyHours         = dbData?.studyHours || 0;
+  const quizAvg            = dbData?.quizScores?.average || 0;
+  const codingAvg          = dbData?.codingScores?.average || 0;
+  const computedLevel      = Math.max(1, Math.floor(studyHours * 2.5 + completedLessons * 1.5 + (quizAvg + codingAvg) / 20));
 
-  // Level computed from real data
-  const computedLevel = Math.max(1, Math.floor(studyHours * 2.5 + completedLessons * 1.5 + (quizAvg + codingAvg) / 20));
+  const currentSubject         = analytics?.currentSubject || 'Not Started';
+  const currentTopicName       = analytics?.currentTopicName || 'Not Started';
+  const nextRecommendedTopic   = analytics?.nextRecommendedTopicName || 'Start your first topic';
+  const completedTopicsCount   = analytics?.completedTopicsCount || 0;
+  const totalTopicsCount       = analytics?.totalTopicsCount || 0;
+  const overallProgress        = totalTopicsCount > 0 ? Math.round((completedTopicsCount / totalTopicsCount) * 100) : 0;
+  const subjectProgress        = analytics?.subjectProgress || [];
+  const weaknesses             = analytics?.weaknesses || 'None yet';
+  const strengths              = analytics?.strengths || 'None yet';
+  const studyTimeChart         = analytics?.studyTimeStats || { labels: [], data: [] };
+  const roadmap                = analytics?.roadmap || [];
+  const recentQuizzes          = dbData?.recentQuizzes || [];
 
-  // Analytics-derived values
-  const currentSubject = analytics?.currentSubject || 'Not Started';
-  const currentTopicName = analytics?.currentTopicName || 'Not Started';
-  const nextRecommendedTopic = analytics?.nextRecommendedTopicName || 'Start your first topic';
-  const completedTopicsCount = analytics?.completedTopicsCount || 0;
-  const totalTopicsCount = analytics?.totalTopicsCount || 0;
-  const overallProgress = totalTopicsCount > 0 ? Math.round((completedTopicsCount / totalTopicsCount) * 100) : 0;
-  const subjectProgress = analytics?.subjectProgress || [];
-  const weaknesses = analytics?.weaknesses || 'None yet';
-  const strengths = analytics?.strengths || 'None yet';
-  const studyTimeChart = analytics?.studyTimeStats || { labels: [], data: [] };
-  const roadmap = analytics?.roadmap || [];
-  const recentQuizzes = dbData?.recentQuizzes || [];
-
-  // Heatmap generation for last 60 days
   const recentHeatmapDays = (() => {
     const days = [];
     const today = new Date();
@@ -285,19 +261,12 @@ export default function StudentDashboard() {
       const d = new Date();
       d.setDate(today.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
-      const activity = heatmapData.find(h => {
-        const itemDate = new Date(h.date).toISOString().split('T')[0];
-        return itemDate === dateStr;
-      });
-      days.push({
-        date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        count: activity ? activity.count : 0
-      });
+      const activity = heatmapData.find(h => new Date(h.date).toISOString().split('T')[0] === dateStr);
+      days.push({ date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), count: activity ? activity.count : 0 });
     }
     return days;
   })();
 
-  // Greeting by hour
   const greeting = (() => {
     const h = new Date().getHours();
     if (h < 12) return 'Good Morning';
@@ -305,51 +274,47 @@ export default function StudentDashboard() {
     return 'Good Evening';
   })();
 
-  // Recent Activity from real quiz data
-  const recentActivity = recentQuizzes.map((q) => ({
+  const recentActivity = recentQuizzes.map(q => ({
     label: `Scored ${q.score}% on ${q.title || 'Quiz'}`,
     xp: `+${Math.round(q.score / 5)} XP`,
     time: new Date(q.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    icon: '📝'
+    icon: '📝',
   }));
 
-  // Continue Learning Path from real roadmap data
   const continuePathSteps = (() => {
     if (!roadmap || roadmap.length === 0) return [];
     const steps = [];
-    const uniqueSubjects = [...new Set(roadmap.map(r => r.subject))];
-    for (const sub of uniqueSubjects) {
-      const subNodes = roadmap.filter(r => r.subject === sub);
-      for (const node of subNodes) {
-        steps.push(node);
-      }
-    }
-    const inProgressIdx = steps.findIndex(s => s.status === 'In Progress');
-    if (inProgressIdx === -1) return steps.slice(0, 5);
-    const start = Math.max(0, inProgressIdx - 2);
+    [...new Set(roadmap.map(r => r.subject))].forEach(sub => {
+      roadmap.filter(r => r.subject === sub).forEach(node => steps.push(node));
+    });
+    const idx = steps.findIndex(s => s.status === 'In Progress');
+    const start = Math.max(0, idx === -1 ? 0 : idx - 2);
     return steps.slice(start, start + 5);
   })();
 
-  if (loading) {
-    return (
-      <div className="w-full min-h-[60vh] flex flex-col items-center justify-center gap-3">
-        <div className="w-10 h-10 rounded-full border-4 border-t-violet-600 border-slate-700 animate-spin"></div>
-        <span className="text-sm font-semibold text-slate-400">Analyzing student analytics...</span>
-      </div>
-    );
-  }
+  // ── LOADING STATE: show premium skeleton ─────────────────────────────
+  if (loading) return <DashboardSkeleton isOffline={isOffline} />;
 
-  if (error) {
+  // ── SESSION ENDED ────────────────────────────────────────────────────
+  if (sessionEnded) {
     return (
-      <div className="w-full min-h-[60vh] flex flex-col items-center justify-center gap-3">
-        <span className="text-4xl">⚠️</span>
-        <span className="text-sm font-semibold text-red-400">{error}</span>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm font-bold"
-        >
-          Retry
-        </button>
+      <div className="w-full min-h-[80vh] flex items-center justify-center">
+        <div className="relative w-full max-w-md mx-auto">
+          <div className="absolute inset-0 rounded-3xl bg-[#161720] blur-sm opacity-60 scale-110" />
+          <div className="relative z-10 flex flex-col items-center justify-center gap-6 p-10 rounded-3xl border border-violet-500/30 bg-[#0f1020]/90 shadow-2xl shadow-violet-900/40" style={{ backdropFilter: 'blur(20px)' }}>
+            <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl bg-violet-500/10 border border-violet-500/30 animate-pulse">⏱️</div>
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-extrabold text-white">Session Ended</h2>
+              <p className="text-sm text-slate-400">Your {SESSION_DURATION_MINUTES}-minute dashboard session has completed.</p>
+            </div>
+            <div className="w-full h-px bg-white/10" />
+            <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Great work today! 🎉</p>
+            <div className="flex gap-3 w-full">
+              <button onClick={() => { setSessionEnded(false); startSessionTimer(); }} className="flex-1 py-3 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-violet-600/30">🔄 New Session</button>
+              <button onClick={() => navigate('/')} className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl text-sm font-bold transition-all border border-white/10">🏠 Go Home</button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -359,6 +324,85 @@ export default function StudentDashboard() {
   return (
     <div className="space-y-6 pb-12 pr-2 text-left">
       
+      {/* ── SESSION TIMER BANNER ── */}
+      {!sessionEnded && (
+        <div
+          className="flex items-center justify-between px-5 py-3 rounded-2xl border text-sm font-semibold"
+          style={{
+            background: timeRemaining <= 30
+              ? 'rgba(239,68,68,0.08)'
+              : timeRemaining <= 60
+              ? 'rgba(234,179,8,0.08)'
+              : 'rgba(139,92,246,0.08)',
+            borderColor: timeRemaining <= 30
+              ? 'rgba(239,68,68,0.3)'
+              : timeRemaining <= 60
+              ? 'rgba(234,179,8,0.3)'
+              : 'rgba(139,92,246,0.3)',
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <span
+              className="w-2 h-2 rounded-full animate-ping"
+              style={{
+                background: timeRemaining <= 30 ? '#ef4444' : timeRemaining <= 60 ? '#eab308' : '#a78bfa'
+              }}
+            />
+            <span style={{ color: timeRemaining <= 30 ? '#f87171' : timeRemaining <= 60 ? '#facc15' : '#c4b5fd' }}>
+              {timeRemaining <= 30
+                ? '⚠️ Session ending soon'
+                : timeRemaining <= 60
+                ? '⏳ Less than a minute left'
+                : '⏱️ Dashboard Session Active'}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span
+              className="font-mono text-lg font-bold"
+              style={{ color: timeRemaining <= 30 ? '#f87171' : timeRemaining <= 60 ? '#facc15' : '#a78bfa' }}
+            >
+              {formatTime(timeRemaining)}
+            </span>
+            <button
+              onClick={() => { clearInterval(countdownRef.current); setSessionEnded(true); }}
+              className="px-3 py-1 rounded-lg text-xs font-bold transition-all"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                color: '#94a3b8',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}
+            >
+              Stop
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── OFFLINE / STALE / GUEST BANNERS ── */}
+      {isOffline && (
+        <div className="flex items-center gap-3 px-5 py-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 text-amber-400 text-sm font-semibold">
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
+          <span>You're offline — viewing cached dashboard. Data will sync when reconnected.</span>
+        </div>
+      )}
+
+      {isStale && !isOffline && (
+        <div className="flex items-center gap-3 px-5 py-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 text-blue-300 text-xs font-semibold">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping flex-shrink-0" />
+          <span>Syncing latest data in the background...</span>
+          {lastRefresh && (
+            <span className="ml-auto text-blue-400/60">Last updated: {lastRefresh.toLocaleTimeString()}</span>
+          )}
+        </div>
+      )}
+
+      {dashIsGuest && (
+        <div className="flex items-center gap-3 px-5 py-3 rounded-2xl border border-violet-500/20 bg-violet-500/5 text-violet-300 text-xs font-semibold">
+          <span className="text-sm">👤</span>
+          <span>Guest Sandbox Mode — demo data shown. <button onClick={() => window.location.href = '/?register=true'} className="underline text-violet-400 hover:text-violet-300 transition-colors">Sign up free</button> to save progress.</span>
+        </div>
+      )}
+
       {/* ── HERO OVERVIEW SECTION ── */}
       <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-[#161720]">
         <div className="absolute top-0 right-0 w-72 h-72 bg-violet-600/10 rounded-full blur-[100px] pointer-events-none" />
