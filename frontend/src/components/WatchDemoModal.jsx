@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, Pause, Volume2, VolumeX, X, Maximize2, Minimize2, 
   ChevronRight, Smartphone, Tablet as TabletIcon, RotateCw, Monitor,
-  Sparkles, Code, BookOpen, GraduationCap, Award, Compass, Trophy, Zap, CheckCircle2
+  Sparkles, Code, BookOpen, GraduationCap, Award, Compass, Trophy, Zap, CheckCircle2,
+  Sun, Moon, Info, RotateCcw
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -194,9 +195,51 @@ export default function WatchDemoModal({ isOpen, onClose }) {
     }
   ];
 
-  // Mobile Mockup State
-  const [deviceType, setDeviceType] = useState('iPhone'); // 'iPhone', 'Android', 'Tablet'
+  // Redesigned Device Simulator States
+  const [deviceType, setDeviceType] = useState('iPhone'); // 'iPhone', 'Android', 'Tablet', 'Desktop', 'Windows', 'macOS'
   const [isPortrait, setIsPortrait] = useState(true);
+  const [demoRunning, setDemoRunning] = useState(true);
+  const [demoStep, setDemoStep] = useState(0);
+  const [currentScreen, setCurrentScreen] = useState('home'); // 'home', 'dashboard', 'learn', 'math', 'math-solved', 'coding', 'coding-terminal', 'ai-chat', 'notes'
+  const [simulatedDarkMode, setSimulatedDarkMode] = useState(true);
+  const [showDeviceInfo, setShowDeviceInfo] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  const simulatorSteps = [
+    { screen: 'home', desc: 'Home Screen' },
+    { screen: 'dashboard', desc: 'Open Dashboard' },
+    { screen: 'learn', desc: 'Open Learn Modules' },
+    { screen: 'math', desc: 'Open Mathematics' },
+    { screen: 'math-solved', desc: 'Solve Equation' },
+    { screen: 'coding', desc: 'Open Coding IDE' },
+    { screen: 'coding-terminal', desc: 'Execute Python Code' },
+    { screen: 'ai-chat', desc: 'AI Explains Output' },
+    { screen: 'notes', desc: 'Generate Study Notes' }
+  ];
+
+  useEffect(() => {
+    if (!demoRunning) return;
+    const timer = setInterval(() => {
+      setDemoStep(prev => {
+        const next = (prev + 1) % simulatorSteps.length;
+        setCurrentScreen(simulatorSteps[next].screen);
+        return next;
+      });
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [demoRunning]);
+
+  const handleMouseMove = (e) => {
+    const card = e.currentTarget;
+    const box = card.getBoundingClientRect();
+    const x = e.clientX - box.left - (box.width / 2);
+    const y = e.clientY - box.top - (box.height / 2);
+    setMousePos({ x: (x / (box.width / 2)) * 12, y: -(y / (box.height / 2)) * 12 });
+  };
+
+  const handleMouseLeave = () => {
+    setMousePos({ x: 0, y: 0 });
+  };
 
   // Toggle fullscreen
   const toggleFullscreen = () => {
@@ -725,55 +768,310 @@ export default function WatchDemoModal({ isOpen, onClose }) {
               <motion.div 
                 initial={{ opacity: 0 }} 
                 animate={{ opacity: 1 }}
-                className="space-y-6"
+                className="space-y-6 text-left max-w-5xl mx-auto"
               >
-                {/* Selection Bar */}
-                <div className="flex justify-center gap-3">
-                  {['iPhone', 'Android', 'Tablet'].map(dev => (
+                {/* Device Selector Toolbar */}
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-slate-900/40 p-4 rounded-2xl border border-white/5">
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { id: 'iPhone', label: '📱 iPhone' },
+                      { id: 'Android', label: '🤖 Android' },
+                      { id: 'Tablet', label: '📟 Tablet' },
+                      { id: 'Desktop', label: '🖥️ Desktop' },
+                      { id: 'Windows', label: '🪟 Windows' },
+                      { id: 'macOS', label: '🍎 macOS' }
+                    ].map(dev => (
+                      <button
+                        key={dev.id}
+                        onClick={() => { setDeviceType(dev.id); if (dev.id === 'Desktop' || dev.id === 'Windows' || dev.id === 'macOS') { setIsPortrait(false); } playSound('click'); }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer border-0 ${
+                          deviceType === dev.id 
+                            ? 'bg-gradient-to-r from-blue-500 to-indigo-650 text-white shadow-lg' 
+                            : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        {dev.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Device orientation and controllers */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {(deviceType === 'iPhone' || deviceType === 'Android' || deviceType === 'Tablet') && (
+                      <button
+                        onClick={() => { setIsPortrait(!isPortrait); playSound('click'); }}
+                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-bold rounded-lg flex items-center gap-1 transition cursor-pointer border border-white/5"
+                      >
+                        <RotateCw size={12} /> Rotate View
+                      </button>
+                    )}
+
                     <button
-                      key={dev}
-                      onClick={() => { setDeviceType(dev); playSound('click'); }}
-                      className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${deviceType === dev ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-400' : 'border border-slate-800 text-slate-400 hover:text-white'}`}
+                      onClick={() => { setDemoRunning(!demoRunning); playSound('click'); }}
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-1 transition cursor-pointer border-0 ${
+                        demoRunning ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'
+                      }`}
                     >
-                      {dev}
+                      {demoRunning ? <Pause size={12} /> : <Play size={12} />}
+                      {demoRunning ? 'Pause Demo' : 'Play Demo'}
                     </button>
-                  ))}
-                  <button 
-                    onClick={() => { setIsPortrait(!isPortrait); playSound('click'); }}
-                    className="px-4 py-1.5 rounded-lg text-xs font-bold border border-slate-800 text-slate-400 hover:text-white flex items-center gap-1.5"
-                  >
-                    <RotateCw size={12} /> {isPortrait ? 'Landscape' : 'Portrait'}
-                  </button>
+
+                    <button
+                      onClick={() => { setDemoStep(0); setCurrentScreen('home'); playSound('click'); }}
+                      className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-bold rounded-lg flex items-center gap-1 transition cursor-pointer border border-white/5"
+                    >
+                      <RotateCcw size={12} /> Restart
+                    </button>
+
+                    <button
+                      onClick={() => { setSimulatedDarkMode(!simulatedDarkMode); playSound('click'); }}
+                      className="p-1.5 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-lg transition cursor-pointer border border-white/5"
+                    >
+                      {simulatedDarkMode ? <Sun size={13} /> : <Moon size={13} />}
+                    </button>
+
+                    <button
+                      onClick={() => { setShowDeviceInfo(!showDeviceInfo); playSound('click'); }}
+                      className={`p-1.5 rounded-lg transition cursor-pointer border border-white/5 ${
+                        showDeviceInfo ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      <Info size={13} />
+                    </button>
+                  </div>
                 </div>
 
-                {/* Device Frame Representation */}
-                <div className="flex justify-center items-center py-4">
-                  <motion.div
-                    animate={{ 
-                      width: deviceType === 'Tablet' ? (isPortrait ? 400 : 540) : (isPortrait ? 220 : 420),
-                      height: deviceType === 'Tablet' ? (isPortrait ? 540 : 400) : (isPortrait ? 420 : 220),
-                      rotate: 0
+                {/* Device Canvas Showcase */}
+                <div 
+                  className="relative flex justify-center items-center py-10 min-h-[580px] bg-[#03060c]/50 rounded-3xl border border-white/5 overflow-hidden select-none"
+                  onMouseMove={handleMouseMove}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.06)_0%,transparent_70%)] pointer-events-none" />
+
+                  <div 
+                    className="relative transition-all duration-300 ease-out"
+                    style={{
+                      transform: `perspective(1200px) rotateY(${mousePos.x}deg) rotateX(${mousePos.y}deg)`,
+                      transformStyle: 'preserve-3d'
                     }}
-                    transition={{ type: 'spring', stiffness: 100 }}
-                    className="border-8 border-slate-900 rounded-3xl bg-slate-950 shadow-2xl relative overflow-hidden flex flex-col justify-between p-4 text-center"
                   >
-                    {/* Speaker Notch */}
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-3 bg-slate-900 rounded-full" />
-                    
-                    <div className="flex-1 flex flex-col justify-center items-center p-2">
-                      <GraduationCap className="text-cyan-400 animate-bounce mb-2" size={32} />
-                      <strong className="text-xs text-white block">EduVerse AI Mobile</strong>
-                      <span className="text-[9px] text-slate-400 mt-1">Responsive compiler & theory modules run natively at 60 FPS on iOS and Android.</span>
-                    </div>
+                    {deviceType === 'iPhone' && (
+                      <div 
+                        className={`border-[10px] border-slate-900 bg-[#080a13] shadow-2xl relative transition-all duration-500 rounded-[48px] ${
+                          isPortrait ? 'w-[280px] h-[560px]' : 'w-[560px] h-[280px]'
+                        }`}
+                        style={{
+                          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 0 4px rgba(255,255,255,0.15)'
+                        }}
+                      >
+                        {isPortrait ? (
+                          <div className="absolute top-3.5 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-full z-45 border border-white/5 flex items-center justify-between px-3 text-[7px] text-white/55 font-mono select-none">
+                            <span className="w-1.5 h-1.5 bg-blue-500/80 rounded-full animate-ping" />
+                            <span>EDUVERSE OS</span>
+                            <div className="flex gap-0.5 items-center">
+                              <span className="w-1 h-1 bg-green-500 rounded-full" />
+                              <div className="w-1 h-2 bg-slate-800 rounded-t" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-6 h-28 bg-black rounded-full z-45 border border-white/5 flex flex-col items-center justify-between py-3 text-[7px] text-white/55 font-mono select-none">
+                            <span className="w-1.5 h-1.5 bg-blue-500/80 rounded-full animate-ping" />
+                            <span className="rotate-90">EDUVERSE</span>
+                            <span className="w-1 h-1 bg-green-500 rounded-full" />
+                          </div>
+                        )}
 
-                    <span className="text-[8px] uppercase tracking-widest text-slate-600 block">EduVerse OS</span>
-                  </motion.div>
+                        <div className="w-full h-full rounded-[38px] overflow-hidden p-3 pt-7 pb-4 bg-slate-950 flex flex-col justify-between text-left text-white relative">
+                          <SimulatedScreenContent screen={currentScreen} setScreen={setCurrentScreen} isDarkMode={simulatedDarkMode} isPortrait={isPortrait} />
+                        </div>
+                      </div>
+                    )}
+
+                    {deviceType === 'Android' && (
+                      <div 
+                        className={`border-[8px] border-slate-900 bg-[#080a13] shadow-2xl relative transition-all duration-500 rounded-[32px] ${
+                          isPortrait ? 'w-[280px] h-[560px]' : 'w-[560px] h-[280px]'
+                        }`}
+                        style={{
+                          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 0 2px rgba(255,255,255,0.1)'
+                        }}
+                      >
+                        {isPortrait ? (
+                          <div className="absolute top-3.5 left-1/2 -translate-x-1/2 w-4 h-4 bg-black rounded-full z-45 border border-white/5" />
+                        ) : (
+                          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 bg-black rounded-full z-45 border border-white/5" />
+                        )}
+
+                        <div className="w-full h-full rounded-[24px] overflow-hidden p-3 pt-8 pb-3 bg-slate-950 flex flex-col justify-between text-left text-white relative">
+                          <SimulatedScreenContent screen={currentScreen} setScreen={setCurrentScreen} isDarkMode={simulatedDarkMode} isPortrait={isPortrait} />
+                        </div>
+                      </div>
+                    )}
+
+                    {deviceType === 'Tablet' && (
+                      <div 
+                        className={`border-[14px] border-slate-900 bg-[#080a13] shadow-2xl relative transition-all duration-500 rounded-[40px] ${
+                          isPortrait ? 'w-[400px] h-[540px]' : 'w-[540px] h-[400px]'
+                        }`}
+                        style={{
+                          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 0 3px rgba(255,255,255,0.15)'
+                        }}
+                      >
+                        {isPortrait ? (
+                          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-2 h-2 bg-black rounded-full z-45 border border-white/5" />
+                        ) : (
+                          <div className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 bg-black rounded-full z-45 border border-white/5" />
+                        )}
+
+                        <div className="w-full h-full rounded-[26px] overflow-hidden p-4 pt-6 pb-4 bg-slate-950 flex flex-col justify-between text-left text-white relative">
+                          <SimulatedScreenContent screen={currentScreen} setScreen={setCurrentScreen} isDarkMode={simulatedDarkMode} isPortrait={isPortrait} />
+                        </div>
+                      </div>
+                    )}
+
+                    {deviceType === 'Desktop' && (
+                      <div className="flex flex-col items-center">
+                        <div 
+                          className="w-[580px] h-[340px] border-[12px] border-slate-900 bg-[#080a13] shadow-2xl relative rounded-t-[20px] rounded-b-[4px] overflow-hidden flex flex-col justify-between"
+                          style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)' }}
+                        >
+                          <div className="flex-1 w-full overflow-hidden p-4 bg-slate-950 flex flex-col justify-between text-left text-white relative">
+                            <SimulatedScreenContent screen={currentScreen} setScreen={setCurrentScreen} isDarkMode={simulatedDarkMode} isPortrait={false} isDesktop />
+                          </div>
+                        </div>
+                        <div className="w-20 h-14 bg-slate-800 border-x border-slate-700/30" />
+                        <div className="w-44 h-3 bg-slate-900 rounded-t-lg shadow-md" />
+                      </div>
+                    )}
+
+                    {deviceType === 'Windows' && (
+                      <div 
+                        className="w-[540px] h-[330px] bg-slate-950 rounded-lg border border-slate-800 overflow-hidden flex flex-col shadow-2xl"
+                        style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)' }}
+                      >
+                        <div className="h-8 bg-slate-900 px-3 flex items-center justify-between text-[10px] text-slate-400 font-bold border-b border-white/5">
+                          <span className="flex items-center gap-1.5">🪟 EduVerse AI App - Windows</span>
+                          <div className="flex gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-slate-700" />
+                            <span className="w-2 h-2 rounded-full bg-slate-700" />
+                            <span className="w-2 h-2 rounded-full bg-red-750" />
+                          </div>
+                        </div>
+                        <div className="flex-1 overflow-hidden p-4 bg-slate-950 flex flex-col justify-between text-left text-white relative">
+                          <SimulatedScreenContent screen={currentScreen} setScreen={setCurrentScreen} isDarkMode={simulatedDarkMode} isPortrait={false} isDesktop />
+                        </div>
+                      </div>
+                    )}
+
+                    {deviceType === 'macOS' && (
+                      <div 
+                        className="w-[540px] h-[330px] bg-slate-950 rounded-xl border border-slate-800/80 overflow-hidden flex flex-col shadow-2xl"
+                        style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)' }}
+                      >
+                        <div className="h-8 bg-[#181a24] px-4 flex items-center justify-between text-[10px] text-slate-400 font-bold border-b border-white/5">
+                          <div className="flex gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-red-500/80" />
+                            <span className="w-2 h-2 rounded-full bg-yellow-500/80" />
+                            <span className="w-2 h-2 rounded-full bg-green-500/80" />
+                          </div>
+                          <span>🍎 EduVerse AI - macOS App</span>
+                          <span className="w-4" />
+                        </div>
+                        <div className="flex-1 overflow-hidden p-4 bg-slate-950 flex flex-col justify-between text-left text-white relative">
+                          <SimulatedScreenContent screen={currentScreen} setScreen={setCurrentScreen} isDarkMode={simulatedDarkMode} isPortrait={false} isDesktop />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {showDeviceInfo && (
+                    <div className="absolute top-4 left-4 max-w-xs p-4 rounded-xl bg-slate-950/95 border border-white/10 backdrop-blur-md text-[10px] leading-relaxed z-50 text-slate-400 space-y-2">
+                      <h4 className="font-extrabold text-white flex items-center gap-1.5"><Sparkles size={10} className="text-blue-400" /> Emulator Hardware Info</h4>
+                      <p>• <strong>Selected Mockup:</strong> {deviceType}</p>
+                      <p>• <strong>Rendering mode:</strong> GPU 3D Matrix Transform</p>
+                      <p>• <strong>Fluid rate:</strong> 60 FPS transitions</p>
+                      <p>• <strong>Orientation:</strong> {isPortrait ? 'Portrait' : 'Landscape'}</p>
+                    </div>
+                  )}
+
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/5 text-[9px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping" /> Hover to tilt view • Click inside screen to interact
+                  </div>
                 </div>
 
-                <div className="flex justify-center">
+                {/* Auto-demo Step display */}
+                <div className="flex justify-between items-center bg-slate-950 border border-white/5 p-4 rounded-2xl">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Auto demo step:</span>
+                    <span className="text-[11px] font-extrabold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20 capitalize">
+                      {simulatorSteps[demoStep].desc}
+                    </span>
+                  </div>
+                  
+                  <div className="flex gap-1.5">
+                    {simulatorSteps.map((step, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => { setDemoStep(idx); setCurrentScreen(step.screen); setDemoRunning(false); playSound('click'); }}
+                        className={`w-2.5 h-2.5 rounded-full transition cursor-pointer border-0 ${
+                          demoStep === idx ? 'bg-blue-500 scale-125' : 'bg-slate-800 hover:bg-slate-700'
+                        }`}
+                        title={step.desc}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Install Platforms section */}
+                <div className="p-8 rounded-3xl bg-gradient-to-b from-[#090e18] to-[#04060c] border border-white/5 space-y-6 text-center">
+                  <div>
+                    <h3 className="text-lg font-black text-white tracking-tight">Download & Install EDUVERSE AI</h3>
+                    <p className="text-xs text-slate-400 mt-1">Get the native desktop wrapper or mobile application on all systems</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                    {[
+                      { name: 'Android APK', icon: '🤖', badge: null, desc: 'Direct Package' },
+                      { name: 'Google Play', icon: '🛍️', badge: null, desc: 'Play Store' },
+                      { name: 'Apple App Store', icon: '🍏', badge: 'Coming Soon', desc: 'iOS App' },
+                      { name: 'Windows Client', icon: '🪟', badge: null, desc: 'Desktop Installer' },
+                      { name: 'macOS Client', icon: '🍎', badge: 'Coming Soon', desc: 'Silicon/Intel' },
+                      { name: 'Linux Binary', icon: '🐧', badge: null, desc: 'Debian/Arch' },
+                      { name: 'Web Version', icon: '🛜', badge: null, desc: 'PWA Web' }
+                    ].map((plat, idx) => (
+                      <div 
+                        key={idx}
+                        className="group p-4 rounded-2xl bg-slate-900/50 border border-white/5 hover:border-blue-500/30 transition flex flex-col items-center justify-between text-center relative"
+                      >
+                        {plat.badge && (
+                          <span className="absolute top-2 right-2 text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20">{plat.badge}</span>
+                        )}
+                        <span className="text-2xl mt-2 block filter drop-shadow-[0_0_8px_rgba(255,255,255,0.1)]">{plat.icon}</span>
+                        <div className="mt-3">
+                          <strong className="text-xs text-slate-200 block group-hover:text-white transition">{plat.name}</strong>
+                          <span className="text-[9px] text-slate-500 block mt-0.5">{plat.desc}</span>
+                        </div>
+                        <button 
+                          disabled={!!plat.badge}
+                          onClick={() => { toast.success(`${plat.name} download started!`); playSound('click'); }}
+                          className={`mt-4 w-full py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition border-0 cursor-pointer ${
+                            plat.badge 
+                              ? 'bg-slate-950 text-slate-600' 
+                              : 'bg-white/5 text-white hover:bg-blue-600'
+                          }`}
+                        >
+                          {plat.badge ? 'Locked' : 'Get App'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-center pt-2">
                   <button 
                     onClick={() => setActiveTab('menu')}
-                    className="px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl border border-white/5"
+                    className="px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl border border-white/5 cursor-pointer"
                   >
                     Back to Menu
                   </button>
@@ -786,5 +1084,324 @@ export default function WatchDemoModal({ isOpen, onClose }) {
         </motion.div>
       </div>
     </AnimatePresence>
+  );
+}
+
+function SimulatedScreenContent({ screen, setScreen, isDarkMode, isPortrait, isDesktop = false }) {
+  const themeBg = isDarkMode ? 'bg-slate-950 text-white' : 'bg-white text-slate-900';
+  const textMuted = isDarkMode ? 'text-slate-400' : 'text-slate-500';
+  const textMain = isDarkMode ? 'text-white' : 'text-slate-900';
+  const cardBg = isDarkMode ? 'bg-slate-900/80 border-white/5' : 'bg-slate-100 border-slate-200';
+  const borderCol = isDarkMode ? 'border-white/5' : 'border-slate-200';
+
+  const playSound = (type) => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      if (type === 'click') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.1);
+      }
+    } catch(e){}
+  };
+
+  return (
+    <div className={`w-full h-full flex flex-col justify-between ${themeBg} font-sans overflow-hidden text-left relative z-10 rounded-xl`}>
+      {/* 1. Status Bar */}
+      {!isDesktop && (
+        <div className="h-6 flex items-center justify-between px-3 text-[9px] font-black uppercase text-slate-500 z-40 relative">
+          <span>9:41 AM</span>
+          <div className="flex items-center gap-1">
+            <span>📶</span>
+            <span>🛜</span>
+            <span>98% 🔋</span>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Main simulated screen page */}
+      <div className="flex-1 overflow-y-auto px-3.5 py-2 space-y-4 custom-sidebar-scroll select-none">
+        
+        {/* SCREEN 1: Home View */}
+        {screen === 'home' && (
+          <div className="space-y-4 text-left">
+            <div>
+              <span className="text-[9px] uppercase font-black tracking-wider text-blue-400">EduVerse AI Platform</span>
+              <h4 className="text-sm font-black leading-tight flex items-center gap-1.5 mt-0.5">
+                Hello Student 👋
+              </h4>
+              <p className="text-[10px] text-slate-500 leading-none mt-1">Welcome Back</p>
+            </div>
+
+            {/* Quick Actions Grid */}
+            <div className="space-y-2">
+              <span className="text-[9px] font-black uppercase text-slate-500">Quick Actions</span>
+              <div className="grid grid-cols-2 gap-1.5">
+                {[
+                  { label: 'Learn', icon: '📚', target: 'learn' },
+                  { label: 'AI Tutor', icon: '🤖', target: 'ai-chat' },
+                  { label: 'Coding Lab', icon: '💻', target: 'coding' },
+                  { label: 'Mathematics', icon: '🧮', target: 'math' },
+                  { label: 'Science Lab', icon: '🧪', target: 'learn' },
+                  { label: 'Dashboard', icon: '📊', target: 'dashboard' }
+                ].map((act, idx) => (
+                  <div 
+                    key={idx} 
+                    onClick={() => { setScreen(act.target); playSound('click'); }}
+                    className={`p-2 rounded-xl border flex items-center gap-2 ${cardBg} hover:border-blue-500/30 transition cursor-pointer active:scale-95`}
+                  >
+                    <span className="text-base">{act.icon}</span>
+                    <strong className="text-[9px] font-black">{act.label}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Progress */}
+            <div className="space-y-2">
+              <span className="text-[9px] font-black uppercase text-slate-500">Recent Learning</span>
+              <div className="space-y-1.5">
+                {[
+                  { name: 'Continue Python', progress: 65, color: 'bg-emerald-500' },
+                  { name: 'Continue Java', progress: 42, color: 'bg-blue-500' }
+                ].map((prog, idx) => (
+                  <div key={idx} className={`p-2 rounded-xl border ${cardBg}`}>
+                    <div className="flex justify-between text-[8px] font-bold">
+                      <span>{prog.name}</span>
+                      <span>{prog.progress}%</span>
+                    </div>
+                    <div className="w-full h-1 bg-slate-800 rounded-full mt-1.5 overflow-hidden">
+                      <div className={`h-full ${prog.color}`} style={{ width: `${prog.progress}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SCREEN 2: Dashboard View */}
+        {screen === 'dashboard' && (
+          <div className="space-y-4">
+            <div>
+              <span className="text-[9px] uppercase font-black text-blue-400">Student Analytics</span>
+              <h4 className="text-sm font-black mt-0.5">My Learning Center</h4>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className={`p-2.5 rounded-xl border ${cardBg}`}>
+                <span className="text-[8px] text-slate-500 uppercase font-black block">Total XP</span>
+                <strong className="text-sm font-extrabold mt-1 block">1,850 XP</strong>
+              </div>
+              <div className={`p-2.5 rounded-xl border ${cardBg}`}>
+                <span className="text-[8px] text-slate-500 uppercase font-black block">Rank Tier</span>
+                <strong className="text-sm text-teal-400 font-extrabold mt-1 block">Level 12</strong>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-xl border ${cardBg} space-y-2`}>
+              <span className="text-[9px] font-black uppercase text-slate-500">Weekly Activity Log</span>
+              <div className="flex justify-between items-end h-16 pt-2">
+                {[45, 60, 30, 90, 15, 75, 50].map((h, idx) => (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                    <div className="w-2.5 bg-gradient-to-t from-blue-500 to-indigo-500 rounded-t" style={{ height: `${h}%` }} />
+                    <span className="text-[7px] text-slate-650">Day {idx + 1}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SCREEN 3: Learn Subjects View */}
+        {screen === 'learn' && (
+          <div className="space-y-4">
+            <div>
+              <span className="text-[9px] uppercase font-black text-blue-400">Modules Catalog</span>
+              <h4 className="text-sm font-black mt-0.5">Academic Subjects</h4>
+            </div>
+
+            <div className="space-y-2">
+              {[
+                { title: 'Core Java Programming', desc: 'Object-oriented logic compilers.', icon: '☕', label: '12 topics' },
+                { title: 'Advanced Python IDE', desc: 'Data structures & algorithm visualizer.', icon: '🐍', label: '8 topics' },
+                { title: 'Mathematics Studio', desc: 'Step-by-step calculus solvers.', icon: '🧮', label: '15 topics' }
+              ].map((sub, idx) => (
+                <div key={idx} className={`p-3 rounded-2xl border flex gap-3 items-start ${cardBg}`}>
+                  <span className="text-2xl">{sub.icon}</span>
+                  <div className="text-left">
+                    <strong className="text-[10px] font-extrabold block leading-tight">{sub.title}</strong>
+                    <span className="text-[8px] text-slate-400 block mt-1 leading-snug">{sub.desc}</span>
+                    <span className="text-[7px] uppercase font-black text-blue-400 mt-2 block">{sub.label}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* SCREEN 4: Mathematics input screen */}
+        {screen === 'math' && (
+          <div className="space-y-4">
+            <div>
+              <span className="text-[9px] uppercase font-black text-blue-400">Mathematics Studio</span>
+              <h4 className="text-sm font-black mt-0.5">Equation Solver</h4>
+            </div>
+
+            <div className={`p-3 rounded-xl border ${cardBg} space-y-3`}>
+              <label className="text-[9px] font-bold text-slate-400 block">Input Formula:</label>
+              <div className="bg-slate-950 border border-white/10 rounded-lg p-2 font-mono text-[10px] text-emerald-400">
+                y = 3x^2 + 5x - 2
+              </div>
+              <div className="w-full h-8 bg-blue-600 rounded-lg flex items-center justify-center text-[9px] font-black uppercase text-white animate-pulse">
+                Clicking Solve...
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SCREEN 5: Mathematics solved screen */}
+        {screen === 'math-solved' && (
+          <div className="space-y-4">
+            <div>
+              <span className="text-[9px] uppercase font-black text-teal-400">Derivation Results</span>
+              <h4 className="text-sm font-black mt-0.5">Step-by-Step Solve</h4>
+            </div>
+
+            <div className="space-y-2">
+              {[
+                { title: 'Step 1: Identify coordinates', text: 'Quadratic equation a=3, b=5, c=-2' },
+                { title: 'Step 2: Calculate Delta Δ', text: 'Δ = b² - 4ac = 25 + 24 = 49' },
+                { title: 'Step 3: Extract roots variables', text: 'x = (-5 ± √49) / 6 => x = 1/3, -2' }
+              ].map((step, idx) => (
+                <div key={idx} className={`p-2.5 rounded-xl border ${cardBg} text-left`}>
+                  <strong className="text-[9px] font-extrabold text-blue-400 block">{step.title}</strong>
+                  <span className="text-[8px] text-slate-400 block mt-1 leading-normal">{step.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* SCREEN 6: Coding IDE screen */}
+        {screen === 'coding' && (
+          <div className="space-y-4">
+            <div>
+              <span className="text-[9px] uppercase font-black text-blue-400">Python compiler</span>
+              <h4 className="text-sm font-black mt-0.5">Coding Sandbox</h4>
+            </div>
+
+            <div className="flex-grow flex flex-col font-mono text-[9px] leading-normal bg-slate-950 border border-white/10 rounded-xl overflow-hidden p-3 h-28 justify-between">
+              <span className="text-emerald-400 block text-left">
+                def sum(a, b):<br />
+                &nbsp;&nbsp;&nbsp;&nbsp;return a + b<br />
+                <br />
+                print(sum(4, 5))
+              </span>
+              <span className="text-[7px] text-slate-650 block border-t border-white/5 pt-1 text-right">Click Run Code...</span>
+            </div>
+          </div>
+        )}
+
+        {/* SCREEN 7: Coding IDE output screen */}
+        {screen === 'coding-terminal' && (
+          <div className="space-y-4">
+            <div>
+              <span className="text-[9px] uppercase font-black text-teal-400">Execution Output</span>
+              <h4 className="text-sm font-black mt-0.5">Terminal Logs</h4>
+            </div>
+
+            <div className="space-y-2">
+              <div className="font-mono text-[10px] bg-black p-3 rounded-lg text-emerald-400 border border-white/10 text-left">
+                $ python script.py<br />
+                9<br />
+                <br />
+                [Process completed successfully]
+              </div>
+              <div className={`p-2.5 rounded-xl border ${cardBg} flex gap-2 items-center`}>
+                <span className="text-sm">🤖</span>
+                <span className="text-[8px] text-slate-400 leading-snug"><strong>AI explanation:</strong> The code declares a function adding parameters 4 and 5 returning 9.</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SCREEN 8: AI Chat tutor screen */}
+        {screen === 'ai-chat' && (
+          <div className="space-y-4 flex flex-col h-full justify-between pb-1 text-left">
+            <div className="space-y-3">
+              <div>
+                <span className="text-[9px] uppercase font-black text-blue-400">Classroom Guide</span>
+                <h4 className="text-sm font-black mt-0.5">AI Classroom Guide</h4>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex flex-col items-end">
+                  <div className="bg-blue-600 text-white p-2 rounded-xl rounded-tr-none text-[9px] max-w-[85%] leading-normal text-left">
+                    Explain recursion in JavaScript.
+                  </div>
+                </div>
+                <div className="flex flex-col items-start">
+                  <div className="bg-slate-900 border border-white/10 text-slate-350 p-2 rounded-xl rounded-tl-none text-[9px] max-w-[85%] leading-relaxed text-left">
+                    Recursion occurs when a function calls itself until reaching a base condition parameters.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SCREEN 9: Generated Notes checklist screen */}
+        {screen === 'notes' && (
+          <div className="space-y-4">
+            <div>
+              <span className="text-[9px] uppercase font-black text-blue-400">Notes Engine</span>
+              <h4 className="text-sm font-black mt-0.5">Study Material</h4>
+            </div>
+
+            <div className={`p-3 rounded-xl border ${cardBg} space-y-2`}>
+              <span className="text-[9px] font-black uppercase text-slate-500 block mb-1">Generated Checklists:</span>
+              {[
+                'Recursion Stack Frame',
+                'Base Condition Variables',
+                'Tail Call Optimizations'
+              ].map((note, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-[9px] text-slate-300">
+                  <span className="text-teal-400">✓</span>
+                  <span>{note}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* 3. Bottom OS Navigation bar */}
+      {!isDesktop && (
+        <div className={`h-11 border-t ${borderCol} flex items-center justify-between px-4 text-[9px] font-black uppercase text-slate-500 z-40 relative bg-slate-950/80`}>
+          {[
+            { name: 'Home', screen: 'home', icon: '🏠' },
+            { name: 'Learn', screen: 'learn', icon: '📚' },
+            { name: 'AI', screen: 'ai-chat', icon: '🤖' },
+            { name: 'Community', screen: 'notes', icon: '👥' },
+            { name: 'Profile', screen: 'dashboard', icon: '👤' }
+          ].map((nav, idx) => (
+            <div key={idx} onClick={() => { setScreen(nav.screen); playSound('click'); }} className="flex flex-col items-center gap-0.5 cursor-pointer active:scale-95">
+              <span className="text-xs">{nav.icon}</span>
+              <span className="text-[7px] tracking-tight">{nav.name}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
