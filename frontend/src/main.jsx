@@ -7,7 +7,11 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { VoiceAssistantProvider } from './context/VoiceContext';
 import { NavigationHistoryProvider } from './context/NavigationContext';
+import { validateEnvironment } from './utils/envValidation';
 import './index.css';
+
+// Run startup environment validation (logs to console, never throws)
+validateEnvironment();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

@@ -11,6 +11,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import WatchDemoModal from '../components/WatchDemoModal';
 import toast from 'react-hot-toast';
+import { isGoogleAuthAvailable, showGoogleUnavailableWarning } from '../utils/envValidation';
 import EduVerseLogo, { EduVerseIcon } from '../components/EduVerseLogo';
 import studentImg from '../assets/hero_character.png';
 import './LandingPage.css';
@@ -139,6 +140,7 @@ const loadGoogleScript = () => {
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const googleAvailable = isGoogleAuthAvailable();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const [scrolled, setScrolled] = useState(false);
@@ -152,12 +154,12 @@ export default function LandingPage() {
   const [loginLoading, setLoginLoading] = useState(false);
 
   const handleGoogleLogin = async () => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      toast.error('Google Client ID is missing. Please set VITE_GOOGLE_CLIENT_ID in your frontend .env file.', { duration: 6000 });
+    if (!isGoogleAuthAvailable()) {
+      showGoogleUnavailableWarning();
       return;
     }
     
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     setLoginLoading(true);
     const scriptLoaded = await loadGoogleScript();
     if (!scriptLoaded) {
@@ -491,13 +493,18 @@ export default function LandingPage() {
                     <div className="space-y-2.5">
                       <button 
                         type="button"
-                        onClick={handleGoogleLogin}
-                        className="w-full flex items-center justify-center gap-3 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 hover:border-white/20 py-2.5 rounded-xl text-xs font-semibold text-white/90 transition-all duration-300 cursor-pointer"
+                        onClick={googleAvailable ? handleGoogleLogin : showGoogleUnavailableWarning}
+                        className={`w-full flex items-center justify-center gap-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-300 ${
+                          googleAvailable 
+                            ? 'bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 hover:border-white/20 text-white/90 cursor-pointer' 
+                            : 'bg-white/[0.01] border border-white/5 text-white/30 cursor-not-allowed opacity-50'
+                        }`}
+                        title={googleAvailable ? 'Sign in with Google' : 'Google Sign-In is currently unavailable'}
                       >
-                        <svg className="w-4 h-4" viewBox="0 0 24 24">
+                        <svg className={`w-4 h-4 ${!googleAvailable && 'grayscale opacity-30'}`} viewBox="0 0 24 24">
                           <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114-3.488 0-6.315-2.827-6.315-6.315s2.827-6.315 6.315-6.315c1.8 0 3.42.756 4.584 1.971l3.14-3.14C19.467 2.656 16.08 1.5 12.24 1.5 6.315 1.5 1.5 6.315 1.5 12.24s4.815 10.74 10.74 10.74c5.985 0 10.665-4.275 10.665-10.8 0-.675-.09-1.35-.225-1.89H12.24z"/>
                         </svg>
-                        Login with Google
+                        {googleAvailable ? 'Login with Google' : 'Google Sign-In is currently unavailable'}
                       </button>
                       <button 
                         type="button"
