@@ -37,8 +37,8 @@ router.post(
       const userRole = role === 'admin' ? 'admin' : 'student';
 
       const result = await db.query(
-        'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role, profile_completed, review_submitted',
-        [name, email.toLowerCase(), hashedPassword, userRole]
+        'INSERT INTO users (name, email, password, role, provider) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, role, avatar_url, provider, profile_completed, review_submitted',
+        [name, email.toLowerCase(), hashedPassword, userRole, 'email']
       );
 
       const user = result.rows[0];
@@ -70,7 +70,7 @@ router.post(
     try {
       const { email, password } = req.body;
       const result = await db.query(
-        'SELECT id, name, email, password, role, profile_completed, review_submitted FROM users WHERE email = $1',
+        'SELECT id, name, email, password, role, avatar_url, provider, profile_completed, review_submitted FROM users WHERE email = $1',
         [email.toLowerCase()]
       );
 
@@ -90,6 +90,9 @@ router.post(
       if (!valid) {
         return res.status(401).json({ message: 'Invalid email or password' });
       }
+
+      // Update last_login
+      await db.query('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
 
       delete user.password;
       const token = generateToken(user);
@@ -121,10 +124,11 @@ router.post('/google', async (req, res) => {
     const payload = googleRes.data;
     const email = payload.email.toLowerCase();
     const name = payload.name;
+    const avatar = payload.picture;
 
     // Find or create user
     let userResult = await db.query(
-      'SELECT id, name, email, role, profile_completed, review_submitted FROM users WHERE email = $1',
+      'SELECT id, name, email, role, avatar_url, provider, profile_completed, review_submitted FROM users WHERE email = $1',
       [email]
     );
 
@@ -132,8 +136,8 @@ router.post('/google', async (req, res) => {
     if (userResult.rows.length === 0) {
       // Create user
       const result = await db.query(
-        'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role, profile_completed, review_submitted',
-        [name, email, '', 'student'] // Empty password for OAuth users
+        'INSERT INTO users (name, email, password, role, provider, avatar_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, email, role, avatar_url, provider, profile_completed, review_submitted',
+        [name, email, '', 'student', 'google', avatar] // Empty password for OAuth users
       );
       user = result.rows[0];
 
@@ -150,7 +154,18 @@ router.post('/google', async (req, res) => {
       if (blockedCheck.rows.length > 0 && blockedCheck.rows[0].blocked) {
         return res.status(403).json({ message: 'This account has been temporarily blocked by administration.' });
       }
+
+      // Update avatar or provider if not set
+      await db.query(
+        'UPDATE users SET avatar_url = COALESCE(avatar_url, $1), provider = COALESCE(provider, $2) WHERE id = $3',
+        [avatar, 'google', user.id]
+      );
+      user.avatar_url = user.avatar_url || avatar;
+      user.provider = user.provider || 'google';
     }
+
+    // Update last login
+    await db.query('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
 
     // Log Login activity
     const { logActivity } = require('../utils/system_logger');
@@ -161,6 +176,128 @@ router.post('/google', async (req, res) => {
   } catch (err) {
     console.error('Google Auth Error:', err.message);
     res.status(401).json({ message: 'Google verification failed or token is invalid' });
+  }
+});
+
+router.post('/github', async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) {
+      return res.status(400).json({ message: 'GitHub Auth Code is required' });
+    }
+
+    const clientId = process.env.GITHUB_CLIENT_ID;
+    const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      return res.status(500).json({ message: 'GitHub Auth is not configured on the server' });
+    }
+
+    // Exchange code for Access Token
+    const tokenRes = await axios.post(
+      'https://github.com/login/oauth/access_token',
+      {
+        client_id: clientId,
+        client_secret: clientSecret,
+        code
+      },
+      { headers: { Accept: 'application/json' } }
+    );
+
+    const { access_token, error, error_description } = tokenRes.data;
+    if (error) {
+      return res.status(400).json({ message: `GitHub OAuth error: ${error_description || error}` });
+    }
+
+    // Fetch user profile from GitHub
+    const userRes = await axios.get('https://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+        'User-Agent': 'EduVerse-AI-Backend'
+      }
+    });
+
+    const payload = userRes.data;
+    const name = payload.name || payload.login;
+    const avatar = payload.avatar_url;
+    let email = payload.email;
+
+    // If primary email is private, fetch all emails
+    if (!email) {
+      try {
+        const emailsRes = await axios.get('https://api.github.com/user/emails', {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+            'User-Agent': 'EduVerse-AI-Backend'
+          }
+        });
+        const primaryEmailObj = emailsRes.data.find(e => e.primary && e.verified);
+        if (primaryEmailObj) {
+          email = primaryEmailObj.email;
+        } else if (emailsRes.data.length > 0) {
+          email = emailsRes.data[0].email;
+        }
+      } catch (e) {
+        console.error('Failed to retrieve GitHub emails:', e.message);
+      }
+    }
+
+    if (!email) {
+      return res.status(400).json({ message: 'Could not retrieve verified email from GitHub account' });
+    }
+
+    email = email.toLowerCase();
+
+    // Find or create user in local Postgres
+    let userResult = await db.query(
+      'SELECT id, name, email, role, avatar_url, provider, profile_completed, review_submitted FROM users WHERE email = $1',
+      [email]
+    );
+
+    let user;
+    if (userResult.rows.length === 0) {
+      // Create user
+      const result = await db.query(
+        'INSERT INTO users (name, email, password, role, provider, avatar_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, email, role, avatar_url, provider, profile_completed, review_submitted',
+        [name, email, '', 'student', 'github', avatar]
+      );
+      user = result.rows[0];
+
+      // Insert student progress
+      await db.query(
+        'INSERT INTO student_progress (student_id) VALUES ($1) ON CONFLICT (student_id) DO NOTHING',
+        [user.id]
+      );
+    } else {
+      user = userResult.rows[0];
+
+      // Check if blocked
+      const blockedCheck = await db.query('SELECT blocked FROM users WHERE id = $1', [user.id]);
+      if (blockedCheck.rows.length > 0 && blockedCheck.rows[0].blocked) {
+        return res.status(403).json({ message: 'This account has been temporarily blocked by administration.' });
+      }
+
+      // Update avatar or provider if not set
+      await db.query(
+        'UPDATE users SET avatar_url = COALESCE(avatar_url, $1), provider = COALESCE(provider, $2) WHERE id = $3',
+        [avatar, 'github', user.id]
+      );
+      user.avatar_url = user.avatar_url || avatar;
+      user.provider = user.provider || 'github';
+    }
+
+    // Update last login
+    await db.query('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
+
+    // Log Login activity
+    const { logActivity } = require('../utils/system_logger');
+    logActivity(user.id, 'login', 'Auth', 'User logged in successfully via GitHub OAuth', false).catch(e => console.error(e));
+
+    const token = generateToken(user);
+    res.json({ message: 'Login successful', token, user });
+  } catch (err) {
+    console.error('GitHub Auth Error:', err.message);
+    res.status(401).json({ message: 'GitHub verification failed or code is invalid' });
   }
 });
 

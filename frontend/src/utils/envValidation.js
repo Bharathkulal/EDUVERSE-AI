@@ -1,15 +1,17 @@
 import toast from 'react-hot-toast';
 
 let googleAuthAvailable = false;
+let githubAuthAvailable = false;
 let isInitialized = false;
-let warningShown = false;
+let googleWarningShown = false;
+let githubWarningShown = false;
 
 /**
  * Validates frontend environment variables on startup.
  * Logs status in the developer console.
  */
 export function validateEnvironment() {
-  if (isInitialized) return { googleAuthAvailable };
+  if (isInitialized) return { googleAuthAvailable, githubAuthAvailable };
   isInitialized = true;
 
   console.log("%c=== [EDUVERSE AI] ENVIRONMENT VALIDATION ===", "color: #3b82f6; font-weight: bold;");
@@ -30,8 +32,17 @@ export function validateEnvironment() {
     googleAuthAvailable = true;
   }
 
+  const githubClientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+  if (!githubClientId) {
+    console.warn("%c⚠ VITE_GITHUB_CLIENT_ID is missing. GitHub Sign-In will be disabled.", "color: #f59e0b;");
+    githubAuthAvailable = false;
+  } else {
+    console.log("%c✔ VITE_GITHUB_CLIENT_ID detected.", "color: #10b981;");
+    githubAuthAvailable = true;
+  }
+
   console.log("%c===========================================", "color: #3b82f6;");
-  return { googleAuthAvailable };
+  return { googleAuthAvailable, githubAuthAvailable };
 }
 
 /**
@@ -45,14 +56,24 @@ export function isGoogleAuthAvailable() {
 }
 
 /**
+ * Check if GitHub Authentication is fully configured.
+ */
+export function isGitHubAuthAvailable() {
+  if (!isInitialized) {
+    validateEnvironment();
+  }
+  return githubAuthAvailable;
+}
+
+/**
  * Triggers a singleton error notification indicating Google OAuth is unconfigured.
  */
 export function showGoogleUnavailableWarning() {
-  if (warningShown) return;
-  warningShown = true;
+  if (googleWarningShown) return;
+  googleWarningShown = true;
 
   toast.error("Google Sign-In is currently unavailable.", {
-    id: "google-client-id-missing-warning", // Unique ID ensures toast is a singleton and never duplicated
+    id: "google-client-id-missing-warning", // Unique ID ensures toast is a singleton
     duration: 5000,
     style: {
       background: '#0f111a',
@@ -61,8 +82,29 @@ export function showGoogleUnavailableWarning() {
     }
   });
 
-  // Reset flag after 6 seconds to allow re-notifying if requested again later
   setTimeout(() => {
-    warningShown = false;
+    googleWarningShown = false;
+  }, 6000);
+}
+
+/**
+ * Triggers a singleton error notification indicating GitHub OAuth is unconfigured.
+ */
+export function showGitHubUnavailableWarning() {
+  if (githubWarningShown) return;
+  githubWarningShown = true;
+
+  toast.error("GitHub Sign-In is currently unavailable.", {
+    id: "github-client-id-missing-warning", // Unique ID ensures toast is a singleton
+    duration: 5000,
+    style: {
+      background: '#0f111a',
+      color: '#fff',
+      border: '1px solid rgba(239, 68, 68, 0.2)'
+    }
+  });
+
+  setTimeout(() => {
+    githubWarningShown = false;
   }, 6000);
 }

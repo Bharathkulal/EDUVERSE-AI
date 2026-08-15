@@ -121,6 +121,19 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const loginWithGitHub = async (code) => {
+    const { data } = await api.post('/auth/github', { code });
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    setUser(data.user);
+    // Clear any guest state
+    localStorage.removeItem('guest_time_left');
+    localStorage.removeItem('guest_ai_requests');
+    localStorage.removeItem('guest_expired');
+    setGuestExpired(false);
+    return data;
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -144,6 +157,7 @@ export const AuthProvider = ({ children }) => {
       login,
       register,
       loginWithGoogle,
+      loginWithGitHub,
       logout,
       setProfileCompleted,
       isAdmin: user?.role === 'admin',

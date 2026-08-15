@@ -233,6 +233,49 @@ export default function Layout({ children }) {
               </div>
             </div>
 
+            {/* User Profile Card inside Sidebar */}
+            <div className="p-3 mb-3 bg-[var(--db-card-bg-elevated)] border border-[var(--db-sidebar-border)] rounded-2xl flex flex-col gap-2.5">
+              <div className="flex items-center gap-3">
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt={user.name} className="w-9 h-9 rounded-full border border-white/20 object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-extrabold text-xs border-2 border-white shadow-sm flex-shrink-0">
+                    {getInitials(user?.name)}
+                  </div>
+                )}
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-bold text-[var(--db-text-main)] truncate">{user?.name}</span>
+                  <span className="text-[10px] text-[var(--db-text-muted)] truncate">{user?.email}</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between text-[10px]">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-500 font-medium">Provider:</span>
+                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase ${
+                    user?.provider === 'google' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
+                    user?.provider === 'github' ? 'bg-slate-800 text-white border border-slate-700' :
+                    'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                  }`}>
+                    {user?.provider || 'Email'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 text-emerald-500 font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Active
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-1.5 mt-1 border-t border-[var(--db-sidebar-border)] pt-2">
+                <button onClick={() => navigate('/settings')} className="py-1 px-2 text-[9px] font-bold bg-[var(--db-input-bg)] hover:bg-[var(--db-btn-secondary-hover)] text-[var(--db-text-main)] rounded-lg transition border border-[var(--db-input-border)] text-center cursor-pointer">
+                  Manage Account
+                </button>
+                <button onClick={handleLogout} className="py-1 px-2 text-[9px] font-bold bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition border border-red-500/20 text-center cursor-pointer">
+                  Logout
+                </button>
+              </div>
+            </div>
+
             {/* Footer Profile Detail */}
             <div className="db-sidebar-footer" style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
               <div className="flex items-center gap-2 text-[var(--db-text-muted)] text-[11px] font-bold leading-normal pr-2">
@@ -429,9 +472,13 @@ export default function Layout({ children }) {
 
             {/* User Profile Section */}
             <Link to={isAdmin ? "/admin/settings" : "/ai-profile"} className="flex items-center gap-3 hover:bg-[var(--db-btn-secondary-hover)] p-1.5 rounded-xl transition text-left" style={{ textDecoration: 'none' }}>
-              <div className="w-9 h-9 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm flex-shrink-0">
-                {getInitials(user?.name)}
-              </div>
+              {user?.avatar_url ? (
+                <img src={user.avatar_url} alt={user.name} className="w-9 h-9 rounded-full border-2 border-white shadow-sm flex-shrink-0 object-cover" />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm flex-shrink-0">
+                  {getInitials(user?.name)}
+                </div>
+              )}
               <div className="hidden lg:flex flex-col">
                 <span className="text-sm font-semibold text-[var(--db-text-main)] leading-tight">{user?.name || 'User Profile'}</span>
                 <span className="text-[11px] text-[var(--db-text-muted)] leading-none">{isAdmin ? 'Administrator' : (user?.course || 'Student') + ' ' + (user?.semester ? `Sem ${user.semester}` : '')}</span>

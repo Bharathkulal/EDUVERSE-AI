@@ -10,6 +10,8 @@ const db = require('./config/db');
     console.log('Running database migrations...');
     await db.query(`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS provider VARCHAR(50) DEFAULT 'email';
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_number VARCHAR(50);
       ALTER TABLE users ADD COLUMN IF NOT EXISTS course VARCHAR(100) DEFAULT 'BCA';
       ALTER TABLE users ADD COLUMN IF NOT EXISTS semester INTEGER DEFAULT 1;

@@ -11,7 +11,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import WatchDemoModal from '../components/WatchDemoModal';
 import toast from 'react-hot-toast';
-import { isGoogleAuthAvailable, showGoogleUnavailableWarning } from '../utils/envValidation';
+import { isGoogleAuthAvailable, showGoogleUnavailableWarning, isGitHubAuthAvailable, showGitHubUnavailableWarning } from '../utils/envValidation';
 import EduVerseLogo, { EduVerseIcon } from '../components/EduVerseLogo';
 import studentImg from '../assets/hero_character.png';
 import './LandingPage.css';
@@ -141,17 +141,24 @@ const loadGoogleScript = () => {
 export default function LandingPage() {
   const navigate = useNavigate();
   const googleAvailable = isGoogleAuthAvailable();
+  const githubAvailable = isGitHubAuthAvailable();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const [scrolled, setScrolled] = useState(false);
   const [demoOpen, setDemoOpen] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState(null);
 
-  const { login, loginWithGoogle, user } = useAuth();
-  const [email, setEmail] = useState('');
+  const { login, loginWithGoogle, loginWithGitHub, user } = useAuth();
+  const [email, setEmail] = useState(() => localStorage.getItem('remembered_email') || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
+
+  // Card view and status flows
+  const [authView, setAuthView] = useState('login'); // 'login', 'forgot'
+  const [authState, setAuthState] = useState('idle'); // 'idle', 'loading', 'success'
+  const [loadingText, setLoadingText] = useState('');
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('remember_me') === 'true');
 
   const handleGoogleLogin = async () => {
     if (!isGoogleAuthAvailable()) {
@@ -161,9 +168,13 @@ export default function LandingPage() {
     
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     setLoginLoading(true);
+    setAuthState('loading');
+    setLoadingText('Connecting to Google...');
+    
     const scriptLoaded = await loadGoogleScript();
     if (!scriptLoaded) {
       setLoginLoading(false);
+      setAuthState('idle');
       toast.error('Failed to load Google Sign-In SDK.');
       return;
     }
@@ -175,22 +186,30 @@ export default function LandingPage() {
         callback: async (tokenResponse) => {
           if (tokenResponse.error) {
             setLoginLoading(false);
+            setAuthState('idle');
             toast.error(`Google Login failed: ${tokenResponse.error_description || tokenResponse.error}`);
             return;
           }
           if (tokenResponse.access_token) {
             try {
+              setLoadingText('Verifying credentials...');
               const data = await loginWithGoogle(tokenResponse.access_token);
+              setAuthState('success');
+              setLoadingText(`Welcome back, ${data.user.name}!`);
               toast.success(`Welcome back, ${data.user.name}!`);
-              setDrawerOpen(false);
-              navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
+              setTimeout(() => {
+                setDrawerOpen(false);
+                navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
+              }, 1500);
             } catch (err) {
+              setAuthState('idle');
               toast.error(err.response?.data?.message || 'Google verification failed.');
             } finally {
               setLoginLoading(false);
             }
           } else {
             setLoginLoading(false);
+            setAuthState('idle');
           }
         },
       });
@@ -198,21 +217,84 @@ export default function LandingPage() {
     } catch (err) {
       console.error(err);
       setLoginLoading(false);
+      setAuthState('idle');
       toast.error('Error initializing Google Sign-In client.');
     }
+  };
+
+  const handleGitHubLogin = () => {
+    if (!isGitHubAuthAvailable()) {
+      showGitHubUnavailableWarning();
+      return;
+    }
+
+    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+    const width = 600;
+    const height = 700;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+
+    const popupUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(window.location.origin + '/oauth-callback.html')}&scope=user:email`;
+    
+    window.open(
+      popupUrl,
+      'GitHub OAuth',
+      `width=${width},height=${height},left=${left},top=${top},status=0,location=0,menubar=0`
+    );
   };
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoginLoading(true);
+    setAuthState('loading');
+    setLoadingText('Authenticating...');
     try {
       const data = await login(email, password);
+      
+      // Save or clear remembered email
+      if (rememberMe) {
+        localStorage.setItem('remembered_email', email);
+        localStorage.setItem('remember_me', 'true');
+      } else {
+        localStorage.removeItem('remembered_email');
+        localStorage.removeItem('remember_me');
+      }
+
+      setAuthState('success');
+      setLoadingText(`Welcome back, Learner!`);
       toast.success('Welcome back, Learner!');
-      setDrawerOpen(false);
-      navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
+      setTimeout(() => {
+        setDrawerOpen(false);
+        navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
+      }, 1500);
     } catch (err) {
+      setAuthState('idle');
       const errorMsg = err.response?.data?.message || 'Login failed';
       toast.error(errorMsg);
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleForgotPasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error('Please enter your email address first.');
+      return;
+    }
+    setLoginLoading(true);
+    setAuthState('loading');
+    setLoadingText('Sending password recovery email...');
+    
+    try {
+      const api = (await import('../api/axios')).default;
+      await api.post('/auth/forgot-password', { email });
+      setAuthState('idle');
+      toast.success('Password reset instructions have been sent to your email.');
+      setAuthView('login');
+    } catch (err) {
+      setAuthState('idle');
+      toast.error(err.response?.data?.message || 'Failed to send recovery email.');
     } finally {
       setLoginLoading(false);
     }
@@ -221,7 +303,7 @@ export default function LandingPage() {
   // Initialize Lenis smooth scroll
   useLenis();
 
-  // Open login drawer if redirected here with ?login=true query param
+  // Open login drawer if redirected here with ?login=true query param, and listen to GitHub OAuth messages
   useEffect(() => {
     if (window.location.search.includes('login=true')) {
       setDrawerOpen(true);
@@ -230,7 +312,37 @@ export default function LandingPage() {
       url.searchParams.delete('login');
       window.history.replaceState({}, document.title, url.pathname + url.hash);
     }
-  }, []);
+
+    const handleGitHubOAuthMessage = async (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'GITHUB_OAUTH_CODE') {
+        const { code } = event.data;
+        setLoginLoading(true);
+        setAuthState('loading');
+        setLoadingText('Connecting to GitHub...');
+        try {
+          const data = await loginWithGitHub(code);
+          setAuthState('success');
+          setLoadingText(`Welcome back, ${data.user.name}!`);
+          toast.success(`Welcome back, ${data.user.name}!`);
+          setTimeout(() => {
+            setDrawerOpen(false);
+            navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
+          }, 1500);
+        } catch (err) {
+          setAuthState('idle');
+          toast.error(err.response?.data?.message || 'GitHub OAuth verification failed.');
+        } finally {
+          setLoginLoading(false);
+        }
+      } else if (event.data?.type === 'GITHUB_OAUTH_ERROR') {
+        toast.error(event.data.error || 'GitHub Authentication failed.');
+      }
+    };
+
+    window.addEventListener('message', handleGitHubOAuthMessage);
+    return () => window.removeEventListener('message', handleGitHubOAuthMessage);
+  }, [loginWithGitHub, navigate]);
 
   // Mouse Parallax for Hero
   useEffect(() => {
@@ -413,153 +525,274 @@ export default function LandingPage() {
             </motion.div>
           </div>
         </motion.div>
-        {/* Integrated Animated Login Panel on Right */}
+
+        {/* Premium Glassmorphic Login Modal */}
         <AnimatePresence>
           {drawerOpen && (
             <>
-              {/* Drawer Backdrop Overlay */}
+              {/* Modal Backdrop Overlay */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => setDrawerOpen(false)}
-                className="fixed inset-0 z-40 backdrop-blur-sm bg-black/60"
+                onClick={() => {
+                  if (authState === 'idle') {
+                    setDrawerOpen(false);
+                    setAuthView('login');
+                  }
+                }}
+                className="fixed inset-0 z-40 backdrop-blur-sm bg-black/70 flex items-center justify-center p-4"
               />
               
               <motion.div
-                initial={{ x: "100%", opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: "100%", opacity: 0 }}
-                transition={{ type: "spring", damping: 28, stiffness: 200 }}
-                className="fixed right-0 top-0 bottom-0 h-full w-[45%] min-w-[400px] max-w-[465px] z-50 flex flex-col justify-center p-6 lg:p-10 text-left overflow-y-auto bg-[#070b1a] border-l border-white/10 shadow-2xl"
+                initial={{ scale: 0.92, opacity: 0, y: 15 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.92, opacity: 0, y: 15 }}
+                transition={{ type: "spring", damping: 25, stiffness: 220 }}
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
               >
-                <div className="space-y-6">
-                  <div className="flex justify-between items-start">
+                <div 
+                  onClick={(e) => e.stopPropagation()}
+                  className="pointer-events-auto relative w-full max-w-[440px] rounded-[24px] bg-[#070c1e]/85 border border-white/10 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] p-6 sm:p-8 flex flex-col justify-between overflow-hidden"
+                >
+                  {/* Subtle Ambient Radial Glows inside Card */}
+                  <div className="absolute -top-12 -left-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+                  <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+
+                  {/* Glassmorphic Loader & Success Overlay */}
+                  <AnimatePresence>
+                    {authState !== 'idle' && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-[#070c1e]/90 backdrop-blur-md z-30 flex flex-col items-center justify-center p-6 text-center"
+                      >
+                        {authState === 'loading' ? (
+                          <div className="flex flex-col items-center gap-4">
+                            <div className="w-12 h-12 rounded-full border-4 border-t-[#3B82F6] border-white/10 animate-spin"></div>
+                            <h3 className="text-white font-bold text-lg mt-2">Authenticating</h3>
+                            <p className="text-white/60 text-xs tracking-wider uppercase animate-pulse">{loadingText}</p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-4 animate-[authFadeIn_0.4s_ease-out]">
+                            {/* Premium Animated Green Checkmark */}
+                            <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                              <svg className="w-8 h-8 text-emerald-400 stroke-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                            <h3 className="text-white font-bold text-xl">Success!</h3>
+                            <p className="text-emerald-400 text-sm font-medium">{loadingText}</p>
+                            <p className="text-white/40 text-[10px] mt-1">Redirecting you to dashboard...</p>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Header Title Section */}
+                  <div className="flex justify-between items-start mb-6">
                     <div>
-                      <h2 className="font-display text-4xl font-extrabold tracking-tight text-white flex items-center gap-2">
-                        EduVerse AI <span className="text-[#3B82F6]">Login</span>
+                      <h2 className="font-display text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                        EduVerse <span className="text-[#3B82F6]">AI</span>
                       </h2>
-                      <p className="text-white font-bold text-lg mt-2">Welcome Back, Learner!</p>
-                      <p className="text-white/60 text-xs mt-1">Sign in to continue your path to building the future with AI.</p>
+                      <p className="text-white/80 font-bold text-sm mt-1.5">
+                        {authView === 'login' ? 'Welcome Back, Learner!' : 'Reset Password'}
+                      </p>
+                      <p className="text-white/40 text-[11px] mt-0.5 leading-normal">
+                        {authView === 'login' 
+                          ? 'Sign in to continue your path to building the future.' 
+                          : 'Enter your email to receive recovery instructions.'}
+                      </p>
                     </div>
                     <button 
-                      onClick={() => setDrawerOpen(false)}
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        setAuthView('login');
+                      }}
                       className="rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white p-2 transition cursor-pointer self-start"
                     >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
 
-                  <form onSubmit={handleLoginSubmit} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <input
-                        type="email"
-                        className="w-full bg-white/[0.03] border border-white/10 focus:border-[#3B82F6]/60 focus:bg-white/[0.05] rounded-xl py-3 px-4 text-white text-sm outline-none transition duration-300"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        placeholder="Email Address"
-                      />
-                    </div>
+                  {/* Login Form View */}
+                  {authView === 'login' ? (
+                    <form onSubmit={handleLoginSubmit} className="space-y-4">
+                      {/* Email Input */}
+                      <div className="space-y-1">
+                        <input
+                          type="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="Email Address"
+                          className="w-full bg-white/[0.02] border border-white/10 hover:border-white/15 focus:border-[#3B82F6]/60 focus:bg-white/[0.04] rounded-xl py-3 px-4 text-white text-xs outline-none transition duration-300 placeholder-white/30"
+                        />
+                      </div>
 
-                    <div className="space-y-1.5 relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        className="w-full bg-white/[0.03] border border-white/10 focus:border-[#3B82F6]/60 focus:bg-white/[0.05] rounded-xl py-3 px-4 text-white text-sm outline-none transition duration-300"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        placeholder="Password"
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition text-xs"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? '👁️' : '👁️‍sh'}
-                      </button>
-                    </div>
+                      {/* Password Input */}
+                      <div className="space-y-1 relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Password"
+                          className="w-full bg-white/[0.02] border border-white/10 hover:border-white/15 focus:border-[#3B82F6]/60 focus:bg-white/[0.04] rounded-xl py-3 px-4 text-white text-xs outline-none transition duration-300 pr-10 placeholder-white/30"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition text-[11px] font-medium"
+                        >
+                          {showPassword ? 'HIDE' : 'SHOW'}
+                        </button>
+                      </div>
 
-                    {/* OR Divider */}
-                    <div className="flex items-center my-4">
-                      <div className="flex-grow border-t border-white/10"></div>
-                      <span className="px-3 text-xs text-white/30 font-medium uppercase tracking-widest">or</span>
-                      <div className="flex-grow border-t border-white/10"></div>
-                    </div>
+                      {/* Controls Area (Remember Me & Forgot Password) */}
+                      <div className="flex justify-between items-center text-[11px] text-white/50 px-0.5">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input 
+                            type="checkbox" 
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                            className="w-3.5 h-3.5 rounded bg-white/5 border border-white/10 text-[#3B82F6] focus:ring-0 cursor-pointer accent-[#3B82F6]" 
+                          />
+                          <span>Remember me</span>
+                        </label>
+                        <button 
+                          type="button" 
+                          onClick={() => setAuthView('forgot')} 
+                          className="hover:text-white font-semibold transition cursor-pointer"
+                        >
+                          Forgot Password?
+                        </button>
+                      </div>
 
-                    {/* Social Buttons */}
-                    <div className="space-y-2.5">
+                      {/* Submit button */}
                       <button 
-                        type="button"
-                        onClick={googleAvailable ? handleGoogleLogin : showGoogleUnavailableWarning}
-                        className={`w-full flex items-center justify-center gap-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-300 ${
-                          googleAvailable 
-                            ? 'bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 hover:border-white/20 text-white/90 cursor-pointer' 
-                            : 'bg-white/[0.01] border border-white/5 text-white/30 cursor-not-allowed opacity-50'
-                        }`}
-                        title={googleAvailable ? 'Sign in with Google' : 'Google Sign-In is currently unavailable'}
+                        type="submit" 
+                        disabled={loginLoading}
+                        className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold py-3 rounded-xl text-xs tracking-wider uppercase transition-all duration-300 shadow-[0_4px_15px_rgba(59,130,246,0.25)] hover:shadow-[0_4px_25px_rgba(59,130,246,0.45)] flex items-center justify-center gap-2 cursor-pointer mt-5"
                       >
-                        <svg className={`w-4 h-4 ${!googleAvailable && 'grayscale opacity-30'}`} viewBox="0 0 24 24">
-                          <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114-3.488 0-6.315-2.827-6.315-6.315s2.827-6.315 6.315-6.315c1.8 0 3.42.756 4.584 1.971l3.14-3.14C19.467 2.656 16.08 1.5 12.24 1.5 6.315 1.5 1.5 6.315 1.5 12.24s4.815 10.74 10.74 10.74c5.985 0 10.665-4.275 10.665-10.8 0-.675-.09-1.35-.225-1.89H12.24z"/>
-                        </svg>
-                        {googleAvailable ? 'Login with Google' : 'Google Sign-In is currently unavailable'}
+                        {loginLoading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : 'Sign In'}
                       </button>
-                      <button 
-                        type="button"
-                        onClick={async () => {
-                          setLoginLoading(true);
-                          try {
-                            const data = await login('student@eduverse.ai', 'student123');
-                            toast.success('Welcome back, Learner! (Logged in via GitHub Auth)');
+
+                      {/* Separator */}
+                      <div className="flex items-center my-4">
+                        <div className="flex-grow border-t border-white/10"></div>
+                        <span className="px-3 text-[10px] text-white/30 font-bold uppercase tracking-widest">or</span>
+                        <div className="flex-grow border-t border-white/10"></div>
+                      </div>
+
+                      {/* Social OAuth Buttons */}
+                      <div className="space-y-2.5">
+                        {/* Google Button */}
+                        <button 
+                          type="button"
+                          onClick={googleAvailable ? handleGoogleLogin : showGoogleUnavailableWarning}
+                          className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl text-xs font-semibold text-[#1f2937] bg-white hover:bg-gray-50 border border-gray-100 shadow-sm hover:shadow-[0_4px_15px_rgba(255,255,255,0.1)] transition-all duration-300 transform hover:scale-[1.01] cursor-pointer"
+                          title={googleAvailable ? 'Continue with Google' : 'Google Sign-In is currently unavailable'}
+                        >
+                          <svg className="w-4.5 h-4.5" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.38-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                          </svg>
+                          Continue with Google
+                        </button>
+
+                        {/* GitHub Button */}
+                        <button 
+                          type="button"
+                          onClick={githubAvailable ? handleGitHubLogin : showGitHubUnavailableWarning}
+                          className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#0f1118] hover:bg-[#151822] border border-[#232a3f] hover:border-slate-500 shadow-sm hover:shadow-[0_4px_15px_rgba(59,130,246,0.15)] transition-all duration-300 transform hover:scale-[1.01] cursor-pointer"
+                          title={githubAvailable ? 'Continue with GitHub' : 'GitHub Sign-In is currently unavailable'}
+                        >
+                          <svg className="w-4.5 h-4.5 fill-white" viewBox="0 0 24 24">
+                            <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"/>
+                          </svg>
+                          Continue with GitHub
+                        </button>
+                      </div>
+
+                      {/* Footer Register Prompt */}
+                      <div className="text-center text-[11px] text-white/40 pt-2.5">
+                        <span>Don't have an account? </span>
+                        <button 
+                          type="button" 
+                          onClick={() => {
                             setDrawerOpen(false);
-                            navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
-                          } catch (err) {
-                            toast.error('GitHub Sign-In failed');
-                          } finally {
-                            setLoginLoading(false);
-                          }
-                        }}
-                        className="w-full flex items-center justify-center gap-3 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 hover:border-white/20 py-2.5 rounded-xl text-xs font-semibold text-white/90 transition-all duration-300 cursor-pointer"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"/>
-                        </svg>
-                        Login with GitHub
-                      </button>
-                    </div>
+                            navigate('/register');
+                          }} 
+                          className="text-[#3B82F6] font-bold hover:underline cursor-pointer"
+                        >
+                          Register Now
+                        </button>
+                      </div>
 
-                    <button 
-                      type="submit" 
-                      className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold py-3.5 rounded-2xl text-xs tracking-wider uppercase transition-all duration-300 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] flex items-center justify-center gap-2 cursor-pointer mt-4"
-                      disabled={loginLoading}
-                    >
-                      {loginLoading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : 'Sign In'}
-                    </button>
-
-                    <div className="flex justify-between items-center text-[10px] text-white/50 pt-2">
-                      <button type="button" onClick={() => toast.success('Password reset email sent!')} className="hover:text-white transition">Forgot Password?</button>
-                      <span>Don't have an account? <button type="button" onClick={() => navigate('/register')} className="text-[#3B82F6] font-bold hover:underline">Register Now</button></span>
-                    </div>
-
-                    {/* Demo Accounts Credentials Box */}
-                    <div className="mt-5 p-3.5 rounded-xl bg-white/[0.02] border border-white/5 text-[11px] text-white/50 space-y-1.5">
-                      <p className="font-bold text-[#3B82F6] flex items-center gap-1">🔑 Demo Accounts Credentials:</p>
-                      <div className="grid grid-cols-2 gap-2 text-[10px] leading-relaxed pt-0.5">
-                        <div>
-                          <p className="font-semibold text-white/80">Student Login:</p>
-                          <p className="font-mono text-white/60">student@eduverse.ai</p>
-                          <p className="font-mono text-white/60">student123</p>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-white/80">Admin Login:</p>
-                          <p className="font-mono text-white/60">admin@eduverse.ai</p>
-                          <p className="font-mono text-white/60">admin123</p>
+                      {/* Collapsible Demo Accounts block */}
+                      <div className="mt-4 p-3 rounded-xl bg-white/[0.01] border border-white/5 text-[10px] text-white/40 space-y-1">
+                        <p className="font-bold text-[#3B82F6]">🔑 Demo Accounts:</p>
+                        <div className="flex justify-between text-[9px] text-white/50 leading-relaxed font-mono">
+                          <div>
+                            <span className="text-white/60 font-semibold font-sans">Student:</span> student@eduverse.ai (student123)
+                          </div>
+                          <div>
+                            <span className="text-white/60 font-semibold font-sans">Admin:</span> admin@eduverse.ai (admin123)
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </form>
+                    </form>
+                  ) : (
+                    /* Forgot Password Form View */
+                    <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+                      <div className="space-y-1">
+                        <input
+                          type="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="Your Registered Email Address"
+                          className="w-full bg-white/[0.02] border border-white/10 hover:border-white/15 focus:border-[#3B82F6]/60 focus:bg-white/[0.04] rounded-xl py-3 px-4 text-white text-xs outline-none transition duration-300 placeholder-white/30"
+                        />
+                      </div>
+
+                      <button 
+                        type="submit" 
+                        disabled={loginLoading}
+                        className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold py-3 rounded-xl text-xs tracking-wider uppercase transition-all duration-300 shadow-[0_4px_15px_rgba(59,130,246,0.25)] hover:shadow-[0_4px_25px_rgba(59,130,246,0.45)] flex items-center justify-center gap-2 cursor-pointer mt-4"
+                      >
+                        {loginLoading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : 'Send Recovery Link'}
+                      </button>
+
+                      <div className="text-center pt-3">
+                        <button 
+                          type="button" 
+                          onClick={() => setAuthView('login')} 
+                          className="text-xs text-white/50 hover:text-white transition font-semibold cursor-pointer inline-flex items-center gap-1.5"
+                        >
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                          </svg>
+                          Back to Sign In
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* Terms & Privacy Links Footer */}
+                  <div className="mt-5 pt-3 border-t border-white/5 text-center text-[9px] text-white/30 leading-normal">
+                    <span>By signing in, you agree to our </span>
+                    <a href="#terms" onClick={(e) => e.preventDefault()} className="hover:text-white underline">Terms of Service</a>
+                    <span> and </span>
+                    <a href="#privacy" onClick={(e) => e.preventDefault()} className="hover:text-white underline">Privacy Policy</a>.
+                  </div>
                 </div>
               </motion.div>
             </>
