@@ -225,6 +225,38 @@ export default function WatchDemoModal({ isOpen, onClose }) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
 
+  // Window width tracking for fluid responsive scaling of device mockups
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Compute scale and height dynamically to prevent any cropping/overflow on smaller screens
+  const getDeviceDimensions = () => {
+    let width = 350;
+    let height = 700;
+    if (deviceType === 'Tablet') {
+      width = isPortrait ? 480 : 648;
+      height = isPortrait ? 648 : 480;
+    } else if (deviceType === 'Desktop') {
+      width = 725;
+      height = 425;
+    } else if (deviceType === 'Windows' || deviceType === 'macOS') {
+      width = 675;
+      height = 412;
+    } else {
+      // iPhone / Android
+      width = isPortrait ? 350 : 700;
+      height = isPortrait ? 700 : 350;
+    }
+    const maxAllowedWidth = Math.min(windowWidth - 64, 1100);
+    const scale = maxAllowedWidth < width ? maxAllowedWidth / width : 1;
+    return { width, height, scale };
+  };
+  const { height: baseHeight, scale: deviceScale } = getDeviceDimensions();
+
   const simulatorSteps = useRef([
     { screen: 'home', desc: 'Home Screen' },
     { screen: 'dashboard', desc: 'Open Dashboard' },
@@ -847,7 +879,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
               <motion.div 
                 initial={{ opacity: 0 }} 
                 animate={{ opacity: 1 }}
-                className="space-y-6 text-left max-w-5xl mx-auto"
+                className="space-y-8 text-left max-w-5xl mx-auto"
               >
                 {/* Device Selector Toolbar */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-slate-900/40 p-4 rounded-2xl border border-white/5">
@@ -920,9 +952,10 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                   </div>
                 </div>
 
-                {/* Device Canvas Showcase */}
+                {/* ─── PREMIUM DEVICE CANVAS SHOWCASE ─── */}
                 <div 
-                  className="relative flex justify-center items-center py-10 min-h-[580px] bg-[#03060c]/50 rounded-3xl border border-white/5 overflow-hidden select-none cursor-grab active:cursor-grabbing"
+                  className="relative flex justify-center items-center py-16 px-4 md:px-12 bg-slate-955/45 backdrop-blur-xl rounded-3xl border border-white/10 select-none cursor-grab active:cursor-grabbing overflow-visible transition-all duration-500 shadow-2xl shadow-indigo-950/20"
+                  style={{ minHeight: `${Math.max(380, baseHeight * deviceScale + 120)}px` }}
                   onMouseMove={handleMouseMove}
                   onMouseLeave={handleMouseLeave}
                   onMouseEnter={() => setIsHovered(true)}
@@ -930,19 +963,78 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                   onTouchEnd={handleTouchEnd}
                   onDoubleClick={handleDoubleClickRestart}
                 >
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.06)_0%,transparent_70%)] pointer-events-none" />
+                  {/* Glassmorphic layered background gradients */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-indigo-900/10 via-slate-900/20 to-blue-900/10 rounded-3xl pointer-events-none" />
+                  
+                  {/* Corner Accent Brackets */}
+                  <div className="absolute top-6 left-6 w-8 h-8 border-t-2 border-l-2 border-white/15 rounded-tl-lg pointer-events-none" />
+                  <div className="absolute top-6 right-6 w-8 h-8 border-t-2 border-r-2 border-white/15 rounded-tr-lg pointer-events-none" />
+                  <div className="absolute bottom-6 left-6 w-8 h-8 border-b-2 border-l-2 border-white/15 rounded-bl-lg pointer-events-none" />
+                  <div className="absolute bottom-6 right-6 w-8 h-8 border-b-2 border-r-2 border-white/15 rounded-br-lg pointer-events-none" />
 
-                  <div 
-                    className="relative transition-all duration-300 ease-out"
+                  {/* Soft ambient glow behind the phone */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[480px] bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 rounded-full blur-[120px] pointer-events-none z-0" />
+
+                  {/* Floating Particle Accents */}
+                  <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none z-0">
+                    {[...Array(6)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute w-1.5 h-1.5 rounded-full bg-blue-400/30"
+                        style={{
+                          top: `${15 + i * 14}%`,
+                          left: `${10 + (i * 17) % 80}%`,
+                        }}
+                        animate={{
+                          y: [0, -25, 0],
+                          opacity: [0.15, 0.45, 0.15],
+                          scale: [0.8, 1.2, 0.8]
+                        }}
+                        transition={{
+                          duration: 4 + i,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: i * 0.5
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Dynamic 3D shadow linked to the device float */}
+                  <motion.div 
+                    className="absolute bottom-16 left-1/2 -translate-x-1/2 rounded-full bg-black/60 blur-xl pointer-events-none z-0"
+                    animate={{
+                      width: [Math.max(120, 240 * deviceScale), Math.max(90, 190 * deviceScale), Math.max(120, 240 * deviceScale)],
+                      height: [14, 8, 14],
+                      opacity: [0.7, 0.4, 0.7]
+                    }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+
+                  {/* The interactive floating container */}
+                  <motion.div 
+                    className="relative z-10 transition-all duration-300 ease-out"
+                    animate={{
+                      y: [0, -18, 0],
+                    }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
                     style={{
-                      transform: `perspective(1200px) rotateY(${mousePos.x}deg) rotateX(${mousePos.y}deg)`,
+                      transform: `perspective(1200px) rotateY(${mousePos.x}deg) rotateX(${mousePos.y}deg) scale(${deviceScale})`,
                       transformStyle: 'preserve-3d'
                     }}
                   >
                     {deviceType === 'iPhone' && (
                       <div 
                         className={`border-[10px] border-slate-900 bg-[#080a13] shadow-2xl relative transition-all duration-500 rounded-[48px] ${
-                          isPortrait ? 'w-[280px] h-[560px]' : 'w-[560px] h-[280px]'
+                          isPortrait ? 'w-[350px] h-[700px]' : 'w-[700px] h-[350px]'
                         }`}
                         style={{
                           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 0 4px rgba(255,255,255,0.15)'
@@ -974,7 +1066,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                     {deviceType === 'Android' && (
                       <div 
                         className={`border-[8px] border-slate-900 bg-[#080a13] shadow-2xl relative transition-all duration-500 rounded-[32px] ${
-                          isPortrait ? 'w-[280px] h-[560px]' : 'w-[560px] h-[280px]'
+                          isPortrait ? 'w-[350px] h-[700px]' : 'w-[700px] h-[350px]'
                         }`}
                         style={{
                           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 0 2px rgba(255,255,255,0.1)'
@@ -995,7 +1087,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                     {deviceType === 'Tablet' && (
                       <div 
                         className={`border-[14px] border-slate-900 bg-[#080a13] shadow-2xl relative transition-all duration-500 rounded-[40px] ${
-                          isPortrait ? 'w-[400px] h-[540px]' : 'w-[540px] h-[400px]'
+                          isPortrait ? 'w-[480px] h-[648px]' : 'w-[648px] h-[480px]'
                         }`}
                         style={{
                           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 0 3px rgba(255,255,255,0.15)'
@@ -1016,21 +1108,21 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                     {deviceType === 'Desktop' && (
                       <div className="flex flex-col items-center">
                         <div 
-                          className="w-[580px] h-[340px] border-[12px] border-slate-900 bg-[#080a13] shadow-2xl relative rounded-t-[20px] rounded-b-[4px] overflow-hidden flex flex-col justify-between"
+                          className="w-[725px] h-[425px] border-[12px] border-slate-900 bg-[#080a13] shadow-2xl relative rounded-t-[20px] rounded-b-[4px] overflow-hidden flex flex-col justify-between"
                           style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)' }}
                         >
                           <div className="flex-1 w-full overflow-hidden p-4 bg-slate-950 flex flex-col justify-between text-left text-white relative">
                             <SimulatedScreenContent screen={currentScreen} setScreen={setCurrentScreen} isDarkMode={simulatedDarkMode} isPortrait={false} isDesktop />
                           </div>
                         </div>
-                        <div className="w-20 h-14 bg-slate-800 border-x border-slate-700/30" />
-                        <div className="w-44 h-3 bg-slate-900 rounded-t-lg shadow-md" />
+                        <div className="w-24 h-16 bg-slate-800 border-x border-slate-700/30" />
+                        <div className="w-48 h-3 bg-slate-900 rounded-t-lg shadow-md" />
                       </div>
                     )}
 
                     {deviceType === 'Windows' && (
                       <div 
-                        className="w-[540px] h-[330px] bg-slate-950 rounded-lg border border-slate-800 overflow-hidden flex flex-col shadow-2xl"
+                        className="w-[675px] h-[412px] bg-slate-950 rounded-lg border border-slate-800 overflow-hidden flex flex-col shadow-2xl"
                         style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)' }}
                       >
                         <div className="h-8 bg-slate-900 px-3 flex items-center justify-between text-[10px] text-slate-400 font-bold border-b border-white/5">
@@ -1049,7 +1141,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
 
                     {deviceType === 'macOS' && (
                       <div 
-                        className="w-[540px] h-[330px] bg-slate-950 rounded-xl border border-slate-800/80 overflow-hidden flex flex-col shadow-2xl"
+                        className="w-[675px] h-[412px] bg-slate-950 rounded-xl border border-slate-800/80 overflow-hidden flex flex-col shadow-2xl"
                         style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)' }}
                       >
                         <div className="h-8 bg-[#181a24] px-4 flex items-center justify-between text-[10px] text-slate-400 font-bold border-b border-white/5">
@@ -1066,7 +1158,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                         </div>
                       </div>
                     )}
-                  </div>
+                  </motion.div>
 
                   {showDeviceInfo && (
                     <div className="absolute top-4 left-4 max-w-xs p-4 rounded-xl bg-slate-950/95 border border-white/10 backdrop-blur-md text-[10px] leading-relaxed z-50 text-slate-400 space-y-2">
@@ -1078,21 +1170,37 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                     </div>
                   )}
 
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/5 text-[9px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping" /> Hover to tilt view • Click inside screen to interact
+                  {/* Interactive Status Indicator Pill */}
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full bg-slate-900/80 backdrop-blur-lg border border-white/10 text-[10px] font-black uppercase tracking-wider text-slate-400 shadow-lg flex items-center gap-2.5 z-20">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                    <span>Hover to tilt 3D canvas • Click elements inside screen to interact</span>
                   </div>
                 </div>
 
-                {/* Auto-demo Step display */}
-                <div className="flex justify-between items-center bg-slate-950 border border-white/5 p-4 rounded-2xl">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Auto demo step:</span>
-                    <span className="text-[11px] font-extrabold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20 capitalize">
-                      {simulatorSteps[demoStep].desc}
-                    </span>
+                {/* ─── REDESIGNED AUTO DEMO PROGRESS BAR ─── */}
+                <div className="bg-slate-900/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
+                  {/* Step Info */}
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-white/5">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-400">Current Demo Module</span>
+                      <h3 className="text-base font-extrabold text-white mt-0.5 bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent capitalize">
+                        {simulatorSteps[demoStep].desc}
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono text-slate-400">Step {demoStep + 1} of {simulatorSteps.length}</span>
+                      <span className="h-4 w-px bg-white/10" />
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        {demoRunning && !isHovered ? 'Running' : 'Paused'}
+                      </span>
+                    </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
+
+                  {/* Progress Indicator Dots / Pill bars */}
+                  <div className="grid grid-cols-3 sm:grid-cols-9 gap-2">
                     {simulatorSteps.map((step, idx) => {
                       const isActive = demoStep === idx;
                       return (
@@ -1100,29 +1208,70 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                           key={idx}
                           onClick={() => {
                             goToStep(idx);
-                            setDemoRunning(false); // Pause autoplay on manual navigation
+                            setDemoRunning(false); // Pause autoplay on manual click
                             playSound('click');
                           }}
-                          className={`relative h-2 rounded-full overflow-hidden transition-all duration-305 cursor-pointer border-0 ${
-                            isActive ? 'w-8 bg-slate-800' : 'w-2 bg-slate-800 hover:bg-slate-700'
+                          className={`relative h-2.5 rounded-full overflow-hidden transition-all duration-305 cursor-pointer border-0 ${
+                            isActive ? 'bg-indigo-950 ring-1 ring-indigo-500/50' : 'bg-white/5 hover:bg-white/10'
                           }`}
                           title={step.desc}
                         >
                           {isActive && demoRunning && !isHovered && (
                             <motion.div
+                              key={demoStep}
                               initial={{ width: '0%' }}
                               animate={{ width: '100%' }}
                               transition={{ duration: 3.8, ease: 'linear' }}
-                              className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500"
+                              className="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"
                             />
                           )}
                           {isActive && (!demoRunning || isHovered) && (
                             <div className="absolute inset-0 bg-blue-500" />
                           )}
+                          {idx < demoStep && (
+                            <div className="absolute inset-0 bg-indigo-500/40" />
+                          )}
                         </button>
                       );
                     })}
                   </div>
+
+                  {/* Step labels selector list */}
+                  <div className="flex flex-wrap gap-2 pt-1.5">
+                    {simulatorSteps.map((step, idx) => {
+                      const isActive = demoStep === idx;
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            goToStep(idx);
+                            setDemoRunning(false);
+                            playSound('click');
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all duration-200 cursor-pointer border-0 ${
+                            isActive 
+                              ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' 
+                              : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                          }`}
+                        >
+                          {step.desc.replace('Open ', '')}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Keyboard + gesture legend */}
+                <div className="flex flex-wrap justify-center gap-4 text-[10px] text-slate-650 font-mono">
+                  <span className="flex items-center gap-1.5">
+                    <kbd className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-slate-400 text-[9px]">←</kbd>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-slate-400 text-[9px]">→</kbd>
+                    Navigate
+                  </span>
+                  <span className="flex items-center gap-1.5"><kbd className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-slate-400 text-[9px]">Space</kbd> Play/Pause</span>
+                  <span>👆 Swipe on mobile</span>
+                  <span>⏸ Hover to pause</span>
+                  <span>↩ Double-click restart</span>
                 </div>
 
                 {/* Install Platforms section */}
