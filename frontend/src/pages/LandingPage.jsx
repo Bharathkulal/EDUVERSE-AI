@@ -553,7 +553,7 @@ export default function LandingPage() {
               >
                 <div 
                   onClick={(e) => e.stopPropagation()}
-                  className="pointer-events-auto relative w-full max-w-[440px] rounded-[24px] bg-[#070c1e]/85 border border-white/10 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] p-6 sm:p-8 flex flex-col justify-between overflow-hidden"
+                  className="pointer-events-auto relative w-full max-w-[415px] max-h-[90vh] rounded-[24px] bg-[#070c1e]/90 border border-white/10 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] p-5 sm:p-6 flex flex-col justify-between overflow-y-auto custom-sidebar-scroll"
                 >
                   {/* Subtle Ambient Radial Glows inside Card */}
                   <div className="absolute -top-12 -left-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
@@ -592,7 +592,7 @@ export default function LandingPage() {
                   </AnimatePresence>
 
                   {/* Header Title Section */}
-                  <div className="flex justify-between items-start mb-6">
+                  <div className="flex justify-between items-start mb-5">
                     <div>
                       <h2 className="font-display text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
                         EduVerse <span className="text-[#3B82F6]">AI</span>
@@ -698,7 +698,7 @@ export default function LandingPage() {
                           className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl text-xs font-semibold text-[#1f2937] bg-white hover:bg-gray-50 border border-gray-100 shadow-sm hover:shadow-[0_4px_15px_rgba(255,255,255,0.1)] transition-all duration-300 transform hover:scale-[1.01] cursor-pointer"
                           title={googleAvailable ? 'Continue with Google' : 'Google Sign-In is currently unavailable'}
                         >
-                          <svg className="w-4.5 h-4.5" viewBox="0 0 24 24">
+                          <svg width="18" height="18" className="w-[18px] h-[18px] flex-shrink-0" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.38-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
@@ -714,7 +714,7 @@ export default function LandingPage() {
                           className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#0f1118] hover:bg-[#151822] border border-[#232a3f] hover:border-slate-500 shadow-sm hover:shadow-[0_4px_15px_rgba(59,130,246,0.15)] transition-all duration-300 transform hover:scale-[1.01] cursor-pointer"
                           title={githubAvailable ? 'Continue with GitHub' : 'GitHub Sign-In is currently unavailable'}
                         >
-                          <svg className="w-4.5 h-4.5 fill-white" viewBox="0 0 24 24">
+                          <svg width="18" height="18" className="w-[18px] h-[18px] flex-shrink-0 fill-white" viewBox="0 0 24 24">
                             <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"/>
                           </svg>
                           Continue with GitHub

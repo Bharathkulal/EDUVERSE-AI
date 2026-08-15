@@ -235,21 +235,21 @@ export default function WatchDemoModal({ isOpen, onClose }) {
 
   // Compute scale and height dynamically to prevent any cropping/overflow on smaller screens
   const getDeviceDimensions = () => {
-    let width = 350;
-    let height = 700;
+    let width = 300;
+    let height = 600;
     if (deviceType === 'Tablet') {
-      width = isPortrait ? 480 : 648;
-      height = isPortrait ? 648 : 480;
+      width = isPortrait ? 420 : 567;
+      height = isPortrait ? 567 : 420;
     } else if (deviceType === 'Desktop') {
-      width = 725;
-      height = 425;
+      width = 640;
+      height = 375;
     } else if (deviceType === 'Windows' || deviceType === 'macOS') {
-      width = 675;
-      height = 412;
+      width = 600;
+      height = 366;
     } else {
       // iPhone / Android
-      width = isPortrait ? 350 : 700;
-      height = isPortrait ? 700 : 350;
+      width = isPortrait ? 300 : 600;
+      height = isPortrait ? 600 : 300;
     }
     const maxAllowedWidth = Math.min(windowWidth - 64, 1100);
     const scale = maxAllowedWidth < width ? maxAllowedWidth / width : 1;
@@ -412,7 +412,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex justify-center items-start overflow-y-auto p-4 md:p-6 bg-black/95 backdrop-blur-xl custom-sidebar-scroll">
         
         {/* Floating gradient mesh background particles */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30">
@@ -426,7 +426,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="relative w-full max-w-6xl bg-slate-950/80 border border-white/10 rounded-3xl overflow-hidden shadow-2xl p-6 md:p-8 flex flex-col justify-between min-h-[85vh] z-10"
+          className="relative w-full max-w-6xl bg-slate-950/85 border border-white/10 rounded-3xl overflow-hidden shadow-2xl p-5 md:p-6 flex flex-col justify-between my-auto z-10"
         >
           {/* HEADER AREA */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/10 pb-6 mb-6">
@@ -954,7 +954,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
 
                 {/* ─── PREMIUM DEVICE CANVAS SHOWCASE ─── */}
                 <div 
-                  className="relative flex justify-center items-center py-16 px-4 md:px-12 bg-slate-955/45 backdrop-blur-xl rounded-3xl border border-white/10 select-none cursor-grab active:cursor-grabbing overflow-visible transition-all duration-500 shadow-2xl shadow-indigo-950/20"
+                  className="relative flex justify-center items-center py-8 px-4 md:px-12 bg-slate-955/45 backdrop-blur-xl rounded-3xl border border-white/10 select-none cursor-grab active:cursor-grabbing overflow-visible transition-all duration-500 shadow-2xl shadow-indigo-950/20"
                   style={{ minHeight: `${Math.max(380, baseHeight * deviceScale + 120)}px` }}
                   onMouseMove={handleMouseMove}
                   onMouseLeave={handleMouseLeave}
@@ -1033,8 +1033,8 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                   >
                     {deviceType === 'iPhone' && (
                       <div 
-                        className={`border-[10px] border-slate-900 bg-[#080a13] shadow-2xl relative transition-all duration-500 rounded-[48px] ${
-                          isPortrait ? 'w-[350px] h-[700px]' : 'w-[700px] h-[350px]'
+                        className={`border-[10px] border-slate-900 bg-[#080a13] shadow-2xl relative transition-all duration-500 rounded-[40px] ${
+                          isPortrait ? 'w-[300px] h-[600px]' : 'w-[600px] h-[300px]'
                         }`}
                         style={{
                           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 0 4px rgba(255,255,255,0.15)'
@@ -1057,7 +1057,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                           </div>
                         )}
 
-                        <div className="w-full h-full rounded-[38px] overflow-hidden p-3 pt-7 pb-4 bg-slate-950 flex flex-col justify-between text-left text-white relative">
+                        <div className="w-full h-full rounded-[30px] overflow-hidden p-3 pt-7 pb-4 bg-slate-950 flex flex-col justify-between text-left text-white relative">
                           <SimulatedScreenContent screen={currentScreen} setScreen={setCurrentScreen} isDarkMode={simulatedDarkMode} isPortrait={isPortrait} />
                         </div>
                       </div>
@@ -1065,8 +1065,8 @@ export default function WatchDemoModal({ isOpen, onClose }) {
 
                     {deviceType === 'Android' && (
                       <div 
-                        className={`border-[8px] border-slate-900 bg-[#080a13] shadow-2xl relative transition-all duration-500 rounded-[32px] ${
-                          isPortrait ? 'w-[350px] h-[700px]' : 'w-[700px] h-[350px]'
+                        className={`border-[8px] border-slate-900 bg-[#080a13] shadow-2xl relative transition-all duration-500 rounded-[28px] ${
+                          isPortrait ? 'w-[300px] h-[600px]' : 'w-[600px] h-[300px]'
                         }`}
                         style={{
                           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 0 2px rgba(255,255,255,0.1)'
@@ -1078,7 +1078,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                           <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 bg-black rounded-full z-45 border border-white/5" />
                         )}
 
-                        <div className="w-full h-full rounded-[24px] overflow-hidden p-3 pt-8 pb-3 bg-slate-950 flex flex-col justify-between text-left text-white relative">
+                        <div className="w-full h-full rounded-[20px] overflow-hidden p-3 pt-8 pb-3 bg-slate-950 flex flex-col justify-between text-left text-white relative">
                           <SimulatedScreenContent screen={currentScreen} setScreen={setCurrentScreen} isDarkMode={simulatedDarkMode} isPortrait={isPortrait} />
                         </div>
                       </div>
@@ -1086,8 +1086,8 @@ export default function WatchDemoModal({ isOpen, onClose }) {
 
                     {deviceType === 'Tablet' && (
                       <div 
-                        className={`border-[14px] border-slate-900 bg-[#080a13] shadow-2xl relative transition-all duration-500 rounded-[40px] ${
-                          isPortrait ? 'w-[480px] h-[648px]' : 'w-[648px] h-[480px]'
+                        className={`border-[12px] border-slate-900 bg-[#080a13] shadow-2xl relative transition-all duration-500 rounded-[32px] ${
+                          isPortrait ? 'w-[420px] h-[567px]' : 'w-[567px] h-[420px]'
                         }`}
                         style={{
                           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 0 3px rgba(255,255,255,0.15)'
@@ -1099,7 +1099,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                           <div className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 bg-black rounded-full z-45 border border-white/5" />
                         )}
 
-                        <div className="w-full h-full rounded-[26px] overflow-hidden p-4 pt-6 pb-4 bg-slate-950 flex flex-col justify-between text-left text-white relative">
+                        <div className="w-full h-full rounded-[22px] overflow-hidden p-4 pt-6 pb-4 bg-slate-950 flex flex-col justify-between text-left text-white relative">
                           <SimulatedScreenContent screen={currentScreen} setScreen={setCurrentScreen} isDarkMode={simulatedDarkMode} isPortrait={isPortrait} />
                         </div>
                       </div>
@@ -1108,7 +1108,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
                     {deviceType === 'Desktop' && (
                       <div className="flex flex-col items-center">
                         <div 
-                          className="w-[725px] h-[425px] border-[12px] border-slate-900 bg-[#080a13] shadow-2xl relative rounded-t-[20px] rounded-b-[4px] overflow-hidden flex flex-col justify-between"
+                          className="w-[640px] h-[375px] border-[10px] border-slate-900 bg-[#080a13] shadow-2xl relative rounded-t-[16px] rounded-b-[4px] overflow-hidden flex flex-col justify-between"
                           style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)' }}
                         >
                           <div className="flex-1 w-full overflow-hidden p-4 bg-slate-950 flex flex-col justify-between text-left text-white relative">
@@ -1122,7 +1122,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
 
                     {deviceType === 'Windows' && (
                       <div 
-                        className="w-[675px] h-[412px] bg-slate-950 rounded-lg border border-slate-800 overflow-hidden flex flex-col shadow-2xl"
+                        className="w-[600px] h-[366px] bg-slate-950 rounded-lg border border-slate-800 overflow-hidden flex flex-col shadow-2xl"
                         style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)' }}
                       >
                         <div className="h-8 bg-slate-900 px-3 flex items-center justify-between text-[10px] text-slate-400 font-bold border-b border-white/5">
@@ -1141,7 +1141,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
 
                     {deviceType === 'macOS' && (
                       <div 
-                        className="w-[675px] h-[412px] bg-slate-950 rounded-xl border border-slate-800/80 overflow-hidden flex flex-col shadow-2xl"
+                        className="w-[600px] h-[366px] bg-slate-950 rounded-xl border border-slate-800/80 overflow-hidden flex flex-col shadow-2xl"
                         style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)' }}
                       >
                         <div className="h-8 bg-[#181a24] px-4 flex items-center justify-between text-[10px] text-slate-400 font-bold border-b border-white/5">
