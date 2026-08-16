@@ -59,23 +59,23 @@ export default function Register() {
         <div className="text-center mb-6">
           <Link to="/" className="auth-brand">EduVerse AI</Link>
           <h1 className="text-2xl font-bold text-white mt-1">Create Account 🚀</h1>
-          <p className="text-emerald-100/60 text-sm">Join the smart AI learning platform</p>
+          <p className="text-violet-100/60 text-sm">Join the smart AI learning platform</p>
         </div>
 
         {/* Step Indicator Header */}
-        <div className="flex justify-center items-center gap-2 mb-6 text-xs font-semibold text-emerald-100/40">
-          <span className={`px-2.5 py-1 rounded-md ${step >= 1 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : ''}`}>1. Details</span>
-          <span className="text-emerald-500/20">➔</span>
-          <span className={`px-2.5 py-1 rounded-md ${step >= 2 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : ''}`}>2. Security</span>
-          <span className="text-emerald-500/20">➔</span>
-          <span className={`px-2.5 py-1 rounded-md ${step >= 3 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : ''}`}>3. Customize</span>
+        <div className="flex justify-center items-center gap-2 mb-6 text-xs font-semibold text-violet-100/40">
+          <span className={`px-2.5 py-1 rounded-md ${step >= 1 ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30' : ''}`}>1. Details</span>
+          <span className="text-violet-500/20">➔</span>
+          <span className={`px-2.5 py-1 rounded-md ${step >= 2 ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30' : ''}`}>2. Security</span>
+          <span className="text-violet-500/20">➔</span>
+          <span className={`px-2.5 py-1 rounded-md ${step >= 3 ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30' : ''}`}>3. Customize</span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {step === 1 && (
             <div className="space-y-4 animate-[authFadeIn_0.3s_ease]">
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-emerald-100/70 uppercase tracking-wider">Full Name</label>
+                <label className="block text-xs font-semibold text-violet-100/70 uppercase tracking-wider">Full Name</label>
                 <div className="auth-input-container">
                   <input
                     type="text"
@@ -94,7 +94,7 @@ export default function Register() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-emerald-100/70 uppercase tracking-wider">Email Address</label>
+                <label className="block text-xs font-semibold text-violet-100/70 uppercase tracking-wider">Email Address</label>
                 <div className="auth-input-container">
                   <input
                     type="email"
@@ -121,7 +121,7 @@ export default function Register() {
           {step === 2 && (
             <div className="space-y-4 animate-[authFadeIn_0.3s_ease]">
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-emerald-100/70 uppercase tracking-wider">Password</label>
+                <label className="block text-xs font-semibold text-violet-100/70 uppercase tracking-wider">Password</label>
                 <div className="auth-input-container">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -148,7 +148,7 @@ export default function Register() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-emerald-100/70 uppercase tracking-wider">Confirm Password</label>
+                <label className="block text-xs font-semibold text-violet-100/70 uppercase tracking-wider">Confirm Password</label>
                 <div className="auth-input-container">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -180,7 +180,7 @@ export default function Register() {
           {step === 3 && (
             <div className="space-y-5 animate-[authFadeIn_0.3s_ease]">
               <div className="space-y-2">
-                <label className="block text-xs font-semibold text-emerald-100/70 uppercase tracking-wider">Select Learning Role</label>
+                <label className="block text-xs font-semibold text-violet-100/70 uppercase tracking-wider">Select Learning Role</label>
                 <div className="role-tabs">
                   <button
                     type="button"
@@ -206,7 +206,7 @@ export default function Register() {
                 </div>
               </div>
 
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-100/70">
+              <div className="p-3 bg-violet-500/10 border border-violet-500/20 rounded-xl text-xs text-violet-100/70">
                 {form.role === 'student' && "🎓 Gain subject materials, take quizzes, run practice algorithms, and track your college grades."}
                 {form.role === 'developer' && "💻 Build full code bases, access AI coding tutors, and deploy ML predictive algorithms."}
                 {form.role === 'admin' && "🛡️ Admin console permissions. Upload dataset tables, train regression matrices, and delete profiles."}
@@ -224,11 +224,11 @@ export default function Register() {
           )}
         </form>
 
-        <p className="text-center text-sm text-emerald-100/50 mt-6">
-          Already have an account? <Link to="/?login=true" className="text-emerald-400 font-semibold hover:text-emerald-300 hover:underline transition">Sign In</Link>
+        <p className="text-center text-sm text-violet-100/50 mt-6">
+          Already have an account? <Link to="/?login=true" className="text-violet-400 font-semibold hover:text-violet-300 hover:underline transition">Sign In</Link>
         </p>
 
-        <p className="text-center text-[10px] text-emerald-100/30 uppercase tracking-widest mt-6">
+        <p className="text-center text-[10px] text-violet-100/30 uppercase tracking-widest mt-6">
           Your AI tutor will personalize your experience
         </p>
       </div>

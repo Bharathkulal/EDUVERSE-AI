@@ -225,10 +225,14 @@ export default function WatchDemoModal({ isOpen, onClose }) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
 
-  // Window width tracking for fluid responsive scaling of device mockups
+  // Window width and height tracking for fluid responsive scaling of device mockups
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+      setWindowHeight(window.innerHeight);
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -252,7 +256,10 @@ export default function WatchDemoModal({ isOpen, onClose }) {
       height = isPortrait ? 600 : 300;
     }
     const maxAllowedWidth = Math.min(windowWidth - 64, 1100);
-    const scale = maxAllowedWidth < width ? maxAllowedWidth / width : 1;
+    const maxAllowedHeight = Math.max(250, windowHeight - 320);
+    const scaleWidth = maxAllowedWidth < width ? maxAllowedWidth / width : 1;
+    const scaleHeight = maxAllowedHeight < height ? maxAllowedHeight / height : 1;
+    const scale = Math.max(0.45, Math.min(scaleWidth, scaleHeight, 1));
     return { width, height, scale };
   };
   const { height: baseHeight, scale: deviceScale } = getDeviceDimensions();
@@ -412,7 +419,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex justify-center items-start overflow-y-auto p-4 md:p-6 bg-black/95 backdrop-blur-xl custom-sidebar-scroll">
+      <div className="fixed inset-0 z-50 flex justify-center items-center p-4 md:p-6 bg-black/95 backdrop-blur-xl">
         
         {/* Floating gradient mesh background particles */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30">
@@ -426,7 +433,7 @@ export default function WatchDemoModal({ isOpen, onClose }) {
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="relative w-full max-w-6xl bg-slate-950/85 border border-white/10 rounded-3xl overflow-hidden shadow-2xl p-5 md:p-6 flex flex-col justify-between my-auto z-10"
+          className="relative w-full max-w-6xl bg-slate-950/85 border border-white/10 rounded-3xl shadow-2xl p-5 md:p-6 flex flex-col justify-between my-auto z-10 max-h-[90vh] overflow-y-auto custom-sidebar-scroll"
         >
           {/* HEADER AREA */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/10 pb-6 mb-6">
