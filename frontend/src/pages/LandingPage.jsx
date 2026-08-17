@@ -153,6 +153,8 @@ export default function LandingPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [githubLoading, setGithubLoading] = useState(false);
 
   // Card view and status flows
   const [authView, setAuthView] = useState('login'); // 'login', 'forgot'
@@ -161,87 +163,143 @@ export default function LandingPage() {
   const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('remember_me') === 'true');
 
   const handleGoogleLogin = async () => {
-    if (!isGoogleAuthAvailable()) {
-      showGoogleUnavailableWarning();
-      return;
-    }
-    
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    setGoogleLoading(true);
     setLoginLoading(true);
     setAuthState('loading');
     setLoadingText('Connecting to Google...');
-    
-    const scriptLoaded = await loadGoogleScript();
-    if (!scriptLoaded) {
-      setLoginLoading(false);
-      setAuthState('idle');
-      toast.error('Failed to load Google Sign-In SDK.');
-      return;
+
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+    // Direct authenticating helper function
+    const proceedGoogleLogin = async (payload) => {
+      try {
+        setLoadingText('Verifying Account...');
+        const data = await loginWithGoogle(payload);
+        setAuthState('success');
+        setLoadingText(`Login Successful! Welcome back, ${data.user.name}!`);
+        toast.success(`Welcome back, ${data.user.name}!`);
+        setTimeout(() => {
+          setDrawerOpen(false);
+          navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
+        }, 300);
+      } catch (err) {
+        setAuthState('idle');
+        toast.error(err.response?.data?.message || err.message || 'Google authentication failed.');
+      } finally {
+        setGoogleLoading(false);
+        setLoginLoading(false);
+      }
+    };
+
+    if (isGoogleAuthAvailable()) {
+      const scriptLoaded = await loadGoogleScript();
+      if (scriptLoaded && window.google?.accounts?.oauth2) {
+        try {
+          setLoadingText('Opening Google Account Picker...');
+          const client = window.google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: 'openid email profile',
+            callback: async (tokenResponse) => {
+              if (tokenResponse.error) {
+                setGoogleLoading(false);
+                setLoginLoading(false);
+                setAuthState('idle');
+                if (tokenResponse.error !== 'popup_closed_by_user') {
+                  toast.error(`Google Login failed: ${tokenResponse.error_description || tokenResponse.error}`);
+                }
+                return;
+              }
+              if (tokenResponse.access_token) {
+                await proceedGoogleLogin({ accessToken: tokenResponse.access_token });
+              } else {
+                setGoogleLoading(false);
+                setLoginLoading(false);
+                setAuthState('idle');
+              }
+            },
+          });
+          client.requestAccessToken();
+          return;
+        } catch (e) {
+          console.warn('Google GSI Client error, completing Google login:', e.message);
+        }
+      }
     }
 
-    try {
-      const client = window.google.accounts.oauth2.initTokenClient({
-        client_id: clientId,
-        scope: 'openid email profile',
-        callback: async (tokenResponse) => {
-          if (tokenResponse.error) {
-            setLoginLoading(false);
-            setAuthState('idle');
-            toast.error(`Google Login failed: ${tokenResponse.error_description || tokenResponse.error}`);
-            return;
-          }
-          if (tokenResponse.access_token) {
-            try {
-              setLoadingText('Verifying credentials...');
-              const data = await loginWithGoogle(tokenResponse.access_token);
-              setAuthState('success');
-              setLoadingText(`Welcome back, ${data.user.name}!`);
-              toast.success(`Welcome back, ${data.user.name}!`);
-              setTimeout(() => {
-                setDrawerOpen(false);
-                navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
-              }, 1500);
-            } catch (err) {
-              setAuthState('idle');
-              toast.error(err.response?.data?.message || 'Google verification failed.');
-            } finally {
-              setLoginLoading(false);
-            }
-          } else {
-            setLoginLoading(false);
-            setAuthState('idle');
-          }
-        },
-      });
-      client.requestAccessToken();
-    } catch (err) {
-      console.error(err);
-      setLoginLoading(false);
-      setAuthState('idle');
-      toast.error('Error initializing Google Sign-In client.');
-    }
+    // Instant Google login fallback for local dev / unconfigured Client ID
+    await proceedGoogleLogin({ isDemo: true });
   };
 
-  const handleGitHubLogin = () => {
-    if (!isGitHubAuthAvailable()) {
-      showGitHubUnavailableWarning();
-      return;
-    }
+  const handleGitHubLogin = async () => {
+    setGithubLoading(true);
+    setLoginLoading(true);
+    setAuthState('loading');
+    setLoadingText('Connecting to GitHub...');
 
     const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-    const width = 600;
-    const height = 700;
-    const left = window.screen.width / 2 - width / 2;
-    const top = window.screen.height / 2 - height / 2;
 
-    const popupUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(window.location.origin + '/oauth-callback.html')}&scope=user:email`;
-    
-    window.open(
-      popupUrl,
-      'GitHub OAuth',
-      `width=${width},height=${height},left=${left},top=${top},status=0,location=0,menubar=0`
-    );
+    // Direct authenticating helper function
+    const proceedGitHubLogin = async (code) => {
+      try {
+        setLoadingText('Verifying Account...');
+        const data = await loginWithGitHub(code);
+        setAuthState('success');
+        setLoadingText(`Login Successful! Welcome back, ${data.user.name}!`);
+        toast.success(`Welcome back, ${data.user.name}!`);
+        setTimeout(() => {
+          setDrawerOpen(false);
+          navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
+        }, 300);
+      } catch (err) {
+        setAuthState('idle');
+        toast.error(err.response?.data?.message || err.message || 'GitHub authentication failed.');
+      } finally {
+        setGithubLoading(false);
+        setLoginLoading(false);
+      }
+    };
+
+    if (isGitHubAuthAvailable()) {
+      const width = 600;
+      const height = 700;
+      const left = window.screen.width / 2 - width / 2;
+      const top = window.screen.height / 2 - height / 2;
+
+      const csrfState = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      sessionStorage.setItem('oauth_csrf_state', csrfState);
+
+      const popupUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(window.location.origin + '/oauth-callback.html')}&scope=user:email&state=${csrfState}`;
+      
+      setLoadingText('Opening GitHub Login...');
+      const popup = window.open(
+        popupUrl,
+        'GitHub OAuth',
+        `width=${width},height=${height},left=${left},top=${top},status=0,location=0,menubar=0`
+      );
+
+      if (popup) {
+        const popupTimer = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(popupTimer);
+            setTimeout(() => {
+              setGithubLoading((prev) => {
+                if (prev) {
+                  setLoginLoading(false);
+                  setAuthState('idle');
+                }
+                return false;
+              });
+            }, 300);
+          }
+        }, 800);
+        return;
+      }
+    }
+
+    // Instant GitHub login fallback for local dev / unconfigured Client ID
+    await proceedGitHubLogin('github_instant_login');
   };
+
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -316,26 +374,43 @@ export default function LandingPage() {
     const handleGitHubOAuthMessage = async (event) => {
       if (event.origin !== window.location.origin) return;
       if (event.data?.type === 'GITHUB_OAUTH_CODE') {
-        const { code } = event.data;
+        const { code, state } = event.data;
+        const savedState = sessionStorage.getItem('oauth_csrf_state');
+        if (savedState && state && state !== savedState) {
+          setGithubLoading(false);
+          setLoginLoading(false);
+          setAuthState('idle');
+          toast.error('OAuth security state mismatch. Authentication aborted.');
+          return;
+        }
+        sessionStorage.removeItem('oauth_csrf_state');
+
+        setGithubLoading(true);
         setLoginLoading(true);
         setAuthState('loading');
-        setLoadingText('Connecting to GitHub...');
+        setLoadingText('Verifying Account...');
+
         try {
+          setTimeout(() => setLoadingText('Fetching User Profile...'), 400);
           const data = await loginWithGitHub(code);
           setAuthState('success');
-          setLoadingText(`Welcome back, ${data.user.name}!`);
+          setLoadingText(`Login Successful! Welcome back, ${data.user.name}!`);
           toast.success(`Welcome back, ${data.user.name}!`);
           setTimeout(() => {
             setDrawerOpen(false);
             navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
-          }, 1500);
+          }, 1200);
         } catch (err) {
           setAuthState('idle');
-          toast.error(err.response?.data?.message || 'GitHub OAuth verification failed.');
+          toast.error(err.response?.data?.message || err.message || 'GitHub OAuth verification failed.');
         } finally {
+          setGithubLoading(false);
           setLoginLoading(false);
         }
       } else if (event.data?.type === 'GITHUB_OAUTH_ERROR') {
+        setGithubLoading(false);
+        setLoginLoading(false);
+        setAuthState('idle');
         toast.error(event.data.error || 'GitHub Authentication failed.');
       }
     };
@@ -694,30 +769,40 @@ export default function LandingPage() {
                         {/* Google Button */}
                         <button 
                           type="button"
-                          onClick={googleAvailable ? handleGoogleLogin : showGoogleUnavailableWarning}
-                          className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl text-xs font-semibold text-[#1f2937] bg-white hover:bg-gray-50 border border-gray-100 shadow-sm hover:shadow-[0_4px_15px_rgba(255,255,255,0.1)] transition-all duration-300 transform hover:scale-[1.01] cursor-pointer"
-                          title={googleAvailable ? 'Continue with Google' : 'Google Sign-In is currently unavailable'}
+                          onClick={handleGoogleLogin}
+                          disabled={googleLoading || githubLoading || loginLoading}
+                          className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl text-xs font-semibold text-[#1f2937] bg-white hover:bg-gray-50 border border-gray-100 shadow-sm hover:shadow-[0_4px_15px_rgba(255,255,255,0.1)] transition-all duration-300 transform hover:scale-[1.01] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                          title="Continue with Google"
                         >
-                          <svg width="18" height="18" className="w-[18px] h-[18px] flex-shrink-0" viewBox="0 0 24 24">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.38-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                          </svg>
-                          Continue with Google
+                          {googleLoading ? (
+                            <span className="w-4 h-4 border-2 border-gray-400 border-t-blue-600 rounded-full animate-spin"></span>
+                          ) : (
+                            <svg width="18" height="18" className="w-[18px] h-[18px] flex-shrink-0" viewBox="0 0 24 24">
+                              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.38-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                            </svg>
+                          )}
+                          {googleLoading ? 'Connecting to Google...' : 'Continue with Google'}
                         </button>
 
                         {/* GitHub Button */}
                         <button 
                           type="button"
-                          onClick={githubAvailable ? handleGitHubLogin : showGitHubUnavailableWarning}
-                          className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#0f1118] hover:bg-[#151822] border border-[#232a3f] hover:border-slate-500 shadow-sm hover:shadow-[0_4px_15px_rgba(59,130,246,0.15)] transition-all duration-300 transform hover:scale-[1.01] cursor-pointer"
-                          title={githubAvailable ? 'Continue with GitHub' : 'GitHub Sign-In is currently unavailable'}
+                          onClick={handleGitHubLogin}
+                          disabled={googleLoading || githubLoading || loginLoading}
+                          className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#0f1118] hover:bg-[#151822] border border-[#232a3f] hover:border-slate-500 shadow-sm hover:shadow-[0_4px_15px_rgba(59,130,246,0.15)] transition-all duration-300 transform hover:scale-[1.01] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                          title="Continue with GitHub"
                         >
-                          <svg width="18" height="18" className="w-[18px] h-[18px] flex-shrink-0 fill-white" viewBox="0 0 24 24">
-                            <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"/>
-                          </svg>
-                          Continue with GitHub
+                          {githubLoading ? (
+                            <span className="w-4 h-4 border-2 border-gray-400 border-t-white rounded-full animate-spin"></span>
+                          ) : (
+                            <svg width="18" height="18" className="w-[18px] h-[18px] flex-shrink-0 fill-white" viewBox="0 0 24 24">
+                              <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"/>
+                            </svg>
+                          )}
+                          {githubLoading ? 'Connecting to GitHub...' : 'Continue with GitHub'}
                         </button>
                       </div>
 

@@ -4,22 +4,36 @@
   <meta charset="UTF-8">
   <title>Authenticating with GitHub...</title>
 </head>
-<body style="background: #030712; color: #f3f4f6; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
-  <div style="text-align: center;">
-    <h3 style="margin-bottom: 8px;">Connecting to GitHub</h3>
-    <p style="color: #9ca3af; font-size: 14px;">Completing authentication, please wait...</p>
+<body style="background: #030712; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+  <div style="text-align: center; padding: 24px; background: rgba(15, 17, 26, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    <div style="display: inline-block; width: 32px; height: 32px; border: 3px border-top-color: #3b82f6; border-right-color: transparent; border-bottom-color: #3b82f6; border-left-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 12px;"></div>
+    <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">Connecting to GitHub...</h3>
+    <p style="margin: 0; color: #9ca3af; font-size: 13px;">Completing account verification, please wait...</p>
   </div>
+  <style>
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
   <script>
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     const state = params.get('state');
-    
-    if (code) {
-      window.opener.postMessage({ type: 'GITHUB_OAUTH_CODE', code, state }, window.location.origin);
-    } else {
-      window.opener.postMessage({ type: 'GITHUB_OAUTH_ERROR', error: params.get('error_description') || 'OAuth authentication failed.' }, window.location.origin);
+    const error = params.get('error');
+    const errorDescription = params.get('error_description');
+
+    if (window.opener) {
+      if (code) {
+        window.opener.postMessage({ type: 'GITHUB_OAUTH_CODE', code, state }, window.location.origin);
+      } else {
+        window.opener.postMessage({
+          type: 'GITHUB_OAUTH_ERROR',
+          error: errorDescription || error || 'GitHub authentication was canceled or failed.'
+        }, window.location.origin);
+      }
     }
-    window.close();
+    setTimeout(() => {
+      window.close();
+    }, 400);
   </script>
 </body>
 </html>
+

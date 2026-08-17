@@ -3,8 +3,6 @@ import toast from 'react-hot-toast';
 let googleAuthAvailable = false;
 let githubAuthAvailable = false;
 let isInitialized = false;
-let googleWarningShown = false;
-let githubWarningShown = false;
 
 /**
  * Validates frontend environment variables on startup.
@@ -25,7 +23,7 @@ export function validateEnvironment() {
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   if (!googleClientId) {
-    console.warn("%c⚠ VITE_GOOGLE_CLIENT_ID is missing. Google Sign-In will be disabled.", "color: #f59e0b;");
+    console.warn("%c⚠ VITE_GOOGLE_CLIENT_ID is missing. Google Sign-In requires VITE_GOOGLE_CLIENT_ID in frontend/.env", "color: #f59e0b;");
     googleAuthAvailable = false;
   } else {
     console.log("%c✔ VITE_GOOGLE_CLIENT_ID detected.", "color: #10b981;");
@@ -34,7 +32,7 @@ export function validateEnvironment() {
 
   const githubClientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
   if (!githubClientId) {
-    console.warn("%c⚠ VITE_GITHUB_CLIENT_ID is missing. GitHub Sign-In will be disabled.", "color: #f59e0b;");
+    console.warn("%c⚠ VITE_GITHUB_CLIENT_ID is missing. GitHub Sign-In requires VITE_GITHUB_CLIENT_ID in frontend/.env", "color: #f59e0b;");
     githubAuthAvailable = false;
   } else {
     console.log("%c✔ VITE_GITHUB_CLIENT_ID detected.", "color: #10b981;");
@@ -46,65 +44,33 @@ export function validateEnvironment() {
 }
 
 /**
- * Check if Google Authentication is fully configured.
+ * Check if Google Authentication Client ID is set.
  */
 export function isGoogleAuthAvailable() {
-  if (!isInitialized) {
-    validateEnvironment();
-  }
-  return googleAuthAvailable;
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  return Boolean(googleClientId && googleClientId.trim().length > 0);
 }
 
 /**
- * Check if GitHub Authentication is fully configured.
+ * Check if GitHub Authentication Client ID is set.
  */
 export function isGitHubAuthAvailable() {
-  if (!isInitialized) {
-    validateEnvironment();
-  }
-  return githubAuthAvailable;
+  const githubClientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+  return Boolean(githubClientId && githubClientId.trim().length > 0);
 }
 
 /**
- * Triggers a singleton error notification indicating Google OAuth is unconfigured.
+ * Developer diagnostic function for Google OAuth environment check.
  */
 export function showGoogleUnavailableWarning() {
-  if (googleWarningShown) return;
-  googleWarningShown = true;
-
-  toast.error("Google Sign-In is currently unavailable.", {
-    id: "google-client-id-missing-warning", // Unique ID ensures toast is a singleton
-    duration: 5000,
-    style: {
-      background: '#0f111a',
-      color: '#fff',
-      border: '1px solid rgba(239, 68, 68, 0.2)'
-    }
-  });
-
-  setTimeout(() => {
-    googleWarningShown = false;
-  }, 6000);
+  console.warn("[OAuth Audit] VITE_GOOGLE_CLIENT_ID is not configured in frontend/.env.");
 }
 
 /**
- * Triggers a singleton error notification indicating GitHub OAuth is unconfigured.
+ * Developer diagnostic function for GitHub OAuth environment check.
  */
 export function showGitHubUnavailableWarning() {
-  if (githubWarningShown) return;
-  githubWarningShown = true;
-
-  toast.error("GitHub Sign-In is currently unavailable.", {
-    id: "github-client-id-missing-warning", // Unique ID ensures toast is a singleton
-    duration: 5000,
-    style: {
-      background: '#0f111a',
-      color: '#fff',
-      border: '1px solid rgba(239, 68, 68, 0.2)'
-    }
-  });
-
-  setTimeout(() => {
-    githubWarningShown = false;
-  }, 6000);
+  console.warn("[OAuth Audit] VITE_GITHUB_CLIENT_ID is not configured in frontend/.env.");
 }
+
+
