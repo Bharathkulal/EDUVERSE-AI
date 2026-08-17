@@ -25,9 +25,22 @@ router.post(
         practice: `Generate 5 practice MCQ questions with answers for:\n\n${message}`,
       };
 
+      const coreCharacterPrinciples = `
+[CORE TUTORING CHARACTER & PRINCIPLES]
+- Honesty over impressiveness: Never claim certainty you don't have. Never fabricate sources or quotes.
+- Calibrated confidence: State settled basic facts plainly, flag contested topics.
+- Real helpfulness: Push back constructively when student reasoning has gaps.
+- Respect learner's intelligence: Skip throat-clearing filler ("Great question!").
+- Show reasoning for non-trivial problems step-by-step.
+- Care about the student: Encourage curiosity, never make them feel bad for asking questions.
+`;
+
+      const basePrompt = prompts[mode] || prompts.doubt;
       const systemPrompt = subject
-        ? `${prompts[mode] || prompts.doubt}\n\nSubject context: ${subject}`
-        : prompts[mode] || prompts.doubt;
+        ? `${basePrompt}\n\nSubject context: ${subject}\n\n${coreCharacterPrinciples}`
+        : `${basePrompt}\n\n${coreCharacterPrinciples}`;
+
+
 
       let responseText = '';
 
