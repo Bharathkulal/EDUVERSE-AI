@@ -97,6 +97,7 @@ const AdminPredictions = lazy(() => import('./pages/admin/AdminPredictions'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const AdminVoiceLogs = lazy(() => import('./pages/admin/AdminVoiceLogs'));
 const AdminContentStudio = lazy(() => import('./pages/admin/AdminContentStudio'));
+const AdminExamStudio = lazy(() => import('./pages/admin/AdminExamStudio'));
 // Other Components
 const DBMSLab = lazy(() => import('./components/DBMSLab'));
 
@@ -222,6 +223,7 @@ export default function App() {
 
             <Route path="/admin" element={<ProtectedRoute adminOnly><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
             <Route path="/admin/students" element={<ProtectedRoute adminOnly><Layout><AdminStudents /></Layout></ProtectedRoute>} />
+            <Route path="/admin/exam-papers" element={<ProtectedRoute adminOnly><Layout><AdminExamStudio /></Layout></ProtectedRoute>} />
             <Route path="/admin/content" element={<ProtectedRoute adminOnly><Layout><AdminContentStudio /></Layout></ProtectedRoute>} />
             <Route path="/admin/study-materials" element={<ProtectedRoute adminOnly><Layout><AdminContentStudio /></Layout></ProtectedRoute>} />
             <Route path="/admin/quizzes" element={<ProtectedRoute adminOnly><Layout><AdminQuizzes /></Layout></ProtectedRoute>} />

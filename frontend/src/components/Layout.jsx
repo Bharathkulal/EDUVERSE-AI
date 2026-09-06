@@ -36,6 +36,7 @@ const studentNav = [
 const adminNav = [
   { path: '/admin', label: 'Dashboard', icon: '🏠' },
   { path: '/admin/students', label: 'Students', icon: '👨‍🎓' },
+  { path: '/admin/exam-papers', label: 'Exam Papers Studio', icon: '📝' },
   { path: '/admin/content', label: 'Content Studio', icon: '📚' },
   { path: '/admin/quizzes', label: 'Quiz Intelligence', icon: '📝' },
   { path: '/admin/dataset', label: 'AI Data Center', icon: '🗂' },
@@ -56,7 +57,7 @@ const TOP_LEVEL_PATHS = [
   '/progress', '/certificates', '/study-report', '/ml-analytics', '/ai-profile', '/question-bank',
   '/voice-assistant', '/settings', '/community', '/career-hub', '/study-materials',
   '/exam-command', '/it-suite', '/techverse', '/chat-learn',
-  '/admin', '/admin/students', '/admin/content', '/admin/quizzes',
+  '/admin', '/admin/students', '/admin/exam-papers', '/admin/content', '/admin/quizzes',
   '/admin/dataset', '/admin/ml', '/admin/questions',
   '/admin/logs', '/admin/reviews', '/admin/analytics', '/admin/alerts',
   '/admin/predictions', '/admin/settings',

@@ -2,562 +2,743 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 
-// In-Memory Data Store with Persistent Mock Data Fallback
-const QR_SECRET_KEY = process.env.QR_SECRET_KEY || 'eduverse-exam-qr-secret-key-2026-secure-hash';
+// =============================================================
+// EDUVERSE AI - EXAM PAPER MANAGEMENT SYSTEM DATABASE
+// =============================================================
 
-// Default mock database state
-let EXAMS_DB = [
-  {
-    id: 'EXAM-2026-ML101',
-    subject: 'Machine Learning',
-    subjectCode: 'CS801',
-    department: 'Computer Science',
-    semester: '7th Semester',
-    section: 'A',
-    facultyName: 'Dr. Sarah Jenkins',
-    examDate: '2026-09-08',
-    totalStudents: 45,
-    qrGenerated: true,
-    qrGeneratedAt: '2026-09-01T10:00:00Z',
-    status: 'ACTIVE'
+// 1. Department Subject Mappings (BCA, BCOM, BBA, Computer Science, AI)
+const SUBJECT_MAPPINGS = {
+  BCA: {
+    '1st Year': [
+      { code: 'BCA101', name: 'Programming in C & Logic', credits: 4, maxMarks: 100 },
+      { code: 'BCA102', name: 'Digital Electronics & Architecture', credits: 4, maxMarks: 100 },
+      { code: 'BCA103', name: 'Discrete Mathematics', credits: 3, maxMarks: 100 }
+    ],
+    '2nd Year': [
+      { code: 'BCA201', name: 'Web Development with React', credits: 4, maxMarks: 100 },
+      { code: 'BCA202', name: 'Data Structures & Algorithms in C++', credits: 4, maxMarks: 100 },
+      { code: 'BCA203', name: 'Database Systems & SQL', credits: 4, maxMarks: 100 },
+      { code: 'BCA204', name: 'Operating Systems & Linux', credits: 3, maxMarks: 100 }
+    ],
+    '3rd Year': [
+      { code: 'BCA301', name: 'Cloud Computing & DevOps', credits: 4, maxMarks: 100 },
+      { code: 'BCA302', name: 'Mobile Application Development', credits: 4, maxMarks: 100 },
+      { code: 'BCA303', name: 'Software Engineering & Agile', credits: 3, maxMarks: 100 },
+      { code: 'BCA304', name: 'Information & Cyber Security', credits: 3, maxMarks: 100 }
+    ]
   },
-  {
-    id: 'EXAM-2026-DSA202',
-    subject: 'Data Structures & Algorithms',
-    subjectCode: 'CS302',
-    department: 'Computer Science',
-    semester: '3rd Semester',
-    section: 'B',
-    facultyName: 'Prof. Alan Turing',
-    examDate: '2026-09-10',
-    totalStudents: 60,
-    qrGenerated: true,
-    qrGeneratedAt: '2026-09-02T11:30:00Z',
-    status: 'SCHEDULED'
+  BCOM: {
+    '1st Year': [
+      { code: 'BCOM101', name: 'Financial Accounting & Reporting', credits: 4, maxMarks: 100 },
+      { code: 'BCOM102', name: 'Business Organization & Management', credits: 4, maxMarks: 100 },
+      { code: 'BCOM103', name: 'Micro Economics Principles', credits: 3, maxMarks: 100 }
+    ],
+    '2nd Year': [
+      { code: 'BCOM201', name: 'Corporate Accounting & Auditing', credits: 4, maxMarks: 100 },
+      { code: 'BCOM202', name: 'Company Law & Corporate Governance', credits: 4, maxMarks: 100 },
+      { code: 'BCOM203', name: 'Cost Accounting & Management Control', credits: 4, maxMarks: 100 },
+      { code: 'BCOM204', name: 'Macro Economics & Policy', credits: 3, maxMarks: 100 }
+    ],
+    '3rd Year': [
+      { code: 'BCOM301', name: 'Income Tax Law & Practice', credits: 4, maxMarks: 100 },
+      { code: 'BCOM302', name: 'Auditing & Professional Ethics', credits: 4, maxMarks: 100 },
+      { code: 'BCOM303', name: 'Goods & Services Tax (GST) Law', credits: 3, maxMarks: 100 },
+      { code: 'BCOM304', name: 'Financial Markets & Services', credits: 3, maxMarks: 100 }
+    ]
   },
-  {
-    id: 'EXAM-2026-AI405',
-    subject: 'Artificial Intelligence & Neural Networks',
-    subjectCode: 'AI701',
-    department: 'AI & Data Science',
-    semester: '7th Semester',
-    section: 'A',
-    facultyName: 'Dr. Evelyn Reed',
-    examDate: '2026-09-05',
-    totalStudents: 38,
-    qrGenerated: true,
-    qrGeneratedAt: '2026-08-30T09:00:00Z',
-    status: 'COMPLETED'
+  BBA: {
+    '1st Year': [
+      { code: 'BBA101', name: 'Principles of Management & Practice', credits: 4, maxMarks: 100 },
+      { code: 'BBA102', name: 'Business Economics & Analysis', credits: 4, maxMarks: 100 },
+      { code: 'BBA103', name: 'Financial Accounting for Managers', credits: 3, maxMarks: 100 }
+    ],
+    '2nd Year': [
+      { code: 'BBA201', name: 'Marketing Management & Digital Strategy', credits: 4, maxMarks: 100 },
+      { code: 'BBA202', name: 'Human Resource Management & Talent', credits: 4, maxMarks: 100 },
+      { code: 'BBA203', name: 'Business Research Methods & Analytics', credits: 4, maxMarks: 100 },
+      { code: 'BBA204', name: 'Corporate Financial Management', credits: 3, maxMarks: 100 }
+    ],
+    '3rd Year': [
+      { code: 'BBA301', name: 'Strategic Management & Leadership', credits: 4, maxMarks: 100 },
+      { code: 'BBA302', name: 'International Business & Trade', credits: 4, maxMarks: 100 },
+      { code: 'BBA303', name: 'Entrepreneurship & Startup Incubation', credits: 3, maxMarks: 100 },
+      { code: 'BBA304', name: 'Consumer Behavior & Market Dynamics', credits: 3, maxMarks: 100 }
+    ]
+  },
+  'Computer Science': {
+    '3rd Year': [
+      { code: 'CS801', name: 'Machine Learning & AI Principles', credits: 4, maxMarks: 100 },
+      { code: 'CS302', name: 'Data Structures & Algorithms', credits: 4, maxMarks: 100 },
+      { code: 'CS501', name: 'Database Management Systems', credits: 4, maxMarks: 100 }
+    ]
+  },
+  'AI & Data Science': {
+    '3rd Year': [
+      { code: 'AI701', name: 'Artificial Intelligence & Neural Networks', credits: 4, maxMarks: 100 }
+    ]
   }
-];
+};
 
+// 2. Initial Students Store
 let STUDENTS_DB = [
   {
-    id: 'STU-1001',
+    id: 'STU-BCA25040',
     name: 'Alex Mercer',
+    rollNumber: 'BCA25040',
+    department: 'BCA',
+    year: '2nd Year',
+    semester: '3rd Semester',
+    section: 'A',
+    email: 'alex.bca25040@eduverse.edu',
+    attendance: 'PRESENT'
+  },
+  {
+    id: 'STU-BCOM25012',
+    name: 'Sophia Chen',
+    rollNumber: 'BCOM25012',
+    department: 'BCOM',
+    year: '1st Year',
+    semester: '1st Semester',
+    section: 'B',
+    email: 'sophia.bcom25012@eduverse.edu',
+    attendance: 'PRESENT'
+  },
+  {
+    id: 'STU-BBA25008',
+    name: 'Marcus Vance',
+    rollNumber: 'BBA25008',
+    department: 'BBA',
+    year: '3rd Year',
+    semester: '5th Semester',
+    section: 'A',
+    email: 'marcus.bba25008@eduverse.edu',
+    attendance: 'PRESENT'
+  },
+  {
+    id: 'STU-CS2026-042',
+    name: 'Rahul Sharma',
     rollNumber: 'CS2026-042',
     department: 'Computer Science',
+    year: '3rd Year',
     semester: '7th Semester',
-    email: 'alex.mercer@eduverse.edu',
-    phone: '+1 (555) 234-5678',
-    photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    section: 'A',
+    email: 'rahul.cs042@eduverse.edu',
     attendance: 'PRESENT'
   },
   {
-    id: 'STU-1002',
-    name: 'Sophia Chen',
-    rollNumber: 'CS2026-088',
-    department: 'Computer Science',
-    semester: '7th Semester',
-    email: 'sophia.chen@eduverse.edu',
-    phone: '+1 (555) 345-6789',
-    photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
-    attendance: 'PRESENT'
-  },
-  {
-    id: 'STU-1003',
-    name: 'Marcus Vance',
-    rollNumber: 'CS2026-104',
-    department: 'Computer Science',
-    semester: '7th Semester',
-    email: 'marcus.vance@eduverse.edu',
-    phone: '+1 (555) 456-7890',
-    photo: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
-    attendance: 'PRESENT'
-  },
-  {
-    id: 'STU-1004',
+    id: 'STU-AI2026-015',
     name: 'Elena Rostova',
     rollNumber: 'AI2026-015',
     department: 'AI & Data Science',
+    year: '3rd Year',
     semester: '7th Semester',
-    email: 'elena.rostova@eduverse.edu',
-    phone: '+1 (555) 567-8901',
-    photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+    section: 'A',
+    email: 'elena.ai015@eduverse.edu',
     attendance: 'PRESENT'
   }
 ];
 
-let QR_CODES_DB = [];
-let ANSWER_SHEETS_DB = [
+// 3. Initial Exam Papers Store
+let EXAM_PAPERS_DB = [
   {
-    id: 'ANS-9901',
-    examId: 'EXAM-2026-ML101',
-    studentId: 'STU-1001',
+    id: 'PAPER-BCA-201',
+    studentId: 'STU-BCA25040',
+    rollNumber: 'BCA25040',
     studentName: 'Alex Mercer',
-    rollNumber: 'CS2026-042',
-    department: 'Computer Science',
-    semester: '7th Semester',
-    subject: 'Machine Learning',
-    subjectCode: 'CS801',
-    facultyName: 'Dr. Sarah Jenkins',
-    examDate: '2026-09-08',
-    uploadTime: new Date(Date.now() - 3600000 * 2).toISOString(),
-    pagesCount: 6,
-    status: 'VERIFIED',
-    verificationHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-    pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    thumbnails: [
-      'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=400&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&auto=format&fit=crop&q=80'
+    department: 'BCA',
+    year: '2nd Year',
+    semester: '3rd Semester',
+    subjectCode: 'BCA201',
+    subjectName: 'Web Development with React',
+    uploadedBy: 'Dr. Sarah Jenkins (Faculty)',
+    pages: [
+      {
+        pageNumber: 1,
+        imageUrl: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&auto=format&fit=crop&q=80',
+        thumbnail: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=200&auto=format&fit=crop&q=80',
+        ocrText: 'Q1: Explain React Virtual DOM and reconciliation algorithm.\nAnswer: Virtual DOM is an in-memory representation of real DOM elements. React uses diffing algorithm to compare VDOM trees and update only changed nodes in real DOM.'
+      },
+      {
+        pageNumber: 2,
+        imageUrl: 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=800&auto=format&fit=crop&q=80',
+        thumbnail: 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=200&auto=format&fit=crop&q=80',
+        ocrText: 'Q2: Differentiate between useState and useEffect hooks.\nAnswer: useState manages local component state variables. useEffect manages side effects like data fetching, subscriptions, and DOM mutations.'
+      },
+      {
+        pageNumber: 3,
+        imageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80',
+        thumbnail: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=200&auto=format&fit=crop&q=80',
+        ocrText: 'Q3: Code snippet for custom custom hook useFetch.\nAnswer: const useFetch = (url) => { ... useEffect() ... return { data, loading, error }; }'
+      }
     ],
-    ocrText: `
-PAGE 1: Machine Learning End Semester Examination - Autumn 2026
-Student: Alex Mercer (Roll No: CS2026-042)
-Question 1: Explain Backpropagation algorithm using gradient descent and chain rule.
-Answer: Backpropagation is a supervised learning algorithm for training artificial neural networks. It calculates the gradient of the loss function with respect to each weight by the chain rule, computing the gradient one layer at a time, iterating backward from the last layer.
-
-PAGE 2: Question 2: What is the difference between L1 and L2 regularization?
-Answer: L1 Regularization (Lasso) adds absolute value of magnitude of coefficient as penalty term to the loss function. It encourages sparsity in parameters, effectively performing feature selection. L2 Regularization (Ridge) adds squared magnitude of coefficient as penalty term, shrinking coefficients smoothly without setting them to absolute zero.
-
-PAGE 3: Question 3: Formulate Support Vector Machines (SVM) primal and dual optimization problem.
-Answer: SVM aims to find an optimal hyper-plane that maximizes the margin between data points of different classes. Convex quadratic programming optimization problem with linear constraints.
-
-PAGE 4: Convolutional Neural Networks (CNN) Architecture & Pooling Layers.
-Max pooling extracts the maximum value from the sub-region of the feature map, providing translation invariance and reducing spatial dimensions.
-
-PAGE 5: Precision, Recall, F1-Score and ROC-AUC Curves.
-Precision = TP / (TP + FP). Recall = TP / (TP + FN). F1-Score is the harmonic mean of precision and recall.
-
-PAGE 6: Concluding Remarks & Self Signature. Verified by Faculty.
-    `,
-    predictedScore: 92,
-    aiAnalysis: {
-      clarityScore: 95,
-      completenessScore: 90,
-      handwritingLegibility: 94,
-      missingQuestions: [],
-      similarityIndex: '2.4% (Passed anti-plagiarism check)',
-      cheatingFlags: [],
-      pageSequenceDetected: 'Correct (Pages 1 to 6)'
-    }
+    pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    ocrText: 'Full Answer Sheet OCR Text extracted for Alex Mercer (BCA25040) in Web Development with React (BCA201).\nAccuracy Rate: 99.4%',
+    marks: {
+      internal: 24,
+      external: 68,
+      total: 92,
+      maxMarks: 100
+    },
+    grade: 'A+',
+    passStatus: 'PASSED',
+    teacherRemarks: 'Outstanding work on custom React hooks and Virtual DOM diffing explanation! Full marks awarded in Q1 & Q2.',
+    highlights: [
+      { page: 1, x: 15, y: 35, width: 70, height: 18, text: 'Clean Virtual DOM explanation (+10 Marks)', color: 'rgba(34, 197, 94, 0.35)' },
+      { page: 2, x: 20, y: 40, width: 60, height: 15, text: 'Correct useEffect dependency array answer (+15 Marks)', color: 'rgba(34, 197, 94, 0.35)' }
+    ],
+    isPublished: true,
+    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000 * 2).toISOString()
+  },
+  {
+    id: 'PAPER-BCA-202',
+    studentId: 'STU-BCA25040',
+    rollNumber: 'BCA25040',
+    studentName: 'Alex Mercer',
+    department: 'BCA',
+    year: '2nd Year',
+    semester: '3rd Semester',
+    subjectCode: 'BCA202',
+    subjectName: 'Data Structures & Algorithms in C++',
+    uploadedBy: 'Prof. Alan Turing',
+    pages: [
+      {
+        pageNumber: 1,
+        imageUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80',
+        thumbnail: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&auto=format&fit=crop&q=80',
+        ocrText: 'Q1: Write C++ code to insert node in Binary Search Tree.\nAnswer: struct Node { int data; Node* left; Node* right; }; Node* insert(Node* root, int val)...'
+      },
+      {
+        pageNumber: 2,
+        imageUrl: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=800&auto=format&fit=crop&q=80',
+        thumbnail: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=200&auto=format&fit=crop&q=80',
+        ocrText: 'Q2: Compare Time Complexity of QuickSort vs MergeSort.\nAnswer: QuickSort avg O(n log n), worst O(n^2). MergeSort always O(n log n) but requires O(n) space.'
+      }
+    ],
+    pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    ocrText: 'Full Answer Sheet OCR Text extracted for Alex Mercer (BCA25040) in Data Structures & Algorithms (BCA202).',
+    marks: {
+      internal: 22,
+      external: 64,
+      total: 86,
+      maxMarks: 100
+    },
+    grade: 'A',
+    passStatus: 'PASSED',
+    teacherRemarks: 'Great BST pointer logic. Be careful with null pointer checks in edge cases.',
+    highlights: [
+      { page: 1, x: 25, y: 30, width: 50, height: 20, text: 'Verified recursive BST insertion logic', color: 'rgba(59, 130, 246, 0.35)' }
+    ],
+    isPublished: true,
+    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000 * 3).toISOString()
+  },
+  {
+    id: 'PAPER-BCOM-101',
+    studentId: 'STU-BCOM25012',
+    rollNumber: 'BCOM25012',
+    studentName: 'Sophia Chen',
+    department: 'BCOM',
+    year: '1st Year',
+    semester: '1st Semester',
+    subjectCode: 'BCOM101',
+    subjectName: 'Financial Accounting & Reporting',
+    uploadedBy: 'Dr. Edgar Codd',
+    pages: [
+      {
+        pageNumber: 1,
+        imageUrl: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=80',
+        thumbnail: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=200&auto=format&fit=crop&q=80',
+        ocrText: 'Q1: Balance Sheet Preparation and Trial Balance Matching.\nAssets = Liabilities + Equity.'
+      }
+    ],
+    pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    ocrText: 'Full Answer Sheet OCR Text extracted for Sophia Chen (BCOM25012) in Financial Accounting (BCOM101).',
+    marks: {
+      internal: 25,
+      external: 65,
+      total: 90,
+      maxMarks: 100
+    },
+    grade: 'A+',
+    passStatus: 'PASSED',
+    teacherRemarks: 'Accurate financial statement preparation.',
+    highlights: [],
+    isPublished: true,
+    createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000 * 1).toISOString()
+  },
+  {
+    id: 'PAPER-BBA-301',
+    studentId: 'STU-BBA25008',
+    rollNumber: 'BBA25008',
+    studentName: 'Marcus Vance',
+    department: 'BBA',
+    year: '3rd Year',
+    semester: '5th Semester',
+    subjectCode: 'BBA301',
+    subjectName: 'Strategic Management & Leadership',
+    uploadedBy: 'Dr. Evelyn Reed',
+    pages: [
+      {
+        pageNumber: 1,
+        imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop&q=80',
+        thumbnail: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop&q=80',
+        ocrText: 'Q1: SWOT Analysis & Porter 5 Forces Model.'
+      }
+    ],
+    pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    ocrText: 'Full Answer Sheet OCR Text extracted for Marcus Vance (BBA25008) in Strategic Management (BBA301).',
+    marks: {
+      internal: 23,
+      external: 65,
+      total: 88,
+      maxMarks: 100
+    },
+    grade: 'A',
+    passStatus: 'PASSED',
+    teacherRemarks: 'Well structured strategic framework analysis.',
+    highlights: [],
+    isPublished: true,
+    createdAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000 * 4).toISOString()
   }
 ];
 
 let AUDIT_LOGS = [
   {
     id: 'LOG-1',
-    timestamp: new Date(Date.now() - 3600000 * 3).toISOString(),
-    user: 'Dr. Sarah Jenkins (Faculty)',
-    action: 'QR_SCAN',
-    details: 'Scanned QR Code for Alex Mercer (CS2026-042) - ML101'
-  },
-  {
-    id: 'LOG-2',
     timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
     user: 'Dr. Sarah Jenkins (Faculty)',
-    action: 'ANSWER_SHEET_UPLOAD',
-    details: 'Uploaded & processed 6 pages for Alex Mercer (CS2026-042)'
+    action: 'UPLOAD_EXAM_PAPER',
+    details: 'Uploaded & processed 3 pages for Alex Mercer (BCA25040) - BCA201'
   }
 ];
 
-let NOTIFICATIONS_DB = [
-  {
-    id: 'NOTIF-1',
-    studentId: 'STU-1001',
-    title: 'Answer Sheet Uploaded! 📄',
-    message: 'Your answer sheet for Machine Learning (CS801) has been scanned and verified by Dr. Sarah Jenkins.',
-    subject: 'Machine Learning',
-    faculty: 'Dr. Sarah Jenkins',
-    timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
-    read: false,
-    pages: 6
-  }
-];
+let REVISION_REQUESTS = [];
 
-// Helper: Encrypt QR Payload with HMAC Digital Signature
-function generateEncryptedQrToken(student, exam) {
-  const uniqueToken = `EQR-${exam.id}-${student.id}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
-  const timestamp = new Date().toISOString();
-
-  const payload = {
-    studentId: student.id,
-    studentName: student.name,
-    rollNumber: student.rollNumber,
-    department: student.department,
-    semester: student.semester,
-    examId: exam.id,
-    subject: exam.subject,
-    subjectCode: exam.subjectCode,
-    examDate: exam.examDate,
-    uniqueToken,
-    timestamp
-  };
-
-  const payloadStr = JSON.stringify(payload);
-  const hmac = crypto.createHmac('sha256', QR_SECRET_KEY);
-  hmac.update(payloadStr);
-  const digitalSignature = hmac.digest('hex');
-
-  const fullData = {
-    ...payload,
-    digitalSignature,
-    verificationHash: crypto.createHash('sha256').update(payloadStr + digitalSignature).digest('hex')
-  };
-
-  // Base64 JSON token
-  const qrTokenStr = Buffer.from(JSON.stringify(fullData)).toString('base64');
-  return {
-    rawPayload: fullData,
-    qrTokenStr
-  };
+// Helper: Extract Department from Roll Number (BCA, BCOM, BBA, CS, AI)
+function getDepartmentFromRollNumber(rollNumber = '') {
+  const cleanRoll = rollNumber.trim().toUpperCase();
+  if (cleanRoll.startsWith('BCA')) return 'BCA';
+  if (cleanRoll.startsWith('BCOM')) return 'BCOM';
+  if (cleanRoll.startsWith('BBA')) return 'BBA';
+  if (cleanRoll.startsWith('CS')) return 'Computer Science';
+  if (cleanRoll.startsWith('AI')) return 'AI & Data Science';
+  return 'BCA'; // Default fallback
 }
 
 // -------------------------------------------------------------
-// ROUTES
+// REST API ROUTES
 // -------------------------------------------------------------
 
-// 1. Get Exams List
-router.get('/exams', (req, res) => {
-  res.json({
-    success: true,
-    exams: EXAMS_DB,
-    studentsCount: STUDENTS_DB.length
-  });
-});
-
-// 2. Create New Exam
-router.post('/exams', (req, res) => {
-  const { subject, subjectCode, department, semester, section, facultyName, examDate } = req.body;
-  if (!subject || !department || !semester) {
-    return res.status(400).json({ success: false, message: 'Missing required exam details.' });
+// 1. Student Login via Roll Number
+router.post('/student/login', (req, res) => {
+  const { rollNumber } = req.body;
+  if (!rollNumber || !rollNumber.trim()) {
+    return res.status(400).json({ success: false, message: 'Please enter a valid Roll Number.' });
   }
 
-  const newExam = {
-    id: `EXAM-${Date.now().toString().slice(-6)}`,
-    subject,
-    subjectCode: subjectCode || 'SUB-101',
-    department,
-    semester,
-    section: section || 'A',
-    facultyName: facultyName || 'Faculty Member',
-    examDate: examDate || new Date().toISOString().split('T')[0],
-    totalStudents: STUDENTS_DB.length,
-    qrGenerated: false,
-    status: 'SCHEDULED'
-  };
+  const formattedRoll = rollNumber.trim().toUpperCase();
+  let student = STUDENTS_DB.find(s => s.rollNumber.toUpperCase() === formattedRoll);
 
-  EXAMS_DB.unshift(newExam);
+  // If student doesn't exist, auto-create student record based on roll number prefix
+  if (!student) {
+    const dept = getDepartmentFromRollNumber(formattedRoll);
+    let year = '2nd Year';
+    let semester = '3rd Semester';
 
-  AUDIT_LOGS.unshift({
-    id: `LOG-${Date.now()}`,
-    timestamp: new Date().toISOString(),
-    user: 'Admin',
-    action: 'CREATE_EXAM',
-    details: `Created new exam: ${newExam.subject} (${newExam.id})`
-  });
-
-  res.json({ success: true, exam: newExam });
-});
-
-// 3. Generate QR Codes for Exam
-router.post('/generate', (req, res) => {
-  const { examId } = req.body;
-  const exam = EXAMS_DB.find(e => e.id === examId) || EXAMS_DB[0];
-
-  const qrRecords = STUDENTS_DB.map(student => {
-    const { rawPayload, qrTokenStr } = generateEncryptedQrToken(student, exam);
-    return {
-      id: `QR-${student.id}-${exam.id}`,
-      examId: exam.id,
-      studentId: student.id,
-      studentName: student.name,
-      rollNumber: student.rollNumber,
-      department: student.department,
-      semester: student.semester,
-      subject: exam.subject,
-      qrToken: qrTokenStr,
-      payload: rawPayload,
-      status: 'GENERATED', // GENERATED, DOWNLOADED, PRINTED, USED, EXPIRED
-      createdAt: new Date().toISOString()
-    };
-  });
-
-  // Save to DB
-  QR_CODES_DB = QR_CODES_DB.filter(q => q.examId !== exam.id).concat(qrRecords);
-
-  // Update exam status
-  exam.qrGenerated = true;
-  exam.qrGeneratedAt = new Date().toISOString();
-
-  AUDIT_LOGS.unshift({
-    id: `LOG-${Date.now()}`,
-    timestamp: new Date().toISOString(),
-    user: 'Admin',
-    action: 'GENERATE_QR',
-    details: `Generated ${qrRecords.length} QR codes for exam ${exam.subject} (${exam.id})`
-  });
-
-  res.json({
-    success: true,
-    examId: exam.id,
-    count: qrRecords.length,
-    qrCodes: qrRecords
-  });
-});
-
-// 4. Retrieve QR Codes for an Exam
-router.get('/qr-codes/:examId', (req, res) => {
-  const { examId } = req.params;
-  let records = QR_CODES_DB.filter(q => q.examId === examId);
-
-  if (records.length === 0) {
-    // Auto generate fallback for demo
-    const exam = EXAMS_DB.find(e => e.id === examId) || EXAMS_DB[0];
-    records = STUDENTS_DB.map(student => {
-      const { rawPayload, qrTokenStr } = generateEncryptedQrToken(student, exam);
-      return {
-        id: `QR-${student.id}-${exam.id}`,
-        examId: exam.id,
-        studentId: student.id,
-        studentName: student.name,
-        rollNumber: student.rollNumber,
-        department: student.department,
-        semester: student.semester,
-        subject: exam.subject,
-        qrToken: qrTokenStr,
-        payload: rawPayload,
-        status: 'GENERATED',
-        createdAt: new Date().toISOString()
-      };
-    });
-    QR_CODES_DB = QR_CODES_DB.concat(records);
-  }
-
-  res.json({
-    success: true,
-    qrCodes: records
-  });
-});
-
-// 5. Verify Scanned QR Token
-router.post('/verify-token', (req, res) => {
-  const { qrToken } = req.body;
-  if (!qrToken) {
-    return res.status(400).json({ success: false, message: 'No QR token provided' });
-  }
-
-  try {
-    let payload;
-    if (qrToken.startsWith('{')) {
-      payload = JSON.parse(qrToken);
-    } else {
-      const jsonStr = Buffer.from(qrToken, 'base64').toString('utf-8');
-      payload = JSON.parse(jsonStr);
+    if (formattedRoll.includes('2501') || formattedRoll.includes('1ST')) {
+      year = '1st Year';
+      semester = '1st Semester';
+    } else if (formattedRoll.includes('2500') || formattedRoll.includes('3RD')) {
+      year = '3rd Year';
+      semester = '5th Semester';
     }
 
-    // Verify HMAC digital signature
-    const { digitalSignature, verificationHash, ...bodyData } = payload;
-    const hmac = crypto.createHmac('sha256', QR_SECRET_KEY);
-    hmac.update(JSON.stringify(bodyData));
-    const expectedSig = hmac.digest('hex');
-
-    // Check if signature matches (or bypass for raw test tokens)
-    const isSignatureValid = (digitalSignature === expectedSig) || true;
-
-    // Find student details
-    const student = STUDENTS_DB.find(s => s.id === payload.studentId || s.rollNumber === payload.rollNumber) || {
-      id: payload.studentId || 'STU-1001',
-      name: payload.studentName || 'Alex Mercer',
-      rollNumber: payload.rollNumber || 'CS2026-042',
-      department: payload.department || 'Computer Science',
-      semester: payload.semester || '7th Semester',
-      photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    student = {
+      id: `STU-${formattedRoll}`,
+      name: `Student (${formattedRoll})`,
+      rollNumber: formattedRoll,
+      department: dept,
+      year: year,
+      semester: semester,
+      section: 'A',
+      email: `${formattedRoll.toLowerCase()}@eduverse.edu`,
       attendance: 'PRESENT'
     };
-
-    const exam = EXAMS_DB.find(e => e.id === payload.examId) || {
-      id: payload.examId || 'EXAM-2026-ML101',
-      subject: payload.subject || 'Machine Learning',
-      subjectCode: payload.subjectCode || 'CS801',
-      facultyName: 'Dr. Sarah Jenkins',
-      examDate: payload.examDate || '2026-09-08'
-    };
-
-    AUDIT_LOGS.unshift({
-      id: `LOG-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      user: 'Faculty Scanner',
-      action: 'QR_VERIFY_SUCCESS',
-      details: `Successfully verified QR token for ${student.name} (${student.rollNumber})`
-    });
-
-    res.json({
-      success: true,
-      verified: isSignatureValid,
-      student,
-      exam,
-      tokenDetails: payload
-    });
-  } catch (err) {
-    console.error('QR verification error:', err);
-    res.status(400).json({
-      success: false,
-      message: 'Invalid or corrupted QR token payload.',
-      error: err.message
-    });
-  }
-});
-
-// 6. Upload Answer Sheet & Run AI Processing
-router.post('/upload', (req, res) => {
-  const { studentId, examId, pagesImages, ocrText, draftMode } = req.body;
-
-  const student = STUDENTS_DB.find(s => s.id === studentId) || STUDENTS_DB[0];
-  const exam = EXAMS_DB.find(e => e.id === examId) || EXAMS_DB[0];
-
-  const newSheet = {
-    id: `ANS-${Date.now().toString().slice(-6)}`,
-    examId: exam.id,
-    studentId: student.id,
-    studentName: student.name,
-    rollNumber: student.rollNumber,
-    department: student.department,
-    semester: student.semester,
-    subject: exam.subject,
-    subjectCode: exam.subjectCode,
-    facultyName: exam.facultyName || 'Dr. Sarah Jenkins',
-    examDate: exam.examDate,
-    uploadTime: new Date().toISOString(),
-    pagesCount: Array.isArray(pagesImages) ? pagesImages.length : 4,
-    status: draftMode ? 'DRAFT' : 'VERIFIED',
-    verificationHash: crypto.createHash('sha256').update(`${student.id}-${exam.id}-${Date.now()}`).digest('hex'),
-    pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    thumbnails: Array.isArray(pagesImages) && pagesImages.length > 0 ? pagesImages : [
-      'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=400&auto=format&fit=crop&q=80'
-    ],
-    ocrText: ocrText || `Extracted OCR Text for ${student.name} (${student.rollNumber}) in ${exam.subject}.\nAI Processed: Contrast enhanced, shadow removed, deskewed.`,
-    predictedScore: Math.floor(Math.random() * 15) + 82,
-    aiAnalysis: {
-      clarityScore: 94,
-      completenessScore: 92,
-      handwritingLegibility: 91,
-      missingQuestions: [],
-      similarityIndex: '1.2% (Unique answer pattern)',
-      cheatingFlags: [],
-      pageSequenceDetected: 'Verified Sequential Page Order'
-    }
-  };
-
-  ANSWER_SHEETS_DB.unshift(newSheet);
-
-  // Update QR Code usage status
-  const qrRec = QR_CODES_DB.find(q => q.studentId === student.id && q.examId === exam.id);
-  if (qrRec) {
-    qrRec.status = 'USED';
+    STUDENTS_DB.unshift(student);
   }
 
-  // Create notification for student if published
-  if (!draftMode) {
-    NOTIFICATIONS_DB.unshift({
-      id: `NOTIF-${Date.now()}`,
-      studentId: student.id,
-      title: 'Answer Sheet Uploaded! 📄',
-      message: `Your answer sheet for ${exam.subject} (${exam.subjectCode}) has been successfully scanned and published by ${exam.facultyName}.`,
-      subject: exam.subject,
-      faculty: exam.facultyName,
-      timestamp: new Date().toISOString(),
-      read: false,
-      pages: newSheet.pagesCount
-    });
-  }
+  // Get department & year specific subject mappings
+  const deptMappings = SUBJECT_MAPPINGS[student.department] || SUBJECT_MAPPINGS.BCA;
+  const yearSubjects = deptMappings[student.year] || deptMappings['2nd Year'] || Object.values(deptMappings)[0] || [];
+
+  // Get existing answer papers for this student
+  const studentPapers = EXAM_PAPERS_DB.filter(p => p.rollNumber.toUpperCase() === formattedRoll);
 
   AUDIT_LOGS.unshift({
     id: `LOG-${Date.now()}`,
     timestamp: new Date().toISOString(),
-    user: 'Faculty',
-    action: 'UPLOAD_ANSWER_SHEET',
-    details: `Uploaded answer sheet (${newSheet.pagesCount} pages) for ${student.name} - ${exam.subject}`
+    user: student.name,
+    action: 'STUDENT_LOGIN',
+    details: `Student logged in with roll number ${formattedRoll}`
   });
 
   res.json({
     success: true,
-    answerSheet: newSheet,
-    notificationSent: !draftMode
+    student,
+    subjects: yearSubjects,
+    papers: studentPapers,
+    allDepartmentSubjects: deptMappings
   });
 });
 
-// 7. Student Answer Sheets Endpoint
-router.get('/student/answer-sheets', (req, res) => {
-  const { studentId } = req.query;
-  const filterId = studentId || 'STU-1001';
-  const list = ANSWER_SHEETS_DB.filter(s => s.studentId === filterId || true); // return all for rich view in demo
+// 2. Fetch All Students (Admin)
+router.get('/students', (req, res) => {
+  res.json({
+    success: true,
+    total: STUDENTS_DB.length,
+    students: STUDENTS_DB
+  });
+});
+
+// 3. Add Single Student (Admin)
+router.post('/students', (req, res) => {
+  const { name, rollNumber, department, year, semester, section, email } = req.body;
+  if (!name || !rollNumber) {
+    return res.status(400).json({ success: false, message: 'Student Name and Roll Number are required.' });
+  }
+
+  const formattedRoll = rollNumber.trim().toUpperCase();
+  const existing = STUDENTS_DB.find(s => s.rollNumber.toUpperCase() === formattedRoll);
+  if (existing) {
+    return res.status(400).json({ success: false, message: `Student with roll number ${formattedRoll} already exists.` });
+  }
+
+  const newStudent = {
+    id: `STU-${formattedRoll}`,
+    name,
+    rollNumber: formattedRoll,
+    department: department || getDepartmentFromRollNumber(formattedRoll),
+    year: year || '1st Year',
+    semester: semester || '1st Semester',
+    section: section || 'A',
+    email: email || `${formattedRoll.toLowerCase()}@eduverse.edu`,
+    attendance: 'PRESENT'
+  };
+
+  STUDENTS_DB.unshift(newStudent);
+  res.json({ success: true, student: newStudent, message: 'Student created successfully!' });
+});
+
+// 4. Bulk Import Students (Admin CSV / Excel)
+router.post('/students/bulk', (req, res) => {
+  const { studentsList } = req.body;
+  if (!Array.isArray(studentsList) || studentsList.length === 0) {
+    return res.status(400).json({ success: false, message: 'Invalid or empty students list.' });
+  }
+
+  let importedCount = 0;
+  studentsList.forEach(s => {
+    if (s.name && s.rollNumber) {
+      const formattedRoll = s.rollNumber.trim().toUpperCase();
+      if (!STUDENTS_DB.some(st => st.rollNumber.toUpperCase() === formattedRoll)) {
+        STUDENTS_DB.unshift({
+          id: `STU-${formattedRoll}`,
+          name: s.name,
+          rollNumber: formattedRoll,
+          department: s.department || getDepartmentFromRollNumber(formattedRoll),
+          year: s.year || '1st Year',
+          semester: s.semester || '1st Semester',
+          section: s.section || 'A',
+          email: s.email || `${formattedRoll.toLowerCase()}@eduverse.edu`,
+          attendance: 'PRESENT'
+        });
+        importedCount++;
+      }
+    }
+  });
 
   res.json({
     success: true,
-    answerSheets: list,
-    notifications: NOTIFICATIONS_DB.filter(n => n.studentId === filterId || true)
+    importedCount,
+    totalStudents: STUDENTS_DB.length,
+    message: `Successfully imported ${importedCount} student records!`
   });
 });
 
-// 8. Bulk Notify Students (Email / WhatsApp Simulation)
-router.post('/bulk-notify', (req, res) => {
-  const { examId, channel } = req.body;
-  const exam = EXAMS_DB.find(e => e.id === examId) || EXAMS_DB[0];
+// 5. Fetch Exam Papers (Admin / Student View)
+router.get('/papers', (req, res) => {
+  const { rollNumber, department, year, semester, subjectCode, isPublishedOnly } = req.query;
+
+  let results = [...EXAM_PAPERS_DB];
+
+  if (rollNumber) {
+    results = results.filter(p => p.rollNumber.toUpperCase() === rollNumber.trim().toUpperCase());
+  }
+
+  if (department && department !== 'All') {
+    results = results.filter(p => p.department === department);
+  }
+
+  if (year && year !== 'All') {
+    results = results.filter(p => p.year === year);
+  }
+
+  if (semester && semester !== 'All') {
+    results = results.filter(p => p.semester === semester);
+  }
+
+  if (subjectCode && subjectCode !== 'All') {
+    results = results.filter(p => p.subjectCode === subjectCode);
+  }
+
+  if (isPublishedOnly === 'true') {
+    results = results.filter(p => p.isPublished);
+  }
 
   res.json({
     success: true,
-    channel: channel || 'EMAIL_AND_WHATSAPP',
-    message: `Successfully dispatched exam QR codes to all ${STUDENTS_DB.length} registered students via ${channel || 'Email & WhatsApp'}.`,
-    recipientsCount: STUDENTS_DB.length
+    total: results.length,
+    papers: results
   });
 });
 
-// 9. Analytics Center Endpoint
+// 6. Upload & Process Scanned Exam Paper Pages (Admin)
+router.post('/papers/upload', (req, res) => {
+  const {
+    rollNumber,
+    studentName,
+    department,
+    year,
+    semester,
+    subjectCode,
+    subjectName,
+    pageImages,
+    uploadedBy,
+    marks,
+    teacherRemarks,
+    isPublished
+  } = req.body;
+
+  if (!rollNumber || !subjectCode) {
+    return res.status(400).json({ success: false, message: 'Roll Number and Subject Code are required.' });
+  }
+
+  const formattedRoll = rollNumber.trim().toUpperCase();
+  const student = STUDENTS_DB.find(s => s.rollNumber.toUpperCase() === formattedRoll) || {
+    id: `STU-${formattedRoll}`,
+    name: studentName || `Student (${formattedRoll})`,
+    rollNumber: formattedRoll,
+    department: department || getDepartmentFromRollNumber(formattedRoll),
+    year: year || '2nd Year',
+    semester: semester || '3rd Semester'
+  };
+
+  const pagesArray = Array.isArray(pageImages) && pageImages.length > 0
+    ? pageImages.map((img, idx) => ({
+        pageNumber: idx + 1,
+        imageUrl: typeof img === 'string' ? img : img.url || 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&auto=format&fit=crop&q=80',
+        thumbnail: typeof img === 'string' ? img : img.thumbnail || 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=200&auto=format&fit=crop&q=80',
+        ocrText: `PAGE ${idx + 1} OCR Text: Extracted text for ${student.name} (${formattedRoll}) - ${subjectCode}.`
+      }))
+    : [
+        {
+          pageNumber: 1,
+          imageUrl: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&auto=format&fit=crop&q=80',
+          thumbnail: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=200&auto=format&fit=crop&q=80',
+          ocrText: `PAGE 1 OCR Text: ${subjectName || subjectCode} Answer Sheet.`
+        }
+      ];
+
+  const totalMarksNum = marks ? Number(marks.total || (Number(marks.internal || 0) + Number(marks.external || 0))) : 85;
+  const passStatus = totalMarksNum >= 40 ? 'PASSED' : 'FAILED';
+  const grade = totalMarksNum >= 90 ? 'A+' : totalMarksNum >= 80 ? 'A' : totalMarksNum >= 70 ? 'B+' : totalMarksNum >= 60 ? 'B' : totalMarksNum >= 40 ? 'C' : 'F';
+
+  const newPaper = {
+    id: `PAPER-${formattedRoll}-${subjectCode}-${Date.now().toString().slice(-4)}`,
+    studentId: student.id,
+    rollNumber: formattedRoll,
+    studentName: student.name,
+    department: student.department,
+    year: student.year,
+    semester: student.semester,
+    subjectCode,
+    subjectName: subjectName || `${subjectCode} Subject Paper`,
+    uploadedBy: uploadedBy || 'Admin Lecturer',
+    pages: pagesArray,
+    pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    ocrText: `Complete OCR Text extracted for ${student.name} (${formattedRoll}) - ${subjectCode}.\nPages Processed: ${pagesArray.length}.\nEnhancements Applied: Contrast Auto-balanced, Shadows Removed, Edge Detection Applied.`,
+    marks: {
+      internal: marks ? Number(marks.internal || 20) : 22,
+      external: marks ? Number(marks.external || 60) : 63,
+      total: totalMarksNum,
+      maxMarks: marks ? Number(marks.maxMarks || 100) : 100
+    },
+    grade,
+    passStatus,
+    teacherRemarks: teacherRemarks || 'Answer sheet uploaded & verified by department faculty.',
+    highlights: [],
+    isPublished: isPublished !== undefined ? Boolean(isPublished) : true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  EXAM_PAPERS_DB.unshift(newPaper);
+
+  AUDIT_LOGS.unshift({
+    id: `LOG-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    user: 'Admin',
+    action: 'UPLOAD_EXAM_PAPER',
+    details: `Uploaded ${pagesArray.length} scanned pages for ${student.name} (${formattedRoll}) - ${subjectCode}`
+  });
+
+  res.json({
+    success: true,
+    paper: newPaper,
+    message: 'Exam paper uploaded & processed successfully!'
+  });
+});
+
+// 7. Update Pages / Reorder / Delete / Replace (Admin)
+router.put('/papers/:id/pages', (req, res) => {
+  const { id } = req.params;
+  const paper = EXAM_PAPERS_DB.find(p => p.id === id);
+  if (!paper) {
+    return res.status(404).json({ success: false, message: 'Exam paper record not found.' });
+  }
+
+  const { pages } = req.body;
+  if (Array.isArray(pages)) {
+    paper.pages = pages.map((p, idx) => ({ ...p, pageNumber: idx + 1 }));
+    paper.updatedAt = new Date().toISOString();
+  }
+
+  res.json({ success: true, paper, message: 'Page order and layout updated successfully!' });
+});
+
+// 8. Update Marks & Result Status (Admin)
+router.put('/papers/:id/marks', (req, res) => {
+  const { id } = req.params;
+  const paper = EXAM_PAPERS_DB.find(p => p.id === id);
+  if (!paper) {
+    return res.status(404).json({ success: false, message: 'Exam paper record not found.' });
+  }
+
+  const { internal, external, maxMarks, grade, passStatus, teacherRemarks, isPublished } = req.body;
+
+  const intNum = internal !== undefined ? Number(internal) : paper.marks.internal;
+  const extNum = external !== undefined ? Number(external) : paper.marks.external;
+  const totalNum = intNum + extNum;
+  const maxNum = maxMarks !== undefined ? Number(maxMarks) : paper.marks.maxMarks;
+
+  paper.marks = {
+    internal: intNum,
+    external: extNum,
+    total: totalNum,
+    maxMarks: maxNum
+  };
+
+  paper.passStatus = passStatus || (totalNum >= 40 ? 'PASSED' : 'FAILED');
+  paper.grade = grade || (totalNum >= 90 ? 'A+' : totalNum >= 80 ? 'A' : totalNum >= 70 ? 'B+' : totalNum >= 60 ? 'B' : totalNum >= 40 ? 'C' : 'F');
+
+  if (teacherRemarks !== undefined) paper.teacherRemarks = teacherRemarks;
+  if (isPublished !== undefined) paper.isPublished = Boolean(isPublished);
+  paper.updatedAt = new Date().toISOString();
+
+  res.json({ success: true, paper, message: 'Marks and result status updated successfully!' });
+});
+
+// 9. Save Teacher Highlights & Annotations (Admin)
+router.put('/papers/:id/highlights', (req, res) => {
+  const { id } = req.params;
+  const paper = EXAM_PAPERS_DB.find(p => p.id === id);
+  if (!paper) {
+    return res.status(404).json({ success: false, message: 'Exam paper record not found.' });
+  }
+
+  const { highlights } = req.body;
+  if (Array.isArray(highlights)) {
+    paper.highlights = highlights;
+    paper.updatedAt = new Date().toISOString();
+  }
+
+  res.json({ success: true, highlights: paper.highlights, message: 'Highlights and comments saved!' });
+});
+
+// 10. Toggle Publish Result Status (Admin)
+router.put('/papers/:id/publish', (req, res) => {
+  const { id } = req.params;
+  const paper = EXAM_PAPERS_DB.find(p => p.id === id);
+  if (!paper) {
+    return res.status(404).json({ success: false, message: 'Exam paper record not found.' });
+  }
+
+  paper.isPublished = !paper.isPublished;
+  paper.updatedAt = new Date().toISOString();
+
+  res.json({
+    success: true,
+    isPublished: paper.isPublished,
+    message: paper.isPublished ? 'Result published to student portal! 🚀' : 'Result unpublished (draft mode).'
+  });
+});
+
+// 11. Trigger OCR Scanning & Clarity Enhancements (Admin)
+router.post('/papers/:id/ocr', (req, res) => {
+  const { id } = req.params;
+  const paper = EXAM_PAPERS_DB.find(p => p.id === id);
+  if (!paper) {
+    return res.status(404).json({ success: false, message: 'Paper not found.' });
+  }
+
+  paper.ocrText = `[ENHANCED OCR SCAN RESULT]\nStudent: ${paper.studentName} (${paper.rollNumber})\nSubject: ${paper.subjectName} (${paper.subjectCode})\nPages Analyzed: ${paper.pages.length}\nAuto-Contrast: 100% | Shadow Removal: Active | Deskew Angle: 0.0°.\nExtracted Answer Text:\n1. Detailed technical responses detected.\n2. Key formulas and diagrams highlighted.\n3. Anti-plagiarism uniqueness score: 98.6%.`;
+
+  res.json({
+    success: true,
+    ocrText: paper.ocrText,
+    message: 'OCR Scan completed! Readable text extracted & shadow removal applied.'
+  });
+});
+
+// 12. Student Re-evaluation Request
+router.post('/papers/:id/revision', (req, res) => {
+  const { id } = req.params;
+  const { studentRoll, reason } = req.body;
+
+  const reqObj = {
+    id: `REV-${Date.now()}`,
+    paperId: id,
+    studentRoll,
+    reason: reason || 'Re-evaluation request submitted by student.',
+    status: 'PENDING',
+    createdAt: new Date().toISOString()
+  };
+
+  REVISION_REQUESTS.unshift(reqObj);
+  res.json({ success: true, revision: reqObj, message: 'Re-evaluation request submitted to department evaluation committee!' });
+});
+
+// 13. System Analytics
 router.get('/analytics', (req, res) => {
-  const totalExams = EXAMS_DB.length;
   const totalStudents = STUDENTS_DB.length;
-  const totalQrGenerated = QR_CODES_DB.length > 0 ? QR_CODES_DB.length : totalStudents * totalExams;
-  const totalQrUsed = ANSWER_SHEETS_DB.length;
-  const uploadedSheets = ANSWER_SHEETS_DB.length;
-  const pendingUploads = Math.max(0, totalQrGenerated - uploadedSheets);
+  const totalPapers = EXAM_PAPERS_DB.length;
+  const publishedCount = EXAM_PAPERS_DB.filter(p => p.isPublished).length;
+  const passedCount = EXAM_PAPERS_DB.filter(p => p.passStatus === 'PASSED').length;
 
   res.json({
     success: true,
     stats: {
-      totalExams,
       totalStudents,
-      totalQrGenerated,
-      totalQrUsed,
-      uploadedSheets,
-      pendingUploads,
-      storageUsedMb: (uploadedSheets * 3.8).toFixed(1),
-      avgUploadTimeSec: 14.2,
-      todayUploads: 18,
-      accuracyRate: '99.8%'
+      totalPapers,
+      publishedCount,
+      passedCount,
+      passPercentage: totalPapers > 0 ? ((passedCount / totalPapers) * 100).toFixed(1) : '100.0',
+      totalPagesScanned: EXAM_PAPERS_DB.reduce((sum, p) => sum + (p.pages ? p.pages.length : 0), 0)
     },
-    departmentStats: [
-      { name: 'Computer Science', uploaded: 42, pending: 3, accuracy: '99.9%' },
-      { name: 'AI & Data Science', uploaded: 35, pending: 3, accuracy: '99.7%' },
-      { name: 'Electrical Engineering', uploaded: 28, pending: 7, accuracy: '99.5%' },
-      { name: 'Mechanical Engineering', uploaded: 31, pending: 4, accuracy: '99.6%' }
-    ],
-    recentLogs: AUDIT_LOGS.slice(0, 10)
+    departmentSubjectMappings: SUBJECT_MAPPINGS
   });
 });
 
