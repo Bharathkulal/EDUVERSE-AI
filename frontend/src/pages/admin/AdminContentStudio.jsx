@@ -70,13 +70,23 @@ export default function AdminContentStudio() {
   const handleFileUploadMock = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    let detectedFormat = 'PDF';
+    const lowerName = file.name.toLowerCase();
+    if (lowerName.endsWith('.doc') || lowerName.endsWith('.docx')) detectedFormat = 'Word';
+    else if (lowerName.endsWith('.xls') || lowerName.endsWith('.xlsx')) detectedFormat = 'Excel';
+    else if (lowerName.endsWith('.ppt') || lowerName.endsWith('.pptx')) detectedFormat = 'PPT';
+    else if (lowerName.endsWith('.txt')) detectedFormat = 'Notepad';
+    else if (lowerName.endsWith('.pdf')) detectedFormat = 'PDF';
+
     setFormData({
       ...formData,
       fileName: file.name,
+      contentType: detectedFormat,
       fileSize: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
       fileUrl: URL.createObjectURL(file)
     });
-    toast.success(`Attached file: ${file.name}`);
+    toast.success(`Attached file (${detectedFormat}): ${file.name}`);
   };
 
   const handleSubmitUpload = async (e) => {
@@ -189,6 +199,13 @@ export default function AdminContentStudio() {
 
         {loading ? (
           <div className="p-8 text-center text-slate-400 text-xs font-bold">Loading...</div>
+        ) : materials.length === 0 ? (
+          <div className="p-10 text-center bg-slate-950/60 rounded-xl border border-slate-800 text-slate-400 space-y-2">
+            <p className="text-sm font-bold text-white">No Published Study Materials 📭</p>
+            <p className="text-xs text-slate-400 max-w-md mx-auto">
+              No notes or study materials have been published yet. Click the <strong>"+ Upload New Study Material"</strong> button above to send notes in <strong>PDF, Word, Excel, PPT, or Notepad</strong> format to students.
+            </p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
@@ -350,16 +367,17 @@ export default function AdminContentStudio() {
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Content Type</label>
+                  <label className="block text-slate-300 font-semibold mb-1">Content / File Format</label>
                   <select
                     value={formData.contentType}
                     onChange={(e) => setFormData({ ...formData, contentType: e.target.value })}
-                    className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white"
+                    className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-cyan-300 font-bold focus:outline-none"
                   >
-                    <option value="PDF">PDF</option>
-                    <option value="Rich Text">Rich Text</option>
-                    <option value="Image">Image</option>
-                    <option value="Doc">Doc</option>
+                    <option value="PDF">PDF (.pdf) 📄</option>
+                    <option value="Word">Word Document (.doc, .docx) 📝</option>
+                    <option value="Excel">Excel Spreadsheet (.xls, .xlsx) 📊</option>
+                    <option value="PPT">PowerPoint Presentation (.ppt, .pptx) 🖥️</option>
+                    <option value="Notepad">Notepad Text File (.txt) 🗒️</option>
                   </select>
                 </div>
               </div>
@@ -376,9 +394,10 @@ export default function AdminContentStudio() {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Attach PDF or Document File</label>
+                <label className="block text-slate-300 font-semibold mb-1">Attach Study Note File (PDF, Word, Excel, PPT, Notepad)</label>
                 <input
                   type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
                   onChange={handleFileUploadMock}
                   className="w-full p-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-400"
                 />

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 
-// In-Memory Academic Database Store with Rich Default Mock Data Fallback
+// In-Memory Academic Database Store
 let SUBJECTS_DB = [
   {
     id: 'SUB-101',
@@ -13,7 +13,7 @@ let SUBJECTS_DB = [
     description: 'Supervised learning, deep neural networks, model optimization, and reinforcement learning.',
     icon: '🤖',
     topicsCount: 12,
-    materialsCount: 28,
+    materialsCount: 0,
     facultyName: 'Dr. Sarah Jenkins'
   },
   {
@@ -25,7 +25,7 @@ let SUBJECTS_DB = [
     description: 'Arrays, Trees, Graphs, Sorting algorithms, Dynamic Programming, and Complexity Analysis.',
     icon: '🌳',
     topicsCount: 16,
-    materialsCount: 34,
+    materialsCount: 0,
     facultyName: 'Prof. Alan Turing'
   },
   {
@@ -37,7 +37,7 @@ let SUBJECTS_DB = [
     description: 'Relational Model, SQL, Normalization, Transactions, Indexing, and NoSQL databases.',
     icon: '🗄️',
     topicsCount: 10,
-    materialsCount: 22,
+    materialsCount: 0,
     facultyName: 'Dr. Edgar Codd'
   },
   {
@@ -49,179 +49,17 @@ let SUBJECTS_DB = [
     description: 'Heuristic Search, Knowledge Representation, Convolutional Networks, Transformers.',
     icon: '🧠',
     topicsCount: 14,
-    materialsCount: 31,
+    materialsCount: 0,
     facultyName: 'Dr. Evelyn Reed'
   }
 ];
 
-let MATERIALS_DB = [
-  {
-    id: 'MAT-1001',
-    title: 'Comprehensive Notes on Backpropagation & Chain Rule',
-    subjectId: 'SUB-101',
-    subjectName: 'Machine Learning',
-    subjectCode: 'CS801',
-    department: 'Computer Science',
-    semester: '7th Semester',
-    topic: 'Deep Neural Networks',
-    subtopic: 'Gradient Descent Optimization',
-    category: 'Notes', // Notes, Important, Question Bank, Question Paper
-    contentType: 'PDF', // PDF, Image, Rich Text, Doc, Link
-    description: 'Complete step-by-step mathematical derivation of gradient descent backpropagation with chain rule and code examples.',
-    fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    fileName: 'ML_Unit3_Backpropagation_Notes.pdf',
-    fileSize: '3.4 MB',
-    tags: ['Backpropagation', 'Chain Rule', 'Neural Networks', 'Unit 3'],
-    unitNumber: 3,
-    examYear: '2026',
-    difficulty: 'Hard',
-    isImportant: true,
-    isPinned: true,
-    visibility: 'Public', // Public, Branch, Semester, Section
-    status: 'Published', // Draft, Published, Archived
-    uploadedBy: 'Dr. Sarah Jenkins',
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    views: 412,
-    downloads: 189,
-    saves: 84
-  },
-  {
-    id: 'MAT-1002',
-    title: 'Top 15 Must-Study Exam Questions for Machine Learning',
-    subjectId: 'SUB-101',
-    subjectName: 'Machine Learning',
-    subjectCode: 'CS801',
-    department: 'Computer Science',
-    semester: '7th Semester',
-    topic: 'Supervised vs Unsupervised Learning',
-    subtopic: 'Exam High Priority Points',
-    category: 'Important',
-    contentType: 'Rich Text',
-    description: 'Curated list of 15 frequently repeated semester exam questions with complete solution formulas and diagrams.',
-    fileUrl: '',
-    fileName: 'V_IMP_Questions_ML_2026.html',
-    fileSize: '450 KB',
-    tags: ['Very Important', 'Exam 2026', 'Repeated Questions', 'V.Imp'],
-    unitNumber: 1,
-    examYear: '2026',
-    difficulty: 'Medium',
-    isImportant: true,
-    isPinned: true,
-    visibility: 'Public',
-    status: 'Published',
-    uploadedBy: 'Dr. Sarah Jenkins',
-    createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-    views: 650,
-    downloads: 310,
-    saves: 142
-  },
-  {
-    id: 'MAT-1003',
-    title: 'Unit-wise Comprehensive Question Bank (Short & Long Answers)',
-    subjectId: 'SUB-101',
-    subjectName: 'Machine Learning',
-    subjectCode: 'CS801',
-    department: 'Computer Science',
-    semester: '7th Semester',
-    topic: 'Classification & Regression Models',
-    subtopic: 'Question Bank Unit 1-5',
-    category: 'Question Bank',
-    contentType: 'PDF',
-    description: 'Unit-wise question bank covering SVM, Decision Trees, KNN, Naive Bayes, L1/L2 Regularization, and Clustering.',
-    fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    fileName: 'ML_Question_Bank_Units_1_to_5.pdf',
-    fileSize: '5.2 MB',
-    tags: ['Question Bank', 'Unit 1-5', 'Short Answers', 'Long Answers'],
-    unitNumber: 2,
-    examYear: '2025',
-    difficulty: 'Medium',
-    isImportant: false,
-    isPinned: false,
-    visibility: 'Public',
-    status: 'Published',
-    uploadedBy: 'Dr. Sarah Jenkins',
-    createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-    views: 380,
-    downloads: 145,
-    saves: 56
-  },
-  {
-    id: 'MAT-1004',
-    title: 'Previous Semester Question Paper Autumn 2025 (With Answer Key)',
-    subjectId: 'SUB-101',
-    subjectName: 'Machine Learning',
-    subjectCode: 'CS801',
-    department: 'Computer Science',
-    semester: '7th Semester',
-    topic: 'End Semester Examination',
-    subtopic: 'Official Question Paper',
-    category: 'Question Paper',
-    contentType: 'PDF',
-    description: 'Official final exam question paper for Autumn 2025 with step-by-step verified answer key solutions.',
-    fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    fileName: 'ML_End_Sem_Paper_Autumn_2025.pdf',
-    fileSize: '4.1 MB',
-    tags: ['Previous Paper', 'Autumn 2025', 'Answer Key', 'Official'],
-    unitNumber: 5,
-    examYear: '2025',
-    difficulty: 'Hard',
-    isImportant: true,
-    isPinned: false,
-    visibility: 'Public',
-    status: 'Published',
-    uploadedBy: 'Dr. Sarah Jenkins',
-    createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
-    views: 890,
-    downloads: 520,
-    saves: 210
-  },
-  {
-    id: 'MAT-1005',
-    title: 'Data Structures: Tree & Graph Traversal Handwritten Notes',
-    subjectId: 'SUB-102',
-    subjectName: 'Data Structures & Algorithms',
-    subjectCode: 'CS302',
-    department: 'Computer Science',
-    semester: '3rd Semester',
-    topic: 'Trees and Binary Search Trees',
-    subtopic: 'BFS & DFS Algorithms',
-    category: 'Notes',
-    contentType: 'PDF',
-    description: 'Clean handwritten class notes explaining Inorder, Preorder, Postorder, BFS, and DFS with step-by-step stack diagrams.',
-    fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    fileName: 'DSA_Tree_Graph_Handwritten_Notes.pdf',
-    fileSize: '6.8 MB',
-    tags: ['Trees', 'Graphs', 'Handwritten', 'BFS', 'DFS'],
-    unitNumber: 3,
-    examYear: '2026',
-    difficulty: 'Medium',
-    isImportant: true,
-    isPinned: true,
-    visibility: 'Public',
-    status: 'Published',
-    uploadedBy: 'Prof. Alan Turing',
-    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-    views: 740,
-    downloads: 390,
-    saves: 165
-  }
-];
-
-let ANNOUNCEMENTS_DB = [
-  {
-    id: 'ANN-101',
-    subjectId: 'SUB-101',
-    subjectName: 'Machine Learning',
-    title: '📢 End Semester Question Bank & Revision Notes Posted!',
-    content: 'All units 1 to 5 revision notes and previous 5 years question papers have been uploaded to the Academic Content Hub. Please review the V.Imp questions before the mid-term test.',
-    postedBy: 'Dr. Sarah Jenkins',
-    createdAt: new Date(Date.now() - 3600000 * 4).toISOString()
-  }
-];
-
-let SAVED_BOOKMARKS = new Set(['MAT-1001', 'MAT-1002']);
-let RECENTLY_VIEWED = ['MAT-1001', 'MAT-1005'];
-let COMPLETED_MATERIALS = new Set(['MAT-1002']);
+// MATERIALS_DB starts empty - only population is when Admin/Lecturer uploads notes (PDF, Word, Excel, PPT, Notepad)
+let MATERIALS_DB = [];
+let ANNOUNCEMENTS_DB = [];
+let SAVED_BOOKMARKS = new Set();
+let RECENTLY_VIEWED = [];
+let COMPLETED_MATERIALS = new Set();
 
 // -------------------------------------------------------------
 // REST API ROUTES
@@ -378,9 +216,17 @@ router.post('/upload', (req, res) => {
     topic: topic || 'General Topic',
     subtopic: subtopic || '',
     category: category || 'Notes',
-    contentType: contentType || 'PDF',
+    contentType: (() => {
+      if (contentType) return contentType;
+      const lower = (fileName || '').toLowerCase();
+      if (lower.endsWith('.doc') || lower.endsWith('.docx')) return 'Word';
+      if (lower.endsWith('.xls') || lower.endsWith('.xlsx')) return 'Excel';
+      if (lower.endsWith('.ppt') || lower.endsWith('.pptx')) return 'PPT';
+      if (lower.endsWith('.txt')) return 'Notepad';
+      return 'PDF';
+    })(),
     description: description || '',
-    fileUrl: fileUrl || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    fileUrl: fileUrl || '',
     fileName: fileName || `${title.replace(/\s+/g, '_')}.pdf`,
     fileSize: fileSize || '2.5 MB',
     tags: Array.isArray(tags) ? tags : ['Study Material', category],

@@ -81,6 +81,25 @@ export default function AcademicContentHub() {
     }
   };
 
+  const getFormatBadge = (contentType, fileName) => {
+    const type = (contentType || '').toUpperCase();
+    const lowerName = (fileName || '').toLowerCase();
+
+    if (type === 'WORD' || lowerName.endsWith('.doc') || lowerName.endsWith('.docx')) {
+      return { label: 'Word (.docx)', icon: '📝', color: 'bg-blue-500/20 text-blue-300 border-blue-500/40' };
+    }
+    if (type === 'EXCEL' || lowerName.endsWith('.xls') || lowerName.endsWith('.xlsx')) {
+      return { label: 'Excel (.xlsx)', icon: '📊', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' };
+    }
+    if (type === 'PPT' || lowerName.endsWith('.ppt') || lowerName.endsWith('.pptx')) {
+      return { label: 'PowerPoint (.pptx)', icon: '🖥️', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40' };
+    }
+    if (type === 'NOTEPAD' || lowerName.endsWith('.txt')) {
+      return { label: 'Notepad (.txt)', icon: '🗒️', color: 'bg-purple-500/20 text-purple-300 border-purple-500/40' };
+    }
+    return { label: 'PDF (.pdf)', icon: '📄', color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' };
+  };
+
   // Student Actions
   const handleOpenMaterial = async (mat) => {
     setSelectedMaterial(mat);
@@ -305,8 +324,12 @@ export default function AcademicContentHub() {
             Loading Academic Materials...
           </div>
         ) : materials.length === 0 ? (
-          <div className="p-12 text-center bg-slate-900/60 rounded-2xl border border-slate-800 text-slate-400">
-            <p className="text-xs font-bold">No study materials found for selected filters.</p>
+          <div className="p-12 text-center bg-slate-900/60 rounded-2xl border border-slate-800 text-slate-400 space-y-3">
+            <div className="text-3xl">📭</div>
+            <p className="text-sm font-bold text-white">No Study Materials Available Yet</p>
+            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+              No notes or study materials have been published for the selected filters. When faculty members upload study materials in <strong>PDF, Word, Excel, PPT, or Notepad</strong> format, they will automatically appear here.
+            </p>
             <button
               onClick={() => {
                 setActiveCategory('All');
@@ -315,7 +338,7 @@ export default function AcademicContentHub() {
                 setExamPrepMode(false);
                 setRevisionMode(false);
               }}
-              className="mt-3 px-4 py-2 bg-cyan-600 text-white text-xs font-bold rounded-xl"
+              className="mt-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl shadow-md transition-all"
             >
               Reset Filters
             </button>
@@ -325,6 +348,7 @@ export default function AcademicContentHub() {
             {materials.map((mat) => {
               const isBookmarked = bookmarkedIds.includes(mat.id);
               const isCompleted = completedIds.includes(mat.id);
+              const fmt = getFormatBadge(mat.contentType, mat.fileName);
 
               return (
                 <div
@@ -344,6 +368,9 @@ export default function AcademicContentHub() {
                       <div className="flex items-center gap-1.5">
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-800 text-cyan-300 border border-slate-700">
                           {mat.category}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${fmt.color}`}>
+                          {fmt.icon} {fmt.label}
                         </span>
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-800 text-slate-300">
                           Unit {mat.unitNumber}
@@ -474,20 +501,91 @@ export default function AcademicContentHub() {
 
               {/* Embedded Document Viewport */}
               <div className="w-full h-96 bg-slate-950 rounded-2xl border border-slate-800 flex items-center justify-center p-4 shadow-inner">
-                {selectedMaterial.fileUrl ? (
-                  <iframe
-                    src={selectedMaterial.fileUrl}
-                    title={selectedMaterial.title}
-                    className="w-full h-full rounded-xl border border-slate-800"
-                  />
-                ) : (
-                  <div className="text-center space-y-2">
-                    <p className="text-sm font-bold text-cyan-300">Interactive Rich Text Content</p>
-                    <p className="text-xs text-slate-400 max-w-md">
-                      {selectedMaterial.description}
-                    </p>
-                  </div>
-                )}
+                {(() => {
+                  const type = (selectedMaterial.contentType || '').toUpperCase();
+                  const fileName = (selectedMaterial.fileName || '').toLowerCase();
+
+                  if (type === 'NOTEPAD' || fileName.endsWith('.txt')) {
+                    return (
+                      <div className="w-full h-full p-4 bg-slate-900/90 rounded-xl border border-slate-800 overflow-y-auto custom-scrollbar font-mono text-xs text-emerald-400 space-y-2">
+                        <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800 pb-2 mb-2">
+                          <span>🗒️ NOTEPAD FILE VIEW: {selectedMaterial.fileName}</span>
+                          <span>Size: {selectedMaterial.fileSize}</span>
+                        </div>
+                        <pre className="whitespace-pre-wrap leading-relaxed">
+                          {selectedMaterial.description || `[Notepad Note Contents]\nTitle: ${selectedMaterial.title}\nSubject: ${selectedMaterial.subjectName}\nTopic: ${selectedMaterial.topic}\nUnit: ${selectedMaterial.unitNumber}\nUploaded By: ${selectedMaterial.uploadedBy}`}
+                        </pre>
+                      </div>
+                    );
+                  }
+
+                  if (type === 'WORD' || fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
+                    return (
+                      <div className="text-center p-6 space-y-3 bg-slate-900/80 rounded-2xl border border-blue-500/30 max-w-md">
+                        <div className="text-4xl text-blue-400">📝</div>
+                        <h4 className="text-sm font-extrabold text-white">Microsoft Word Document</h4>
+                        <p className="text-xs text-slate-400">{selectedMaterial.fileName} ({selectedMaterial.fileSize})</p>
+                        <p className="text-xs text-slate-300">This note is formatted as a Word document. Click below to download and view in Microsoft Word / Docs.</p>
+                        <button
+                          onClick={(e) => handleDownload(e, selectedMaterial)}
+                          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all"
+                        >
+                          ⬇️ Download Word Document (.docx)
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  if (type === 'EXCEL' || fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) {
+                    return (
+                      <div className="text-center p-6 space-y-3 bg-slate-900/80 rounded-2xl border border-emerald-500/30 max-w-md">
+                        <div className="text-4xl text-emerald-400">📊</div>
+                        <h4 className="text-sm font-extrabold text-white">Microsoft Excel Spreadsheet</h4>
+                        <p className="text-xs text-slate-400">{selectedMaterial.fileName} ({selectedMaterial.fileSize})</p>
+                        <p className="text-xs text-slate-300">This study material contains formula tables and calculations. Click below to download spreadsheet.</p>
+                        <button
+                          onClick={(e) => handleDownload(e, selectedMaterial)}
+                          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all"
+                        >
+                          ⬇️ Download Excel Sheet (.xlsx)
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  if (type === 'PPT' || fileName.endsWith('.ppt') || fileName.endsWith('.pptx')) {
+                    return (
+                      <div className="text-center p-6 space-y-3 bg-slate-900/80 rounded-2xl border border-amber-500/30 max-w-md">
+                        <div className="text-4xl text-amber-400">🖥️</div>
+                        <h4 className="text-sm font-extrabold text-white">PowerPoint Presentation</h4>
+                        <p className="text-xs text-slate-400">{selectedMaterial.fileName} ({selectedMaterial.fileSize})</p>
+                        <p className="text-xs text-slate-300">Lecture slides presentation file. Click below to download slide deck.</p>
+                        <button
+                          onClick={(e) => handleDownload(e, selectedMaterial)}
+                          className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-amber-600/30 transition-all"
+                        >
+                          ⬇️ Download PowerPoint (.pptx)
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  // Default PDF or IFRAME
+                  return selectedMaterial.fileUrl ? (
+                    <iframe
+                      src={selectedMaterial.fileUrl}
+                      title={selectedMaterial.title}
+                      className="w-full h-full rounded-xl border border-slate-800"
+                    />
+                  ) : (
+                    <div className="text-center space-y-2">
+                      <p className="text-sm font-bold text-cyan-300">Interactive Document</p>
+                      <p className="text-xs text-slate-400 max-w-md">
+                        {selectedMaterial.description}
+                      </p>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
@@ -511,7 +609,7 @@ export default function AcademicContentHub() {
                   onClick={(e) => handleDownload(e, selectedMaterial)}
                   className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl shadow-md"
                 >
-                  ⬇️ Download PDF
+                  ⬇️ Download Note File
                 </button>
               </div>
             </div>
