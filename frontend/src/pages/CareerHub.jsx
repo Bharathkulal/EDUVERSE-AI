@@ -57,11 +57,73 @@ export default function CareerHub() {
   const [portfolioGenerated, setPortfolioGenerated] = useState(false);
 
   // States for Certifications
+  const [activeLearningCert, setActiveLearningCert] = useState(null);
+  const [activeModuleIdx, setActiveModuleIdx] = useState(0);
+
   const [certs, setCerts] = useState([
-    { id: 1, name: 'Java Fundamentals', provider: 'EduVerse AI', progress: 85, icon: '☕', color: 'from-orange-500 to-red-500' },
-    { id: 2, name: 'DSA Mastery', provider: 'EduVerse AI', progress: 60, icon: '🌳', color: 'from-green-500 to-emerald-500' },
-    { id: 3, name: 'Python Developer', provider: 'EduVerse AI', progress: 40, icon: '🐍', color: 'from-blue-500 to-cyan-500' },
-    { id: 4, name: 'Database Expert', provider: 'EduVerse AI', progress: 20, icon: '🗄️', color: 'from-yellow-500 to-amber-500' },
+    {
+      id: 1,
+      name: 'Java Fundamentals',
+      provider: 'EduVerse AI',
+      icon: '☕',
+      color: 'from-orange-500 to-red-500',
+      progress: 100,
+      modules: [
+        { id: 'j1', title: 'Unit 1: Java Syntax & Primitive Types', desc: 'Variables, primitives, operators, and type casting', duration: '40 mins', completed: true, keyPoints: ['Primitive data types (int, float, char, boolean)', 'Operator precedence & arithmetic expressions', 'Implicit & explicit type casting rules'], codeSnippet: 'public class Main {\n  public static void main(String[] args) {\n    int age = 22;\n    System.out.println("Age: " + age);\n  }\n}' },
+        { id: 'j2', title: 'Unit 2: Control Flow & Decision Logic', desc: 'If-else branching, switch statements, for & while loops', duration: '45 mins', completed: true, keyPoints: ['Conditional execution paths', 'Loop control (break & continue)', 'Switch expressions & pattern matching'], codeSnippet: 'for (int i = 0; i < 5; i++) {\n  System.out.println("Iteration " + i);\n}' },
+        { id: 'j3', title: 'Unit 3: Object-Oriented Principles', desc: 'Classes, Objects, Inheritance, Encapsulation, Polymorphism', duration: '60 mins', completed: true, keyPoints: ['Class definitions & constructors', 'Method overriding vs overloading', 'Abstract classes & Interfaces'], codeSnippet: 'class Animal {\n  void sound() { System.out.println("Animal sound"); }\n}' },
+        { id: 'j4', title: 'Unit 4: Exception Handling & File I/O', desc: 'Try-catch blocks, throw, custom exceptions, file streams', duration: '50 mins', completed: true, keyPoints: ['Checked vs unchecked exceptions', 'Try-with-resources statement', 'BufferedReader & FileWriter streams'], codeSnippet: 'try {\n  int res = 10 / 0;\n} catch (ArithmeticException e) {\n  System.err.println(e.getMessage());\n}' },
+        { id: 'j5', title: 'Unit 5: Java Collections Framework', desc: 'List, Set, Map, ArrayList, HashMap, Iterators', duration: '55 mins', completed: true, keyPoints: ['ArrayList vs LinkedList performance', 'HashSet & HashMap hashing mechanism', 'Sorting with Comparable & Comparator'], codeSnippet: 'List<String> list = new ArrayList<>();\nlist.add("Java");\nSystem.out.println(list);' }
+      ]
+    },
+    {
+      id: 2,
+      name: 'DSA Mastery',
+      provider: 'EduVerse AI',
+      icon: '🌳',
+      color: 'from-green-500 to-emerald-500',
+      progress: 71,
+      modules: [
+        { id: 'd1', title: 'Module 1: Big O & Complexity Analysis', desc: 'Time and space complexity analysis, asymptotic notation', duration: '35 mins', completed: true, keyPoints: ['O(1), O(log n), O(n), O(n log n), O(n^2)', 'Best, Average, and Worst case analysis', 'Space complexity & recursion stack memory'], codeSnippet: '// Binary Search O(log n)\nint binarySearch(int[] arr, int target) {\n  int low = 0, high = arr.length - 1;\n  while(low <= high) {\n    int mid = low + (high - low) / 2;\n    if(arr[mid] == target) return mid;\n    else if(arr[mid] < target) low = mid + 1;\n    else high = mid - 1;\n  }\n  return -1;\n}' },
+        { id: 'd2', title: 'Module 2: Arrays & Two Pointers', desc: 'Array operations, sliding window, two pointer techniques', duration: '50 mins', completed: true, keyPoints: ['In-place element manipulation', 'Two pointers (opposite & same direction)', 'Sliding window maximums'], codeSnippet: '// Two Pointers sum\nint i = 0, j = arr.length - 1;\nwhile(i < j) {\n  if(arr[i] + arr[j] == target) break;\n}' },
+        { id: 'd3', title: 'Module 3: Stacks & Queues', desc: 'LIFO & FIFO operations, monotonic stack, circular queue', duration: '45 mins', completed: true, keyPoints: ['Stack with push, pop, peek', 'Queue using array & linked list', 'Next Greater Element problem'], codeSnippet: 'Stack<Integer> st = new Stack<>();\nst.push(10);\nint val = st.pop();' },
+        { id: 'd4', title: 'Module 4: Linked Lists & Pointers', desc: 'Singly, Doubly, Circular Linked Lists, reversing list', duration: '55 mins', completed: true, keyPoints: ['Node structure & pointer manipulation', 'Floyd Cycle Detection (Fast & Slow pointer)', 'Reversing linked list iteratively'], codeSnippet: 'ListNode prev = null, curr = head;\nwhile(curr != null) {\n  ListNode next = curr.next;\n  curr.next = prev;\n  prev = curr;\n  curr = next;\n}' },
+        { id: 'd5', title: 'Module 5: Binary Trees & BST', desc: 'Tree traversals (Pre, In, Post, Level), BST insertion & deletion', duration: '60 mins', completed: true, keyPoints: ['Recursive & Iterative Traversals', 'Lowest Common Ancestor (LCA)', 'Validating BST properties'], codeSnippet: 'void inorder(TreeNode root) {\n  if(root == null) return;\n  inorder(root.left);\n  System.out.println(root.val);\n  inorder(root.right);\n}' },
+        { id: 'd6', title: 'Module 6: Graph Algorithms', desc: 'Graph representation (Adjacency List), BFS, DFS, Dijkstra', duration: '65 mins', completed: false, keyPoints: ['Breadth First Search (Queue)', 'Depth First Search (Stack/Recursion)', 'Shortest path algorithms'], codeSnippet: '// BFS Traversal\nQueue<Integer> q = new LinkedList<>();\nq.add(start);\nvisited[start] = true;' },
+        { id: 'd7', title: 'Module 7: Dynamic Programming', desc: 'Memoization vs Tabulation, 0/1 Knapsack, LCS', duration: '75 mins', completed: false, keyPoints: ['Optimal Substructure & Overlapping Subproblems', 'Top-down vs Bottom-up approaches', 'Space optimization techniques'], codeSnippet: 'int[] dp = new int[n + 1];\ndp[0] = 0;\ndp[1] = 1;\nfor(int i = 2; i <= n; i++) dp[i] = dp[i-1] + dp[i-2];' }
+      ]
+    },
+    {
+      id: 3,
+      name: 'Python Developer',
+      provider: 'EduVerse AI',
+      icon: '🐍',
+      color: 'from-blue-500 to-cyan-500',
+      progress: 50,
+      modules: [
+        { id: 'p1', title: 'Lesson 1: Python Fundamentals & Collections', desc: 'Variables, Lists, Tuples, Dictionaries, Sets, Comprehensions', duration: '40 mins', completed: true, keyPoints: ['Mutable vs Immutable data types', 'Dictionary key-value lookups', 'List comprehensions syntax'], codeSnippet: 'squares = [x**2 for x in range(10) if x % 2 == 0]\nprint(squares)' },
+        { id: 'p2', title: 'Lesson 2: Functions, Decorators & Generators', desc: 'Def, *args, **kwargs, lambda functions, decorators, yield', duration: '50 mins', completed: true, keyPoints: ['First-class functions & closures', 'Writing custom decorators with @fn', 'Memory-efficient generators with yield'], codeSnippet: 'def my_decorator(func):\n  def wrapper():\n    print("Before")\n    func()\n    print("After")\n  return wrapper' },
+        { id: 'p3', title: 'Lesson 3: OOP & Modules in Python', desc: 'Classes, __init__, dunder methods, inheritance, modules', duration: '45 mins', completed: true, keyPoints: ['Self reference & instance attributes', 'Dunder methods (__str__, __repr__)', 'Importing custom modules'], codeSnippet: 'class Developer:\n  def __init__(self, name):\n    self.name = name' },
+        { id: 'p4', title: 'Lesson 4: File I/O, Web Scraping & APIs', desc: 'Open context manager, Requests library, BeautifulSoup', duration: '55 mins', completed: false, keyPoints: ['With open(...) as f:', 'HTTP GET/POST requests', 'HTML parsing with BeautifulSoup'], codeSnippet: 'import requests\nres = requests.get("https://api.github.com")\nprint(res.json())' },
+        { id: 'p5', title: 'Lesson 5: Data Analysis with Pandas & NumPy', desc: 'DataFrames, Series, filtering, aggregation, matrix operations', duration: '60 mins', completed: false, keyPoints: ['NumPy arrays & broadcasting', 'Pandas read_csv & groupby', 'Data cleaning & missing values'], codeSnippet: 'import pandas as pd\ndf = pd.read_csv("data.csv")\nprint(df.describe())' },
+        { id: 'p6', title: 'Lesson 6: Web Backend APIs with FastAPI', desc: 'Routing, Pydantic models, Async endpoints, Swagger docs', duration: '65 mins', completed: false, keyPoints: ['Async def endpoint handlers', 'Request body validation with Pydantic', 'Auto OpenAPI / Swagger UI'], codeSnippet: 'from fastapi import FastAPI\napp = FastAPI()\n@app.get("/")\ndef read_root(): return {"message": "Hello"}' }
+      ]
+    },
+    {
+      id: 4,
+      name: 'Database Expert',
+      provider: 'EduVerse AI',
+      icon: '🗄️',
+      color: 'from-yellow-500 to-amber-500',
+      progress: 20,
+      modules: [
+        { id: 'db1', title: 'Chapter 1: Relational Architecture & SQL Queries', desc: 'SELECT, WHERE, GROUP BY, HAVING, ORDER BY, Subqueries', duration: '40 mins', completed: true, keyPoints: ['SQL clause evaluation order', 'Aggregate functions (COUNT, SUM, AVG)', 'Filtering grouped data with HAVING'], codeSnippet: 'SELECT dept, COUNT(*) FROM employees\nWHERE status = \'active\'\nGROUP BY dept HAVING COUNT(*) > 5;' },
+        { id: 'db2', title: 'Chapter 2: Table Joins & Relational Algebra', desc: 'INNER, LEFT, RIGHT, FULL OUTER, CROSS JOINs, Union', duration: '50 mins', completed: false, keyPoints: ['Cartesian product & JOIN conditions', 'Self joins & hierarchical queries', 'Relational algebra operations'], codeSnippet: 'SELECT e.name, d.department_name\nFROM employees e\nLEFT JOIN departments d ON e.dept_id = d.id;' },
+        { id: 'db3', title: 'Chapter 3: Database Normalization (1NF to BCNF)', desc: 'Functional dependencies, 1NF, 2NF, 3NF, BCNF decomposition', duration: '55 mins', completed: false, keyPoints: ['Removing partial dependencies (2NF)', 'Removing transitive dependencies (3NF)', 'Boyce-Codd Normal Form (BCNF)'], codeSnippet: '-- 3NF Table Split\nCREATE TABLE Departments (\n  dept_id INT PRIMARY KEY,\n  dept_name VARCHAR(100)\n);' },
+        { id: 'db4', title: 'Chapter 4: Indexing, B-Trees & Performance Tuning', desc: 'Clustered vs Non-clustered indexes, B-Tree structures, EXPLAIN', duration: '60 mins', completed: false, keyPoints: ['Primary vs secondary indexes', 'Composite index column order', 'Analyzing execution plans with EXPLAIN'], codeSnippet: 'CREATE INDEX idx_user_email ON users(email);' },
+        { id: 'db5', title: 'Chapter 5: Transactions, ACID & Locking', desc: 'BEGIN, COMMIT, ROLLBACK, Isolation levels, Deadlocks', duration: '60 mins', completed: false, keyPoints: ['Atomicity, Consistency, Isolation, Durability', 'Read Uncommitted to Serializable', 'Shared vs Exclusive Locks'], codeSnippet: 'BEGIN TRANSACTION;\nUPDATE accounts SET balance = balance - 100 WHERE id = 1;\nUPDATE accounts SET balance = balance + 100 WHERE id = 2;\nCOMMIT;' }
+      ]
+    }
   ]);
 
   const companyQuestions = [
@@ -282,17 +344,32 @@ export default function CareerHub() {
     toast.success(`${templateType} Resume built successfully!`);
   };
 
-  // ───── Certifications Tracker ─────
-  const handleProgressCert = (certId) => {
+  // ───── Certifications Tracker & Learning Modules ─────
+  const handleOpenLearningModules = (cert) => {
+    setActiveLearningCert(cert);
+    const uncompletedIdx = cert.modules.findIndex(m => !m.completed);
+    setActiveModuleIdx(uncompletedIdx !== -1 ? uncompletedIdx : 0);
+  };
+
+  const handleCompleteModule = (certId, moduleId) => {
     setCerts(prev => prev.map(c => {
       if (c.id === certId) {
-        const nextProg = Math.min(c.progress + 10, 100);
-        if (nextProg === 100) {
-          toast.success(`🎉 Congratulations! Earning certificate for ${c.name}!`);
+        const updatedModules = c.modules.map(m => m.id === moduleId ? { ...m, completed: true } : m);
+        const completedCount = updatedModules.filter(m => m.completed).length;
+        const newProg = Math.round((completedCount / updatedModules.length) * 100);
+
+        const updatedCert = { ...c, modules: updatedModules, progress: newProg };
+        
+        if (newProg === 100) {
+          toast.success(`🎉 Congratulations! Unlocked Certificate for ${c.name}!`);
         } else {
-          toast.success(`Progressed ${c.name} by 10%`);
+          toast.success(`Completed Module! ${c.name} progress: ${newProg}%`);
         }
-        return { ...c, progress: nextProg };
+
+        if (activeLearningCert && activeLearningCert.id === certId) {
+          setActiveLearningCert(updatedCert);
+        }
+        return updatedCert;
       }
       return c;
     }));
@@ -808,73 +885,230 @@ export default function CareerHub() {
           <motion.div key="certifications" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {certs.map((cert, i) => (
-                <div key={i} className="p-5 rounded-2xl border hover:shadow-lg transition-all flex flex-col justify-between gap-3 bg-white border-slate-200" >
+                <div key={i} className="p-5 rounded-2xl border hover:shadow-xl transition-all flex flex-col justify-between gap-4 bg-slate-900/90 border-slate-800 text-white shadow-xl hover:border-cyan-500/40" >
                   <div className="flex items-center gap-3">
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cert.color} flex items-center justify-center text-xl text-white shadow-md`}>
                       {cert.icon}
                     </div>
                     <div>
-                      <h3 className="text-xs font-bold text-slate-800 leading-tight">{cert.name}</h3>
+                      <h3 className="text-xs font-extrabold text-white leading-tight">{cert.name}</h3>
                       <p className="text-[10px] text-slate-400">{cert.provider}</p>
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[11px] font-bold text-slate-500">
-                      <span>Progress</span>
-                      <span>{cert.progress}%</span>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[11px] font-bold text-slate-300">
+                      <span>Course Progress</span>
+                      <span className="text-cyan-400 font-mono font-bold">{cert.progress}%</span>
                     </div>
-                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div className={`h-full bg-gradient-to-r ${cert.color} rounded-full transition-all`} style={{ width: `${cert.progress}%` }} />
+                    <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                      <div className={`h-full bg-gradient-to-r ${cert.color} rounded-full transition-all duration-500`} style={{ width: `${cert.progress}%` }} />
                     </div>
                   </div>
 
                   {cert.progress >= 100 ? (
                     <button 
                       onClick={() => setActiveCertCertificate(cert)}
-                      className="w-full py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer"
+                      className="w-full py-2.5 text-xs font-extrabold rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md cursor-pointer transition-all flex items-center justify-center gap-1.5"
                     >
                       🎉 View Certificate
                     </button>
                   ) : (
                     <button 
-                      onClick={() => handleProgressCert(cert.id)}
-                      className="w-full py-2 text-xs font-bold rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer"
+                      onClick={() => handleOpenLearningModules(cert)}
+                      className="w-full py-2.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 cursor-pointer transition-all flex items-center justify-center gap-1.5"
                     >
-                      Continue Learning
+                      <span>▶️</span> Continue Learning ({cert.modules.filter(m => m.completed).length}/{cert.modules.length})
                     </button>
                   )}
                 </div>
               ))}
             </div>
 
-            {/* Certificate overlay modal */}
-            {activeCertCertificate && (
-              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-3xl border border-slate-200 max-w-xl w-full p-8 text-center space-y-6 shadow-2xl relative">
-                  <button 
-                    onClick={() => setActiveCertCertificate(null)}
-                    className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xs font-bold"
-                  >
-                    Close
-                  </button>
-
-                  <Award size={64} className="text-amber-500 mx-auto" />
+            {/* Interactive Learning Modules Modal Overlay */}
+            {activeLearningCert && (
+              <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
+                <div className="bg-slate-900 rounded-3xl border border-slate-800 max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col text-white">
                   
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-black uppercase text-violet-600 tracking-wider">EDUVERSE ACADEMY CERTIFICATE OF PROGRESS</span>
-                    <h2 className="text-xl font-black text-slate-800">{activeCertCertificate.name}</h2>
-                    <p className="text-xs text-slate-500">This certifies that <strong>{resumeName}</strong> has successfully completed the curriculum requirements.</p>
+                  {/* Modal Header */}
+                  <div className="p-6 border-b border-slate-800 bg-slate-950/80 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${activeLearningCert.color} flex items-center justify-center text-xl shadow-lg`}>
+                        {activeLearningCert.icon}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-lg font-extrabold text-white">{activeLearningCert.name}</h2>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                            Learning Modules
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Progress: <span className="font-mono font-bold text-cyan-300">{activeLearningCert.progress}%</span> ({activeLearningCert.modules.filter(m => m.completed).length} of {activeLearningCert.modules.length} Modules Completed)
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setActiveLearningCert(null)}
+                      className="p-2 text-slate-400 hover:text-white bg-slate-800 rounded-xl transition-colors text-xs font-bold"
+                    >
+                      ✕ Close
+                    </button>
                   </div>
 
-                  <div className="border-t border-b py-3 text-[10px] text-slate-400 flex justify-between">
+                  {/* Modal Content Split View */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 flex-1 overflow-hidden">
+                    
+                    {/* Left Panel: Modules Navigation List */}
+                    <div className="md:col-span-1 p-4 bg-slate-950/60 border-r border-slate-800 overflow-y-auto space-y-2 custom-scrollbar">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Course Curriculum</p>
+                      {activeLearningCert.modules.map((mod, idx) => {
+                        const isSelected = activeModuleIdx === idx;
+                        return (
+                          <div
+                            key={mod.id}
+                            onClick={() => setActiveModuleIdx(idx)}
+                            className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                              isSelected
+                                ? 'bg-slate-800 border-cyan-400 shadow-md'
+                                : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700'
+                            }`}
+                          >
+                            <div className="min-w-0">
+                              <p className={`text-xs font-bold truncate ${isSelected ? 'text-cyan-300' : 'text-slate-200'}`}>
+                                {mod.title}
+                              </p>
+                              <p className="text-[10px] text-slate-400 mt-0.5">{mod.duration}</p>
+                            </div>
+
+                            {mod.completed ? (
+                              <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold border border-emerald-500/40">
+                                ✓
+                              </span>
+                            ) : (
+                              <span className="w-6 h-6 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-[10px] font-bold border border-slate-700">
+                                {idx + 1}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Right Panel: Module Study Workspace */}
+                    {activeLearningCert.modules[activeModuleIdx] && (
+                      <div className="md:col-span-2 p-6 overflow-y-auto space-y-5 custom-scrollbar bg-slate-900/80 flex flex-col justify-between">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div>
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-slate-800 text-cyan-400 border border-slate-700">
+                                Module {activeModuleIdx + 1} of {activeLearningCert.modules.length}
+                              </span>
+                              <h3 className="text-base font-extrabold text-white mt-1">
+                                {activeLearningCert.modules[activeModuleIdx].title}
+                              </h3>
+                            </div>
+                            <span className="text-xs text-slate-400 font-mono">
+                              ⏱️ {activeLearningCert.modules[activeModuleIdx].duration}
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-slate-300 leading-relaxed">
+                            {activeLearningCert.modules[activeModuleIdx].desc}
+                          </p>
+
+                          {/* Key Learning Concepts */}
+                          <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
+                            <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wider">
+                              🎯 Core Learning Outcomes & Concepts
+                            </h4>
+                            <ul className="space-y-1 text-xs text-slate-300">
+                              {activeLearningCert.modules[activeModuleIdx].keyPoints.map((point, i) => (
+                                <li key={i} className="flex items-center gap-2">
+                                  <span className="text-cyan-400">•</span> {point}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {/* Interactive Code / Theory Snippet */}
+                          <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
+                            <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                              <span>💻</span> Code Implementation & Practice Snippet
+                            </h4>
+                            <pre className="p-3 bg-slate-900 rounded-xl font-mono text-xs text-cyan-300 overflow-x-auto border border-slate-800">
+                              {activeLearningCert.modules[activeModuleIdx].codeSnippet}
+                            </pre>
+                          </div>
+                        </div>
+
+                        {/* Complete Module Button Action */}
+                        <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setActiveModuleIdx(Math.max(0, activeModuleIdx - 1))}
+                              disabled={activeModuleIdx === 0}
+                              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 rounded-xl disabled:opacity-40"
+                            >
+                              ← Prev Module
+                            </button>
+                            <button
+                              onClick={() => setActiveModuleIdx(Math.min(activeLearningCert.modules.length - 1, activeModuleIdx + 1))}
+                              disabled={activeModuleIdx === activeLearningCert.modules.length - 1}
+                              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 rounded-xl disabled:opacity-40"
+                            >
+                              Next Module →
+                            </button>
+                          </div>
+
+                          {activeLearningCert.modules[activeModuleIdx].completed ? (
+                            <span className="px-4 py-2 bg-emerald-500/20 text-emerald-300 font-extrabold text-xs rounded-xl border border-emerald-500/40 flex items-center gap-1.5">
+                              ✓ Module Completed
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleCompleteModule(activeLearningCert.id, activeLearningCert.modules[activeModuleIdx].id)}
+                              className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-cyan-500/20 cursor-pointer transition-all"
+                            >
+                              Complete Module & Progress Certificate ➔
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Certificate overlay modal */}
+            {activeCertCertificate && (
+              <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
+                <div className="bg-slate-900 rounded-3xl border border-slate-800 max-w-xl w-full p-8 text-center space-y-6 shadow-2xl relative text-white">
+                  <button 
+                    onClick={() => setActiveCertCertificate(null)}
+                    className="absolute top-4 right-4 text-slate-400 hover:text-white text-xs font-bold bg-slate-800 px-3 py-1.5 rounded-xl"
+                  >
+                    ✕ Close
+                  </button>
+
+                  <Award size={64} className="text-amber-400 mx-auto animate-bounce" />
+                  
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black uppercase text-cyan-400 tracking-wider">EDUVERSE ACADEMY CERTIFICATE OF MASTERY</span>
+                    <h2 className="text-2xl font-black text-white">{activeCertCertificate.name}</h2>
+                    <p className="text-xs text-slate-300">This certifies that <strong>{resumeName}</strong> has successfully completed all learning modules and curriculum requirements.</p>
+                  </div>
+
+                  <div className="border-t border-b border-slate-800 py-3 text-[10px] font-mono text-slate-400 flex justify-between">
                     <span>DATE: {new Date().toLocaleDateString()}</span>
                     <span>VERIFICATION ID: EDV-{activeCertCertificate.id}93A</span>
                   </div>
 
                   <button 
                     onClick={() => { toast.success('Certificate PDF download started!'); setActiveCertCertificate(null); }}
-                    className="w-full py-2 bg-violet-600 text-white text-xs font-bold rounded-xl"
+                    className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-cyan-500/30"
                   >
                     Download Certificate Document
                   </button>
