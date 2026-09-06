@@ -43,7 +43,6 @@ const CodingBattleSystem = lazy(() => import('./pages/CodingBattleSystem'));
 const Community = lazy(() => import('./pages/Community'));
 const CareerHub = lazy(() => import('./pages/CareerHub'));
 const ExamCommandCenter = lazy(() => import('./pages/ExamCommandCenter'));
-const InnovationHub = lazy(() => import('./pages/InnovationHub'));
 // Command AI Page
 const CommandAIDashboard = lazy(() => import('./pages/CommandAIDashboard'));
 // Python AI Learning Platform
@@ -186,7 +185,6 @@ export default function App() {
 
             {/* Career Hub, Innovation & Community */}
             <Route path="/career-hub" element={<ProtectedRoute><Layout><CareerHub /></Layout></ProtectedRoute>} />
-            <Route path="/innovation-hub" element={<ProtectedRoute><Layout><InnovationHub /></Layout></ProtectedRoute>} />
             <Route path="/exam-command" element={<ProtectedRoute><Layout><ExamCommandCenter /></Layout></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><Layout><Community /></Layout></ProtectedRoute>} />
 

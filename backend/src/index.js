@@ -913,7 +913,6 @@ const db = require('./config/db');
   const itSuiteRoutes = require('./routes/it_suite');
   const chatLearnRoutes = require('./routes/chat_learn');
   const voiceRoutes = require('./routes/voice');
-  const innovationRoutes = require('./routes/innovation');
   const mathRoutes = require('./routes/math');
   const examQrRoutes = require('./routes/exam_qr');
   const http = require('http');
@@ -1103,7 +1102,6 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/it-suite', itSuiteRoutes);
 app.use('/api/chat-learn', chatLearnRoutes);
 app.use('/api/voice', voiceRoutes);
-app.use('/api/innovation', innovationRoutes);
 app.use('/api/math', mathRoutes);
 app.use('/api/exam-qr', examQrRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
