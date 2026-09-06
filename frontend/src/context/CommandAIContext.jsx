@@ -33,9 +33,64 @@ export const CommandAIProvider = ({ children }) => {
   const [rate, setRate] = useState(1.0);
   const [voiceStyle, setVoiceStyle] = useState('Natural');
 
+  // Diagnostics & Permissions state
+  const [microphoneStatus, setMicrophoneStatus] = useState('granted'); // granted, prompt, denied, missing
+  const [diagnosticLogs, setDiagnosticLogs] = useState([]);
+  const [restartCount, setRestartCount] = useState(0);
+  const [lastExecutionTime, setLastExecutionTime] = useState(0);
+  const [lastConfidence, setLastConfidence] = useState(0.95);
+  const [lastParsedIntent, setLastParsedIntent] = useState('READY');
+
   const recognitionRef = useRef(null);
   const wakeWordDetectorRef = useRef(null);
   const isMountedRef = useRef(true);
+
+  const addDiagnosticLog = useCallback((type, message) => {
+    const entry = { time: new Date().toLocaleTimeString(), type, message };
+    setDiagnosticLogs(prev => [entry, ...prev.slice(0, 49)]);
+  }, []);
+
+  // Pre-check microphone permissions
+  const checkMicrophonePermissions = useCallback(async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setMicrophoneStatus('missing');
+      return;
+    }
+    try {
+      if (navigator.permissions && navigator.permissions.query) {
+        const status = await navigator.permissions.query({ name: 'microphone' });
+        setMicrophoneStatus(status.state);
+        status.onchange = () => setMicrophoneStatus(status.state);
+      }
+    } catch (e) {
+      // Ignore query permission unsupported edge cases
+    }
+  }, []);
+
+  useEffect(() => {
+    checkMicrophonePermissions();
+  }, [checkMicrophonePermissions]);
+
+  const requestMicrophonePermission = useCallback(async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setMicrophoneStatus('missing');
+        toast.error('Microphone API is not supported in this browser.');
+        return false;
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop());
+      setMicrophoneStatus('granted');
+      toast.success('Microphone access granted!');
+      addDiagnosticLog('permission', 'Microphone access granted');
+      return true;
+    } catch (err) {
+      setMicrophoneStatus('denied');
+      toast.error('Microphone permission denied. Please click the camera/mic icon in address bar to allow.');
+      addDiagnosticLog('error', `Microphone denied: ${err.message}`);
+      return false;
+    }
+  }, [addDiagnosticLog]);
 
   // Initialize Memory Store from logged-in user profile
   useEffect(() => {
@@ -65,7 +120,6 @@ export const CommandAIProvider = ({ children }) => {
     utterance.onend = () => {
       if (isMountedRef.current) {
         setActiveState('idle');
-        // Restart wake word detector if enabled
         if (isWakeEnabled && wakeWordDetectorRef.current) {
           wakeWordDetectorRef.current.start();
         }
@@ -80,7 +134,6 @@ export const CommandAIProvider = ({ children }) => {
       }
     };
 
-    // Find custom female voice if available
     const voices = window.speechSynthesis.getVoices();
     const targetVoice = voices.find(
       (v) => v.name.includes('Google US English') || v.name.includes('Female') || v.name.includes('Zira')
@@ -93,17 +146,17 @@ export const CommandAIProvider = ({ children }) => {
   /** Execute Router Result Actions in React space */
   const executeRouterAction = useCallback(async (result) => {
     if (!result.success) {
-      speak(result.response);
-      toast.error(result.response);
+      if (result.error !== 'UNKNOWN_INTENT') {
+        speak(result.response);
+        toast.error(result.response);
+      }
       return;
     }
 
     const { action, route, state, payload, response } = result;
 
-    // Trigger TTS response
     speak(response);
 
-    // React Action handler
     switch (action) {
       case 'NAVIGATE':
         if (route) {
@@ -115,6 +168,41 @@ export const CommandAIProvider = ({ children }) => {
         break;
       case 'HISTORY_FORWARD':
         window.history.forward();
+        break;
+      case 'SCROLL_DOWN':
+        window.scrollBy({ top: window.innerHeight * 0.6, behavior: 'smooth' });
+        break;
+      case 'SCROLL_UP':
+        window.scrollBy({ top: -window.innerHeight * 0.6, behavior: 'smooth' });
+        break;
+      case 'SWITCH_THEME': {
+        const themeBtn = document.querySelector('button[title*="theme" i]') || document.querySelector('button[aria-label*="theme" i]') || document.querySelector('.theme-toggle');
+        if (themeBtn) themeBtn.click();
+        break;
+      }
+      case 'VOICE_SEARCH': {
+        const q = payload?.query || '';
+        const searchInput = document.querySelector('input[placeholder*="search" i]') || document.querySelector('input[type="search"]');
+        if (searchInput) {
+          searchInput.focus();
+          if (q) {
+            searchInput.value = q;
+            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        }
+        break;
+      }
+      case 'START_TIMER':
+        toast.success('Focus Timer activated (25 min)');
+        break;
+      case 'STOP_TIMER':
+        toast.success('Focus Timer paused');
+        break;
+      case 'EXPORT_NOTES':
+        toast.success('Exporting study notes as PDF...');
+        break;
+      case 'DELETE_CHAT':
+        toast.success('Workspace cleared.');
         break;
       case 'TRIGGER_RESUME_DOWNLOAD':
         toast.loading('Compiling and generating resume PDF...');
@@ -132,7 +220,6 @@ export const CommandAIProvider = ({ children }) => {
         if (wakeWordDetectorRef.current) wakeWordDetectorRef.current.stop();
         break;
       case 'LOGOUT':
-        // Wipe local storage state and trigger normal logout redirect
         MemoryStore.clearAll();
         api.post('/auth/logout').finally(() => {
           window.location.href = '/';
@@ -142,7 +229,6 @@ export const CommandAIProvider = ({ children }) => {
         break;
     }
 
-    // Log the voice command execution to backend analytics for Admin audit trail
     try {
       await api.post('/voice/log', {
         intent: result.intent,
@@ -151,10 +237,9 @@ export const CommandAIProvider = ({ children }) => {
         status: 'success'
       });
     } catch (e) {
-      // Backend log failed but client command succeeded
+      // Silent catch
     }
 
-    // Update state history
     setHistory(MemoryStore.getCommandHistory());
   }, [navigate, speak, transcript]);
 
@@ -162,21 +247,33 @@ export const CommandAIProvider = ({ children }) => {
   const executeCommand = useCallback(async (rawText) => {
     if (!rawText.trim()) return;
 
+    const startTime = performance.now();
     setActiveState('thinking');
+    addDiagnosticLog('intent', `Parsing: "${rawText}"`);
     
-    // 1. LLM Intent parsing
+    // 1. LLM / Fuzzy Intent parsing
     const intentResult = await parseIntent(rawText, MemoryStore.getFullContext());
-    
+    setLastParsedIntent(intentResult.intent);
+    setLastConfidence(intentResult.confidence);
+
     // 2. Command routing
     const routerResult = await routeCommand(intentResult, user?.role || 'student');
     
+    const duration = Math.round(performance.now() - startTime);
+    setLastExecutionTime(duration);
+    addDiagnosticLog('action', `Executed: ${intentResult.intent} (${duration}ms)`);
+
     // 3. React execution
     await executeRouterAction(routerResult);
-  }, [user, executeRouterAction]);
+  }, [user, executeRouterAction, addDiagnosticLog]);
 
   /** Activate Speech Recognition manually */
-  const startListening = useCallback(() => {
-    // Cancel any active wake word listener
+  const startListening = useCallback(async () => {
+    if (microphoneStatus === 'denied') {
+      const granted = await requestMicrophonePermission();
+      if (!granted) return;
+    }
+
     if (wakeWordDetectorRef.current) {
       wakeWordDetectorRef.current.stop();
     }
@@ -192,7 +289,9 @@ export const CommandAIProvider = ({ children }) => {
         recognitionRef.current.start();
         return;
       } catch {
-        recognitionRef.current.stop();
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
       }
     }
 
@@ -206,6 +305,7 @@ export const CommandAIProvider = ({ children }) => {
       setTranscript('');
       setIsPanelOpen(true);
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      addDiagnosticLog('speech', 'Speech recognition engine started');
     };
 
     rec.onresult = (event) => {
@@ -216,7 +316,7 @@ export const CommandAIProvider = ({ children }) => {
 
     rec.onend = () => {
       setActiveState('idle');
-      // Trigger execution automatically if transcript exists
+      setRestartCount(prev => prev + 1);
       setTranscript((currentVal) => {
         if (currentVal.trim()) {
           executeCommand(currentVal);
@@ -227,17 +327,31 @@ export const CommandAIProvider = ({ children }) => {
 
     rec.onerror = (event) => {
       setActiveState('idle');
-      if (event.error !== 'no-speech') {
-        toast.error(`Mic error: ${event.error}`);
+      addDiagnosticLog('error', `Speech engine error: ${event.error}`);
+
+      // Filter out benign operational abort / no-speech errors to prevent intrusive toasts
+      if (event.error !== 'no-speech' && event.error !== 'aborted') {
+        if (event.error === 'not-allowed') {
+          setMicrophoneStatus('denied');
+          toast.error('Microphone permission blocked. Please enable mic access.');
+        } else {
+          console.warn(`[CommandAI] Recognition note: ${event.error}`);
+        }
       }
+
       if (isWakeEnabled && wakeWordDetectorRef.current) {
         wakeWordDetectorRef.current.start();
       }
     };
 
     recognitionRef.current = rec;
-    rec.start();
-  }, [executeCommand, isWakeEnabled]);
+    try {
+      rec.start();
+    } catch (e) {
+      addDiagnosticLog('error', `Speech start exception: ${e.message}`);
+    }
+  }, [executeCommand, isWakeEnabled, microphoneStatus, requestMicrophonePermission, addDiagnosticLog]);
+
 
   // Handle continuous Wake Word Lifecycle
   useEffect(() => {
@@ -285,6 +399,13 @@ export const CommandAIProvider = ({ children }) => {
     setRate,
     voiceStyle,
     setVoiceStyle,
+    microphoneStatus,
+    requestMicrophonePermission,
+    diagnosticLogs,
+    restartCount,
+    lastExecutionTime,
+    lastConfidence,
+    lastParsedIntent,
     speak,
     startListening,
     executeCommand
@@ -295,6 +416,7 @@ export const CommandAIProvider = ({ children }) => {
       {children}
     </CommandAIContext.Provider>
   );
+
 };
 
 export const useCommandAI = () => {

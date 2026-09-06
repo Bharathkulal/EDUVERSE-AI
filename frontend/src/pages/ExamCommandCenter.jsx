@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ExamCommandCenter.css';
 
+import QrScannerModal from '../components/ExamAI/QrScannerModal';
+import FacultyUploadPortal from '../components/ExamAI/FacultyUploadPortal';
+import StudentAnswerSheetViewer from '../components/ExamAI/StudentAnswerSheetViewer';
+import AdminQrFactory from '../components/ExamAI/AdminQrFactory';
+import AiExamIntelligenceSuite from '../components/ExamAI/AiExamIntelligenceSuite';
+import QrSystemAnalytics from '../components/ExamAI/QrSystemAnalytics';
+
 // Initialize Web Speech API safely
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
@@ -11,7 +18,9 @@ if (SpeechRecognition) {
 }
 
 export default function ExamCommandCenter() {
-  const [activeView, setActiveView] = useState('oral');
+  const [activeView, setActiveView] = useState('faculty-scan');
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [scannedStudentData, setScannedStudentData] = useState(null);
 
   // ==========================================
   // 1. AI ORAL EXAM STATE
@@ -499,7 +508,34 @@ PART C: HIGH ORDER THINKING SKILL (HOTS) SCENARIO (Bloom Level: Evaluating/Creat
     <div className="ecc-container">
       {/* Sidebar Navigation */}
       <div className="ecc-sidebar">
-        <div className="ecc-sidebar-title">Assessment modules</div>
+        <div className="ecc-sidebar-title text-cyan-400 font-bold uppercase tracking-wider">🎯 AI QR System</div>
+        
+        <button className={`ecc-nav-item ${activeView === 'faculty-scan' ? 'active' : ''}`} onClick={() => setActiveView('faculty-scan')}>
+          <span className="ecc-nav-icon">📷</span>
+          <span>Faculty Upload Portal</span>
+        </button>
+
+        <button className={`ecc-nav-item ${activeView === 'student-sheets' ? 'active' : ''}`} onClick={() => setActiveView('student-sheets')}>
+          <span className="ecc-nav-icon">📄</span>
+          <span>My Answer Sheets</span>
+        </button>
+
+        <button className={`ecc-nav-item ${activeView === 'qr-factory' ? 'active' : ''}`} onClick={() => setActiveView('qr-factory')}>
+          <span className="ecc-nav-icon">🛡️</span>
+          <span>Admin QR Factory</span>
+        </button>
+
+        <button className={`ecc-nav-item ${activeView === 'ai-suite' ? 'active' : ''}`} onClick={() => setActiveView('ai-suite')}>
+          <span className="ecc-nav-icon">🧠</span>
+          <span>AI Evaluation Suite</span>
+        </button>
+
+        <button className={`ecc-nav-item ${activeView === 'qr-analytics' ? 'active' : ''}`} onClick={() => setActiveView('qr-analytics')}>
+          <span className="ecc-nav-icon">📊</span>
+          <span>QR System Analytics</span>
+        </button>
+
+        <div className="ecc-sidebar-title mt-4">Assessment modules</div>
         
         <button className={`ecc-nav-item ${activeView === 'oral' ? 'active' : ''}`} onClick={() => setActiveView('oral')}>
           <span className="ecc-nav-icon">🎙️</span>
@@ -555,6 +591,88 @@ PART C: HIGH ORDER THINKING SKILL (HOTS) SCENARIO (Bloom Level: Evaluating/Creat
       {/* Main Workspace content */}
       <div className="ecc-content" onCopy={triggerCopyAlert}>
         
+        {/* Global Quick Action Bar for Exam AI */}
+        <div className="flex flex-wrap items-center justify-between gap-4 p-4 mb-6 bg-slate-900/90 backdrop-blur-xl border border-cyan-500/30 rounded-2xl shadow-xl">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-xl shadow-lg shadow-cyan-500/30">
+              📋
+            </div>
+            <div>
+              <h1 className="text-lg font-extrabold text-white">AI QR Answer Sheet Management System</h1>
+              <p className="text-xs text-slate-400">Automated QR Answer Sheet Scanning, Verification & AI Grading Platform</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsScannerOpen(true)}
+              className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-cyan-500/20 transition-all flex items-center gap-2"
+            >
+              📷 Scan QR Code
+            </button>
+            <button
+              onClick={() => setActiveView('qr-factory')}
+              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-bold rounded-xl border border-slate-700 transition-colors"
+            >
+              🛡️ Generate QRs
+            </button>
+            <button
+              onClick={() => setActiveView('student-sheets')}
+              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition-colors"
+            >
+              📄 My Answer Sheets
+            </button>
+          </div>
+        </div>
+
+        {/* Global QR Scanner Modal */}
+        <QrScannerModal
+          isOpen={isScannerOpen}
+          onClose={() => setIsScannerOpen(false)}
+          onScanSuccess={(res) => {
+            setScannedStudentData(res);
+            setActiveView('faculty-scan');
+          }}
+        />
+
+        {/* ==========================================
+            VIEW 0A: FACULTY SCAN & UPLOAD PORTAL
+            ========================================== */}
+        {activeView === 'faculty-scan' && (
+          <FacultyUploadPortal
+            scannedStudentData={scannedStudentData}
+            onUploadComplete={() => setActiveView('student-sheets')}
+          />
+        )}
+
+        {/* ==========================================
+            VIEW 0B: STUDENT ANSWER SHEETS & VIEWER
+            ========================================== */}
+        {activeView === 'student-sheets' && (
+          <StudentAnswerSheetViewer />
+        )}
+
+        {/* ==========================================
+            VIEW 0C: ADMIN QR FACTORY & EXAMS
+            ========================================== */}
+        {activeView === 'qr-factory' && (
+          <AdminQrFactory />
+        )}
+
+        {/* ==========================================
+            VIEW 0D: AI EVALUATION & FRAUD SUITE
+            ========================================== */}
+        {activeView === 'ai-suite' && (
+          <AiExamIntelligenceSuite />
+        )}
+
+        {/* ==========================================
+            VIEW 0E: QR SYSTEM ANALYTICS
+            ========================================== */}
+        {activeView === 'qr-analytics' && (
+          <QrSystemAnalytics />
+        )}
+
         {/* ==========================================
             VIEW 1: AI ORAL EXAM MODE
             ========================================== */}

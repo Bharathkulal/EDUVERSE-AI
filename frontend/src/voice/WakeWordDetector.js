@@ -66,9 +66,10 @@ export class WakeWordDetector {
       };
 
       rec.onerror = (event) => {
-        if (event.error === 'no-speech') return; // ignore silence errors
+        if (event.error === 'no-speech' || event.error === 'aborted') return; // ignore silence and operational abort errors
         if (this.onError) this.onError(event.error);
       };
+
 
       rec.onend = () => {
         this.isListening = false;

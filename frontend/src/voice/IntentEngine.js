@@ -102,38 +102,107 @@ function normalizeIntent(parsed, raw) {
   };
 }
 
+// Levenshtein edit distance for fuzzy phonetic/typo matching
+function levenshteinDistance(a, b) {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+  const matrix = [];
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+function fuzzyMatchScore(input, phrase) {
+  if (input === phrase) return 1.0;
+  if (input.includes(phrase) || phrase.includes(input)) return 0.9;
+  
+  const dist = levenshteinDistance(input, phrase);
+  const maxLen = Math.max(input.length, phrase.length);
+  if (maxLen === 0) return 1.0;
+  return 1 - dist / maxLen;
+}
+
 /**
- * Lightweight regex/keyword fallback for offline use.
+ * Lightweight regex/keyword and fuzzy fallback for offline use.
  */
 function regexFallback(clean, raw) {
-  // Sort by phrase length desc so longer matches take priority
-  const sorted = [...COMMAND_REGISTRY].sort(
-    (a, b) => Math.max(...b.phrases.map(p => p.length)) - Math.max(...a.phrases.map(p => p.length))
-  );
+  // Alias map for common spoken variations & typos
+  const ALIAS_MAP = [
+    { target: 'OPEN_DASHBOARD', aliases: ['dashbord', 'dasboard', 'take me home', 'main page', 'show main page', 'go home'] },
+    { target: 'START_JAVA_QUIZ', aliases: ['java quize', 'quize java', 'test java'] },
+    { target: 'START_PYTHON_QUIZ', aliases: ['python quize', 'quize python', 'test python'] },
+    { target: 'OPEN_CODING', aliases: ['open cod', 'code editor', 'coding lab', 'go to code'] },
+    { target: 'OPEN_PRACTICE', aliases: ['practice mode', 'practice center'] },
+    { target: 'OPEN_SMARTBOARD', aliases: ['white board', 'drawing board'] }
+  ];
 
-  for (const cmd of sorted) {
-    for (const phrase of cmd.phrases) {
-      if (clean.includes(phrase)) {
-        // Extract topic — everything after the matched phrase
-        const afterPhrase = clean.replace(phrase, '').trim();
-        const topic = extractTopic(clean);
-
+  for (const item of ALIAS_MAP) {
+    if (item.aliases.some(alias => clean.includes(alias) || fuzzyMatchScore(clean, alias) > 0.72)) {
+      const cmd = COMMAND_REGISTRY.find(c => c.intent === item.target);
+      if (cmd) {
         return {
           intent: cmd.intent,
-          confidence: 0.82,
-          parameters: topic ? { topic } : {},
-          response: cmd.responseTemplate.replace('{topic}', topic || ''),
+          confidence: 0.88,
+          parameters: {},
+          response: cmd.responseTemplate,
           requires_confirmation: cmd.requiresConfirmation,
           rawTranscript: raw,
-          source: 'regex',
+          source: 'fuzzy_alias',
           timestamp: Date.now(),
         };
       }
     }
   }
 
+  // Sort by phrase length desc so longer matches take priority
+  const sorted = [...COMMAND_REGISTRY].sort(
+    (a, b) => Math.max(...b.phrases.map(p => p.length)) - Math.max(...a.phrases.map(p => p.length))
+  );
+
+  let bestMatch = null;
+  let bestScore = 0;
+
+  for (const cmd of sorted) {
+    for (const phrase of cmd.phrases) {
+      const score = fuzzyMatchScore(clean, phrase);
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = { cmd, phrase };
+      }
+    }
+  }
+
+  if (bestMatch && bestScore >= 0.65) {
+    const topic = extractTopic(clean);
+    return {
+      intent: bestMatch.cmd.intent,
+      confidence: Math.min(0.95, parseFloat(bestScore.toFixed(2))),
+      parameters: topic ? { topic } : {},
+      response: bestMatch.cmd.responseTemplate.replace('{topic}', topic || ''),
+      requires_confirmation: bestMatch.cmd.requiresConfirmation,
+      rawTranscript: raw,
+      source: 'fuzzy_levenshtein',
+      timestamp: Date.now(),
+    };
+  }
+
   return buildUnknown(raw);
 }
+
 
 /**
  * Extract topic from utterances like "teach me about stacks"

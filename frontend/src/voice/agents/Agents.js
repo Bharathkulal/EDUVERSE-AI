@@ -31,10 +31,25 @@ export const DashboardAgent = {
     if (intent === 'OPEN_ADMIN') {
       return { action: 'NAVIGATE', route: '/admin', response: 'Opening admin workspace.' };
     }
+    if (intent === 'SCROLL_DOWN') {
+      return { action: 'SCROLL_DOWN', response: 'Scrolling down.' };
+    }
+    if (intent === 'SCROLL_UP') {
+      return { action: 'SCROLL_UP', response: 'Scrolling up.' };
+    }
+    if (intent === 'VOICE_SEARCH') {
+      return { action: 'VOICE_SEARCH', payload: { query: parameters.topic || '' }, response: `Searching for ${parameters.topic || 'content'}.` };
+    }
+    if (intent === 'START_TIMER') {
+      return { action: 'START_TIMER', response: 'Starting focus timer.' };
+    }
+    if (intent === 'STOP_TIMER') {
+      return { action: 'STOP_TIMER', response: 'Stopping focus timer.' };
+    }
     if (intent === 'HELP') {
       return {
         action: 'SHOW_HELP',
-        response: 'I am your voice operating system. Try saying: "Open dashboard", "Start Java quiz", "Open Smartboard", or "Show my progress".'
+        response: 'I am Friday Voice OS. Say "Open dashboard", "Teach me recursion", "Start Java quiz", or "Generate React component".'
       };
     }
     if (intent === 'STOP_LISTENING') {
@@ -100,7 +115,6 @@ export const QuizAgent = {
 // 5. Assignment Agent
 export const AssignmentAgent = {
   execute(intent, parameters, context) {
-    // Navigates to subject details where assignments are listed
     if (intent === 'OPEN_SUBJECTS') {
       return { action: 'NAVIGATE', route: '/subjects', response: 'Opening your class subjects and assignments.' };
     }
@@ -152,8 +166,11 @@ export const AiTutorAgent = {
     if (intent === 'OPEN_DBMS') {
       return { action: 'NAVIGATE', route: '/dbms-lab', response: 'Opening DBMS Practice Lab.' };
     }
-    if (intent === 'OPEN_CHAT_LEARN') {
-      return { action: 'NAVIGATE', route: '/chat-learn', response: 'Opening Chat Learn.' };
+    if (intent === 'OPEN_CHAT_LEARN' || intent === 'CREATE_NEW_CHAT') {
+      return { action: 'NAVIGATE', route: '/chat-learn', response: 'Opening Chat Learn workspace.' };
+    }
+    if (intent === 'DELETE_CHAT') {
+      return { action: 'DELETE_CHAT', response: 'Deleting chat workspace.' };
     }
     if (intent === 'TEACH_TOPIC') {
       const topic = parameters.topic || parameters.subject || 'Data Structures';
@@ -178,6 +195,18 @@ export const NotesAgent = {
     if (intent === 'GENERATE_NOTES') {
       return { action: 'NAVIGATE', route: '/voice-assistant', payload: { action: 'notes' }, response: 'Generating revision study notes now.' };
     }
+    if (intent === 'EXPORT_NOTES') {
+      return { action: 'EXPORT_NOTES', response: 'Exporting study notes as PDF.' };
+    }
+    if (intent === 'GENERATE_FLASHCARDS') {
+      return { action: 'NAVIGATE', route: '/voice-assistant', payload: { action: 'flashcards' }, response: 'Generating revision flashcards.' };
+    }
+    if (intent === 'SUMMARIZE_PDF') {
+      return { action: 'NAVIGATE', route: '/chat-learn', payload: { action: 'summarize' }, response: 'Summarizing document content.' };
+    }
+    if (intent === 'TRANSLATE_DOCUMENT') {
+      return { action: 'NAVIGATE', route: '/chat-learn', payload: { action: 'translate' }, response: 'Translating document content.' };
+    }
     return null;
   }
 };
@@ -194,8 +223,17 @@ export const CodingAgent = {
     if (intent === 'EXPLAIN_CODE') {
       return { action: 'NAVIGATE', route: '/coding', payload: { mode: 'explain' }, response: 'Send your code snippet and I will explain it step-by-step.' };
     }
-    if (intent === 'GENERATE_CODE') {
-      return { action: 'NAVIGATE', route: '/coding', payload: { mode: 'generate' }, response: 'Opening code generator prompt.' };
+    if (intent === 'GENERATE_CODE' || intent === 'GENERATE_REACT_COMPONENT' || intent === 'CREATE_NODE_API') {
+      return { action: 'NAVIGATE', route: '/coding', payload: { mode: 'generate', topic: parameters.topic }, response: 'Opening Code Generator in Code Lab.' };
+    }
+    if (intent === 'OPTIMIZE_FUNCTION') {
+      return { action: 'NAVIGATE', route: '/coding', payload: { mode: 'optimize' }, response: 'Analyzing and optimizing your function.' };
+    }
+    if (intent === 'GENERATE_UNIT_TESTS') {
+      return { action: 'NAVIGATE', route: '/coding', payload: { mode: 'unit_tests' }, response: 'Generating unit test suite.' };
+    }
+    if (intent === 'CONVERT_CODE') {
+      return { action: 'NAVIGATE', route: '/coding', payload: { mode: 'convert' }, response: 'Translating code syntax.' };
     }
     if (intent === 'OPEN_CODING_BATTLE') {
       return { action: 'NAVIGATE', route: '/coding-battle', response: 'Loading Coding Battle system. Get ready!' };
@@ -217,7 +255,6 @@ export const NotificationAgent = {
 // 12. CalendarAgent
 export const CalendarAgent = {
   execute(intent, parameters, context) {
-    // Navigates to student dashboard goals/schedule
     if (intent === 'OPEN_DASHBOARD') {
       return { action: 'NAVIGATE', route: '/dashboard', response: 'Opening timetable schedule on dashboard.' };
     }
@@ -230,6 +267,9 @@ export const SettingsAgent = {
   execute(intent, parameters, context) {
     if (intent === 'OPEN_SETTINGS') {
       return { action: 'NAVIGATE', route: '/settings', response: 'Opening system settings panel.' };
+    }
+    if (intent === 'SWITCH_THEME') {
+      return { action: 'SWITCH_THEME', response: 'Switching visual theme.' };
     }
     if (intent === 'LOGOUT') {
       return { action: 'LOGOUT', response: 'Logging out from your EduVerse account. See you soon!' };
@@ -264,3 +304,4 @@ export const ALL_AGENTS = [
   NotesAgent, CodingAgent, NotificationAgent, CalendarAgent,
   SettingsAgent, AnalyticsAgent
 ];
+

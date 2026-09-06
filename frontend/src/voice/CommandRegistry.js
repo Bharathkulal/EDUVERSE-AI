@@ -519,6 +519,189 @@ export const COMMAND_REGISTRY = [
     responseTemplate: 'Opening Exam Command Center.',
   },
 
+  // ─── APP CONTROL & ACTIONS ───────────────────────────────────────────────
+  {
+    intent: 'SCROLL_DOWN',
+    phrases: ['scroll down', 'page down', 'scroll lower'],
+    agent: 'DashboardAgent',
+    type: 'ACTION',
+    roles: ['student', 'teacher', 'admin'],
+    requiresConfirmation: false,
+    description: 'Scroll down the page',
+    responseTemplate: 'Scrolling down.',
+  },
+  {
+    intent: 'SCROLL_UP',
+    phrases: ['scroll up', 'page up', 'scroll top'],
+    agent: 'DashboardAgent',
+    type: 'ACTION',
+    roles: ['student', 'teacher', 'admin'],
+    requiresConfirmation: false,
+    description: 'Scroll up the page',
+    responseTemplate: 'Scrolling up.',
+  },
+  {
+    intent: 'SWITCH_THEME',
+    phrases: ['switch theme', 'toggle theme', 'dark mode', 'light mode'],
+    agent: 'SettingsAgent',
+    type: 'ACTION',
+    roles: ['student', 'teacher', 'admin'],
+    requiresConfirmation: false,
+    description: 'Toggle dark or light theme',
+    responseTemplate: 'Switching theme.',
+  },
+  {
+    intent: 'VOICE_SEARCH',
+    phrases: ['search', 'find', 'look for', 'search page'],
+    agent: 'DashboardAgent',
+    type: 'ACTION',
+    roles: ['student', 'teacher', 'admin'],
+    requiresConfirmation: false,
+    description: 'Search in active page or app',
+    responseTemplate: 'Searching for {topic}.',
+  },
+  {
+    intent: 'START_TIMER',
+    phrases: ['start timer', 'set timer', 'start focus timer'],
+    agent: 'DashboardAgent',
+    type: 'ACTION',
+    roles: ['student', 'teacher', 'admin'],
+    requiresConfirmation: false,
+    description: 'Start focus timer',
+    responseTemplate: 'Starting timer.',
+  },
+  {
+    intent: 'STOP_TIMER',
+    phrases: ['stop timer', 'cancel timer', 'pause timer'],
+    agent: 'DashboardAgent',
+    type: 'ACTION',
+    roles: ['student', 'teacher', 'admin'],
+    requiresConfirmation: false,
+    description: 'Stop active timer',
+    responseTemplate: 'Timer stopped.',
+  },
+  {
+    intent: 'CREATE_NEW_CHAT',
+    phrases: ['create new chat', 'new chat', 'start new chat', 'new workspace'],
+    agent: 'AiTutorAgent',
+    type: 'NAVIGATE',
+    route: '/chat-learn',
+    roles: ['student', 'teacher'],
+    requiresConfirmation: false,
+    description: 'Create a new AI chat workspace',
+    responseTemplate: 'Creating new Chat Learn workspace.',
+  },
+  {
+    intent: 'DELETE_CHAT',
+    phrases: ['delete chat', 'delete workspace', 'clear chat history'],
+    agent: 'AiTutorAgent',
+    type: 'ACTION',
+    roles: ['student', 'teacher'],
+    requiresConfirmation: true,
+    description: 'Delete active chat workspace',
+    responseTemplate: 'Are you sure you want to delete this chat workspace?',
+  },
+  {
+    intent: 'EXPORT_NOTES',
+    phrases: ['export notes', 'download notes', 'export as pdf', 'generate pdf'],
+    agent: 'NotesAgent',
+    type: 'ACTION',
+    roles: ['student', 'teacher'],
+    requiresConfirmation: false,
+    description: 'Export notes as PDF document',
+    responseTemplate: 'Generating PDF export of your notes.',
+  },
+  {
+    intent: 'GENERATE_FLASHCARDS',
+    phrases: ['generate flashcards', 'make flashcards', 'create flashcards'],
+    agent: 'NotesAgent',
+    type: 'NAVIGATE',
+    route: '/voice-assistant',
+    roles: ['student', 'teacher'],
+    requiresConfirmation: false,
+    description: 'Generate study flashcards',
+    responseTemplate: 'Generating revision flashcards.',
+  },
+
+  // ─── ADVANCED CODING & DOCUMENTS ──────────────────────────────────────────
+  {
+    intent: 'GENERATE_REACT_COMPONENT',
+    phrases: ['generate react component', 'create react component', 'make react component'],
+    agent: 'CodingAgent',
+    type: 'NAVIGATE',
+    route: '/coding',
+    roles: ['student', 'teacher'],
+    requiresConfirmation: false,
+    description: 'Generate a React component in code editor',
+    responseTemplate: 'Generating React component in Code Lab.',
+  },
+  {
+    intent: 'OPTIMIZE_FUNCTION',
+    phrases: ['optimize code', 'optimize this function', 'make code faster'],
+    agent: 'CodingAgent',
+    type: 'NAVIGATE',
+    route: '/coding',
+    roles: ['student', 'teacher'],
+    requiresConfirmation: false,
+    description: 'Optimize code performance',
+    responseTemplate: 'Analyzing and optimizing your function.',
+  },
+  {
+    intent: 'CREATE_NODE_API',
+    phrases: ['create node api', 'create node.js api', 'build backend api'],
+    agent: 'CodingAgent',
+    type: 'NAVIGATE',
+    route: '/coding',
+    roles: ['student', 'teacher'],
+    requiresConfirmation: false,
+    description: 'Generate Node.js Express API route',
+    responseTemplate: 'Building Node.js API template.',
+  },
+  {
+    intent: 'GENERATE_UNIT_TESTS',
+    phrases: ['generate unit tests', 'create unit tests', 'write tests'],
+    agent: 'CodingAgent',
+    type: 'NAVIGATE',
+    route: '/coding',
+    roles: ['student', 'teacher'],
+    requiresConfirmation: false,
+    description: 'Generate unit tests for active program',
+    responseTemplate: 'Generating unit test suite.',
+  },
+  {
+    intent: 'CONVERT_CODE',
+    phrases: ['convert python to c#', 'convert code', 'translate code'],
+    agent: 'CodingAgent',
+    type: 'NAVIGATE',
+    route: '/coding',
+    roles: ['student', 'teacher'],
+    requiresConfirmation: false,
+    description: 'Convert code between programming languages',
+    responseTemplate: 'Translating code syntax.',
+  },
+  {
+    intent: 'SUMMARIZE_PDF',
+    phrases: ['summarize pdf', 'summarize document', 'summarize chapter'],
+    agent: 'NotesAgent',
+    type: 'NAVIGATE',
+    route: '/chat-learn',
+    roles: ['student', 'teacher'],
+    requiresConfirmation: false,
+    description: 'Summarize uploaded document or PDF',
+    responseTemplate: 'Generating document summary.',
+  },
+  {
+    intent: 'TRANSLATE_DOCUMENT',
+    phrases: ['translate to hindi', 'translate document', 'translate text'],
+    agent: 'NotesAgent',
+    type: 'NAVIGATE',
+    route: '/chat-learn',
+    roles: ['student', 'teacher'],
+    requiresConfirmation: false,
+    description: 'Translate document or text',
+    responseTemplate: 'Translating document content.',
+  },
+
   // ─── SYSTEM ────────────────────────────────────────────────────────────────
   {
     intent: 'STOP_LISTENING',
@@ -528,7 +711,7 @@ export const COMMAND_REGISTRY = [
     roles: ['student', 'teacher', 'admin'],
     requiresConfirmation: false,
     description: 'Stop voice recognition',
-    responseTemplate: 'Stopping. Say "Hey EduVerse" to wake me up.',
+    responseTemplate: 'Stopping. Say "Hey Friday" or "Hey EduVerse" to wake me up.',
   },
   {
     intent: 'HELP',
@@ -538,7 +721,7 @@ export const COMMAND_REGISTRY = [
     roles: ['student', 'teacher', 'admin'],
     requiresConfirmation: false,
     description: 'Show available commands',
-    responseTemplate: 'I can help you navigate, learn, quiz, code, and more. Say "Open Dashboard", "Teach me Python", or "Start Java Quiz" to get started.',
+    responseTemplate: 'I am Friday Voice OS. Say "Open Dashboard", "Teach me recursion", "Start Java Quiz", or "Generate React component".',
   },
 ];
 
@@ -556,9 +739,14 @@ export const AGENT_NAMES = [
 ];
 
 /** Wake words */
-export const WAKE_WORDS = ['hey eduverse', 'hello eduverse', 'eduverse'];
+export const WAKE_WORDS = [
+  'hey friday', 'hello friday', 'hi friday', 'okay friday',
+  'hey eduverse', 'hello eduverse', 'hi eduverse', 'ok friday',
+  'eduverse', 'friday'
+];
 
 /** All intents as enum-like constant */
 export const INTENTS = Object.fromEntries(
   COMMAND_REGISTRY.map(c => [c.intent, c.intent])
 );
+
