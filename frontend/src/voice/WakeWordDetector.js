@@ -92,7 +92,7 @@ export class WakeWordDetector {
     if (this.recognition) {
       try {
         this.recognition.stop();
-      } catch {}
+      } catch { }
       this.recognition = null;
     }
     this.isListening = false;

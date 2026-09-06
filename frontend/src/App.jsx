@@ -43,6 +43,7 @@ const CodingBattleSystem = lazy(() => import('./pages/CodingBattleSystem'));
 const Community = lazy(() => import('./pages/Community'));
 const CareerHub = lazy(() => import('./pages/CareerHub'));
 const ExamCommandCenter = lazy(() => import('./pages/ExamCommandCenter'));
+const AcademicContentHub = lazy(() => import('./pages/AcademicContentHub'));
 // Command AI Page
 const CommandAIDashboard = lazy(() => import('./pages/CommandAIDashboard'));
 // Python AI Learning Platform
@@ -95,6 +96,7 @@ const AdminAlerts = lazy(() => import('./pages/admin/AdminAlerts'));
 const AdminPredictions = lazy(() => import('./pages/admin/AdminPredictions'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const AdminVoiceLogs = lazy(() => import('./pages/admin/AdminVoiceLogs'));
+const AdminContentStudio = lazy(() => import('./pages/admin/AdminContentStudio'));
 // Other Components
 const DBMSLab = lazy(() => import('./components/DBMSLab'));
 
@@ -183,8 +185,9 @@ export default function App() {
             <Route path="/typing-quest" element={<ProtectedRoute><Layout><TypingQuest /></Layout></ProtectedRoute>} />
             <Route path="/coding-battle" element={<ProtectedRoute><Layout><CodingBattleSystem /></Layout></ProtectedRoute>} />
 
-            {/* Career Hub, Innovation & Community */}
+            {/* Career Hub, Academic Content Hub & Community */}
             <Route path="/career-hub" element={<ProtectedRoute><Layout><CareerHub /></Layout></ProtectedRoute>} />
+            <Route path="/study-materials" element={<ProtectedRoute><Layout><AcademicContentHub /></Layout></ProtectedRoute>} />
             <Route path="/exam-command" element={<ProtectedRoute><Layout><ExamCommandCenter /></Layout></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><Layout><Community /></Layout></ProtectedRoute>} />
 
@@ -219,7 +222,8 @@ export default function App() {
 
             <Route path="/admin" element={<ProtectedRoute adminOnly><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
             <Route path="/admin/students" element={<ProtectedRoute adminOnly><Layout><AdminStudents /></Layout></ProtectedRoute>} />
-            <Route path="/admin/content" element={<ProtectedRoute adminOnly><Layout><AdminContent /></Layout></ProtectedRoute>} />
+            <Route path="/admin/content" element={<ProtectedRoute adminOnly><Layout><AdminContentStudio /></Layout></ProtectedRoute>} />
+            <Route path="/admin/study-materials" element={<ProtectedRoute adminOnly><Layout><AdminContentStudio /></Layout></ProtectedRoute>} />
             <Route path="/admin/quizzes" element={<ProtectedRoute adminOnly><Layout><AdminQuizzes /></Layout></ProtectedRoute>} />
             <Route path="/admin/dataset" element={<ProtectedRoute adminOnly><Layout><AdminDataset /></Layout></ProtectedRoute>} />
             <Route path="/admin/ml" element={<ProtectedRoute adminOnly><Layout><AdminML /></Layout></ProtectedRoute>} />

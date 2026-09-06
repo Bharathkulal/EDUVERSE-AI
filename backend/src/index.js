@@ -915,6 +915,7 @@ const db = require('./config/db');
   const voiceRoutes = require('./routes/voice');
   const mathRoutes = require('./routes/math');
   const examQrRoutes = require('./routes/exam_qr');
+  const academicContentRoutes = require('./routes/academic_content');
   const http = require('http');
   const { Server } = require('socket.io');
   const { setIoInstance } = require('./utils/system_logger');
@@ -1104,6 +1105,7 @@ app.use('/api/chat-learn', chatLearnRoutes);
 app.use('/api/voice', voiceRoutes);
 app.use('/api/math', mathRoutes);
 app.use('/api/exam-qr', examQrRoutes);
+app.use('/api/academic-content', academicContentRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
   setHeaders: (res, filepath) => {
     if (filepath.includes('chat_learn') && filepath.includes('files')) {
