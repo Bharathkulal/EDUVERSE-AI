@@ -14,6 +14,7 @@ import toast from 'react-hot-toast';
 import { isGoogleAuthAvailable, showGoogleUnavailableWarning, isGitHubAuthAvailable, showGitHubUnavailableWarning } from '../utils/envValidation';
 import EduVerseLogo, { EduVerseIcon } from '../components/EduVerseLogo';
 import studentImg from '../assets/hero_character.png';
+import MotivationSection from '../components/MotivationSection';
 import './LandingPage.css';
 
 // Lenis smooth scroll implementation
@@ -469,7 +470,7 @@ export default function LandingPage() {
           </div>
           
           <nav className="hidden items-center gap-8 md:flex">
-            {['Features', 'Platform', 'Journey', 'Analytics', 'Credentials'].map((item) => (
+            {['Features', 'Platform', 'Journey', 'Analytics', 'Credentials', 'Motivation'].map((item) => (
               <a
                 key={item}
                 href={`#${item.toLowerCase()}`}
@@ -1606,6 +1607,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ───────────────── SECTION 10B: INTELLECTUAL MOTIVATION & READER PORTAL ───────────────── */}
+      <MotivationSection onOpenAuth={() => setDrawerOpen(true)} />
 
       {/* ───────────────── SECTION 11: CALL TO ACTION ───────────────── */}
       <section className="relative py-32 bg-[#03050C] border-t border-white/5 overflow-hidden">

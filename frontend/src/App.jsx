@@ -4,7 +4,6 @@ import { AnimatePresence } from 'framer-motion';
 import { useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Layout from './components/Layout';
-import AIChatLayer from './components/AIChatLayer';
 import { useVoiceAssistant } from './context/VoiceContext';
 import toast from 'react-hot-toast';
 
@@ -126,8 +125,6 @@ export default function App() {
 
   return (
     <>
-      <AIChatLayer />
-      
       {/* Command AI Global Overlays */}
       <Suspense fallback={null}>
         <CommandPanel />

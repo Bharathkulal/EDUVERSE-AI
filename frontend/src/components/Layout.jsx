@@ -10,7 +10,6 @@ import ThemeToggleButton from './ThemeToggleButton';
 import { Mic } from 'lucide-react';
 import EduVerseLogo from './EduVerseLogo';
 import ReviewPopup from './ReviewPopup';
-import CommandOrb from './CommandAI/CommandOrb';
 import '../pages/DashboardTheme.css';
 
 const studentNav = [
@@ -67,7 +66,7 @@ export default function Layout({ children }) {
   const { user, logout, isAdmin, guestTimeLeft, guestAiRequests, guestExpired } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const { goBack, canGoBack, clearHistory } = useNavHistory();
-  const { executeCommand } = useCommandAI();
+  const { executeCommand, setIsPanelOpen } = useCommandAI();
   useSessionTracker(user);
   const location = useLocation();
   const navigate = useNavigate();
@@ -216,7 +215,7 @@ export default function Layout({ children }) {
           <div className="mt-auto">
 
             {/* XP Progress Card */}
-            <div className="p-4 rounded-2xl bg-[var(--db-card-bg-elevated)] border border-[var(--db-sidebar-border)] hidden lg:block mb-4">
+            <div className="p-4 rounded-2xl bg-[var(--db-card-bg-elevated)] border border-[var(--db-sidebar-border)] hidden lg:block mb-3">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-8 h-8 rounded-lg bg-[#2563EB]/10 text-[#2563EB] flex items-center justify-center font-bold text-sm">🏆</div>
                 <div className="flex flex-col">
@@ -233,56 +232,9 @@ export default function Layout({ children }) {
               </div>
             </div>
 
-            {/* User Profile Card inside Sidebar */}
-            <div className="p-3 mb-3 bg-[var(--db-card-bg-elevated)] border border-[var(--db-sidebar-border)] rounded-2xl flex flex-col gap-2.5">
-              <div className="flex items-center gap-3">
-                {user?.avatar_url ? (
-                  <img src={user.avatar_url} alt={user.name} className="w-9 h-9 rounded-full border border-white/20 object-cover flex-shrink-0" />
-                ) : (
-                  <div className="w-9 h-9 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-extrabold text-xs border-2 border-white shadow-sm flex-shrink-0">
-                    {getInitials(user?.name)}
-                  </div>
-                )}
-                <div className="flex flex-col min-w-0">
-                  <span className="text-xs font-bold text-[var(--db-text-main)] truncate">{user?.name}</span>
-                  <span className="text-[10px] text-[var(--db-text-muted)] truncate">{user?.email}</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between text-[10px]">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-slate-500 font-medium">Provider:</span>
-                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase ${
-                    user?.provider === 'google' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                    user?.provider === 'github' ? 'bg-slate-800 text-white border border-slate-700' :
-                    'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                  }`}>
-                    {user?.provider || 'Email'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 text-emerald-500 font-bold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Active
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-1.5 mt-1 border-t border-[var(--db-sidebar-border)] pt-2">
-                <button onClick={() => navigate('/settings')} className="py-1 px-2 text-[9px] font-bold bg-[var(--db-input-bg)] hover:bg-[var(--db-btn-secondary-hover)] text-[var(--db-text-main)] rounded-lg transition border border-[var(--db-input-border)] text-center cursor-pointer">
-                  Manage Account
-                </button>
-                <button onClick={handleLogout} className="py-1 px-2 text-[9px] font-bold bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition border border-red-500/20 text-center cursor-pointer">
-                  Logout
-                </button>
-              </div>
-            </div>
 
-            {/* Footer Profile Detail */}
-            <div className="db-sidebar-footer" style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
-              <div className="flex items-center gap-2 text-[var(--db-text-muted)] text-[11px] font-bold leading-normal pr-2">
-                <CommandOrb size={28} floating={false} />
-                <span>Double tap on screen for Voice Agent</span>
-              </div>
-            </div>
+
           </div>
         </div>
       </aside>
