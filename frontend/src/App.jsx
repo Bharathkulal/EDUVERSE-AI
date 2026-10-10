@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import { useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Layout from './components/Layout';
+import AIChatLayer from './components/AIChatLayer';
 import { useVoiceAssistant } from './context/VoiceContext';
 import toast from 'react-hot-toast';
 
@@ -41,6 +42,8 @@ const TypingQuest = lazy(() => import('./pages/TypingQuest'));
 const CodingBattleSystem = lazy(() => import('./pages/CodingBattleSystem'));
 const Community = lazy(() => import('./pages/Community'));
 const CareerHub = lazy(() => import('./pages/CareerHub'));
+const InnovationHub = lazy(() => import('./pages/InnovationHub'));
+const DebateArena = lazy(() => import('./pages/DebateArena'));
 const ExamCommandCenter = lazy(() => import('./pages/ExamCommandCenter'));
 const AcademicContentHub = lazy(() => import('./pages/AcademicContentHub'));
 // Command AI Page
@@ -125,6 +128,8 @@ export default function App() {
 
   return (
     <>
+      <AIChatLayer />
+
       {/* Command AI Global Overlays */}
       <Suspense fallback={null}>
         <CommandPanel />
@@ -183,8 +188,10 @@ export default function App() {
             <Route path="/typing-quest" element={<ProtectedRoute><Layout><TypingQuest /></Layout></ProtectedRoute>} />
             <Route path="/coding-battle" element={<ProtectedRoute><Layout><CodingBattleSystem /></Layout></ProtectedRoute>} />
 
-            {/* Career Hub, Academic Content Hub & Community */}
+            {/* Career Hub, Innovation, Debate, Academic Content Hub & Community */}
             <Route path="/career-hub" element={<ProtectedRoute><Layout><CareerHub /></Layout></ProtectedRoute>} />
+            <Route path="/innovation-hub" element={<ProtectedRoute><Layout><InnovationHub /></Layout></ProtectedRoute>} />
+            <Route path="/debate-arena" element={<ProtectedRoute><Layout><DebateArena /></Layout></ProtectedRoute>} />
             <Route path="/study-materials" element={<ProtectedRoute><Layout><AcademicContentHub /></Layout></ProtectedRoute>} />
             <Route path="/exam-command" element={<ProtectedRoute><Layout><ExamCommandCenter /></Layout></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><Layout><Community /></Layout></ProtectedRoute>} />

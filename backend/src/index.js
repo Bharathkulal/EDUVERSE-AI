@@ -882,7 +882,40 @@ const db = require('./config/db');
         `);
       }
 
+      // Innovation Hub Tables
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS innovation_ideas (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          title VARCHAR(500) NOT NULL,
+          problem TEXT,
+          solution TEXT,
+          target_audience TEXT,
+          industry VARCHAR(200),
+          country VARCHAR(100),
+          status VARCHAR(50) DEFAULT 'draft',
+          overall_score INTEGER DEFAULT 0,
+          evaluation_data JSONB,
+          market_data JSONB,
+          competitor_data JSONB,
+          business_model_data JSONB,
+          finance_data JSONB,
+          mvp_data JSONB,
+          pitch_data JSONB,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
 
+        CREATE TABLE IF NOT EXISTS innovation_documents (
+          id SERIAL PRIMARY KEY,
+          idea_id INTEGER REFERENCES innovation_ideas(id) ON DELETE CASCADE,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          doc_type VARCHAR(100) NOT NULL,
+          title VARCHAR(300),
+          content TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
 
       console.log('Database migrations completed successfully.');
     } catch (err) {
@@ -916,6 +949,7 @@ const db = require('./config/db');
   const mathRoutes = require('./routes/math');
   const examQrRoutes = require('./routes/exam_qr');
   const academicContentRoutes = require('./routes/academic_content');
+  const innovationRoutes = require('./routes/innovation');
   const http = require('http');
   const { Server } = require('socket.io');
   const { setIoInstance } = require('./utils/system_logger');
@@ -1106,6 +1140,7 @@ app.use('/api/voice', voiceRoutes);
 app.use('/api/math', mathRoutes);
 app.use('/api/exam-qr', examQrRoutes);
 app.use('/api/academic-content', academicContentRoutes);
+app.use('/api/innovation', innovationRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
   setHeaders: (res, filepath) => {
     if (filepath.includes('chat_learn') && filepath.includes('files')) {

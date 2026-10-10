@@ -10,6 +10,7 @@ import ThemeToggleButton from './ThemeToggleButton';
 import { Mic } from 'lucide-react';
 import EduVerseLogo from './EduVerseLogo';
 import ReviewPopup from './ReviewPopup';
+import CommandOrb from './CommandAI/CommandOrb';
 import '../pages/DashboardTheme.css';
 
 const studentNav = [
@@ -23,6 +24,8 @@ const studentNav = [
   { path: '/quizzes', label: 'Arena', icon: '🏆' },
   { path: '/study-materials', label: 'Academic Content Hub', icon: '📖' },
   { path: '/career-hub', label: 'Career Hub', icon: '🔥' },
+  { path: '/innovation-hub', label: 'Innovation Hub', icon: '💡' },
+  { path: '/debate-arena', label: 'Debate Arena', icon: '⚡' },
   { path: '/exam-command', label: 'Exam AI', icon: '📋' },
   { path: '/community', label: 'Community', icon: '🌐' },
   { path: '/progress', label: 'Progress', icon: '📊' },
@@ -55,6 +58,7 @@ const TOP_LEVEL_PATHS = [
   '/subjects', '/practice-hub', '/quizzes', '/coding', '/dbms-lab', '/ai-tutor',
   '/progress', '/certificates', '/study-report', '/ml-analytics', '/ai-profile', '/question-bank',
   '/voice-assistant', '/settings', '/community', '/career-hub', '/study-materials',
+  '/innovation-hub', '/debate-arena',
   '/exam-command', '/it-suite', '/techverse', '/chat-learn',
   '/admin', '/admin/students', '/admin/exam-papers', '/admin/content', '/admin/quizzes',
   '/admin/dataset', '/admin/ml', '/admin/questions',
@@ -232,8 +236,56 @@ export default function Layout({ children }) {
               </div>
             </div>
 
+            {/* User Profile Card inside Sidebar */}
+            <div className="p-3 mb-3 bg-[var(--db-card-bg-elevated)] border border-[var(--db-sidebar-border)] rounded-2xl flex flex-col gap-2.5">
+              <div className="flex items-center gap-3">
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt={user.name} className="w-9 h-9 rounded-full border border-white/20 object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-extrabold text-xs border-2 border-white shadow-sm flex-shrink-0">
+                    {getInitials(user?.name)}
+                  </div>
+                )}
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-bold text-[var(--db-text-main)] truncate">{user?.name}</span>
+                  <span className="text-[10px] text-[var(--db-text-muted)] truncate">{user?.email}</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between text-[10px]">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-500 font-medium">Provider:</span>
+                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase ${
+                    user?.provider === 'google' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
+                    user?.provider === 'github' ? 'bg-slate-800 text-white border border-slate-700' :
+                    'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                  }`}>
+                    {user?.provider || 'Email'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 text-emerald-500 font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Active
+                </div>
+              </div>
 
+              <div className="grid grid-cols-2 gap-1.5 mt-1 border-t border-[var(--db-sidebar-border)] pt-2">
+                <button onClick={() => navigate('/settings')} className="py-1 px-2 text-[9px] font-bold bg-[var(--db-input-bg)] hover:bg-[var(--db-btn-secondary-hover)] text-[var(--db-text-main)] rounded-lg transition border border-[var(--db-input-border)] text-center cursor-pointer">
+                  Manage Account
+                </button>
+                <button onClick={handleLogout} className="py-1 px-2 text-[9px] font-bold bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition border border-red-500/20 text-center cursor-pointer">
+                  Logout
+                </button>
+              </div>
+            </div>
 
+            {/* Footer Profile Detail */}
+            <div className="db-sidebar-footer" style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+              <div className="flex items-center gap-2 text-[var(--db-text-muted)] text-[11px] font-bold leading-normal pr-2">
+                <CommandOrb size={28} floating={false} />
+                <span>Double tap on screen for Voice Agent</span>
+              </div>
+            </div>
 
           </div>
         </div>
@@ -439,7 +491,7 @@ export default function Layout({ children }) {
           </div>
         </header>
 
-        <main className={`db-content-body overflow-y-auto custom-sidebar-scroll ${['/coding', '/chat-learn', '/exam-center'].includes(location.pathname) ? '!p-0 !max-w-none !m-0 !h-full' : ''}`}>
+        <main className={`db-content-body overflow-y-auto custom-sidebar-scroll ${['/coding', '/chat-learn', '/exam-center', '/debate-arena'].includes(location.pathname) ? '!p-0 !max-w-none !m-0 !h-full' : ''}`}>
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, x: 20 }}
